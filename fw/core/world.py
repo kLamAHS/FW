@@ -14,6 +14,7 @@ reason the temporal decision had to be made before any feature work.
 
 from __future__ import annotations
 
+import secrets
 import sqlite3
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -69,6 +70,9 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                       "source_id": ("source", "null")}},
     "event": {"refs": {"entity_id": ("entity", "skip"),
                        "location_id": ("entity", "null")}},
+    "scene": {"refs": {"chapter_id": ("chapter", "null"),
+                       "location_id": ("entity", "null"),
+                       "pov_id": ("entity", "null")}},
     "title": {"refs": {"entity_id": ("entity", "skip"),
                        "territory_id": ("entity", "null"),
                        "dynasty_root_id": ("entity", "null")}},
@@ -99,9 +103,30 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
-_RESTORE_ORDER = ("event", "title", "secret", "geometry", "route_segment",
+_RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
                   "interpretation", "knowledge_state", "causal_link")
+
+# How undo's toast names a change to each kind of row.
+_ACTION_NOUNS: dict[str, str] = {
+    "event": "the event", "scene": "the scene", "title": "the title",
+    "secret": "the secret", "title_holding": "a title grant",
+    "knowledge_state": "a knowledge note", "geometry": "map geometry",
+    "route_segment": "a route segment", "causal_link": "a causal link",
+    "event_participant": "an event participation",
+    "scene_participant": "a scene participation",
+    "interpretation": "an interpretation",
+}
+
+# What the FK cascade takes with a row of each table — the children a raw DELETE must
+# snapshot into the log first, or they would be the one loss the log cannot repair.
+_CHILD_TABLES: dict[str, tuple[tuple[str, str], ...]] = {
+    "event": (("event_participant", "event_id"), ("causal_link", "cause_id"),
+              ("causal_link", "effect_id"), ("interpretation", "event_id")),
+    "title": (("title_holding", "title_id"),),
+    "secret": (("knowledge_state", "secret_id"),),
+    "scene": (("scene_participant", "scene_id"),),
+}
 
 # SET NULL columns on rows that *survive* a delete: the cascade clears the reference
 # but keeps the row, so a restore should offer to re-link it. Only these (table,
@@ -170,7 +195,10 @@ class World:
         # Undo state. Actions are grouped in the log by action_id; inversions announce
         # themselves with a marker record, so which actions currently stand undone is
         # reconstructed from the file itself — undo history survives a restart.
-        self._session_token = new_id()[:10].lower()
+        # The token must be genuinely random: a ULID prefix is a millisecond timestamp,
+        # and two handles opened in the same millisecond would then weave their
+        # transactions into each other's actions.
+        self._session_token = secrets.token_hex(6)
         self._undone: set[str] = set()                  # action ids currently undone
         self._redo: list[tuple[str, str]] = []          # (target, its inversion)
         self._inversions: dict[str, str] = {}           # inversion action -> target
@@ -380,7 +408,8 @@ class World:
         """
         rows = self.db.query(
             "SELECT table_name, row_id, before, at FROM revision "
-            "WHERE project_id = ? ORDER BY id DESC LIMIT ?",
+            "WHERE project_id = ? AND table_name IN ('entity', 'fact') "
+            "ORDER BY id DESC LIMIT ?",
             (self.project_id, limit * 8),
         )
         out: list[tuple[Entity, str]] = []
@@ -542,20 +571,32 @@ class World:
             batch.append(prior)
             cursor -= 1
 
-        deletes: dict[str, list[dict]] = {}
-        relinks: list[dict] = []
-        for prior in batch:
-            if prior["action"] == "delete":
-                deletes.setdefault(prior["table_name"], []).append(prior)
-            elif prior["action"] == "update":
-                relinks.append(prior)
+        deletes = [prior for prior in batch if prior["action"] == "delete"]
+        relinks = [prior for prior in batch if prior["action"] == "update"]
+
+        facts, others = self._replay_deletes(deletes)
+        for prior in relinks:
+            others += self._apply_relink(prior)
+        return facts, others
+
+    def _replay_deletes(self, deletes: list[dict]) -> tuple[int, int]:
+        """Re-insert delete records in dependency order, whatever order they arrive in.
+
+        Entities first, then facts — which can be *about* other facts (reification), so
+        they insert in passes until a pass makes no progress, a claim always preceding
+        the facts about it; what remains is about a fact that never came back, and
+        stays gone exactly as the FK would insist. Then everything else parents-first.
+        Both restore and undo replay through here, so neither can drop a cascade child
+        by replaying it before its parent exists.
+        """
+        by_table: dict[str, list[dict]] = {}
+        for prior in deletes:
+            by_table.setdefault(prior["table_name"], []).append(prior)
 
         facts = others = 0
-        # Facts can be *about* other facts in the same batch (reification). Insert in
-        # passes until a pass makes no progress, so a claim precedes the facts about it;
-        # what is left is about a fact that never came back, and stays gone exactly as
-        # the FK would insist.
-        pending = deletes.pop("fact", [])
+        for prior in by_table.pop("entity", []):
+            others += self._undelete_entity(prior)
+        pending = by_table.pop("fact", [])
         while pending:
             waiting: list[dict] = []
             for prior in pending:
@@ -571,13 +612,21 @@ class World:
                 break
             pending = waiting
         for table in _RESTORE_ORDER:
-            for prior in deletes.get(table, []):
+            for prior in by_table.get(table, []):
                 if self._restore_row(table, prior["before"] or {}, prior["id"],
                                      strict=False):
                     others += 1
-        for prior in relinks:
-            others += self._apply_relink(prior)
         return facts, others
+
+    def _undelete_entity(self, rev: dict) -> int:
+        """Re-insert one entity from its delete record, if it can come back."""
+        snapshot = {k: v for k, v in (rev["before"] or {}).items()
+                    if k in self._table_columns("entity")}
+        if not {"id", "type_key", "name"} <= set(snapshot) or self.db.one(
+                "SELECT 1 FROM entity WHERE id = ?", (snapshot.get("id"),)):
+            return 0
+        self._insert_entity_snapshot(snapshot, rev["id"])
+        return 1
 
     def _restore_row(self, table: str, snapshot: dict, source_revision: int,
                      *, strict: bool) -> bool:
@@ -745,16 +794,18 @@ class World:
 
     def redo(self) -> str:
         """Reinstate the most recently undone action."""
-        if not self._redo:
-            raise WorldError("nothing to redo")
-        target, inversion = self._redo[-1]
+        # Read and pop inside the transaction: it holds the connection lock, so two
+        # concurrent requests cannot both grab (and doubly apply) the same entry.
         with self.db.transaction():
+            if not self._redo:
+                raise WorldError("nothing to redo")
+            target, inversion = self._redo[-1]
             fresh = self._current_action_id()
             self._inversions[fresh] = inversion
             self._log_revision("undo", inversion, "undo", None, {"kind": "redo"})
             self._invert_action(inversion)
             self._undone.discard(target)
-        self._redo.pop()
+            self._redo.pop()
         return f"Redid {self._describe_action(target)}."
 
     def undo_state(self) -> dict:
@@ -787,32 +838,68 @@ class World:
             else:
                 self._undone.add(target)
                 pending[target] = (marker["id"], marker["action_id"])
-        self._redo = [(t, inv) for t, (_, inv) in
-                      sorted(pending.items(), key=lambda kv: kv[1][0])]
+        # A real action recorded *after* an undo forfeits that undo's redo — in the
+        # session that clears the stack directly; across a reopen it must be read off
+        # the log, or a stale redo would clobber the newer edit it lost to.
+        newest_real = 0
+        last_id: int | None = None
+        while newest_real == 0:
+            sql = ("SELECT id, action_id FROM revision "
+                   "WHERE project_id = ? AND action_id != ''")
+            params: list[Any] = [self.project_id]
+            if last_id is not None:
+                sql += " AND id < ?"
+                params.append(last_id)
+            sql += " ORDER BY id DESC LIMIT 500"
+            rows = self.db.query(sql, params)
+            if not rows:
+                break
+            for row in rows:
+                last_id = row["id"]
+                if row["action_id"] not in self._inversions:
+                    newest_real = row["id"]
+                    break
+        self._redo = [(t, inv) for t, (marker_id, inv) in
+                      sorted(pending.items(), key=lambda kv: kv[1][0])
+                      if marker_id > newest_real]
 
     def _newest_action(self) -> str | None:
-        """The most recent real user action that is not already undone."""
-        rows = self.db.query(
-            "SELECT action_id, max(id) AS newest FROM revision "
-            "WHERE project_id = ? AND action_id != '' "
-            "GROUP BY action_id ORDER BY newest DESC LIMIT 200",
-            (self.project_id,),
-        )
-        for row in rows:
-            aid = row["action_id"]
-            if aid in self._inversions or aid in self._undone:
-                continue
-            return aid
-        return None
+        """The most recent real user action that is not already undone.
+
+        Walks the log newest-first with early termination — never an aggregate over the
+        whole history, and never a fixed window that heavy undo traffic could exhaust.
+        """
+        seen: set[str] = set()
+        last_id: int | None = None
+        while True:
+            sql = ("SELECT id, action_id FROM revision "
+                   "WHERE project_id = ? AND action_id != ''")
+            params: list[Any] = [self.project_id]
+            if last_id is not None:
+                sql += " AND id < ?"
+                params.append(last_id)
+            sql += " ORDER BY id DESC LIMIT 500"
+            rows = self.db.query(sql, params)
+            if not rows:
+                return None
+            for row in rows:
+                last_id = row["id"]
+                aid = row["action_id"]
+                if aid in seen:
+                    continue
+                seen.add(aid)
+                if aid not in self._inversions and aid not in self._undone:
+                    return aid
 
     def _invert_action(self, action_id: str) -> int:
         """Apply the inverse of every record in one action.
 
-        Deletes are inverted first (newest-first, so a cascade's parent returns before
-        its children), then updates (their targets exist again by now), then inserts
-        (newest-first, children removed before parents). The mixed shapes — a delete
-        with its relink updates, a restore with its re-inserts, a transfer's
-        end-and-assert pair — all come out right under that one ordering.
+        Deletes are inverted first — replayed in dependency order by the same machinery
+        restore uses, so a cascade's children all find their parents — then updates
+        (their targets exist again by now), then inserts (newest-first, children
+        removed before parents). The mixed shapes — a delete with its relink updates,
+        a restore with its re-inserts, a transfer's end-and-assert pair — all come out
+        right under that one ordering.
         """
         revs = [
             {**dict(r), "before": decode_json(r["before"], None),
@@ -823,10 +910,9 @@ class World:
                 (action_id,),
             )
         ]
-        changed = 0
-        for rev in revs:
-            if rev["action"] == "delete":
-                changed += self._undelete(rev)
+        facts, others = self._replay_deletes(
+            [rev for rev in revs if rev["action"] == "delete"])
+        changed = facts + others
         for rev in revs:
             if rev["action"] == "update":
                 changed += self._unupdate(rev)
@@ -834,19 +920,6 @@ class World:
             if rev["action"] == "insert":
                 changed += self._uninsert(rev)
         return changed
-
-    def _undelete(self, rev: dict) -> int:
-        """Inverse of a delete record: put the snapshotted row back."""
-        table = rev["table_name"]
-        snapshot = {k: v for k, v in (rev["before"] or {}).items()
-                    if k in self._table_columns(table)}
-        if table == "entity":
-            if not {"id", "type_key", "name"} <= set(snapshot) or self.db.one(
-                    "SELECT 1 FROM entity WHERE id = ?", (snapshot["id"],)):
-                return 0
-            self._insert_entity_snapshot(snapshot, rev["id"])
-            return 1
-        return 1 if self._restore_row(table, snapshot, rev["id"], strict=False) else 0
 
     def _unupdate(self, rev: dict) -> int:
         """Inverse of an update record: apply its `before` values again."""
@@ -926,21 +999,44 @@ class World:
                 "DELETE FROM geometry_bbox WHERE id IN ("
                 " SELECT rtree_id FROM geometry_rtree_map WHERE geometry_id = ?)",
                 (row["id"],))
+        # The DELETE below cascades: children attached since this row was created
+        # (a holding granted after a restore, say) must be snapshotted first, under
+        # the batch marker, or they would be gone beyond any log's help.
+        if "id" in row.keys() and table in _CHILD_TABLES:  # noqa: SIM118 — Row, not dict
+            marker = f"cascade:{row['id']}"
+            logged: set[str] = set()
+            for child_table, column in _CHILD_TABLES[table]:
+                for child in self.db.query(
+                    f"SELECT * FROM {child_table} WHERE {column} = ?", (row["id"],)
+                ):
+                    child_key = f"{child_table}:{_row_key(child_table, child)}"
+                    if child_key in logged:
+                        continue
+                    logged.add(child_key)
+                    self._log_revision(child_table, _row_key(child_table, child),
+                                       "delete", _snapshot(child), None, note=marker)
         self._log_revision(table, row_id, "delete", _snapshot(row), None)
         self.db.execute(f"DELETE FROM {table} WHERE {condition}", parts)
         return 1
 
     def _describe_action(self, action_id: str | None) -> str:
-        """A human phrase for an action, from its terminal (newest) record."""
+        """A human phrase for an action, from its most significant record.
+
+        Significance, not recency: creating an event logs the event and then its
+        participants, and the phrase should name the event, not the last participant.
+        """
         if action_id is None:
             return "nothing"
-        row = self.db.one(
+        rows = self.db.query(
             "SELECT * FROM revision WHERE action_id = ? AND table_name != 'undo' "
-            "ORDER BY id DESC LIMIT 1",
+            "ORDER BY id DESC LIMIT 40",
             (action_id,),
         )
-        if row is None:
+        if not rows:
             return "an empty action"
+        precedence = ("entity", "fact", "event", "scene", "title", "secret")
+        row = next((r for want in precedence for r in rows
+                    if r["table_name"] == want), rows[0])
         before = decode_json(row["before"], None) or {}
         after = decode_json(row["after"], None) or {}
         table, act = row["table_name"], row["action"]
@@ -963,6 +1059,16 @@ class World:
             if act == "delete":
                 return f"removing a {predicate} connection"
             return f"an edit to a {predicate} connection"
+        noun = _ACTION_NOUNS.get(table)
+        if noun:
+            name = (after.get("name") or after.get("title")
+                    or before.get("name") or before.get("title"))
+            phrase = f"{noun} “{name}”" if name else noun
+            if act == "insert":
+                return f"creating {phrase}"
+            if act == "delete":
+                return f"deleting {phrase}"
+            return f"an edit to {phrase}"
         count = self.db.scalar(
             "SELECT count(*) FROM revision WHERE action_id = ? "
             "AND table_name != 'undo'", (action_id,))
@@ -1690,10 +1796,13 @@ class World:
                 "confidence": confidence, "secrecy": secrecy, "props": props or {},
                 "created_at": stamp, "updated_at": stamp,
             })
+            self._log_revision("event", eid, "insert", None, {"name": name})
             for entity_id, role in participants:
                 self.db.insert("event_participant", {
                     "event_id": eid, "entity_id": entity_id, "role": role,
                 })
+                self._log_revision("event_participant", f"{eid}/{entity_id}/{role}",
+                                   "insert", None, {"role": role})
         return Event(id=eid, name=name, type_key=type_key, summary=summary,
                      start_day=start_day, end_day=end_day, location_id=location_id,
                      confidence=confidence, secrecy=secrecy, props=props or {})
@@ -1758,10 +1867,12 @@ class World:
                     "that would close a causal loop — the second event already leads "
                     "back to the first"
                 )
+            link_id = new_id()
             self.db.insert("causal_link", {
-                "id": new_id(), "project_id": self.project_id, "cause_id": cause_id,
+                "id": link_id, "project_id": self.project_id, "cause_id": cause_id,
                 "effect_id": effect_id, "kind": kind, "note": note,
             })
+            self._log_revision("causal_link", link_id, "insert", None, {"kind": kind})
         return True
 
     def _causally_reaches(self, origin_id: str, target_id: str) -> bool:
@@ -1811,13 +1922,15 @@ class World:
                   dynasty_root_id: str | None = None, created_on: int | None = None,
                   entity_id: str | None = None) -> Title:
         tid = new_id()
-        self.db.insert("title", {
-            "id": tid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "entity_id": entity_id, "name": name, "rank": rank,
-            "territory_id": territory_id, "succession_law": succession_law,
-            "dynasty_root_id": dynasty_root_id, "created_on": created_on,
-            "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("title", {
+                "id": tid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "entity_id": entity_id, "name": name, "rank": rank,
+                "territory_id": territory_id, "succession_law": succession_law,
+                "dynasty_root_id": dynasty_root_id, "created_on": created_on,
+                "created_at": now_iso(),
+            })
+            self._log_revision("title", tid, "insert", None, {"name": name})
         return Title(id=tid, name=name, rank=rank, territory_id=territory_id,
                      succession_law=succession_law, dynasty_root_id=dynasty_root_id,
                      created_on=created_on, entity_id=entity_id)
@@ -1841,11 +1954,13 @@ class World:
                     to_day: int | None = None, how: str = "inheritance",
                     disputed: bool = False, note: str = "") -> TitleHolding:
         hid = new_id()
-        self.db.insert("title_holding", {
-            "id": hid, "title_id": title_id, "holder_id": holder_id,
-            "from_day": from_day, "to_day": to_day, "how": how,
-            "disputed": int(disputed), "note": note,
-        })
+        with self.db.transaction():
+            self.db.insert("title_holding", {
+                "id": hid, "title_id": title_id, "holder_id": holder_id,
+                "from_day": from_day, "to_day": to_day, "how": how,
+                "disputed": int(disputed), "note": note,
+            })
+            self._log_revision("title_holding", hid, "insert", None, {"how": how})
         return TitleHolding(id=hid, title_id=title_id, holder_id=holder_id,
                             from_day=from_day, to_day=to_day, how=how,
                             disputed=disputed, note=note)
@@ -1881,11 +1996,13 @@ class World:
     def add_secret(self, name: str, *, truth: str = "", about_id: str | None = None,
                    fact_id: str | None = None, severity: str = "major") -> Secret:
         sid = new_id()
-        self.db.insert("secret", {
-            "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "name": name, "truth": truth, "about_id": about_id, "fact_id": fact_id,
-            "severity": severity, "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("secret", {
+                "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "name": name, "truth": truth, "about_id": about_id, "fact_id": fact_id,
+                "severity": severity, "created_at": now_iso(),
+            })
+            self._log_revision("secret", sid, "insert", None, {"name": name})
         return Secret(id=sid, name=name, truth=truth, about_id=about_id,
                       fact_id=fact_id, severity=severity)
 
@@ -1900,13 +2017,16 @@ class World:
                       acquired_from: str | None = None,
                       scene_id: str | None = None, note: str = "") -> Knowledge:
         kid = new_id()
-        self.db.insert("knowledge_state", {
-            "id": kid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "observer_id": observer_id, "secret_id": secret_id, "stance": stance,
-            "about_observer_id": about_observer_id, "acquired_on": acquired_on,
-            "acquired_from": acquired_from, "scene_id": scene_id, "note": note,
-            "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("knowledge_state", {
+                "id": kid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "observer_id": observer_id, "secret_id": secret_id, "stance": stance,
+                "about_observer_id": about_observer_id, "acquired_on": acquired_on,
+                "acquired_from": acquired_from, "scene_id": scene_id, "note": note,
+                "created_at": now_iso(),
+            })
+            self._log_revision("knowledge_state", kid, "insert", None,
+                               {"stance": stance})
         return Knowledge(id=kid, observer_id=observer_id, secret_id=secret_id,
                          stance=stance, about_observer_id=about_observer_id,
                          acquired_on=acquired_on, acquired_from=acquired_from,
@@ -1965,9 +2085,12 @@ class World:
                 "outcome": outcome, "notes": notes,
                 "created_at": stamp, "updated_at": stamp,
             })
+            self._log_revision("scene", sid, "insert", None, {"title": title})
             for entity_id in participants:
                 self.db.insert("scene_participant",
                                {"scene_id": sid, "entity_id": entity_id, "role": "present"})
+                self._log_revision("scene_participant", f"{sid}/{entity_id}",
+                                   "insert", None, None)
         return Scene(id=sid, title=title, chapter_id=chapter_id, position=position,
                      day=day, end_day=end_day, location_id=location_id, pov_id=pov_id,
                      objective=objective, conflict=conflict, outcome=outcome, notes=notes)
@@ -2005,6 +2128,7 @@ class World:
                 "created_at": now_iso(),
             })
             self._index_geometry(gid, coordinates)
+            self._log_revision("geometry", gid, "insert", None, {"kind": kind})
         return Geometry(id=gid, entity_id=entity_id, kind=kind, coordinates=coordinates,
                         valid_from=valid_from, valid_to=valid_to, layer=layer,
                         style=style or {}, approximate=approximate)
@@ -2058,14 +2182,16 @@ class World:
                           closed_seasons: Sequence[str] = (), danger: str = "low",
                           toll_holder_id: str | None = None) -> RouteSegment:
         sid = new_id()
-        self.db.insert("route_segment", {
-            "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "entity_id": entity_id, "from_entity_id": from_entity_id,
-            "to_entity_id": to_entity_id, "medium": medium, "length": length,
-            "quality": quality, "terrain": terrain, "built_on": built_on,
-            "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
-            "danger": danger, "toll_holder_id": toll_holder_id,
-        })
+        with self.db.transaction():
+            self.db.insert("route_segment", {
+                "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "entity_id": entity_id, "from_entity_id": from_entity_id,
+                "to_entity_id": to_entity_id, "medium": medium, "length": length,
+                "quality": quality, "terrain": terrain, "built_on": built_on,
+                "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
+                "danger": danger, "toll_holder_id": toll_holder_id,
+            })
+            self._log_revision("route_segment", sid, "insert", None, {"medium": medium})
         return RouteSegment(id=sid, from_entity_id=from_entity_id,
                             to_entity_id=to_entity_id, length=length, medium=medium,
                             quality=quality, terrain=terrain, entity_id=entity_id,

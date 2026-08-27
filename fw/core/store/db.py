@@ -118,12 +118,19 @@ class Database:
     def _migrate(self, from_version: int) -> None:
         from fw.core.store.schema import MIGRATIONS
 
-        # Same reason as _create_schema: executescript manages its own transaction.
+        # Each step commits atomically WITH its user_version bump: a crash between the
+        # two would otherwise leave a file that re-runs the migration on every open and
+        # dies on it ("duplicate column"). user_version lives in the database header
+        # and rolls back with the transaction, so wrapping both is enough. Migration
+        # scripts must therefore not manage their own transactions.
         for version in range(from_version + 1, SCHEMA_VERSION + 1):
             statement = MIGRATIONS.get(version)
             if statement:
-                self.conn.executescript(statement)
-        self.conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+                self.conn.executescript(
+                    f"BEGIN;\n{statement}\n;\nPRAGMA user_version = {version};\nCOMMIT;"
+                )
+            else:
+                self.conn.execute(f"PRAGMA user_version = {version}")
 
     # ---- transactions -----------------------------------------------------
 

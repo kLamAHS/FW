@@ -1027,3 +1027,116 @@ class TestSchemaMigration:
             assert upgraded.get_entity(fresh.id) is None
         finally:
             upgraded.close()
+
+
+class TestUndoRedoHardening:
+    """Regressions from the adversarial review of the undo slice."""
+
+    def test_undo_of_a_delete_keeps_the_grants_and_participations(self, world: World):
+        """Cascade children must replay through the dependency-ordered machinery:
+        a flat newest-first replay put holdings before their titles and lost them."""
+        lord = world.add_entity("person", "Held")
+        title = world.add_title("Holder of Things", entity_id=lord.id)
+        world.grant_title(title.id, lord.id)
+        event = world.add_event("A day", participants=[(lord.id, "participant")])
+
+        world.delete_entity(lord.id)
+        world.undo()
+        back_title = world.title_named("Holder of Things")
+        assert back_title is not None
+        assert [h.holder_id for h in world.title_holdings(back_title.id)] == [lord.id]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [lord.id]
+
+    def test_a_forfeited_redo_stays_forfeited_after_reopen(self, tmp_path):
+        """In-session, a new action clears the redo stack; the reconstruction must
+        reach the same answer, or a stale redo would clobber the newer edit."""
+        path = tmp_path / "forfeit.fwworld"
+        w = World.create(path, name="Forfeit")
+        e = w.add_entity("settlement", "Town")
+        w.update_entity(e.id, name="Y")
+        w.undo()                                      # back to Town
+        w.update_entity(e.id, name="Z")               # forfeits the redo of Y
+        with pytest.raises(WorldError, match="nothing to redo"):
+            w.redo()
+        w.close()
+
+        reopened = World.open(path)
+        try:
+            assert reopened.undo_state()["can_redo"] is False
+            with pytest.raises(WorldError, match="nothing to redo"):
+                reopened.redo()
+            assert reopened.get_entity(e.id).name == "Z"
+        finally:
+            reopened.close()
+
+    def test_two_handles_never_share_a_session_token(self, tmp_path):
+        """The token must be random, not a timestamp prefix: two handles opened in
+        the same millisecond would otherwise weave their actions together."""
+        path = tmp_path / "tokens.fwworld"
+        World.create(path, name="T").close()
+        handles = [World.open(path) for _ in range(8)]
+        try:
+            tokens = {h._session_token for h in handles}
+            assert len(tokens) == len(handles)
+        finally:
+            for h in handles:
+                h.close()
+
+    def test_uninsert_logs_what_its_cascade_takes(self, world: World):
+        """A child row that undo cannot reach (here: a grant whose history predates
+        the action_id column) still dies when its parent is uninserted — that loss
+        must be snapshotted into the log, and redo must bring both back."""
+        holder = world.add_entity("person", "Holder")
+        title = world.add_title("The Seat")
+        world.grant_title(title.id, holder.id)
+        # age the grant out of undo's reach, as pre-migration history is
+        world.db.execute(
+            "UPDATE revision SET action_id = '' WHERE table_name = 'title_holding'")
+
+        world.undo()          # targets the title creation; the grant still exists
+        assert world.title_named("The Seat") is None
+        assert world.db.one(
+            "SELECT 1 FROM revision WHERE table_name = 'title_holding' "
+            "AND action = 'delete' AND note LIKE 'cascade:%'") is not None
+
+        world.redo()          # title returns — and the grant its cascade took
+        again = world.title_named("The Seat")
+        assert again is not None
+        assert [h.holder_id for h in world.title_holdings(again.id)] == [holder.id]
+
+    def test_heavy_undo_traffic_does_not_starve_the_walk(self, world: World):
+        """Inversion records must never push real actions out of reach."""
+        e = world.add_entity("settlement", "Yo-yo")
+        for _ in range(120):
+            world.undo()
+            world.redo()
+        assert world.undo_state()["can_undo"] is True
+        world.undo()
+        assert world.get_entity(e.id) is None
+
+    def test_events_scenes_and_links_are_undoable_too(self, world: World):
+        """Ctrl+Z must target what the writer just did — and the UI creates events,
+        scenes and causal links, not only entities and facts."""
+        who = world.add_entity("person", "Witness")
+        event = world.add_event("The fire", participants=[(who.id, "witness")])
+        assert "The fire" in world.undo_state()["undo"]
+        world.undo()
+        assert world.events() == []
+        world.redo()
+        assert [e.name for e in world.events()] == ["The fire"]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [who.id]
+
+        scene = world.add_scene("A parley", participants=[who.id])
+        world.undo()
+        assert world.get_scene(scene.id) is None
+        world.redo()
+        assert world.get_scene(scene.id) is not None
+        assert [p.id for p in world.scene_participants(scene.id)] == [who.id]
+
+        second = world.add_event("The flood")
+        world.link_cause(second.id, event.id)
+        assert "causal link" in world.undo_state()["undo"]
+        world.undo()
+        assert world.consequences_of(second.id) == []
+        world.redo()
+        assert world.consequences_of(second.id) == [(event.id, 1)]
