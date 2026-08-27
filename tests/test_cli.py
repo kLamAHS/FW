@@ -56,3 +56,22 @@ class TestRestoreCommand:
 
         main(["restore", "2024", "--list"])
         assert "Yearling" in capsys.readouterr().out
+
+    def test_a_numeric_path_naming_a_real_file_stays_a_path(self, tmp_path,
+                                                            monkeypatch, capsys):
+        """`fw restore 2024` with a world file named 2024 in the directory must not
+        mutate the default world on a guessed revision id."""
+        monkeypatch.chdir(tmp_path)
+        default = World.create(tmp_path / "world.fwworld", name="Default")
+        casualty = default.add_entity("settlement", "Casualty")
+        default.delete_entity(casualty.id)
+        default.close()
+        World.create(tmp_path / "2024", name="Numeric world").close()
+
+        with pytest.raises(SystemExit) as excinfo:
+            main(["restore", "2024"])
+        assert "revision id" in str(excinfo.value)
+        # and the default world was left alone
+        untouched = World.open("world.fwworld")
+        assert untouched.entity_named("Casualty") is None
+        untouched.close()

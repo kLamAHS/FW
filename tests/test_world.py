@@ -831,3 +831,30 @@ class TestCascadeAtScale:
 
         world.restore(world.recently_deleted()[0]["revision_id"])
         assert len(world.facts_about(hub.id)) == n_facts
+
+    def test_restore_will_not_replay_a_link_that_now_closes_a_loop(self, world: World):
+        """The world can move on while a link sits deleted: if the DAG grew a path the
+        other way, replaying the old link must be skipped, not commit a cycle."""
+        owner = world.add_entity("person", "Chronicler")
+        a = world.add_event("A", entity_id=owner.id)   # dies (and returns) with them
+        x = world.add_event("X")
+        b = world.add_event("B")
+        world.link_cause(x.id, a.id)
+        world.link_cause(a.id, b.id)
+
+        world.delete_entity(owner.id)                  # takes A and both links
+        world.link_cause(b.id, x.id)                   # legal now: A's chain is gone
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.get_entity(owner.id) is not None
+        # A and one of its links return; the one that would close B→X→A→B does not
+        events = {e.name for e in world.events()}
+        assert "A" in events
+        links = world.db.query("SELECT cause_id, effect_id FROM causal_link")
+        pairs = {(r["cause_id"], r["effect_id"]) for r in links}
+        assert (b.id, x.id) in pairs                   # the newer decision stands
+        assert len(pairs & {(x.id, a.id), (a.id, b.id)}) == 1
+        # and the graph is still a DAG: nothing reaches itself
+        for eid in (a.id, b.id, x.id):
+            downstream = [i for i, _ in world.consequences_of(eid, max_depth=32)]
+            assert eid not in downstream
