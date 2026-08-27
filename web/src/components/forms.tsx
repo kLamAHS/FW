@@ -12,11 +12,11 @@
  * client-side implementation would eventually disagree with the first.
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api'
 import type { CalendarInfo, Entity, EntityDraft, Vocabulary } from '../api'
-import { useDebounced } from './common'
+import { useAsync, useDebounced } from './common'
 
 /* ------------------------------------------------------------------ modal */
 
@@ -133,6 +133,26 @@ export function EntityForm(
   const [from, setFrom] = useState<CivilDraft>(EMPTY_DATE)
   const [to, setTo] = useState<CivilDraft>(EMPTY_DATE)
   const [confidence, setConfidence] = useState(existing?.confidence ?? 'canon')
+
+  // When editing, show the dates the entity already has. Blank-on-save now genuinely
+  // clears a date (that is the fix the form's hint promises), so starting the fields
+  // empty over real dates would turn "open More detail, save" into silent erasure.
+  useEffect(() => {
+    let cancelled = false
+    const load = async (day: number | null, set: (d: CivilDraft) => void) => {
+      if (day === null) return
+      const civil = await api.date(day)
+      if (!cancelled) {
+        set({ year: String(civil.year), month: civil.month,
+              day: String(civil.day_of_month) })
+      }
+    }
+    if (existing) {
+      void load(existing.exists_from, setFrom)
+      void load(existing.exists_to, setTo)
+    }
+    return () => { cancelled = true }
+  }, [existing])
   const [tags, setTags] = useState(existing?.tags.join(', ') ?? '')
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
@@ -148,6 +168,7 @@ export function EntityForm(
   const toLabel = isPerson ? 'Died' : 'Destroyed or ended'
 
   const submit = async () => {
+    if (busy) return                       // Enter twice must not create twice
     if (!name.trim()) { setError('It needs a name.'); return }
     setBusy(true)
     setError(null)
@@ -289,6 +310,7 @@ export function FactForm(
   })()
 
   const submit = async () => {
+    if (busy) return
     setError(null)
     if (isRelationship && !target) { setError('Pick who or what it connects to.'); return }
     if (!isRelationship && !value.trim()) { setError('It needs a value.'); return }
@@ -401,21 +423,17 @@ function EntityPicker(
 ) {
   const [text, setText] = useState('')
   const query = useDebounced(text)
-  const [results, setResults] = useState<Entity[]>([])
-  const cancelled = useRef(false)
-
-  useEffect(() => {
-    cancelled.current = false
-    if (!query.trim()) { setResults([]); return }
-    api.search(query)
-      .then((found) => {
-        if (!cancelled.current) {
-          setResults(found.filter((e) => e.id !== excludeId).slice(0, 8))
-        }
-      })
-      .catch(() => setResults([]))
-    return () => { cancelled.current = true }
-  }, [query, excludeId])
+  // useAsync already discards out-of-order responses. The hand-rolled version this
+  // replaces reset its own cancellation flag on the next run, so a slow response for
+  // "Nor" could land under an input reading "Northmarch" — and the writer would record
+  // the relationship against whatever stale row they clicked.
+  const found = useAsync(
+    () => (query.trim() ? api.search(query) : Promise.resolve([])),
+    [query],
+  )
+  const results = (found.data ?? [])
+    .filter((e) => e.id !== excludeId)
+    .slice(0, 8)
 
   if (chosen) {
     return (

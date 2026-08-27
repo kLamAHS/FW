@@ -258,28 +258,34 @@ class World:
 
         Fact changes are attributed to their subject entity, so adding a relationship
         counts as editing the person it is about — which is how a writer thinks of it.
+        A *deleted* fact's subject comes from the delete record's own snapshot, because
+        the row it pointed at is gone; looking it up in the fact table would silently
+        drop the newest edit from the list and misorder the rest.
         """
         rows = self.db.query(
-            """SELECT row_id, table_name, max(id) AS latest, max(at) AS at
-               FROM revision WHERE project_id = ?
-               GROUP BY row_id ORDER BY latest DESC LIMIT ?""",
-            (self.project_id, limit * 3),
+            "SELECT table_name, row_id, before, at FROM revision "
+            "WHERE project_id = ? ORDER BY id DESC LIMIT ?",
+            (self.project_id, limit * 8),
         )
         out: list[tuple[Entity, str]] = []
         seen: set[str] = set()
         for row in rows:
-            entity_id = row["row_id"]
-            if row["table_name"] == "fact":
+            if row["table_name"] == "entity":
+                entity_id = row["row_id"]
+            elif row["table_name"] == "fact":
                 entity_id = self.db.scalar(
                     "SELECT subject_id FROM fact WHERE id = ?", (row["row_id"],))
                 if entity_id is None:
-                    continue
-            if entity_id in seen:
+                    before = decode_json(row["before"], None)
+                    entity_id = (before or {}).get("subject_id")
+            else:
                 continue
-            entity = self.get_entity(entity_id)
-            if entity is None:
+            if not entity_id or entity_id in seen:
                 continue
             seen.add(entity_id)
+            entity = self.get_entity(entity_id)
+            if entity is None:
+                continue          # deleted entities stay off the dashboard
             out.append((entity, row["at"]))
             if len(out) >= limit:
                 break
@@ -376,7 +382,12 @@ class World:
         with self.db.transaction():
             row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
             data = dict(row) if row else {}
-            before = {k: data[k] for k in payload if k != "updated_at" and k in data}
+            # Decode JSON columns so `before` and `after` share one shape — a diff
+            # renderer must not see '["a"]' against ['a', 'b'] on every tags edit.
+            before = {
+                k: (decode_json(data[k], []) if k == "tags" else data[k])
+                for k in payload if k != "updated_at" and k in data
+            }
             self.db.update("entity", entity_id, payload)
             e = self.get_entity(entity_id)
             if e is not None:
@@ -388,14 +399,21 @@ class World:
 
     def delete_entity(self, entity_id: str) -> None:
         with self.db.transaction():
-            entity = self.get_entity(entity_id)
+            row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
+            if row is not None:
+                # The FK cascade is about to take every fact touching this entity with
+                # it. Log each one first, in full, or the most destructive operation in
+                # the application would be the one the recovery log knows least about.
+                for fact_row in self.db.query(
+                    "SELECT * FROM fact WHERE subject_id = ? OR object_id = ?",
+                    (entity_id, entity_id),
+                ):
+                    self._log_revision("fact", fact_row["id"], "delete",
+                                       _snapshot(fact_row), None)
+                self._log_revision("entity", entity_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM entity_fts WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity_trigram WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity WHERE id = ?", (entity_id,))
-            if entity is not None:
-                self._log_revision("entity", entity_id, "delete",
-                                   {"name": entity.name, "type_key": entity.type_key},
-                                   None)
 
     def get_entity(self, entity_id: str) -> Entity | None:
         row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
@@ -518,11 +536,21 @@ class World:
         takes Greyhaven, House Marr's control *ended* — it did not become untrue.
         """
         with self.db.transaction():
-            before = self.db.scalar(
-                "SELECT valid_to FROM fact WHERE id = ?", (fact_id,))
+            row = self.db.one(
+                "SELECT valid_from, valid_to FROM fact WHERE id = ?", (fact_id,))
+            if row is None:
+                # Logging an update for a row that never existed would pollute the
+                # append-only log with a phantom.
+                raise WorldError(f"no fact {fact_id!r} to end")
+            if row["valid_from"] is not None and on_day < row["valid_from"]:
+                raise WorldError(
+                    "cannot end a fact before it began — that would leave an interval "
+                    "true on no day at all, which silently erases the fact from every "
+                    "view while appearing to keep it"
+                )
             self.db.update("fact", fact_id, {"valid_to": on_day, "updated_at": now_iso()})
             self._log_revision("fact", fact_id, "update",
-                               {"valid_to": before}, {"valid_to": on_day})
+                               {"valid_to": row["valid_to"]}, {"valid_to": on_day})
 
     def delete_fact(self, fact_id: str) -> None:
         """Remove a fact outright.
@@ -534,12 +562,7 @@ class World:
             row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
             if row is None:
                 return
-            self._log_revision("fact", fact_id, "delete", {
-                "subject_id": row["subject_id"],
-                "predicate_key": row["predicate_key"],
-                "object_id": row["object_id"], "value": row["value"],
-                "valid_from": row["valid_from"], "valid_to": row["valid_to"],
-            }, None)
+            self._log_revision("fact", fact_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM fact WHERE id = ?", (fact_id,))
 
     def transfer(
@@ -1324,6 +1347,20 @@ def _segment(row) -> RouteSegment:
         closed_seasons=tuple(decode_json(row["closed_seasons"], [])),
         danger=row["danger"], toll_holder_id=row["toll_holder_id"],
     )
+
+
+def _snapshot(row) -> dict:
+    """A full-row copy for a delete revision, with JSON columns decoded.
+
+    A delete is the one action where the log entry must be the complete row — a partial
+    snapshot makes "even a deletion is recoverable" a false promise, restoring a fact
+    without its secrecy, note, strength or uncertainty bounds.
+    """
+    data = dict(row)
+    for key in ("tags", "props", "core_fields"):
+        if key in data:
+            data[key] = decode_json(data[key], [])
+    return data
 
 
 def _flatten_coords(coordinates: Any) -> tuple[list[float], list[float]]:

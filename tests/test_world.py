@@ -448,3 +448,74 @@ class TestSearchRanking:
         names = [e.name for e in renn.search("Northmarch")]
         assert names[0] == "The Northmarch"
         assert "Northwatch" in names          # still found, just not first
+
+
+class TestReviewFindings:
+    """Regression tests for the adversarial review of the editing slice."""
+
+    def test_delete_entity_logs_every_cascaded_fact_in_full(self, world: World):
+        """The FK cascade must not destroy facts the log knows nothing about."""
+        hub = world.add_entity("house", "Hub House")
+        other = world.add_entity("person", "Vassal")
+        fact = world.assert_fact(other, "vassal_of", hub, secrecy="secret",
+                                 strength="overwhelming", note="sworn at midwinter")
+        world.delete_entity(hub.id)
+
+        history = world.revisions_for(fact.id)
+        assert [h["action"] for h in history] == ["delete", "insert"]
+        snapshot = history[0]["before"]
+        # the snapshot is the complete row, not a lossy subset
+        assert snapshot["secrecy"] == "secret"
+        assert snapshot["strength"] == "overwhelming"
+        assert snapshot["note"] == "sworn at midwinter"
+        assert snapshot["predicate_key"] == "vassal_of"
+
+    def test_entity_delete_snapshot_is_the_full_row(self, world: World):
+        e = world.add_entity("settlement", "Doomed", summary="A summary worth keeping",
+                             exists_from=world.day(100), tags=["northern"])
+        world.delete_entity(e.id)
+        snapshot = world.revisions_for(e.id)[0]["before"]
+        assert snapshot["summary"] == "A summary worth keeping"
+        assert snapshot["exists_from"] == world.day(100)
+        assert snapshot["tags"] == ["northern"]
+
+    def test_end_fact_refuses_a_day_before_the_fact_began(self, world: World):
+        """An inverted interval is true on no day — the fact would silently vanish."""
+        a = world.add_entity("house", "A")
+        b = world.add_entity("settlement", "B")
+        fact = world.assert_fact(a, "legally_owns", b, valid_from=world.day(300))
+        with pytest.raises(WorldError, match="before it began"):
+            world.end_fact(fact.id, world.day(200))
+        # the fact is untouched and still visible
+        assert world.get_fact(fact.id).valid_to is None
+
+    def test_end_fact_refuses_a_missing_fact(self, world: World):
+        """No phantom revisions for rows that never existed."""
+        with pytest.raises(WorldError, match="no fact"):
+            world.end_fact("ghost", 5)
+        assert world.revisions_for("ghost") == []
+
+    def test_recently_edited_survives_fact_deletion(self, world: World):
+        """The newest edit must not vanish because its fact row is gone."""
+        mara = world.add_entity("person", "Mara")
+        edric = world.add_entity("person", "Edric")
+        fact = world.assert_fact(mara, "trusts", edric, strength="deeply_trusts")
+        world.delete_fact(fact.id)
+
+        names = [e.name for e, _ in world.recently_edited(limit=5)]
+        assert names[0] == "Mara"       # the deletion is her newest edit
+
+    def test_update_before_and_after_share_one_shape(self, world: World):
+        """tags must not appear as a JSON string on one side and a list on the other."""
+        e = world.add_entity("settlement", "Tagged", tags=["north"])
+        world.update_entity(e.id, tags=["north", "ally"])
+        update = world.revisions_for(e.id)[0]
+        assert update["before"]["tags"] == ["north"]
+        assert update["after"]["tags"] == ["north", "ally"]
+
+    def test_decode_json_honours_an_explicit_none_default(self):
+        from fw.core.store.db import decode_json
+        assert decode_json(None, None) is None
+        assert decode_json("", None) is None
+        assert decode_json(None) == {}
+        assert decode_json("[1]", None) == [1]

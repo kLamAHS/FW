@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { api } from '../api'
-import type { WorldSummary } from '../api'
+import type { Vocabulary, WorldSummary } from '../api'
 import {
   Badge, ErrorBox, Loading, Panel, SEVERITY_GLYPH, TypeChip, useAsync,
 } from '../components/common'
@@ -18,9 +18,9 @@ import {
 /* ------------------------------------------------------------------ entities */
 
 export function EntitiesView(
-  { world, day, onSelect, version }:
+  { world, day, onSelect, version, vocabulary }:
   { world: WorldSummary; day: number; onSelect: (id: string) => void
-    version: number },
+    version: number; vocabulary: Vocabulary | null },
 ) {
   const [type, setType] = useState<string>('')
   const [atDate, setAtDate] = useState(true)
@@ -28,9 +28,8 @@ export function EntitiesView(
     () => api.entities({ type_key: type || undefined, at: atDate ? day : undefined }),
     [type, atDate, day, version],
   )
-  const vocabulary = useAsync(() => api.vocabulary(), [])
 
-  const types = (vocabulary.data?.entity_types ?? [])
+  const types = (vocabulary?.entity_types ?? [])
     .filter((t) => world.counts[t.key])
     .sort((a, b) => (world.counts[b.key] ?? 0) - (world.counts[a.key] ?? 0))
 

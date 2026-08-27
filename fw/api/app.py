@@ -225,7 +225,15 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
     def patch_entity(entity_id: str, payload: S.EntityPatch) -> S.EntityOut:
         if world.get_entity(entity_id) is None:
             raise HTTPException(404, f"no entity {entity_id}")
-        world.update_entity(entity_id, **payload.model_dump(exclude_none=True))
+        # exclude_unset, not exclude_none: an explicit null means "clear this" — the
+        # edit form promises that a blanked year removes a date, and exclude_none was
+        # silently discarding exactly that request. Fields with no meaningful null are
+        # still guarded, so name: null cannot reach the NOT NULL column.
+        changes = payload.model_dump(exclude_unset=True)
+        for key in ("name", "summary", "confidence", "tags"):
+            if key in changes and changes[key] is None:
+                changes.pop(key)
+        world.update_entity(entity_id, **changes)
         return _entity_out(world.get_entity(entity_id))
 
     @app.delete("/api/entities/{entity_id}", status_code=204)

@@ -10,17 +10,18 @@
 
 import { useState } from 'react'
 import { api } from '../api'
+import type { Vocabulary } from '../api'
 import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
 
 interface Props {
   day: number
   onSelect: (id: string) => void
   version: number
+  vocabulary: Vocabulary | null
 }
 
-export function SuccessionView({ day, onSelect, version }: Props) {
+export function SuccessionView({ day, onSelect, version, vocabulary }: Props) {
   const titles = useAsync(() => api.titles(day), [day, version])
-  const vocabulary = useAsync(() => api.vocabulary(), [])
   const [titleId, setTitleId] = useState<string | null>(null)
   const [law, setLaw] = useState<string>('')
   const [illegitimate, setIllegitimate] = useState<string>('')
@@ -90,7 +91,7 @@ export function SuccessionView({ day, onSelect, version }: Props) {
                 <option value="">
                   {canonical.data ? `${canonical.data.law_label} (as written)` : 'as written'}
                 </option>
-                {(vocabulary.data?.succession_laws ?? []).map((l) => (
+                {(vocabulary?.succession_laws ?? []).map((l) => (
                   <option key={l.key} value={l.key}>{l.label}</option>
                 ))}
               </select>

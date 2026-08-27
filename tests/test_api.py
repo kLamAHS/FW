@@ -446,3 +446,44 @@ class TestSecretsEndpoint:
         assert stances["misinformed"][0]["name"] == "Prince Oren"
         # the second-order layer
         assert any(p["about"] for p in stances["knows"])
+
+
+class TestPatchClearsDates:
+    def test_an_explicit_null_clears_a_date(self, client):
+        """The edit form promises 'leave the year blank for always'; exclude_none was
+        silently discarding exactly that request, so a death could never be undone."""
+        created = client.post("/api/entities", json={
+            "type_key": "person", "name": "Undying", "exists_to": 500,
+        }).json()
+        patched = client.patch(f"/api/entities/{created['id']}",
+                               json={"exists_to": None}).json()
+        assert patched["exists_to"] is None
+
+    def test_an_omitted_field_stays_untouched(self, client):
+        created = client.post("/api/entities", json={
+            "type_key": "person", "name": "Dated", "exists_from": 100, "exists_to": 500,
+        }).json()
+        patched = client.patch(f"/api/entities/{created['id']}",
+                               json={"name": "Renamed"}).json()
+        assert patched["exists_from"] == 100
+        assert patched["exists_to"] == 500
+
+    def test_null_never_reaches_a_not_null_column(self, client):
+        created = client.post("/api/entities", json={
+            "type_key": "person", "name": "Named",
+        }).json()
+        response = client.patch(f"/api/entities/{created['id']}", json={"name": None})
+        assert response.status_code == 200
+        assert response.json()["name"] == "Named"
+
+    def test_ending_before_the_beginning_is_a_400(self, client, renn):
+        a = entity_named(client, "House Marr")
+        b = entity_named(client, "Blackmere")
+        fact = client.post("/api/facts", json={
+            "subject_id": a["id"], "predicate_key": "claims",
+            "object_id": b["id"], "valid_from": renn.day(300),
+        }).json()
+        response = client.post(f"/api/facts/{fact['id']}/end",
+                               params={"on_day": renn.day(200)})
+        assert response.status_code == 400
+        assert "before it began" in response.json()["detail"]

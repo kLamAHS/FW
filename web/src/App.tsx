@@ -62,7 +62,10 @@ export function App() {
   )
 
   if (world.loading && !world.data) return <Loading what="Opening the world" />
-  if (world.error) return <ErrorBox error={world.error} />
+  // Fatal only when there is nothing to show. /api/world now refetches after every
+  // edit, and one failed refetch must not tear down the writer's whole session —
+  // stale-but-present data keeps the app alive until the next successful load.
+  if (world.error && !world.data) return <ErrorBox error={world.error} />
   if (!world.data) return null
 
   const dateText = date.data?.text ?? ''
@@ -124,13 +127,14 @@ export function App() {
                        version={version} />
           )}
           {view === 'succession' && (
-            <SuccessionView day={currentDay} onSelect={setSelected} version={version} />
+            <SuccessionView day={currentDay} onSelect={setSelected} version={version}
+                            vocabulary={vocabulary.data} />
           )}
           {view === 'scenes' && <SceneView onSelect={setSelected} version={version} />}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
           {view === 'entities' && (
             <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}
-                          version={version} />
+                          version={version} vocabulary={vocabulary.data} />
           )}
           {view === 'continuity' && (
             <ContinuityView onSelect={setSelected} version={version} />
@@ -151,18 +155,40 @@ export function App() {
         )}
       </div>
 
-      {creating && vocabulary.data && (
+      {creating && (
         <Modal title="Add to the world" onClose={() => setCreating(false)}>
-          <EntityForm
-            vocabulary={vocabulary.data}
-            calendar={world.data.calendar}
-            onDone={(entity) => {
-              setCreating(false)
-              bump()
-              setSelected(entity.id)     // open what was just made, ready to connect
-            }}
-            onCancel={() => setCreating(false)}
-          />
+          {vocabulary.data ? (
+            <EntityForm
+              vocabulary={vocabulary.data}
+              calendar={world.data.calendar}
+              onDone={(entity) => {
+                setCreating(false)
+                bump()
+                setSelected(entity.id)   // open what was just made, ready to connect
+              }}
+              onCancel={() => setCreating(false)}
+            />
+          ) : (
+            // A failed vocabulary load must not leave "+ New" silently dead: say what
+            // went wrong, in the modal the click opened, with a way to retry.
+            <div className="form-stack">
+              {vocabulary.loading
+                ? <Loading what="Loading the world's vocabulary" />
+                : (
+                  <>
+                    <div className="error-box">
+                      The world's vocabulary did not load, so nothing can be created yet.
+                    </div>
+                    <div className="form-actions">
+                      <button onClick={() => setCreating(false)}>Close</button>
+                      <button className="active" onClick={vocabulary.reload}>
+                        Try again
+                      </button>
+                    </div>
+                  </>
+                )}
+            </div>
+          )}
         </Modal>
       )}
     </div>

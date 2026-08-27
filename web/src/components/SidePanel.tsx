@@ -97,8 +97,16 @@ export function SidePanel(
           {entity.summary && <p className="serif">{entity.summary}</p>}
 
           <div className="toolbar">
-            <button onClick={() => setMode('edit')}>Edit</button>
-            <button onClick={() => setMode('add-fact')}>Add a connection</button>
+            <button onClick={() => setMode('edit')} disabled={!vocabulary}
+                    title={vocabulary ? undefined
+                      : 'The vocabulary failed to load — reload the page'}>
+              Edit
+            </button>
+            <button onClick={() => setMode('add-fact')} disabled={!vocabulary}
+                    title={vocabulary ? undefined
+                      : 'The vocabulary failed to load — reload the page'}>
+              Add a connection
+            </button>
             <span className="spacer" />
             {armedDelete ? (
               <>
@@ -290,7 +298,8 @@ function ChangeHistory({ entityId }: { entityId: string }) {
         <ul className="clean small">
           {history.data.map((r) => (
             <li key={r.id}>
-              <span className="mono muted">{r.at.slice(0, 16).replace('T', ' ')}</span>{' '}
+              {/* r.at carries its UTC offset; Date renders it in the writer's zone. */}
+              <span className="mono muted">{new Date(r.at).toLocaleString()}</span>{' '}
               {describeRevision(r)}
             </li>
           ))}

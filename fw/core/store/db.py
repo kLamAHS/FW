@@ -221,10 +221,20 @@ def _encode(value: Any) -> Any:
     return value
 
 
-def decode_json(value: str | None, default: Any = None) -> Any:
+_UNSET = object()
+
+
+def decode_json(value: str | None, default: Any = _UNSET) -> Any:
+    """Parse a JSON column, or return `default` (an explicit None is honoured).
+
+    The old fallback `default if default is not None else {}` made None impossible to
+    return, so a revision with no prior state decoded as {} while the API contract said
+    null — every consumer distinguishing "no prior state" by null would misclassify.
+    """
+    fallback = {} if default is _UNSET else default
     if not value:
-        return default if default is not None else {}
+        return fallback
     try:
         return json.loads(value)
     except (TypeError, ValueError):
-        return default if default is not None else {}
+        return fallback
