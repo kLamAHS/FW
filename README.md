@@ -15,6 +15,12 @@ temporal model that can be asked questions.
   history that bear on the room are already there, ranked.
 - **Does any of this contradict itself?** Twenty continuity rules run over the world,
   including the one that catches a journey the timeline does not allow.
+- **What if it had gone differently?** Fork an alternate timeline (§105): it inherits the
+  whole world, everything you change in it stays in it, and the main timeline cannot be
+  touched from a branch — succession, maps and state all answer per-timeline.
+- **Take it back.** Every change is one Ctrl+Z away — creations, edits, deletions with
+  their whole cascade, restores — with redo, per timeline, surviving a restart. Deleted
+  things also wait in Recently deleted on the dashboard.
 
 ## Running it
 
