@@ -10,7 +10,8 @@
 
 import { useState } from 'react'
 import { api } from '../api'
-import type { Vocabulary, WorldSummary } from '../api'
+import type { CalendarInfo, Vocabulary, WorldSummary } from '../api'
+import { EventForm, Modal } from '../components/forms'
 import {
   Badge, ErrorBox, Loading, Panel, SEVERITY_GLYPH, TypeChip, useAsync,
 } from '../components/common'
@@ -72,21 +73,45 @@ export function EntitiesView(
 /* ------------------------------------------------------------------ timeline */
 
 export function EventsView(
-  { day, onSelect, version }:
-  { day: number; onSelect: (id: string) => void; version: number },
+  { day, onSelect, version, calendar, onMutate }:
+  { day: number; onSelect: (id: string) => void; version: number
+    calendar: CalendarInfo; onMutate: () => void },
 ) {
   const { data, error, loading } = useAsync(() => api.events(), [version])
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [causePick, setCausePick] = useState('')
   const consequences = useAsync(
     () => (expanded ? api.consequences(expanded) : Promise.resolve([])),
-    [expanded],
+    [expanded, version],
   )
 
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} />
 
+  const recordConsequence = async (causeId: string) => {
+    if (!causePick) return
+    await api.linkCause(causeId, causePick)
+    setCausePick('')
+    onMutate()
+  }
+
   return (
-    <Panel title="History" count={data?.length ?? 0}>
+    <>
+      <div className="toolbar">
+        <span className="spacer" />
+        <button onClick={() => setCreating(true)}>+ New event</button>
+      </div>
+      {creating && (
+        <Modal title="Record what happened" onClose={() => setCreating(false)}>
+          <EventForm
+            calendar={calendar}
+            onDone={() => { setCreating(false); onMutate() }}
+            onCancel={() => setCreating(false)}
+          />
+        </Modal>
+      )}
+      <Panel title="History" count={data?.length ?? 0}>
       <ul className="clean">
         {(data ?? []).map((e) => {
           const future = e.start_day !== null && e.start_day > day
@@ -131,6 +156,23 @@ export function EventsView(
                       {'→ '.repeat(c.depth)}{c.name}
                     </div>
                   ))}
+                  {/* §32: record that this event led to another. */}
+                  <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                    <select value={causePick}
+                            onChange={(ev) => setCausePick(ev.target.value)}
+                            aria-label="This event led to…">
+                      <option value="">this led to…</option>
+                      {(data ?? [])
+                        .filter((other) => other.id !== e.id)
+                        .map((other) => (
+                          <option key={other.id} value={other.id}>{other.name}</option>
+                        ))}
+                    </select>
+                    <button disabled={!causePick}
+                            onClick={() => void recordConsequence(e.id)}>
+                      Record
+                    </button>
+                  </div>
                 </div>
               )}
             </li>
@@ -138,6 +180,7 @@ export function EventsView(
         })}
       </ul>
     </Panel>
+    </>
   )
 }
 

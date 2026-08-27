@@ -109,14 +109,16 @@ export function App() {
         <main className="content">
           {view === 'dashboard' && (
             <Dashboard world={world.data} day={currentDay} dateText={dateText}
-                       onSelect={setSelected} onGo={setView} version={version} />
+                       onSelect={setSelected} onGo={setView} version={version}
+                       onMutate={bump} />
           )}
           {view === 'map' && (
             <MapView day={currentDay} onSelect={setSelected} selectedId={selected}
                      version={version} />
           )}
           {view === 'timeline' && (
-            <EventsView day={currentDay} onSelect={setSelected} version={version} />
+            <EventsView day={currentDay} onSelect={setSelected} version={version}
+                        calendar={world.data.calendar} onMutate={bump} />
           )}
           {view === 'pedigree' && (
             <PedigreeView day={currentDay} onSelect={setSelected} selectedId={selected}
@@ -130,7 +132,10 @@ export function App() {
             <SuccessionView day={currentDay} onSelect={setSelected} version={version}
                             vocabulary={vocabulary.data} />
           )}
-          {view === 'scenes' && <SceneView onSelect={setSelected} version={version} />}
+          {view === 'scenes' && (
+            <SceneView onSelect={setSelected} version={version}
+                       calendar={world.data.calendar} onMutate={bump} />
+          )}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
           {view === 'entities' && (
             <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}

@@ -519,3 +519,90 @@ class TestReviewFindings:
         assert decode_json("", None) is None
         assert decode_json(None) == {}
         assert decode_json("[1]", None) == [1]
+
+
+class TestRestore:
+    """§59 restore points: every recorded change can be walked back."""
+
+    def test_a_deleted_entity_returns_with_its_cascaded_facts(self, renn: World):
+        marr = renn.entity_named("House Marr")
+        connections = len(renn.facts_about(marr.id))
+        assert connections > 0
+
+        renn.delete_entity(marr.id)
+        assert renn.entity_named("House Marr") is None
+
+        deleted = renn.recently_deleted()
+        assert deleted[0]["name"] == "House Marr"
+
+        message = renn.restore(deleted[0]["revision_id"])
+        assert "House Marr" in message
+        back = renn.entity_named("House Marr")
+        assert back is not None
+        assert back.summary == marr.summary
+        assert len(renn.facts_about(back.id)) == connections
+        # and it no longer shows as deleted
+        assert all(d["name"] != "House Marr" for d in renn.recently_deleted())
+
+    def test_restoring_an_update_inverts_it_and_is_itself_reversible(self, world: World):
+        e = world.add_entity("settlement", "Oldname")
+        world.update_entity(e.id, name="Newname")
+
+        rename = world.revisions_for(e.id)[0]
+        world.restore(rename["id"])
+        assert world.get_entity(e.id).name == "Oldname"
+
+        # the restore logged its own inverse, so restoring it is a redo
+        undo = world.revisions_for(e.id)[0]
+        world.restore(undo["id"])
+        assert world.get_entity(e.id).name == "Newname"
+
+    def test_a_deleted_fact_can_come_back_alone(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b, strength="deeply_trusts",
+                                 note="a note worth keeping")
+        world.delete_fact(fact.id)
+        delete_rev = world.revisions_for(fact.id)[0]
+
+        world.restore(delete_rev["id"])
+        restored = world.get_fact(fact.id)
+        assert restored is not None
+        assert restored.strength == "deeply_trusts"
+        assert restored.note == "a note worth keeping"
+
+    def test_restoring_a_fact_whose_endpoint_is_gone_says_so(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.delete_fact(fact.id)
+        fact_delete = world.revisions_for(fact.id)[0]
+        world.delete_entity(b.id)
+
+        with pytest.raises(WorldError, match="restore that entity first"):
+            world.restore(fact_delete["id"])
+
+    def test_restore_refuses_nonsense(self, world: World):
+        with pytest.raises(WorldError, match="no revision"):
+            world.restore(999_999)
+        e = world.add_entity("settlement", "Made")
+        insert_rev = world.revisions_for(e.id)[0]
+        with pytest.raises(WorldError, match="nothing to restore"):
+            world.restore(insert_rev["id"])
+
+    def test_restore_ignores_hostile_snapshot_keys(self, world: World):
+        """A crafted world file must not smuggle SQL through revision JSON."""
+        e = world.add_entity("settlement", "Victim")
+        world.delete_entity(e.id)
+        rev_id = world.recently_deleted()[0]["revision_id"]
+        # poison the snapshot with a key that is not a column
+        import json
+        row = world.db.one("SELECT before FROM revision WHERE id = ?", (rev_id,))
+        poisoned = {**json.loads(row["before"]),
+                    "name) VALUES ('x'); DROP TABLE entity; --": 1}
+        world.db.execute("UPDATE revision SET before = ? WHERE id = ?",
+                         (json.dumps(poisoned), rev_id))
+
+        world.restore(rev_id)                      # must not raise, must not execute
+        assert world.entity_named("Victim") is not None
+        assert world.db.scalar("SELECT count(*) FROM entity") >= 1

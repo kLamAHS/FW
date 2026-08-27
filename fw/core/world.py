@@ -291,6 +291,179 @@ class World:
                 break
         return out
 
+    def get_revision(self, revision_id: int) -> dict | None:
+        row = self.db.one(
+            "SELECT * FROM revision WHERE id = ? AND project_id = ?",
+            (revision_id, self.project_id),
+        )
+        if row is None:
+            return None
+        return {**dict(row), "before": decode_json(row["before"], None),
+                "after": decode_json(row["after"], None)}
+
+    def recently_deleted(self, *, limit: int = 10) -> list[dict]:
+        """Entity deletions that have not been restored — the way back in (§59).
+
+        A deleted entity has no page left to restore it from, so this list is where the
+        writer finds it again.
+        """
+        out: list[dict] = []
+        for row in self.db.query(
+            "SELECT id, row_id, before, at FROM revision "
+            "WHERE project_id = ? AND table_name = 'entity' AND action = 'delete' "
+            "ORDER BY id DESC LIMIT ?",
+            (self.project_id, limit * 2),
+        ):
+            if self.get_entity(row["row_id"]) is not None:
+                continue                     # already restored
+            snapshot = decode_json(row["before"], None) or {}
+            out.append({
+                "revision_id": row["id"], "entity_id": row["row_id"],
+                "name": snapshot.get("name", "?"),
+                "type_key": snapshot.get("type_key", "?"), "at": row["at"],
+            })
+            if len(out) >= limit:
+                break
+        return out
+
+    def restore(self, revision_id: int) -> str:
+        """Undo one recorded change (§59 restore points).
+
+        Restoring is itself a logged change — the log stays append-only, and undoing a
+        restore is just restoring the restore. A deleted entity comes back with the
+        facts the FK cascade took with it, because those were logged in the same batch.
+        """
+        rev = self.get_revision(revision_id)
+        if rev is None:
+            raise WorldError(f"no revision {revision_id}")
+        if rev["table_name"] not in ("entity", "fact"):
+            raise WorldError(f"cannot restore {rev['table_name']!r} revisions")
+        with self.db.transaction():
+            if rev["action"] == "delete":
+                return self._restore_deleted(rev)
+            if rev["action"] == "update":
+                return self._restore_update(rev)
+            raise WorldError(
+                "an insert revision has nothing to restore — deleting the row is how a "
+                "creation is undone, and that produces its own restorable record"
+            )
+
+    def _table_columns(self, table: str) -> set[str]:
+        return {r["name"] for r in self.db.query(f"PRAGMA table_info({table})")}
+
+    def _restore_deleted(self, rev: dict) -> str:
+        row_id = rev["row_id"]
+        # Snapshot keys come from the world file; only real columns may pass into an
+        # INSERT's column list, whatever the log claims.
+        snapshot = {k: v for k, v in (rev["before"] or {}).items()
+                    if k in self._table_columns(rev["table_name"])}
+        if rev["table_name"] == "entity":
+            if self.db.one("SELECT 1 FROM entity WHERE id = ?", (row_id,)):
+                raise WorldError(f"{snapshot.get('name', row_id)} already exists")
+            if not {"id", "type_key", "name"} <= set(snapshot):
+                raise WorldError("this delete record is too incomplete to restore")
+            self.db.insert("entity", snapshot)
+            self._index_entity(row_id, snapshot["type_key"], snapshot["name"],
+                               snapshot.get("summary", ""), snapshot.get("tags") or [])
+            self._log_revision("entity", row_id, "insert", None, {
+                "name": snapshot["name"], "type_key": snapshot["type_key"],
+                "restored_from": rev["id"],
+            })
+            brought_back = self._restore_cascaded_facts(rev)
+            name = snapshot.get("name", row_id)
+            if brought_back:
+                plural = "connection" if brought_back == 1 else "connections"
+                return f"Restored {name} and {brought_back} {plural}."
+            return f"Restored {name}."
+
+        # a single fact
+        self._restore_fact_row(snapshot, rev["id"], strict=True)
+        return f"Restored the {snapshot.get('predicate_key', 'fact')} connection."
+
+    def _restore_cascaded_facts(self, rev: dict) -> int:
+        """Re-insert the facts logged in the same delete batch as an entity.
+
+        The batch wrote its fact deletions contiguously before the entity deletion,
+        under the transaction lock, so walking revision ids downwards from the entity
+        record until the pattern breaks recovers exactly that batch — no more.
+        """
+        entity_id = rev["row_id"]
+        restored = 0
+        cursor = rev["id"] - 1
+        while True:
+            prior = self.get_revision(cursor)
+            if (prior is None or prior["table_name"] != "fact"
+                    or prior["action"] != "delete" or prior["at"] != rev["at"]):
+                break
+            snapshot = prior["before"] or {}
+            if entity_id not in (snapshot.get("subject_id"), snapshot.get("object_id")):
+                break
+            if self._restore_fact_row(snapshot, prior["id"], strict=False):
+                restored += 1
+            cursor -= 1
+        return restored
+
+    def _restore_fact_row(self, snapshot: dict, source_revision: int,
+                          *, strict: bool) -> bool:
+        """Re-insert one fact from its delete snapshot.
+
+        `strict` raises when an endpoint entity is missing (the writer asked for this
+        exact fact back); the batch path skips instead, because an entity restore should
+        bring back what it can rather than fail on one absent counterpart.
+        """
+        snapshot = {k: v for k, v in snapshot.items()
+                    if k in self._table_columns("fact")}
+        fact_id = snapshot.get("id")
+        if not fact_id or self.db.one("SELECT 1 FROM fact WHERE id = ?", (fact_id,)):
+            return False
+        for endpoint in ("subject_id", "object_id"):
+            eid = snapshot.get(endpoint)
+            if eid and not self.db.one("SELECT 1 FROM entity WHERE id = ?", (eid,)):
+                if strict:
+                    raise WorldError(
+                        "one side of this connection no longer exists — "
+                        "restore that entity first"
+                    )
+                return False
+        # A reference to a fact that itself no longer exists cannot survive the FK.
+        about = snapshot.get("about_fact_id")
+        if about and not self.db.one("SELECT 1 FROM fact WHERE id = ?", (about,)):
+            snapshot["about_fact_id"] = None
+        self.db.insert("fact", snapshot)
+        self._log_revision("fact", fact_id, "insert", None, {
+            "subject_id": snapshot.get("subject_id"),
+            "predicate_key": snapshot.get("predicate_key"),
+            "object_id": snapshot.get("object_id"),
+            "value": snapshot.get("value"),
+            "restored_from": source_revision,
+        })
+        return True
+
+    def _restore_update(self, rev: dict) -> str:
+        row_id = rev["row_id"]
+        before = rev["before"] or {}
+        if not before:
+            raise WorldError("this change recorded no prior values to restore")
+        if rev["table_name"] == "entity":
+            if self.get_entity(row_id) is None:
+                raise WorldError(
+                    "the entity no longer exists — restore its deletion first")
+            self.update_entity(row_id, **before)     # logs its own inverse record
+            return "Restored the earlier values."
+        row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
+        if row is None:
+            raise WorldError("the fact no longer exists — restore its deletion first")
+        # Revision JSON comes from the world file, and a world file must never be able
+        # to smuggle SQL — only real fact columns may be named, whatever the log says.
+        data = dict(row)
+        before = {key: value for key, value in before.items() if key in data}
+        if not before:
+            raise WorldError("this change names no restorable columns")
+        current = {key: data[key] for key in before}
+        self.db.update("fact", row_id, {**before, "updated_at": now_iso()})
+        self._log_revision("fact", row_id, "update", current, before)
+        return "Restored the earlier values."
+
     # ---- entities ---------------------------------------------------------
 
     def add_entity(

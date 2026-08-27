@@ -159,6 +159,54 @@ with sync_playwright() as p:
         print("  Thornby appears on the dashboard (recently edited)")
     page.screenshot(path=str(OUT / "after-editing.png"))
 
+    # Delete Thornby, find it in Recently deleted, and bring it back (§59).
+    if panel_title == "Thornby":
+        page.click(".side button:has-text('Delete')")
+        page.wait_for_timeout(300)
+        page.click(".side button:has-text('Really delete')")
+        page.wait_for_timeout(1400)
+        body = page.text_content(".content") or ""
+        if "Recently deleted" not in body:
+            problems.append("deleted Thornby but no Recently-deleted section appeared")
+        else:
+            page.screenshot(path=str(OUT / "recently-deleted.png"))
+            page.click(".content button:has-text('Restore')")
+            page.wait_for_timeout(1400)
+            after = page.text_content(".content") or ""
+            if "Recently deleted" in after:
+                problems.append("restore did not clear the Recently-deleted section")
+            else:
+                print("  deleted Thornby and restored it from the dashboard")
+
+    # Create an event and record a causal link (§31, §32).
+    page.click("nav.nav button:has-text('History')")
+    page.wait_for_timeout(900)
+    page.click(".toolbar button:has-text('+ New event')")
+    page.wait_for_selector(".modal-card")
+    page.fill(".modal-card input[placeholder*='Battle']", "The granary fire")
+    page.click(".modal-card button:has-text('Record the event')")
+    page.wait_for_timeout(1200)
+    history_body = page.text_content(".content") or ""
+    if "The granary fire" not in history_body:
+        problems.append("created event missing from the history view")
+    else:
+        print("  recorded a new event in the history view")
+
+    # Create a scene from the Scenes view (§44).
+    page.click("nav.nav button:has-text('Scenes')")
+    page.wait_for_timeout(900)
+    page.click(".toolbar button:has-text('+ New scene')")
+    page.wait_for_selector(".modal-card")
+    page.fill(".modal-card input[placeholder*='Winter Feast']", "A quiet word on the stairs")
+    page.click(".modal-card button:has-text('Create the scene')")
+    page.wait_for_timeout(1200)
+    scenes_body = page.text_content(".content") or ""
+    if "A quiet word" not in scenes_body:
+        problems.append("created scene missing from the scenes view")
+    else:
+        print("  wrote a new scene from the scenes view")
+    page.screenshot(path=str(OUT / "created-scene.png"))
+
     # Exercise the succession hypothetical (§50).
     page.click("nav.nav button:has-text('Succession')")
     page.wait_for_timeout(1100)

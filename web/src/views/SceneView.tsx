@@ -11,16 +11,21 @@
 
 import { useState } from 'react'
 import { api } from '../api'
+import type { CalendarInfo } from '../api'
 import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
+import { Modal, SceneForm } from '../components/forms'
 
 interface Props {
   onSelect: (id: string) => void
   version: number
+  calendar: CalendarInfo
+  onMutate: () => void
 }
 
-export function SceneView({ onSelect, version }: Props) {
+export function SceneView({ onSelect, version, calendar, onMutate }: Props) {
   const scenes = useAsync(() => api.scenes(), [version])
   const [chosen, setChosen] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
   const sceneId = chosen ?? scenes.data?.[0]?.id ?? null
   const context = useAsync(
     () => (sceneId ? api.sceneContext(sceneId) : Promise.resolve(null)),
@@ -29,8 +34,27 @@ export function SceneView({ onSelect, version }: Props) {
 
   if (scenes.loading) return <Loading />
   if (scenes.error) return <ErrorBox error={scenes.error} />
+
+  const creator = creating && (
+    <Modal title="A new scene" onClose={() => setCreating(false)}>
+      <SceneForm
+        calendar={calendar}
+        onDone={() => { setCreating(false); onMutate() }}
+        onCancel={() => setCreating(false)}
+      />
+    </Modal>
+  )
+
   if (!scenes.data?.length) {
-    return <p className="muted">This world has no scenes yet.</p>
+    return (
+      <>
+        <p className="muted">
+          This world has no scenes yet.{' '}
+          <button onClick={() => setCreating(true)}>Write the first one</button>
+        </p>
+        {creator}
+      </>
+    )
   }
 
   return (
@@ -43,7 +67,10 @@ export function SceneView({ onSelect, version }: Props) {
             {s.title}
           </button>
         ))}
+        <span className="spacer" />
+        <button onClick={() => setCreating(true)}>+ New scene</button>
       </div>
+      {creator}
 
       {context.loading && <Loading what="Gathering what matters here" />}
       {context.error ? <ErrorBox error={context.error} /> : null}

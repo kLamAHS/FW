@@ -15,7 +15,9 @@
 import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api'
-import type { CalendarInfo, Entity, EntityDraft, Vocabulary } from '../api'
+import type {
+  CalendarInfo, Entity, EntityDraft, EventDraft, SceneDraft, Vocabulary,
+} from '../api'
 import { useAsync, useDebounced } from './common'
 
 /* ------------------------------------------------------------------ modal */
@@ -412,13 +414,14 @@ export function FactForm(
 
 /* ------------------------------------------------------------ entity picker */
 
-function EntityPicker(
-  { label, chosen, onChoose, excludeId }:
+export function EntityPicker(
+  { label, chosen, onChoose, excludeId, typeKey }:
   {
     label: string
     chosen: Entity | null
     onChoose: (entity: Entity | null) => void
     excludeId?: string
+    typeKey?: string
   },
 ) {
   const [text, setText] = useState('')
@@ -428,8 +431,8 @@ function EntityPicker(
   // "Nor" could land under an input reading "Northmarch" — and the writer would record
   // the relationship against whatever stale row they clicked.
   const found = useAsync(
-    () => (query.trim() ? api.search(query) : Promise.resolve([])),
-    [query],
+    () => (query.trim() ? api.search(query, typeKey) : Promise.resolve([])),
+    [query, typeKey],
   )
   const results = (found.data ?? [])
     .filter((e) => e.id !== excludeId)
@@ -464,6 +467,217 @@ function EntityPicker(
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+
+/* --------------------------------------------------------- multi-entity picker */
+
+export function MultiEntityPicker(
+  { label, chosen, onChange, typeKey }:
+  {
+    label: string
+    chosen: Entity[]
+    onChange: (next: Entity[]) => void
+    typeKey?: string
+  },
+) {
+  return (
+    <div className="field">
+      <div className="small muted">{label}</div>
+      {chosen.length > 0 && (
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', margin: '4px 0' }}>
+          {chosen.map((e) => (
+            <span key={e.id} className="picked" style={{ padding: '2px 7px', marginTop: 0 }}>
+              <span className="name">{e.name}</span>
+              <button onClick={() => onChange(chosen.filter((c) => c.id !== e.id))}
+                      aria-label={`Remove ${e.name}`}>✕</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <EntityPicker
+        label=""
+        chosen={null}
+        typeKey={typeKey}
+        onChoose={(e) => {
+          if (e && !chosen.some((c) => c.id === e.id)) onChange([...chosen, e])
+        }}
+      />
+    </div>
+  )
+}
+
+/* --------------------------------------------------------------- scene form */
+
+export function SceneForm(
+  { calendar, onDone, onCancel }:
+  { calendar: CalendarInfo; onDone: () => void; onCancel: () => void },
+) {
+  const [title, setTitle] = useState('')
+  const [when, setWhen] = useState<CivilDraft>(EMPTY_DATE)
+  const [location, setLocation] = useState<Entity | null>(null)
+  const [pov, setPov] = useState<Entity | null>(null)
+  const [participants, setParticipants] = useState<Entity[]>([])
+  const [objective, setObjective] = useState('')
+  const [conflict, setConflict] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (busy) return
+    if (!title.trim()) { setError('It needs a title.'); return }
+    setBusy(true)
+    setError(null)
+    try {
+      const draft: SceneDraft = {
+        title: title.trim(),
+        day: await resolveDate(when),
+        location_id: location?.id ?? null,
+        pov_id: pov?.id ?? null,
+        objective: objective.trim(),
+        conflict: conflict.trim(),
+        // The POV character is in the room too — do not make the writer add them twice.
+        participants: [...new Set([
+          ...participants.map((p) => p.id),
+          ...(pov ? [pov.id] : []),
+        ])],
+      }
+      await api.createScene(draft)
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="form-stack">
+      <label className="field">
+        <div className="small muted">Title</div>
+        <input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus
+               placeholder="The Winter Feast at…" />
+      </label>
+      <WorldDateInput label="When" calendar={calendar} value={when} onChange={setWhen}
+                      hint="the context panel is built from this date" />
+      <EntityPicker label="Where" chosen={location} onChoose={setLocation} />
+      <EntityPicker label="Whose eyes (POV)" chosen={pov} onChoose={setPov}
+                    typeKey="person" />
+      <MultiEntityPicker label="Who else is present" chosen={participants}
+                         onChange={setParticipants} typeKey="person" />
+      <label className="field">
+        <div className="small muted">Objective — what someone wants here</div>
+        <input value={objective} onChange={(e) => setObjective(e.target.value)} />
+      </label>
+      <label className="field">
+        <div className="small muted">Conflict — what stands in the way</div>
+        <input value={conflict} onChange={(e) => setConflict(e.target.value)} />
+      </label>
+      {error && <div className="error-box">{error}</div>}
+      <div className="form-actions">
+        <button onClick={onCancel}>Cancel</button>
+        <button className="active" onClick={() => void submit()} disabled={busy}>
+          {busy ? 'Saving…' : 'Create the scene'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/* --------------------------------------------------------------- event form */
+
+const EVENT_KINDS = ['event', 'battle', 'war', 'treaty', 'rebellion', 'coronation',
+                     'marriage', 'famine', 'plague', 'discovery', 'assassination',
+                     'natural disaster'] as const
+
+const PARTICIPANT_ROLES = ['participant', 'commander', 'witness', 'victim',
+                           'belligerent', 'signatory', 'author'] as const
+
+export function EventForm(
+  { calendar, onDone, onCancel }:
+  { calendar: CalendarInfo; onDone: () => void; onCancel: () => void },
+) {
+  const [name, setName] = useState('')
+  const [kind, setKind] = useState<string>('event')
+  const [summary, setSummary] = useState('')
+  const [when, setWhen] = useState<CivilDraft>(EMPTY_DATE)
+  const [location, setLocation] = useState<Entity | null>(null)
+  const [participants, setParticipants] = useState<Entity[]>([])
+  const [roles, setRoles] = useState<Record<string, string>>({})
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (busy) return
+    if (!name.trim()) { setError('It needs a name.'); return }
+    setBusy(true)
+    setError(null)
+    try {
+      const draft: EventDraft = {
+        name: name.trim(),
+        type_key: kind,
+        summary: summary.trim(),
+        start_day: await resolveDate(when),
+        location_id: location?.id ?? null,
+        participants: participants.map((p) => ({
+          id: p.id, role: roles[p.id] ?? 'participant',
+        })),
+      }
+      await api.createEvent(draft)
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="form-stack">
+      <label className="field">
+        <div className="small muted">What happened?</div>
+        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus
+               placeholder="The Battle of…" />
+      </label>
+      <label className="field">
+        <div className="small muted">Kind</div>
+        <select value={kind} onChange={(e) => setKind(e.target.value)}>
+          {EVENT_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
+        </select>
+      </label>
+      <WorldDateInput label="When" calendar={calendar} value={when} onChange={setWhen}
+                      hint="leave blank if nobody recorded the date" />
+      <EntityPicker label="Where" chosen={location} onChoose={setLocation} />
+      <MultiEntityPicker label="Who was involved" chosen={participants}
+                         onChange={setParticipants} />
+      {participants.length > 0 && (
+        <div className="field">
+          <div className="small muted">Their parts in it</div>
+          {participants.map((p) => (
+            <div key={p.id} style={{ display: 'flex', gap: 8, alignItems: 'center',
+                                     padding: '2px 0' }}>
+              <span style={{ flex: 1 }}>{p.name}</span>
+              <select value={roles[p.id] ?? 'participant'}
+                      onChange={(e) => setRoles({ ...roles, [p.id]: e.target.value })}>
+                {PARTICIPANT_ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          ))}
+        </div>
+      )}
+      <label className="field">
+        <div className="small muted">What should be remembered about it</div>
+        <input value={summary} onChange={(e) => setSummary(e.target.value)} />
+      </label>
+      {error && <div className="error-box">{error}</div>}
+      <div className="form-actions">
+        <button onClick={onCancel}>Cancel</button>
+        <button className="active" onClick={() => void submit()} disabled={busy}>
+          {busy ? 'Saving…' : 'Record the event'}
+        </button>
+      </div>
     </div>
   )
 }

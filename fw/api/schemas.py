@@ -196,6 +196,40 @@ class MapOut(BaseModel):
     features: list[dict[str, Any]]
 
 
+class SceneIn(BaseModel):
+    title: str
+    day: int | None = None
+    end_day: int | None = None
+    location_id: str | None = None
+    pov_id: str | None = None
+    objective: str = ""
+    conflict: str = ""
+    outcome: str = ""
+    notes: str = ""
+    participants: list[str] = Field(default_factory=list)
+
+
+class EventParticipantIn(BaseModel):
+    id: str
+    role: str = "participant"
+
+
+class EventIn(BaseModel):
+    name: str
+    type_key: str = "event"
+    summary: str = ""
+    start_day: int | None = None
+    end_day: int | None = None
+    location_id: str | None = None
+    participants: list[EventParticipantIn] = Field(default_factory=list)
+
+
+class CausalLinkIn(BaseModel):
+    cause_id: str
+    effect_id: str
+    note: str = ""
+
+
 class SuppressIn(BaseModel):
     rule_key: str
     fingerprint: str

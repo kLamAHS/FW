@@ -136,6 +136,16 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
             raise HTTPException(404, f"no entity {entity_id}")
         return world.revisions_for(entity_id, limit=limit)
 
+    @app.get("/api/deleted")
+    def get_deleted(limit: int = Query(10, le=50)) -> list[dict[str, Any]]:
+        """§59: deletions that can still be undone. A deleted entity has no page left,
+        so this list is where the writer finds the way back."""
+        return world.recently_deleted(limit=limit)
+
+    @app.post("/api/revisions/{revision_id}/restore")
+    def restore_revision(revision_id: int) -> dict[str, str]:
+        return {"message": world.restore(revision_id)}
+
     @app.get("/api/snapshots")
     def get_snapshots() -> list[dict[str, Any]]:
         return [
@@ -502,6 +512,38 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
         )
 
     # ---- events and causality (§31, §32) ----------------------------------
+
+    @app.post("/api/scenes", status_code=201)
+    def create_scene(payload: S.SceneIn) -> dict[str, Any]:
+        scene = world.add_scene(
+            payload.title, day=payload.day, end_day=payload.end_day,
+            location_id=payload.location_id, pov_id=payload.pov_id,
+            objective=payload.objective, conflict=payload.conflict,
+            outcome=payload.outcome, notes=payload.notes,
+            participants=payload.participants,
+        )
+        return {"id": scene.id, "title": scene.title, "day": scene.day}
+
+    @app.post("/api/events", status_code=201)
+    def create_event(payload: S.EventIn) -> dict[str, Any]:
+        event = world.add_event(
+            payload.name, type_key=payload.type_key, summary=payload.summary,
+            start_day=payload.start_day, end_day=payload.end_day,
+            location_id=payload.location_id,
+            participants=[(p.id, p.role) for p in payload.participants],
+        )
+        return {"id": event.id, "name": event.name, "start_day": event.start_day}
+
+    @app.post("/api/causal-links", status_code=201)
+    def create_causal_link(payload: S.CausalLinkIn) -> dict[str, str]:
+        """§32: record that one event led to another."""
+        for event_id in (payload.cause_id, payload.effect_id):
+            if not world.db.one("SELECT 1 FROM event WHERE id = ?", (event_id,)):
+                raise HTTPException(404, f"no event {event_id}")
+        if payload.cause_id == payload.effect_id:
+            raise HTTPException(400, "an event cannot cause itself")
+        world.link_cause(payload.cause_id, payload.effect_id, note=payload.note)
+        return {"status": "linked"}
 
     @app.get("/api/events")
     def list_events(first: int | None = None, last: int | None = None) -> list[dict]:

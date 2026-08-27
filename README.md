@@ -123,7 +123,7 @@ entities 0.62 ms.
 ## Testing
 
 ```bash
-.venv/bin/python -m pytest      # 199 tests
+.venv/bin/python -m pytest      # 210 tests
 .venv/bin/ruff check fw/
 .venv/bin/lint-imports          # the layering contract
 cd web && npm run build         # typechecks as part of the build
@@ -152,12 +152,16 @@ secrets, scene context with relevance ranking, twenty continuity rules with supp
 routing, search, and the "why does this matter" / "what if it vanished" analyses.
 
 Building happens in the client too: create entities (three fields, everything else behind
-one disclosure, per §56), record relationships and properties with in-world dates, end a
-fact on the timeline's current date rather than deleting it (§106.3's rule as the one-click
-path), and edit or delete from the side panel without losing your place (§76). Every
-mutation is written to the §59 revision log inside the same transaction — deletions record
-the complete row, including the facts an entity takes with it — and the dashboard shows
-what changed most recently (§74).
+one disclosure, per §56), write scenes and record events with participants and roles (§31,
+§44), link one event to its consequences (§32), record relationships and properties with
+in-world dates, end a fact on the timeline's current date rather than deleting it (§106.3's
+rule as the one-click path), and edit or delete from the side panel without losing your
+place (§76). Every mutation is written to the §59 revision log inside the same
+transaction — deletions record the complete row, including the facts an entity takes with
+it — and any recorded change can be walked back: a deleted entity is restored from the
+dashboard with its connections, an edit from the entity's own change history, and a restore
+is itself a logged, reversible change. The dashboard shows what changed most recently
+(§74), and `fw restore` does all of this from the command line.
 
 Deliberately not yet built, and reachable because of the decisions above:
 
@@ -169,8 +173,8 @@ Deliberately not yet built, and reachable because of the decisions above:
 - **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
   features (§103) and plugins (§102).
 - **Prose.** Scenes carry metadata and context, not manuscript text.
-- **Undo.** The revision log records every change, including full snapshots of deletions;
-  a restore path over it is not yet wired to the UI.
+- **A full undo stack.** Restore works per recorded change; a single walk-backwards
+  undo/redo pointer over the log is not built.
 
 ## The brief's own principles
 

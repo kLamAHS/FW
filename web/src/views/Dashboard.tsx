@@ -21,15 +21,24 @@ interface Props {
   onSelect: (id: string) => void
   onGo: (view: string) => void
   version: number
+  onMutate: () => void
 }
 
-export function Dashboard({ world, day, dateText, onSelect, onGo, version }: Props) {
+export function Dashboard(
+  { world, day, dateText, onSelect, onGo, version, onMutate }: Props,
+) {
   const titles = useAsync(() => api.titles(day), [day, version])
   const continuity = useAsync(() => api.continuity(), [version])
   const events = useAsync(() => api.events(), [version])
   const state = useAsync(() => api.state(day), [day, version])
   const secrets = useAsync(() => api.secrets(day), [day, version])
   const recent = useAsync(() => api.recent(8), [version])
+  const deleted = useAsync(() => api.deleted(6), [version])
+
+  const restore = async (revisionId: number) => {
+    await api.restoreRevision(revisionId)
+    onMutate()
+  }
 
   const succession = useAsync(async () => {
     const list = await api.titles(day)
@@ -193,6 +202,26 @@ export function Dashboard({ world, day, dateText, onSelect, onGo, version }: Pro
           ))}
           {(recent.data ?? []).length === 0 && (
             <p className="muted">Changes you make will show up here.</p>
+          )}
+          {(deleted.data ?? []).length > 0 && (
+            <div style={{ marginTop: 12, paddingTop: 10,
+                          borderTop: '1px solid var(--line-soft)' }}>
+              <h3 style={{ marginBottom: 5 }}>Recently deleted</h3>
+              {(deleted.data ?? []).map((d) => (
+                <div key={d.revision_id}
+                     style={{ display: 'flex', gap: 8, alignItems: 'baseline',
+                              padding: '3px 0' }}>
+                  <span className="name">{d.name}</span>
+                  <span className="type-chip">{d.type_key.replace(/_/g, ' ')}</span>
+                  <span className="spacer" style={{ flex: 1 }} />
+                  <button className="small"
+                          title="Bring it back, with the connections it was deleted with"
+                          onClick={() => void restore(d.revision_id)}>
+                    Restore
+                  </button>
+                </div>
+              ))}
+            </div>
           )}
         </Panel>
 

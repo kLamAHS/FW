@@ -191,7 +191,7 @@ export function SidePanel(
                 </Section>
               )}
 
-              <ChangeHistory entityId={entity.id} />
+              <ChangeHistory entityId={entity.id} onChanged={changed} />
             </>
           )}
 
@@ -279,13 +279,26 @@ function FactLine(
   )
 }
 
-/** §59: the entity's own change history, collapsed by default. */
-function ChangeHistory({ entityId }: { entityId: string }) {
+/** §59: the entity's own change history, collapsed by default, each step reversible. */
+function ChangeHistory(
+  { entityId, onChanged }: { entityId: string; onChanged: () => void },
+) {
   const [open, setOpen] = useState(false)
+  const [restoreError, setRestoreError] = useState<string | null>(null)
   const history = useAsync(
     () => (open ? api.history(entityId) : Promise.resolve(null)),
     [open, entityId],
   )
+
+  const restore = async (revisionId: number) => {
+    setRestoreError(null)
+    try {
+      await api.restoreRevision(revisionId)
+      onChanged()
+    } catch (err) {
+      setRestoreError(err instanceof Error ? err.message : String(err))
+    }
+  }
 
   return (
     <div style={{ marginTop: 14 }}>
@@ -294,13 +307,20 @@ function ChangeHistory({ entityId }: { entityId: string }) {
         {open ? '▾' : '▸'} Change history
       </button>
       {open && history.loading && <Loading />}
+      {open && restoreError && <div className="error-box small">{restoreError}</div>}
       {open && history.data && (
         <ul className="clean small">
           {history.data.map((r) => (
-            <li key={r.id}>
+            <li key={r.id} style={{ display: 'flex', gap: 6, alignItems: 'baseline' }}>
               {/* r.at carries its UTC offset; Date renders it in the writer's zone. */}
-              <span className="mono muted">{new Date(r.at).toLocaleString()}</span>{' '}
-              {describeRevision(r)}
+              <span className="mono muted">{new Date(r.at).toLocaleString()}</span>
+              <span style={{ flex: 1 }}>{describeRevision(r)}</span>
+              {r.action === 'update' && (
+                <button className="small" title="Put the earlier values back"
+                        onClick={() => void restore(r.id)}>
+                  restore
+                </button>
+              )}
             </li>
           ))}
           {history.data.length === 0 && <li className="muted">No recorded changes.</li>}

@@ -340,6 +340,36 @@ export interface FactDraft {
   note?: string
 }
 
+export interface SceneDraft {
+  title: string
+  day?: number | null
+  end_day?: number | null
+  location_id?: string | null
+  pov_id?: string | null
+  objective?: string
+  conflict?: string
+  outcome?: string
+  participants?: string[]
+}
+
+export interface EventDraft {
+  name: string
+  type_key?: string
+  summary?: string
+  start_day?: number | null
+  end_day?: number | null
+  location_id?: string | null
+  participants?: { id: string; role: string }[]
+}
+
+export interface DeletedEntry {
+  revision_id: number
+  entity_id: string
+  name: string
+  type_key: string
+  at: string
+}
+
 export interface RevisionEntry {
   id: number
   table_name: string
@@ -358,6 +388,16 @@ export const api = {
     get<WorldDate>('/day', { year, month, day }),
   recent: (limit = 8) => get<{ entity: Entity; at: string }[]>('/recent', { limit }),
   history: (id: string) => get<RevisionEntry[]>(`/entities/${id}/history`),
+
+  deleted: (limit = 10) => get<DeletedEntry[]>('/deleted', { limit }),
+  restoreRevision: (id: number) =>
+    send<{ message: string }>(`/revisions/${id}/restore`, 'POST'),
+  createScene: (draft: SceneDraft) =>
+    send<{ id: string; title: string; day: number | null }>('/scenes', 'POST', draft),
+  createEvent: (draft: EventDraft) =>
+    send<{ id: string; name: string; start_day: number | null }>('/events', 'POST', draft),
+  linkCause: (cause_id: string, effect_id: string, note = '') =>
+    send<{ status: string }>('/causal-links', 'POST', { cause_id, effect_id, note }),
 
   createEntity: (draft: EntityDraft) => send<Entity>('/entities', 'POST', draft),
   updateEntity: (id: string, patch: Partial<EntityDraft>) =>

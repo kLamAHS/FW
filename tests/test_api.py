@@ -487,3 +487,71 @@ class TestPatchClearsDates:
                                params={"on_day": renn.day(200)})
         assert response.status_code == 400
         assert "before it began" in response.json()["detail"]
+
+
+class TestSceneAndEventCreation:
+    def test_create_scene_with_participants(self, client):
+        mara = entity_named(client, "Lady Mara")
+        grey = entity_named(client, "Greyhaven")
+        response = client.post("/api/scenes", json={
+            "title": "A quiet word on the stairs",
+            "day": 85326, "location_id": grey["id"], "pov_id": mara["id"],
+            "objective": "Mara tests Edric's silence.",
+            "participants": [mara["id"]],
+        })
+        assert response.status_code == 201
+        scenes = client.get("/api/scenes").json()
+        assert any(s["title"] == "A quiet word on the stairs" for s in scenes)
+        # the scene context engine works on it immediately
+        ctx = client.get(f"/api/scenes/{response.json()['id']}/context").json()
+        assert any(p["name"] == "Lady Mara" for p in ctx["participants"])
+
+    def test_create_event_with_roles_and_causes(self, client):
+        grey = entity_named(client, "Greyhaven")
+        mara = entity_named(client, "Lady Mara")
+        fire = client.post("/api/events", json={
+            "name": "The granary fire", "start_day": 85000,
+            "location_id": grey["id"],
+            "participants": [{"id": mara["id"], "role": "witness"}],
+        }).json()
+        riots = client.post("/api/events", json={
+            "name": "The bread riots", "start_day": 85100,
+        }).json()
+
+        linked = client.post("/api/causal-links", json={
+            "cause_id": fire["id"], "effect_id": riots["id"],
+            "note": "No grain, no bread, no peace.",
+        })
+        assert linked.status_code == 201
+        chain = client.get(f"/api/events/{fire['id']}/consequences").json()
+        assert [c["name"] for c in chain] == ["The bread riots"]
+
+    def test_causal_link_guards(self, client):
+        event = client.post("/api/events", json={"name": "Alone"}).json()
+        assert client.post("/api/causal-links", json={
+            "cause_id": event["id"], "effect_id": event["id"],
+        }).status_code == 400
+        assert client.post("/api/causal-links", json={
+            "cause_id": event["id"], "effect_id": "ghost",
+        }).status_code == 404
+
+
+class TestRestoreEndpoint:
+    def test_delete_then_restore_over_http(self, client):
+        marr = entity_named(client, "House Marr")
+        facts_before = len(client.get(f"/api/entities/{marr['id']}").json()["facts"])
+
+        client.delete(f"/api/entities/{marr['id']}")
+        deleted = client.get("/api/deleted").json()
+        assert deleted[0]["name"] == "House Marr"
+
+        restored = client.post(f"/api/revisions/{deleted[0]['revision_id']}/restore")
+        assert restored.status_code == 200
+        assert "House Marr" in restored.json()["message"]
+
+        bundle = client.get(f"/api/entities/{marr['id']}").json()
+        assert bundle["entity"]["name"] == "House Marr"
+        assert len(bundle["facts"]) == facts_before
+
+    def test_restoring_nonsense_is_a_clean_400(self, client):
+        assert client.post("/api/revisions/999999/restore").status_code == 400

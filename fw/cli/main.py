@@ -303,6 +303,23 @@ def cmd_export(args) -> None:
     world.close()
 
 
+def cmd_restore(args) -> None:
+    """§59: undo a recorded change from the command line."""
+    world = _open(args.path)
+    if args.list:
+        deleted = world.recently_deleted(limit=20)
+        if not deleted:
+            print("Nothing deleted that can be restored.")
+        for d in deleted:
+            print(f"  {d['revision_id']:6}  {d['name']}  ({d['type_key']}, {d['at']})")
+        world.close()
+        return
+    if args.revision is None:
+        sys.exit("Give a revision id, or --list to see what can be restored.")
+    print(world.restore(args.revision))
+    world.close()
+
+
 def cmd_serve(args) -> None:
     import uvicorn
 
@@ -395,6 +412,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = add("export", cmd_export, "Export the world as JSON.")
     p.add_argument("--out")
+
+    p = add("restore", cmd_restore, "Undo a recorded change.")
+    p.add_argument("revision", type=int, nargs="?", help="revision id to restore")
+    p.add_argument("--list", action="store_true",
+                   help="list deletions that can still be undone")
 
     p = add("serve", cmd_serve, "Start the local web application.")
     p.add_argument("--host", default="127.0.0.1")
