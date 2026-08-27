@@ -20,6 +20,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from fw.api import schemas as S
+from fw.core.calendar.kernel import CalendarError
 from fw.core.continuity.engine import ContinuityEngine, Severity
 from fw.core.derive.dependency import DependencyAnalyst
 from fw.core.derive.scene_context import SceneContextEngine
@@ -106,6 +107,34 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
     @app.get("/api/date/{day}", response_model=S.DateOut)
     def get_date(day: int) -> S.DateOut:
         return _date_out(world, day)
+
+    @app.get("/api/day", response_model=S.DateOut)
+    def get_day(year: int, month: int = 1, day: int = 1) -> S.DateOut:
+        """Civil date → day index, for form inputs.
+
+        The client could compute this itself from the calendar payload, but leap rules
+        make client-side conversion a second implementation waiting to disagree with the
+        first. One source of truth; the round trip is a few milliseconds on localhost.
+        """
+        try:
+            return _date_out(world, world.day(year, month, day))
+        except CalendarError as exc:
+            raise HTTPException(400, str(exc)) from exc
+
+    @app.get("/api/recent")
+    def get_recent(limit: int = Query(8, le=50)) -> list[dict[str, Any]]:
+        """§74: recently edited entities, for the dashboard."""
+        return [
+            {"entity": _entity_out(entity).model_dump(), "at": at}
+            for entity, at in world.recently_edited(limit=limit)
+        ]
+
+    @app.get("/api/entities/{entity_id}/history")
+    def get_history(entity_id: str, limit: int = Query(50, le=200)) -> list[dict[str, Any]]:
+        """§59: the change history of one entity, newest first."""
+        if world.get_entity(entity_id) is None:
+            raise HTTPException(404, f"no entity {entity_id}")
+        return world.revisions_for(entity_id, limit=limit)
 
     @app.get("/api/snapshots")
     def get_snapshots() -> list[dict[str, Any]]:
@@ -230,7 +259,7 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
 
     @app.delete("/api/facts/{fact_id}", status_code=204)
     def delete_fact(fact_id: str) -> None:
-        world.db.execute("DELETE FROM fact WHERE id = ?", (fact_id,))
+        world.delete_fact(fact_id)
 
     @app.post("/api/facts/{fact_id}/end", response_model=S.FactOut)
     def end_fact(fact_id: str, on_day: int) -> S.FactOut:

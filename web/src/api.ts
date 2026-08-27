@@ -317,10 +317,56 @@ async function send<T>(path: string, method: string, body?: unknown): Promise<T>
   return response.status === 204 ? (undefined as T) : (response.json() as Promise<T>)
 }
 
+export interface EntityDraft {
+  type_key: string
+  name: string
+  summary?: string
+  exists_from?: number | null
+  exists_to?: number | null
+  confidence?: string
+  tags?: string[]
+}
+
+export interface FactDraft {
+  subject_id: string
+  predicate_key: string
+  object_id?: string | null
+  value?: string | null
+  valid_from?: number | null
+  valid_to?: number | null
+  confidence?: string
+  secrecy?: string
+  strength?: string | null
+  note?: string
+}
+
+export interface RevisionEntry {
+  id: number
+  table_name: string
+  row_id: string
+  action: 'insert' | 'update' | 'delete'
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+  at: string
+}
+
 export const api = {
   world: () => get<WorldSummary>('/world'),
   vocabulary: () => get<Vocabulary>('/vocabulary'),
   date: (day: number) => get<WorldDate>(`/date/${day}`),
+  dayIndex: (year: number, month = 1, day = 1) =>
+    get<WorldDate>('/day', { year, month, day }),
+  recent: (limit = 8) => get<{ entity: Entity; at: string }[]>('/recent', { limit }),
+  history: (id: string) => get<RevisionEntry[]>(`/entities/${id}/history`),
+
+  createEntity: (draft: EntityDraft) => send<Entity>('/entities', 'POST', draft),
+  updateEntity: (id: string, patch: Partial<EntityDraft>) =>
+    send<Entity>(`/entities/${id}`, 'PATCH', patch),
+  deleteEntity: (id: string) => send<void>(`/entities/${id}`, 'DELETE'),
+  createFact: (draft: FactDraft) => send<Fact>('/facts', 'POST', draft),
+  deleteFact: (id: string) => send<void>(`/facts/${id}`, 'DELETE'),
+  endFact: (id: string, onDay: number) =>
+    send<Fact>(`/facts/${id}/end?on_day=${onDay}`, 'POST'),
   snapshots: () => get<{ id: string; name: string; day: number; note: string; date: WorldDate }[]>(
     '/snapshots'),
 

@@ -20,23 +20,25 @@ interface Props {
   dateText: string
   onSelect: (id: string) => void
   onGo: (view: string) => void
+  version: number
 }
 
-export function Dashboard({ world, day, dateText, onSelect, onGo }: Props) {
-  const titles = useAsync(() => api.titles(day), [day])
-  const continuity = useAsync(() => api.continuity(), [])
-  const events = useAsync(() => api.events(), [])
-  const state = useAsync(() => api.state(day), [day])
-  const secrets = useAsync(() => api.secrets(day), [day])
+export function Dashboard({ world, day, dateText, onSelect, onGo, version }: Props) {
+  const titles = useAsync(() => api.titles(day), [day, version])
+  const continuity = useAsync(() => api.continuity(), [version])
+  const events = useAsync(() => api.events(), [version])
+  const state = useAsync(() => api.state(day), [day, version])
+  const secrets = useAsync(() => api.secrets(day), [day, version])
+  const recent = useAsync(() => api.recent(8), [version])
 
   const succession = useAsync(async () => {
     const list = await api.titles(day)
     return Promise.all(
       list.map(async (t) => ({ title: t, line: await api.succession(t.id, { day }) })),
     )
-  }, [day])
+  }, [day, version])
 
-  const recent = (events.data ?? [])
+  const recentEvents = (events.data ?? [])
     .filter((e) => e.start_day !== null && e.start_day <= day)
     .sort((a, b) => (b.start_day ?? 0) - (a.start_day ?? 0))
     .slice(0, 6)
@@ -143,14 +145,16 @@ export function Dashboard({ world, day, dateText, onSelect, onGo }: Props) {
                actions={<button onClick={() => onGo('timeline')}>Timeline</button>}>
           {events.loading && <Loading />}
           <ul className="clean">
-            {recent.map((e) => (
+            {recentEvents.map((e) => (
               <li key={e.id}>
                 <div><strong>{e.name}</strong></div>
                 <div className="muted small mono">{e.date_text}</div>
                 {e.summary && <div className="small">{e.summary}</div>}
               </li>
             ))}
-            {recent.length === 0 && <li className="muted">Nothing has happened yet.</li>}
+            {recentEvents.length === 0 && (
+              <li className="muted">Nothing has happened yet.</li>
+            )}
           </ul>
         </Panel>
 
@@ -175,6 +179,20 @@ export function Dashboard({ world, day, dateText, onSelect, onGo }: Props) {
           ))}
           {(secrets.data ?? []).length === 0 && (
             <p className="muted">No secrets recorded.</p>
+          )}
+        </Panel>
+
+        <Panel title="Recently edited">
+          {(recent.data ?? []).map(({ entity }) => (
+            <button key={entity.id} className="entity-line"
+                    onClick={() => onSelect(entity.id)}>
+              <span className="name">{entity.name}</span>
+              <span className="type-chip">{entity.type_key.replace(/_/g, ' ')}</span>
+              <span className="desc">{entity.summary}</span>
+            </button>
+          ))}
+          {(recent.data ?? []).length === 0 && (
+            <p className="muted">Changes you make will show up here.</p>
           )}
         </Panel>
 

@@ -362,6 +362,55 @@ table.data th {
 table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft);
                 vertical-align: top; }
 
+/* ---------------------------------------------------------------- forms */
+
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(20, 18, 15, 0.45);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 8vh 16px 16px;
+}
+.modal-card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: var(--shadow); width: min(30rem, 100%);
+  max-height: 84vh; overflow: auto; padding: 16px 18px;
+}
+.modal-head { display: flex; align-items: baseline; justify-content: space-between;
+              margin-bottom: 12px; }
+.modal-head h2 { font-family: var(--serif); font-size: 1.15rem; }
+
+.form-stack { display: grid; gap: 12px; }
+.field { display: block; }
+.field > input, .field > select { width: 100%; margin-top: 3px; }
+
+.disclosure {
+  border: none; background: none; padding: 2px 0; text-align: left;
+  color: var(--link); font-size: 0.86rem;
+}
+.disclosure:hover { text-decoration: underline; border: none; }
+
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+
+.picked {
+  display: flex; gap: 8px; align-items: center; margin-top: 3px;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  background: var(--accent-soft); padding: 5px 9px;
+}
+.picked .name { font-weight: 600; flex: 1; }
+.picked button { padding: 1px 7px; }
+
+.picker-results {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  margin-top: 4px; max-height: 220px; overflow: auto; background: var(--panel);
+}
+
+.fact-actions { display: inline-flex; gap: 4px; margin-left: auto; }
+.fact-actions button { font-size: 0.72rem; padding: 1px 7px; color: var(--ink-faint); }
+.fact-actions button:hover { color: var(--ink); }
+
+.danger { color: var(--error); border-color: var(--error); }
+.danger:hover { background: var(--error-bg); border-color: var(--error); }
+
 @media (max-width: 900px) {
   .side { position: fixed; inset: 0 0 0 auto; width: min(92vw, 380px); z-index: 100;
           box-shadow: var(--shadow); }

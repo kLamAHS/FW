@@ -15,10 +15,11 @@ import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
 interface Props {
   day: number
   onSelect: (id: string) => void
+  version: number
 }
 
-export function SuccessionView({ day, onSelect }: Props) {
-  const titles = useAsync(() => api.titles(day), [day])
+export function SuccessionView({ day, onSelect, version }: Props) {
+  const titles = useAsync(() => api.titles(day), [day, version])
   const vocabulary = useAsync(() => api.vocabulary(), [])
   const [titleId, setTitleId] = useState<string | null>(null)
   const [law, setLaw] = useState<string>('')
@@ -29,7 +30,7 @@ export function SuccessionView({ day, onSelect }: Props) {
 
   const canonical = useAsync(
     () => (chosen ? api.succession(chosen, { day }) : Promise.resolve(null)),
-    [chosen, day],
+    [chosen, day, version],
   )
   const hypothetical = useAsync(
     () => (chosen && (law || illegitimate || dead)
@@ -40,7 +41,7 @@ export function SuccessionView({ day, onSelect }: Props) {
           assume_dead: dead || undefined,
         })
       : Promise.resolve(null)),
-    [chosen, day, law, illegitimate, dead],
+    [chosen, day, law, illegitimate, dead, version],
   )
 
   const people = (canonical.data?.line ?? []).concat(

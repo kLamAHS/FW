@@ -1,7 +1,7 @@
 /**
  * The application shell.
  *
- * Two pieces of global state, and both are deliberate.
+ * Three pieces of global state, all deliberate.
  *
  * **The date** (§3) belongs to the whole application, not to the map. Moving the slider
  * has to move every view at once, or the writer ends up holding "which view is showing
@@ -9,11 +9,16 @@
  *
  * **The selection** (§76) opens the side panel rather than navigating, so inspecting a
  * house from the map does not lose the map.
+ *
+ * **The mutation version** exists because editing happens in the side panel while a view
+ * stays on screen. Every successful edit bumps it, every view depends on it, so a rename
+ * in the panel repaints the map behind it — the two must never disagree about the world.
  */
 
 import { useState } from 'react'
 import { api } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
+import { EntityForm, Modal } from './components/forms'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
 import { Dashboard } from './views/Dashboard'
@@ -39,11 +44,16 @@ const VIEWS = [
 ] as const
 
 export function App() {
-  const world = useAsync(() => api.world(), [])
+  const [version, setVersion] = useState(0)
+  const bump = () => setVersion((v) => v + 1)
+
+  const world = useAsync(() => api.world(), [version])
+  const vocabulary = useAsync(() => api.vocabulary(), [])
   const snapshots = useAsync(() => api.snapshots(), [])
   const [view, setView] = useState<string>('dashboard')
   const [day, setDay] = useState<number | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -51,7 +61,7 @@ export function App() {
     [currentDay, world.data !== null],
   )
 
-  if (world.loading) return <Loading what="Opening the world" />
+  if (world.loading && !world.data) return <Loading what="Opening the world" />
   if (world.error) return <ErrorBox error={world.error} />
   if (!world.data) return null
 
@@ -76,7 +86,11 @@ export function App() {
           ))}
         </nav>
         <span style={{ flex: 1 }} />
-        <SearchBox onSelect={(id) => setSelected(id)} />
+        <button className="active" onClick={() => setCreating(true)}
+                title="Add something to the world">
+          + New
+        </button>
+        <SearchBox onSelect={(id) => setSelected(id)} version={version} />
       </header>
 
       <Timeline
@@ -92,50 +106,79 @@ export function App() {
         <main className="content">
           {view === 'dashboard' && (
             <Dashboard world={world.data} day={currentDay} dateText={dateText}
-                       onSelect={setSelected} onGo={setView} />
+                       onSelect={setSelected} onGo={setView} version={version} />
           )}
           {view === 'map' && (
-            <MapView day={currentDay} onSelect={setSelected} selectedId={selected} />
+            <MapView day={currentDay} onSelect={setSelected} selectedId={selected}
+                     version={version} />
           )}
-          {view === 'timeline' && <EventsView day={currentDay} onSelect={setSelected} />}
+          {view === 'timeline' && (
+            <EventsView day={currentDay} onSelect={setSelected} version={version} />
+          )}
           {view === 'pedigree' && (
-            <PedigreeView day={currentDay} onSelect={setSelected} selectedId={selected} />
+            <PedigreeView day={currentDay} onSelect={setSelected} selectedId={selected}
+                          version={version} />
           )}
           {view === 'graph' && (
-            <GraphView day={currentDay} onSelect={setSelected} selectedId={selected} />
+            <GraphView day={currentDay} onSelect={setSelected} selectedId={selected}
+                       version={version} />
           )}
           {view === 'succession' && (
-            <SuccessionView day={currentDay} onSelect={setSelected} />
+            <SuccessionView day={currentDay} onSelect={setSelected} version={version} />
           )}
-          {view === 'scenes' && <SceneView onSelect={setSelected} />}
+          {view === 'scenes' && <SceneView onSelect={setSelected} version={version} />}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
           {view === 'entities' && (
-            <EntitiesView world={world.data} day={currentDay} onSelect={setSelected} />
+            <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}
+                          version={version} />
           )}
-          {view === 'continuity' && <ContinuityView onSelect={setSelected} />}
+          {view === 'continuity' && (
+            <ContinuityView onSelect={setSelected} version={version} />
+          )}
         </main>
 
         {selected && (
           <SidePanel
             entityId={selected}
             day={currentDay}
+            dateText={dateText}
+            vocabulary={vocabulary.data}
+            calendar={world.data.calendar}
             onClose={() => setSelected(null)}
             onSelect={setSelected}
+            onMutate={bump}
           />
         )}
       </div>
+
+      {creating && vocabulary.data && (
+        <Modal title="Add to the world" onClose={() => setCreating(false)}>
+          <EntityForm
+            vocabulary={vocabulary.data}
+            calendar={world.data.calendar}
+            onDone={(entity) => {
+              setCreating(false)
+              bump()
+              setSelected(entity.id)     // open what was just made, ready to connect
+            }}
+            onCancel={() => setCreating(false)}
+          />
+        </Modal>
+      )}
     </div>
   )
 }
 
 /** Universal search (§53). Debounced, and it opens the side panel rather than navigating. */
-function SearchBox({ onSelect }: { onSelect: (id: string) => void }) {
+function SearchBox(
+  { onSelect, version }: { onSelect: (id: string) => void; version: number },
+) {
   const [text, setText] = useState('')
   const [open, setOpen] = useState(false)
   const query = useDebounced(text)
   const { data } = useAsync(
     () => (query.trim() ? api.search(query) : Promise.resolve([])),
-    [query],
+    [query, version],
   )
 
   return (

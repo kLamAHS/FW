@@ -15,15 +15,16 @@ import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
 
 interface Props {
   onSelect: (id: string) => void
+  version: number
 }
 
-export function SceneView({ onSelect }: Props) {
-  const scenes = useAsync(() => api.scenes(), [])
+export function SceneView({ onSelect, version }: Props) {
+  const scenes = useAsync(() => api.scenes(), [version])
   const [chosen, setChosen] = useState<string | null>(null)
   const sceneId = chosen ?? scenes.data?.[0]?.id ?? null
   const context = useAsync(
     () => (sceneId ? api.sceneContext(sceneId) : Promise.resolve(null)),
-    [sceneId],
+    [sceneId, version],
   )
 
   if (scenes.loading) return <Loading />

@@ -1,38 +1,71 @@
 /**
- * The contextual side panel (§76).
+ * The contextual side panel (§76) — now also where editing happens.
  *
- * "Wherever the user is working, allow quick inspection without leaving context." Clicking
- * a house on the map, a node in the graph or a name in a scene opens this rather than
- * navigating away — the writer keeps their place.
+ * "Wherever the user is working, allow quick inspection without leaving context." Editing
+ * obeys the same rule: renaming a character or recording a new relationship happens here,
+ * in place, rather than on a separate admin page that loses the writer's position.
  *
- * It also carries §51's "why does this matter" and §52's "what changes if this
- * disappears", because the answer to both is nearly always wanted about the thing you have
- * just clicked.
+ * Two editing decisions worth naming:
+ * - **Ending a fact uses the timeline's current date.** The slider already answers "when
+ *   is now?", so "this stopped being true" is one click, and §106.3's rule — close
+ *   history, never overwrite it — becomes the easy path rather than the disciplined one.
+ * - **Deletion is a two-step button, not a confirm dialog.** The first click arms it and
+ *   says what it will do; the second does it. Nothing modal, nothing to dismiss.
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../api'
-import type { Finding } from '../api'
+import type { CalendarInfo, Fact, Finding, Vocabulary } from '../api'
 import { Badge, ErrorBox, Loading, TypeChip, useAsync } from './common'
+import { EntityForm, FactForm } from './forms'
 
 interface Props {
   entityId: string
   day: number
+  dateText: string
+  vocabulary: Vocabulary | null
+  calendar: CalendarInfo
   onClose: () => void
   onSelect: (id: string) => void
+  onMutate: () => void
 }
 
 type Tab = 'facts' | 'why' | 'impact'
+type Mode = 'view' | 'edit' | 'add-fact'
 
-export function SidePanel({ entityId, day, onClose, onSelect }: Props) {
+export function SidePanel(
+  { entityId, day, dateText, vocabulary, calendar, onClose, onSelect, onMutate }: Props,
+) {
   const [tab, setTab] = useState<Tab>('facts')
+  const [mode, setMode] = useState<Mode>('view')
+  const [armedDelete, setArmedDelete] = useState(false)
   const bundle = useAsync(() => api.entity(entityId, day), [entityId, day])
+
+  // A new selection starts fresh: on the details tab, in view mode, with nothing armed.
+  // Without this, selecting a character while the panel sits on "If it vanished" opens
+  // them mid-analysis — and a just-created entity would land on a tab about its removal.
+  useEffect(() => {
+    setTab('facts')
+    setMode('view')
+    setArmedDelete(false)
+  }, [entityId])
 
   if (bundle.loading) return <aside className="side"><Loading /></aside>
   if (bundle.error) return <aside className="side"><ErrorBox error={bundle.error} /></aside>
   if (!bundle.data) return null
 
   const { entity, facts, events, titles, knowledge, scenes } = bundle.data
+
+  const changed = () => {
+    bundle.reload()
+    onMutate()
+  }
+
+  const removeEntity = async () => {
+    await api.deleteEntity(entity.id)
+    onMutate()
+    onClose()
+  }
 
   return (
     <aside className="side" aria-label={`Details for ${entity.name}`}>
@@ -43,88 +76,241 @@ export function SidePanel({ entityId, day, onClose, onSelect }: Props) {
         {entity.confidence !== 'canon' && <Badge kind="disputed">{entity.confidence}</Badge>}
       </div>
 
-      {entity.summary && <p className="serif">{entity.summary}</p>}
-
-      <div className="toolbar" role="tablist">
-        <button role="tab" aria-selected={tab === 'facts'}
-                className={tab === 'facts' ? 'active' : ''}
-                onClick={() => setTab('facts')}>Details</button>
-        <button role="tab" aria-selected={tab === 'why'}
-                className={tab === 'why' ? 'active' : ''}
-                onClick={() => setTab('why')}>Why it matters</button>
-        <button role="tab" aria-selected={tab === 'impact'}
-                className={tab === 'impact' ? 'active' : ''}
-                onClick={() => setTab('impact')}>If it vanished</button>
-      </div>
-
-      {tab === 'facts' && (
+      {mode === 'edit' && vocabulary ? (
+        <EntityForm
+          vocabulary={vocabulary}
+          calendar={calendar}
+          existing={entity}
+          onDone={() => { setMode('view'); changed() }}
+          onCancel={() => setMode('view')}
+        />
+      ) : mode === 'add-fact' && vocabulary ? (
+        <FactForm
+          subject={entity}
+          vocabulary={vocabulary}
+          calendar={calendar}
+          onDone={() => { setMode('view'); changed() }}
+          onCancel={() => setMode('view')}
+        />
+      ) : (
         <>
-          {titles.length > 0 && (
-            <Section title="Titles held">
-              <ul className="clean">
-                {titles.map((t) => <li key={t.id}>{t.name}</li>)}
-              </ul>
-            </Section>
+          {entity.summary && <p className="serif">{entity.summary}</p>}
+
+          <div className="toolbar">
+            <button onClick={() => setMode('edit')}>Edit</button>
+            <button onClick={() => setMode('add-fact')}>Add a connection</button>
+            <span className="spacer" />
+            {armedDelete ? (
+              <>
+                <button className="danger" onClick={() => void removeEntity()}>
+                  Really delete
+                </button>
+                <button onClick={() => setArmedDelete(false)}>Keep it</button>
+              </>
+            ) : (
+              <button className="danger" onClick={() => setArmedDelete(true)}
+                      title="Removes the entity and every fact touching it">
+                Delete
+              </button>
+            )}
+          </div>
+
+          <div className="toolbar" role="tablist">
+            <button role="tab" aria-selected={tab === 'facts'}
+                    className={tab === 'facts' ? 'active' : ''}
+                    onClick={() => setTab('facts')}>Details</button>
+            <button role="tab" aria-selected={tab === 'why'}
+                    className={tab === 'why' ? 'active' : ''}
+                    onClick={() => setTab('why')}>Why it matters</button>
+            <button role="tab" aria-selected={tab === 'impact'}
+                    className={tab === 'impact' ? 'active' : ''}
+                    onClick={() => setTab('impact')}>If it vanished</button>
+          </div>
+
+          {tab === 'facts' && (
+            <>
+              {titles.length > 0 && (
+                <Section title="Titles held">
+                  <ul className="clean">
+                    {titles.map((t) => <li key={t.id}>{t.name}</li>)}
+                  </ul>
+                </Section>
+              )}
+
+              {facts.length > 0 && (
+                <Section title="Connections" count={facts.length}>
+                  {facts.map((f) => (
+                    <FactLine key={f.id + f.predicate_key} fact={f}
+                              day={day} dateText={dateText}
+                              onSelect={onSelect} onChanged={changed} />
+                  ))}
+                </Section>
+              )}
+              {facts.length === 0 && (
+                <p className="muted small">
+                  Nothing recorded yet — “Add a connection” is where a world starts.
+                </p>
+              )}
+
+              {knowledge.length > 0 && (
+                <Section title="What they know">
+                  <ul className="clean">
+                    {knowledge.map((k, i) => (
+                      <li key={i} className="small">
+                        <strong>{k.stance}</strong>{' '}
+                        {k.about_observer_id ? 'that another knows ' : ''}
+                        “{k.secret_name}”
+                        {k.note && <div className="muted">{k.note}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                </Section>
+              )}
+
+              {events.length > 0 && (
+                <Section title="History" count={events.length}>
+                  <ul className="clean">
+                    {events.map((e) => <li key={e.id} className="small">{e.name}</li>)}
+                  </ul>
+                </Section>
+              )}
+
+              {scenes.length > 0 && (
+                <Section title="Appears in">
+                  <ul className="clean">
+                    {scenes.map((s) => <li key={s.id} className="small">{s.title}</li>)}
+                  </ul>
+                </Section>
+              )}
+
+              <ChangeHistory entityId={entity.id} />
+            </>
           )}
 
-          {facts.length > 0 && (
-            <Section title="Connections" count={facts.length}>
-              {facts.map((f) => (
-                <div key={f.id + f.predicate_key} className="fact-line">
-                  <span className="pred">{f.predicate_label}</span>
-                  {f.object_id ? (
-                    <button className="obj" style={{ border: 0, background: 'none', padding: 0 }}
-                            onClick={() => onSelect(f.object_id!)}>
-                      {f.object_name}
-                    </button>
-                  ) : (
-                    <span className="obj">{f.value}</span>
-                  )}
-                  {f.strength && <Badge>{f.strength.replace(/_/g, ' ')}</Badge>}
-                  {f.is_secret && <Badge kind="secret" title="Secret">secret</Badge>}
-                  {f.note && <div className="small muted" style={{ width: '100%' }}>{f.note}</div>}
-                </div>
-              ))}
-            </Section>
-          )}
-
-          {knowledge.length > 0 && (
-            <Section title="What they know">
-              <ul className="clean">
-                {knowledge.map((k, i) => (
-                  <li key={i} className="small">
-                    <strong>{k.stance}</strong>{' '}
-                    {k.about_observer_id ? 'that another knows ' : ''}
-                    “{k.secret_name}”
-                    {k.note && <div className="muted">{k.note}</div>}
-                  </li>
-                ))}
-              </ul>
-            </Section>
-          )}
-
-          {events.length > 0 && (
-            <Section title="History" count={events.length}>
-              <ul className="clean">
-                {events.map((e) => <li key={e.id} className="small">{e.name}</li>)}
-              </ul>
-            </Section>
-          )}
-
-          {scenes.length > 0 && (
-            <Section title="Appears in">
-              <ul className="clean">
-                {scenes.map((s) => <li key={s.id} className="small">{s.title}</li>)}
-              </ul>
-            </Section>
-          )}
+          {tab === 'why' && <WhyTab entityId={entityId} day={day} />}
+          {tab === 'impact' && <ImpactTab entityId={entityId} day={day} />}
         </>
       )}
-
-      {tab === 'why' && <WhyTab entityId={entityId} day={day} />}
-      {tab === 'impact' && <ImpactTab entityId={entityId} day={day} />}
     </aside>
   )
+}
+
+/** One fact row, with its quiet end/delete affordances. */
+function FactLine(
+  { fact, day, dateText, onSelect, onChanged }:
+  {
+    fact: Fact
+    day: number
+    dateText: string
+    onSelect: (id: string) => void
+    onChanged: () => void
+  },
+) {
+  const [armed, setArmed] = useState<'end' | 'delete' | null>(null)
+  // An incoming fact is shown flipped through its inverse; ending or deleting it must
+  // target the real row, which fact.id already names in either direction.
+  const alreadyEnded = fact.valid_to !== null && fact.valid_to <= day
+
+  const endIt = async () => {
+    await api.endFact(fact.id, day)
+    setArmed(null)
+    onChanged()
+  }
+  const deleteIt = async () => {
+    await api.deleteFact(fact.id)
+    setArmed(null)
+    onChanged()
+  }
+
+  return (
+    <div className="fact-line">
+      <span className="pred">{fact.predicate_label}</span>
+      {fact.object_id ? (
+        <button className="obj" style={{ border: 0, background: 'none', padding: 0 }}
+                onClick={() => onSelect(fact.object_id!)}>
+          {fact.object_name}
+        </button>
+      ) : (
+        <span className="obj">{fact.value}</span>
+      )}
+      {fact.strength && <Badge>{fact.strength.replace(/_/g, ' ')}</Badge>}
+      {fact.is_secret && <Badge kind="secret" title="Secret">secret</Badge>}
+
+      <span className="fact-actions">
+        {armed === 'end' ? (
+          <>
+            <button className="danger" onClick={() => void endIt()}
+                    title={`Close this fact's validity on ${dateText}`}>
+              end on {dateText}
+            </button>
+            <button onClick={() => setArmed(null)}>keep</button>
+          </>
+        ) : armed === 'delete' ? (
+          <>
+            <button className="danger" onClick={() => void deleteIt()}>really delete</button>
+            <button onClick={() => setArmed(null)}>keep</button>
+          </>
+        ) : (
+          <>
+            {!alreadyEnded && (
+              <button onClick={() => setArmed('end')}
+                      title="It stopped being true — close it on the current date">
+                end
+              </button>
+            )}
+            <button onClick={() => setArmed('delete')}
+                    title="It was never true — remove the entry">
+              ✕
+            </button>
+          </>
+        )}
+      </span>
+
+      {fact.note && <div className="small muted" style={{ width: '100%' }}>{fact.note}</div>}
+    </div>
+  )
+}
+
+/** §59: the entity's own change history, collapsed by default. */
+function ChangeHistory({ entityId }: { entityId: string }) {
+  const [open, setOpen] = useState(false)
+  const history = useAsync(
+    () => (open ? api.history(entityId) : Promise.resolve(null)),
+    [open, entityId],
+  )
+
+  return (
+    <div style={{ marginTop: 14 }}>
+      <button className="disclosure" onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}>
+        {open ? '▾' : '▸'} Change history
+      </button>
+      {open && history.loading && <Loading />}
+      {open && history.data && (
+        <ul className="clean small">
+          {history.data.map((r) => (
+            <li key={r.id}>
+              <span className="mono muted">{r.at.slice(0, 16).replace('T', ' ')}</span>{' '}
+              {describeRevision(r)}
+            </li>
+          ))}
+          {history.data.length === 0 && <li className="muted">No recorded changes.</li>}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function describeRevision(r: {
+  action: string
+  before: Record<string, unknown> | null
+  after: Record<string, unknown> | null
+}): string {
+  if (r.action === 'insert') return 'created'
+  if (r.action === 'delete') return 'deleted'
+  const changes = Object.entries(r.after ?? {})
+    .map(([key, value]) => `${key.replace(/_/g, ' ')} → ${String(value ?? '—')}`)
+  return changes.length ? changes.join(', ') : 'changed'
 }
 
 function Section(

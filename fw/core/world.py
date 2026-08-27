@@ -225,6 +225,66 @@ class World:
     def day(self, year: int, month: int = 1, day: int = 1) -> int:
         return self.calendar.date(year, month, day)
 
+    # ---- revisions (§59) --------------------------------------------------
+
+    def _log_revision(self, table: str, row_id: str, action: str,
+                      before: dict | None, after: dict | None) -> None:
+        """Append to the revision log. Never updated, never deleted.
+
+        §59 asks for revision history and restore points, and §106.3 forbids overwriting
+        history. The log records what changed rather than snapshotting the row, so it is a
+        readable diff — and because it is written inside the same transaction as the
+        change, a rollback takes its log entry with it.
+        """
+        self.db.insert("revision", {
+            "project_id": self.project_id, "table_name": table, "row_id": row_id,
+            "action": action, "before": before, "after": after, "at": now_iso(),
+        })
+
+    def revisions_for(self, row_id: str, *, limit: int = 50) -> list[dict]:
+        """The change history of one row, newest first."""
+        return [
+            {**dict(r), "before": decode_json(r["before"], None),
+             "after": decode_json(r["after"], None)}
+            for r in self.db.query(
+                "SELECT * FROM revision WHERE project_id = ? AND row_id = ? "
+                "ORDER BY id DESC LIMIT ?",
+                (self.project_id, row_id, limit),
+            )
+        ]
+
+    def recently_edited(self, *, limit: int = 10) -> list[tuple[Entity, str]]:
+        """Entities with the newest changes, for §74's dashboard section.
+
+        Fact changes are attributed to their subject entity, so adding a relationship
+        counts as editing the person it is about — which is how a writer thinks of it.
+        """
+        rows = self.db.query(
+            """SELECT row_id, table_name, max(id) AS latest, max(at) AS at
+               FROM revision WHERE project_id = ?
+               GROUP BY row_id ORDER BY latest DESC LIMIT ?""",
+            (self.project_id, limit * 3),
+        )
+        out: list[tuple[Entity, str]] = []
+        seen: set[str] = set()
+        for row in rows:
+            entity_id = row["row_id"]
+            if row["table_name"] == "fact":
+                entity_id = self.db.scalar(
+                    "SELECT subject_id FROM fact WHERE id = ?", (row["row_id"],))
+                if entity_id is None:
+                    continue
+            if entity_id in seen:
+                continue
+            entity = self.get_entity(entity_id)
+            if entity is None:
+                continue
+            seen.add(entity_id)
+            out.append((entity, row["at"]))
+            if len(out) >= limit:
+                break
+        return out
+
     # ---- entities ---------------------------------------------------------
 
     def add_entity(
@@ -260,6 +320,8 @@ class World:
                 "created_at": stamp, "updated_at": stamp,
             })
             self._index_entity(eid, type_key, name, summary, tags)
+            self._log_revision("entity", eid, "insert", None,
+                               {"name": name, "type_key": type_key})
         return Entity(
             id=eid, type_key=type_key, name=name, summary=summary,
             exists_from=exists_from, exists_to=exists_to,
@@ -312,16 +374,28 @@ class World:
             return
         payload["updated_at"] = now_iso()
         with self.db.transaction():
+            row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
+            data = dict(row) if row else {}
+            before = {k: data[k] for k in payload if k != "updated_at" and k in data}
             self.db.update("entity", entity_id, payload)
             e = self.get_entity(entity_id)
             if e is not None:
                 self._index_entity(e.id, e.type_key, e.name, e.summary, e.tags)
+            self._log_revision(
+                "entity", entity_id, "update", before,
+                {k: v for k, v in payload.items() if k != "updated_at"},
+            )
 
     def delete_entity(self, entity_id: str) -> None:
         with self.db.transaction():
+            entity = self.get_entity(entity_id)
             self.db.execute("DELETE FROM entity_fts WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity_trigram WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity WHERE id = ?", (entity_id,))
+            if entity is not None:
+                self._log_revision("entity", entity_id, "delete",
+                                   {"name": entity.name, "type_key": entity.type_key},
+                                   None)
 
     def get_entity(self, entity_id: str) -> Entity | None:
         row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
@@ -410,17 +484,23 @@ class World:
 
         fid = new_id()
         stamp = now_iso()
-        self.db.insert("fact", {
-            "id": fid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "subject_id": subject_id, "predicate_key": predicate_key,
-            "object_id": object_id, "about_fact_id": about_fact_id,
-            "value": None if value is None else str(value),
-            "valid_from": valid_from, "valid_from_hi": valid_from_hi,
-            "valid_to": valid_to, "valid_to_lo": valid_to_lo, "precision": precision,
-            "confidence": confidence, "secrecy": secrecy, "strength": strength,
-            "source_id": source_id, "note": note, "props": props or {},
-            "created_at": stamp, "updated_at": stamp,
-        })
+        with self.db.transaction():
+            self.db.insert("fact", {
+                "id": fid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "subject_id": subject_id, "predicate_key": predicate_key,
+                "object_id": object_id, "about_fact_id": about_fact_id,
+                "value": None if value is None else str(value),
+                "valid_from": valid_from, "valid_from_hi": valid_from_hi,
+                "valid_to": valid_to, "valid_to_lo": valid_to_lo, "precision": precision,
+                "confidence": confidence, "secrecy": secrecy, "strength": strength,
+                "source_id": source_id, "note": note, "props": props or {},
+                "created_at": stamp, "updated_at": stamp,
+            })
+            self._log_revision("fact", fid, "insert", None, {
+                "subject_id": subject_id, "predicate_key": predicate_key,
+                "object_id": object_id, "value": None if value is None else str(value),
+                "valid_from": valid_from, "valid_to": valid_to,
+            })
         return Fact(
             id=fid, subject_id=subject_id, predicate_key=predicate_key,
             object_id=object_id, value=None if value is None else str(value),
@@ -437,7 +517,30 @@ class World:
         §106.3: timeline-aware information must not overwrite history. When House Orren
         takes Greyhaven, House Marr's control *ended* — it did not become untrue.
         """
-        self.db.update("fact", fact_id, {"valid_to": on_day, "updated_at": now_iso()})
+        with self.db.transaction():
+            before = self.db.scalar(
+                "SELECT valid_to FROM fact WHERE id = ?", (fact_id,))
+            self.db.update("fact", fact_id, {"valid_to": on_day, "updated_at": now_iso()})
+            self._log_revision("fact", fact_id, "update",
+                               {"valid_to": before}, {"valid_to": on_day})
+
+    def delete_fact(self, fact_id: str) -> None:
+        """Remove a fact outright.
+
+        Ending a fact is almost always right; deletion is for the entry that was simply a
+        mistake. The revision log keeps what was deleted, so even this is recoverable.
+        """
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
+            if row is None:
+                return
+            self._log_revision("fact", fact_id, "delete", {
+                "subject_id": row["subject_id"],
+                "predicate_key": row["predicate_key"],
+                "object_id": row["object_id"], "value": row["value"],
+                "valid_from": row["valid_from"], "valid_to": row["valid_to"],
+            }, None)
+            self.db.execute("DELETE FROM fact WHERE id = ?", (fact_id,))
 
     def transfer(
         self,
@@ -688,9 +791,13 @@ class World:
         seen: set[str] = set()
 
         try:
+            # Weighted ranking: a hit in the NAME outranks a hit in the summary or
+            # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
+            # "Northmarch", because Northwatch's summary mentions the region — precisely
+            # the wrong entity picked with full confidence.
             for row in self.db.query(
                 "SELECT entity_id FROM entity_fts WHERE entity_fts MATCH ? "
-                "ORDER BY rank LIMIT ?",
+                "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0) LIMIT ?",
                 (_fts_query(text), limit),
             ):
                 if row["entity_id"] not in seen:

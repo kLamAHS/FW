@@ -35,10 +35,11 @@ interface Props {
   day: number
   onSelect: (id: string) => void
   selectedId: string | null
+  version: number
 }
 
-export function MapView({ day, onSelect, selectedId }: Props) {
-  const { data, error, loading } = useAsync(() => api.map(day), [day])
+export function MapView({ day, onSelect, selectedId, version }: Props) {
+  const { data, error, loading } = useAsync(() => api.map(day), [day, version])
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [mode, setMode] = useState<ControlMode>('legally_owns')
   const [showLabels, setShowLabels] = useState(true)

@@ -388,3 +388,63 @@ class TestReification:
 
         world.db.execute("DELETE FROM fact WHERE id = ?", (base.id,))
         assert world.get_fact(about.id) is None    # cascaded, not orphaned
+
+
+class TestRevisionLog:
+    """§59: every mutation leaves an append-only trace."""
+
+    def test_create_update_delete_are_all_logged(self, world: World):
+        e = world.add_entity("settlement", "Newtown")
+        world.update_entity(e.id, name="Renamed")
+        world.delete_entity(e.id)
+
+        history = world.revisions_for(e.id)
+        actions = [h["action"] for h in history]
+        assert actions == ["delete", "update", "insert"]     # newest first
+        update = history[1]
+        assert update["before"]["name"] == "Newtown"
+        assert update["after"]["name"] == "Renamed"
+
+    def test_fact_lifecycle_is_logged(self, world: World):
+        a = world.add_entity("house", "House A")
+        b = world.add_entity("settlement", "B-town")
+        fact = world.assert_fact(a, "legally_owns", b, valid_from=world.day(100))
+        world.end_fact(fact.id, world.day(200))
+        world.delete_fact(fact.id)
+
+        history = world.revisions_for(fact.id)
+        actions = [h["action"] for h in history]
+        assert actions == ["delete", "update", "insert"]
+        assert history[1]["after"]["valid_to"] == world.day(200)
+        # the deletion kept what was lost, so even a deletion is recoverable
+        assert history[0]["before"]["predicate_key"] == "legally_owns"
+
+    def test_deleting_a_missing_fact_is_a_quiet_no_op(self, world: World):
+        world.delete_fact("nonexistent")
+
+    def test_recently_edited_attributes_facts_to_their_subject(self, world: World):
+        person = world.add_entity("person", "Mara")
+        other = world.add_entity("person", "Edric")
+        world.assert_fact(person, "trusts", other, strength="deeply_trusts")
+
+        recent = world.recently_edited(limit=5)
+        names = [entity.name for entity, _ in recent]
+        # the fact edit surfaces as Mara, not as an opaque fact id
+        assert names[0] == "Mara"
+        # each entity appears once, however many changes it has
+        assert len(names) == len(set(names))
+
+    def test_recently_edited_skips_deleted_entities(self, world: World):
+        e = world.add_entity("settlement", "Doomed")
+        world.delete_entity(e.id)
+        assert "Doomed" not in [x.name for x, _ in world.recently_edited()]
+
+
+class TestSearchRanking:
+    def test_a_name_hit_outranks_a_summary_mention(self, renn: World):
+        """Searching 'Northmarch' must find The Northmarch itself first — not
+        Northwatch, whose summary merely mentions the region. Caught by driving the
+        entity picker in a browser: it chose the wrong entity with full confidence."""
+        names = [e.name for e in renn.search("Northmarch")]
+        assert names[0] == "The Northmarch"
+        assert "Northwatch" in names          # still found, just not first

@@ -18,14 +18,15 @@ import {
 /* ------------------------------------------------------------------ entities */
 
 export function EntitiesView(
-  { world, day, onSelect }:
-  { world: WorldSummary; day: number; onSelect: (id: string) => void },
+  { world, day, onSelect, version }:
+  { world: WorldSummary; day: number; onSelect: (id: string) => void
+    version: number },
 ) {
   const [type, setType] = useState<string>('')
   const [atDate, setAtDate] = useState(true)
   const { data, error, loading } = useAsync(
     () => api.entities({ type_key: type || undefined, at: atDate ? day : undefined }),
-    [type, atDate, day],
+    [type, atDate, day, version],
   )
   const vocabulary = useAsync(() => api.vocabulary(), [])
 
@@ -72,9 +73,10 @@ export function EntitiesView(
 /* ------------------------------------------------------------------ timeline */
 
 export function EventsView(
-  { day, onSelect }: { day: number; onSelect: (id: string) => void },
+  { day, onSelect, version }:
+  { day: number; onSelect: (id: string) => void; version: number },
 ) {
-  const { data, error, loading } = useAsync(() => api.events(), [])
+  const { data, error, loading } = useAsync(() => api.events(), [version])
   const [expanded, setExpanded] = useState<string | null>(null)
   const consequences = useAsync(
     () => (expanded ? api.consequences(expanded) : Promise.resolve([])),
@@ -142,9 +144,11 @@ export function EventsView(
 
 /* ------------------------------------------------------------------ continuity */
 
-export function ContinuityView({ onSelect }: { onSelect: (id: string) => void }) {
+export function ContinuityView(
+  { onSelect, version }: { onSelect: (id: string) => void; version: number },
+) {
   const [minimum, setMinimum] = useState('notice')
-  const report = useAsync(() => api.continuity(minimum), [minimum])
+  const report = useAsync(() => api.continuity(minimum), [minimum, version])
   const [dismissing, setDismissing] = useState<string | null>(null)
   const [reason, setReason] = useState('')
 

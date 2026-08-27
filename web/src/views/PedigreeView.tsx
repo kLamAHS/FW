@@ -23,16 +23,17 @@ interface Props {
   day: number
   onSelect: (id: string) => void
   selectedId: string | null
+  version: number
 }
 
-export function PedigreeView({ day, onSelect, selectedId }: Props) {
+export function PedigreeView({ day, onSelect, selectedId, version }: Props) {
   const [lens, setLens] = useState<'legal' | 'biological'>('legal')
   const [livingOnly, setLivingOnly] = useState(false)
   const pan = usePanZoom(0.85)
 
   const { data, error, loading } = useAsync(
     () => api.pedigree({ lens, living_only_on: livingOnly ? day : undefined }),
-    [lens, livingOnly, day],
+    [lens, livingOnly, day, version],
   )
 
   if (loading && !data) return <Loading what="Laying out the family" />

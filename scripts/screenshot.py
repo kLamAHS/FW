@@ -110,6 +110,55 @@ with sync_playwright() as p:
     else:
         problems.append("search returned nothing for 'Greyhaven'")
 
+    # Exercise the editing loop: create an entity, connect it, end the connection.
+    page.click(".topbar > button:has-text('+ New')")
+    page.wait_for_selector(".modal-card")
+    page.select_option(".modal-card select", label="Settlement")
+    page.fill(".modal-card input[placeholder*='settlement']", "Thornby")
+    page.fill(".modal-card input[placeholder*='remember']",
+              "A village raised by the test harness.")
+    page.screenshot(path=str(OUT / "create-entity.png"))
+    page.click(".modal-card button:has-text('Add to the world')")
+    page.wait_for_timeout(1200)
+
+    panel_title = (page.text_content(".side h2") or "").strip()
+    if panel_title != "Thornby":
+        problems.append(f"creating Thornby should open its panel, got {panel_title!r}")
+    else:
+        print("  created Thornby; its panel opened")
+
+        page.click(".side button:has-text('Add a connection')")
+        page.wait_for_timeout(400)
+        page.select_option(".side select", "located_in")
+        page.fill(".side input[placeholder='Type a name…']", "Northmarch")
+        page.wait_for_timeout(700)
+        page.click(".picker-results .entity-line")
+        page.screenshot(path=str(OUT / "add-fact.png"))
+        page.click(".side button:has-text('Record it')")
+        page.wait_for_timeout(1200)
+        body = page.text_content(".side") or ""
+        if "The Northmarch" not in body:
+            problems.append("recording 'Thornby located in The Northmarch' did not show")
+        else:
+            print("  connected Thornby to The Northmarch")
+
+        # End the fact on the current date, §106.3's easy path.
+        page.click(".side .fact-actions button:has-text('end')")
+        page.wait_for_timeout(300)
+        page.click(".side .fact-actions button:has-text('end on')")
+        page.wait_for_timeout(900)
+        print("  ended the connection on the current date")
+
+    # The dashboard's recently-edited section should now lead with Thornby.
+    page.click("nav.nav button:has-text('World')")
+    page.wait_for_timeout(1200)
+    recently = page.text_content(".content") or ""
+    if "Thornby" not in recently:
+        problems.append("Thornby missing from the dashboard after editing")
+    else:
+        print("  Thornby appears on the dashboard (recently edited)")
+    page.screenshot(path=str(OUT / "after-editing.png"))
+
     # Exercise the succession hypothetical (§50).
     page.click("nav.nav button:has-text('Succession')")
     page.wait_for_timeout(1100)

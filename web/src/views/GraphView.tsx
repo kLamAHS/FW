@@ -26,9 +26,10 @@ interface Props {
   day: number
   onSelect: (id: string) => void
   selectedId: string | null
+  version: number
 }
 
-export function GraphView({ day, onSelect, selectedId }: Props) {
+export function GraphView({ day, onSelect, selectedId, version }: Props) {
   const [active, setActive] = useState<Set<string>>(
     new Set(['kinship', 'feeling', 'politics', 'territory']),
   )
@@ -42,7 +43,7 @@ export function GraphView({ day, onSelect, selectedId }: Props) {
       centre: focus ?? undefined,
       hops: 2,
     }),
-    [day, [...active].sort().join(','), focus],
+    [day, [...active].sort().join(','), focus, version],
   )
 
   const layout = useForceLayout(data)
