@@ -1,1 +1,172 @@
-# FW
+# FW — a worldbuilding application for fiction writers
+
+An external cognitive model of a fictional world, built from `DesignSpec.pdf` in this
+repository.
+
+The brief's premise is that a writer should never have to hold their whole world in their
+head. So this is not a wiki with a family-tree page bolted on: it is one interconnected,
+temporal model that can be asked questions.
+
+- **What was true in year 215?** Every fact carries a validity interval, so one slider
+  moves the map, the borders, the titles, the living cast and the alliances together.
+- **Who inherits?** Succession is computed from the genealogy under a chosen law, as of a
+  date — and "what if he were declared illegitimate?" is a question, not an edit.
+- **Why is this scene tense?** Open it and the relationships, secrets, goals and recent
+  history that bear on the room are already there, ranked.
+- **Does any of this contradict itself?** Twenty continuity rules run over the world,
+  including the one that catches a journey the timeline does not allow.
+
+## Running it
+
+```bash
+python -m venv .venv && .venv/bin/pip install -e ".[dev]"
+
+.venv/bin/fw seed demo.fwworld     # the worked example world (§115)
+cd web && npm install && npm run build && cd ..
+.venv/bin/fw serve demo.fwworld    # http://127.0.0.1:8000
+```
+
+The browser client is optional. The API and the CLI are complete without it, and `fw serve`
+will say so rather than showing a broken page.
+
+```bash
+fw succession demo.fwworld --title "King of Renn" --year 240 --month 5 --day 61
+fw succession demo.fwworld --title "King of Renn" --illegitimate "Prince Oren"
+fw route demo.fwworld Greyhaven Rennford
+fw scene demo.fwworld
+fw why demo.fwworld Greyhaven
+fw impact demo.fwworld Greyhaven
+fw check demo.fwworld
+```
+
+## The example world
+
+`fw seed` builds the Kingdom of Renn, the demonstration dataset §115 asks for: one kingdom,
+three regions, six settlements, three noble houses, a royal dynasty, ten characters, a
+disputed inheritance, two roads, a major river, resources, two trade routes, a war, a
+secret, and an active political crisis. Almost every name comes from the brief's own
+running examples.
+
+The disputed inheritance, the secret and the crisis are one thing. Old King Renn fathered
+Aldren and Corren. Aldren's legal children are Oren and Elia; Corren's are Caros and Mara.
+But Oren's *biological* father is Corren — which is §57's worked example of a fact that is
+publicly believed and canonically false at the same time, and the reason the succession is
+contested.
+
+The world doubles as the integration-test fixture, so the tests exercise the same world a
+new user first opens.
+
+## Architecture
+
+A headless Python domain core with thin adapters. The HTTP layer and the React client are
+both adapters; all world logic lives in `fw/core` and is testable with no server and no
+browser.
+
+```
+fw/core/     the domain. Never imports the web framework — enforced in CI.
+  calendar/    fictional calendars, eras, uncertain dates, day-index conversion
+  model/       records and the starting vocabulary of types and predicates
+  store/       SQLite schema, connection policy, migrations
+  genealogy/   parentage, kinship, pedigree layout
+  succession/  succession laws and the heir-ordering engine
+  geo/         routing over the road and river network
+  continuity/  the rule registry
+  derive/      scene context and dependency analysis
+  seed/        the Kingdom of Renn
+  world.py     the World facade — the core's public surface
+fw/api/      FastAPI routers
+fw/cli/      the `fw` command
+web/         React 19 + TypeScript + Vite
+tests/       pytest
+```
+
+### The fact spine
+
+The decision everything rests on: **a property and a relationship are the same thing.** §3
+requires that every property *or* relationship may carry a temporal range, which columns on
+an entity table cannot express. So both are one row shape:
+
+```
+fact(subject, predicate, object | value, valid_from, valid_to, confidence,
+     secrecy, source, branch, about_fact_id)
+```
+
+A person's hair colour and their oath of fealty store identically, so temporality (§3),
+confidence (§57), secrecy (§6), sourcing (§58) and alternate-timeline branching (§105) apply
+uniformly to both without a second implementation. `predicate.inverse_key` names the inverse
+once, which is why §77's bidirectional linking is a lookup rather than a duplicated row, and
+why §106.1 — never enter the same fact twice — is enforced by the schema rather than by
+discipline.
+
+Entity types, predicates and scales are **rows, not classes**. The built-ins are installed
+through the same API a writer's own custom type would use, so §60's extensibility is
+structural rather than promised.
+
+### Storage
+
+One `.fwworld` file is one SQLite database, so §63's "portable project export" is `cp`.
+STRICT tables, foreign keys on, FTS5 for search (including trigram for fuzzy matching) and
+R\*Tree for map viewports — all from the standard library, no extra dependency.
+
+**`ANALYZE` is not optional.** Recursive CTEs carry every graph traversal in this
+application. Benchmarked at the brief's own §99 scale — 50,000 entities and 200,000
+relationships — the kinship traversal took **264 ms** without table statistics and **0.26 ms**
+with them: without `ANALYZE`, SQLite's planner declines the indexes on the recursive step and
+degrades to scans. The store runs it after bulk load and `PRAGMA optimize` on close. Meeting
+this after the graph views were built would have looked like "SQLite cannot do graphs" and
+invited exactly the wrong, expensive rewrite §64 warns against.
+
+At that same scale: world-state-at-date 12.9 ms, transitive vassal chains 4.2 ms, full
+descendant subtree 21.3 ms, map viewport over 20k features 0.39 ms, search across 50k
+entities 0.62 ms.
+
+## Testing
+
+```bash
+.venv/bin/python -m pytest      # 180 tests
+.venv/bin/ruff check fw/
+.venv/bin/lint-imports          # the layering contract
+cd web && npm run build         # typechecks as part of the build
+python scripts/screenshot.py    # drives the real UI in a browser
+```
+
+Three things are tested in ways worth mentioning:
+
+- **The calendar is checked against an oracle.** Gregorian output is compared against
+  Python's own proleptic calendar across two centuries, and `hypothesis` round-trips
+  randomly generated calendars — arbitrary month counts and lengths, arbitrary leap rules,
+  pre-epoch years.
+- **Succession is checked against the brief.** §8 states the expected answer outright, so
+  the test asserts that ordering rather than whatever the engine happens to produce.
+- **Layout is tested as coordinates, not pixels.** `layout_pedigree` returns
+  `{node_id: (x, y)}`, so "does the family tree look right" becomes "are the coordinates
+  right" — which diffs in review, where a screenshot does not.
+
+## Scope
+
+Implemented: the entity and relationship model with custom types, temporal facts,
+world-state-at-date, genealogy with legal/biological/adoptive parentage, twelve succession
+laws with hypotheticals, the four-way territorial distinction (§11), layered temporal maps,
+the relationship graph, the pedigree, events and causal chains, layered knowledge and
+secrets, scene context with relevance ranking, twenty continuity rules with suppressions,
+routing, search, and the "why does this matter" / "what if it vanished" analyses.
+
+Deliberately not yet built, and reachable because of the decisions above:
+
+- **Alternate timelines (§105).** `branch_id` is on every temporal table from the first
+  migration and the MVP resolves a single branch with an equality predicate. The column
+  exists; branch overlay resolution does not.
+- **Perspective and fog-of-knowledge maps (§93, §94).** Knowledge attaches to secrets, not
+  yet to geometry or labels.
+- **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
+  features (§103) and plugins (§102).
+- **Prose.** Scenes carry metadata and context, not manuscript text.
+
+## The brief's own principles
+
+§116 asks that every feature be measured against one question: *does this help a writer
+understand, navigate, reason about, or write their fictional world more easily?* Where a
+feature here looks unusual, that is generally the reason — the relevance ranking in scene
+context exists because an unranked panel of four hundred facts sends the writer straight
+back to remembering things themselves, and every derived conclusion carries its evidence
+because §67 refuses black boxes.

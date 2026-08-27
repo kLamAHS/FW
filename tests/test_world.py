@@ -340,3 +340,51 @@ class TestStateAtDate:
         world.assert_fact(a, "feels_about", b, strength="loves", secrecy="secret")
         assert len(world.state_at(world.day(300)).facts) == 1
         assert world.state_at(world.day(300), include_secret=False).facts == []
+
+
+class TestReification:
+    """A fact about another fact (§33, §57).
+
+    The column exists before any feature needs it, because the alternative — a second,
+    parallel mechanism for assertions-about-assertions — would share none of the fact
+    spine's temporality, confidence or secrecy, and would split every related query.
+    """
+
+    def test_a_fact_can_be_about_another_fact(self, world: World):
+        aldren = world.add_entity("person", "King Aldren")
+        oren = world.add_entity("person", "Prince Oren")
+        crown = world.add_entity("house", "The Crown")
+
+        parentage = world.assert_fact(aldren, "legal_parent_of", oren)
+        account = world.assert_fact(
+            crown, "knows_about", oren, about_fact_id=parentage.id,
+            confidence="disputed", note="The Crown's public position on the parentage.",
+        )
+
+        assert world.get_fact(account.id).about_fact_id == parentage.id
+        assert world.get_fact(parentage.id).about_fact_id is None
+
+    def test_two_accounts_of_one_claim_coexist(self, world: World):
+        """§57: 'publicly believed' and 'canonical secret' are two assertions, not a field."""
+        aldren = world.add_entity("person", "King Aldren")
+        corren = world.add_entity("person", "Lord Corren")
+        oren = world.add_entity("person", "Prince Oren")
+
+        public = world.assert_fact(aldren, "legal_parent_of", oren, confidence="canon")
+        private = world.assert_fact(corren, "parent_of", oren,
+                                    confidence="canon", secrecy="deep_secret")
+
+        # Both are true at once, and each keeps its own provenance.
+        assert public.secrecy == "public"
+        assert private.is_secret
+        assert len(world.facts_where(subject_id=corren.id)) == 1
+        assert len(world.facts_where(object_id=oren.id, include_secret=False)) == 1
+
+    def test_deleting_the_subject_fact_removes_facts_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        base = world.assert_fact(a, "trusts", b)
+        about = world.assert_fact(b, "knows_about", a, about_fact_id=base.id)
+
+        world.db.execute("DELETE FROM fact WHERE id = ?", (base.id,))
+        assert world.get_fact(about.id) is None    # cascaded, not orphaned

@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from fw.api import schemas as S
@@ -673,7 +673,7 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
 
     # ---- static client ----------------------------------------------------
 
-    if WEB_DIST.is_dir():
+    if (WEB_DIST / "index.html").is_file():
         app.mount("/assets", StaticFiles(directory=WEB_DIST / "assets"), name="assets")
 
         @app.get("/{path:path}", include_in_schema=False)
@@ -683,6 +683,30 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
             if path and candidate.is_file():
                 return FileResponse(candidate)
             return FileResponse(WEB_DIST / "index.html")
+    else:
+        @app.get("/", include_in_schema=False)
+        def not_built() -> HTMLResponse:
+            """Say what to do rather than returning a bare 404.
+
+            The API is fully usable without the client, so this is a missing front end
+            rather than a broken install — the page should say so.
+            """
+            return HTMLResponse(
+                "<!doctype html><meta charset='utf-8'>"
+                "<title>FW — the client has not been built</title>"
+                "<style>body{font:16px/1.6 system-ui;margin:8vh auto;max-width:34rem;"
+                "padding:0 1.5rem;color:#16181d}code{background:#efece6;padding:2px 6px;"
+                "border-radius:4px}</style>"
+                "<h1>The world is loaded; the client is not built.</h1>"
+                "<p>The API is running and complete — try "
+                "<a href='/api/world'>/api/world</a> or "
+                "<a href='/docs'>/docs</a>.</p>"
+                "<p>To build the browser client:</p>"
+                "<pre><code>cd web &amp;&amp; npm install &amp;&amp; npm run build</code></pre>"
+                "<p>Then restart <code>fw serve</code>. "
+                "Everything is also available from the command line — try "
+                "<code>fw scene</code> or <code>fw succession</code>.</p>",
+            )
 
     return app
 

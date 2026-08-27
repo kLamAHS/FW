@@ -25,7 +25,11 @@ from dataclasses import dataclass, field
 
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.model.records import Entity, Event, Fact, Scene, Secret
+from fw.core.model.vocabulary import inverse_of
 from fw.core.world import World
+
+# §11's authorities, which are what a scene's location most needs stated.
+CONTROL_PREDICATES = ("legally_owns", "administers", "occupies", "taxes", "claims", "rules")
 
 # Predicates whose presence in a room is inherently dramatic. Weighted because "X hates Y"
 # earns its place at a dinner table more than "X speaks Rennish".
@@ -343,12 +347,14 @@ class SceneContextEngine:
         notes: list[str] = []
         for fact in self.world.facts_where(object_id=location.id, at=day):
             holder = self.world.get_entity(fact.subject_id)
-            if holder is None:
+            if holder is None or fact.predicate_key not in CONTROL_PREDICATES:
                 continue
-            if fact.predicate_key in ("legally_owns", "administers", "occupies",
-                                      "taxes", "claims"):
-                notes.append(f"{location.name} is {fact.predicate_key.replace('_', ' ')} "
-                             f"by {holder.name}.")
+            # Read the fact from the place's side, which means the inverse predicate:
+            # "administers" seen from Greyhaven is "administered by". Conjugating the
+            # forward key instead produces "Greyhaven is administers by House Veyne".
+            inverse = inverse_of(fact.predicate_key) or fact.predicate_key
+            notes.append(f"{location.name} is {inverse.replace('_', ' ')} {holder.name}.")
+        notes.sort()
         season = self.world.calendar.season(day)
         if season:
             notes.append(f"The season is {season}.")

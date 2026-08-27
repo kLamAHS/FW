@@ -172,6 +172,14 @@ CREATE TABLE fact (
     object_id       TEXT REFERENCES entity(id) ON DELETE CASCADE,   -- for kind='rel'
     value           TEXT,                                           -- for kind='prop'
 
+    -- Reification: a fact *about another fact*. §33 wants competing accounts of one
+    -- claim and §57 wants "publicly believed" and "canonical secret" to coexist as two
+    -- assertions rather than one field that must pick a side. Without this, a fact can
+    -- only ever be about an entity, and those sections need a second, parallel mechanism
+    -- that shares none of the spine's temporality or provenance. It is one nullable
+    -- column now against a migration and a divided query surface later.
+    about_fact_id   TEXT REFERENCES fact(id) ON DELETE CASCADE,
+
     -- §3 temporal validity. Bounds are day indices; the *_hi / *_lo columns carry the
     -- uncertainty, so 'from sometime in the 310s' is representable without losing the
     -- ability to index and range-scan.
@@ -203,6 +211,7 @@ CREATE INDEX ix_fact_object    ON fact(branch_id, object_id, predicate_key);
 CREATE INDEX ix_fact_pred_subj ON fact(branch_id, predicate_key, subject_id);
 CREATE INDEX ix_fact_pred_obj  ON fact(branch_id, predicate_key, object_id);
 CREATE INDEX ix_fact_temporal  ON fact(branch_id, predicate_key, valid_from, valid_to);
+CREATE INDEX ix_fact_about     ON fact(about_fact_id) WHERE about_fact_id IS NOT NULL;
 
 -- ---------------------------------------------------------------- events & causality
 

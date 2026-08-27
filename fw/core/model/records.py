@@ -69,6 +69,8 @@ class Fact:
     predicate_key: str
     object_id: str | None = None
     value: str | None = None
+    # A fact about another fact (§33, §57) — e.g. "the Crown's account of this claim".
+    about_fact_id: str | None = None
     valid_from: int | None = None
     valid_from_hi: int | None = None
     valid_to: int | None = None

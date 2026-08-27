@@ -375,6 +375,7 @@ class World:
         source_id: str | None = None,
         note: str = "",
         props: dict[str, Any] | None = None,
+        about_fact_id: str | None = None,
     ) -> Fact:
         """Record that something is (or was) so.
 
@@ -412,7 +413,7 @@ class World:
         self.db.insert("fact", {
             "id": fid, "project_id": self.project_id, "branch_id": self.branch_id,
             "subject_id": subject_id, "predicate_key": predicate_key,
-            "object_id": object_id,
+            "object_id": object_id, "about_fact_id": about_fact_id,
             "value": None if value is None else str(value),
             "valid_from": valid_from, "valid_from_hi": valid_from_hi,
             "valid_to": valid_to, "valid_to_lo": valid_to_lo, "precision": precision,
@@ -423,6 +424,7 @@ class World:
         return Fact(
             id=fid, subject_id=subject_id, predicate_key=predicate_key,
             object_id=object_id, value=None if value is None else str(value),
+            about_fact_id=about_fact_id,
             valid_from=valid_from, valid_from_hi=valid_from_hi,
             valid_to=valid_to, valid_to_lo=valid_to_lo, precision=precision,
             confidence=confidence, secrecy=secrecy, strength=strength,
@@ -1134,7 +1136,8 @@ def _entity(row) -> Entity:
 def _fact(row) -> Fact:
     return Fact(
         id=row["id"], subject_id=row["subject_id"], predicate_key=row["predicate_key"],
-        object_id=row["object_id"], value=row["value"], valid_from=row["valid_from"],
+        object_id=row["object_id"], value=row["value"],
+        about_fact_id=row["about_fact_id"], valid_from=row["valid_from"],
         valid_from_hi=row["valid_from_hi"], valid_to=row["valid_to"],
         valid_to_lo=row["valid_to_lo"], precision=row["precision"],
         confidence=row["confidence"], secrecy=row["secrecy"], strength=row["strength"],
