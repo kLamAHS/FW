@@ -596,3 +596,27 @@ class TestRestoreEndpoint:
         assert client.post("/api/events", json={
             "name": "Nobody", "participants": [{"id": "no-such-entity"}],
         }).status_code == 404
+
+
+class TestUndoEndpoints:
+    def test_undo_and_redo_round_trip_over_http(self, client):
+        made = client.post("/api/entities", json={
+            "type_key": "settlement", "name": "Ephemeral"}).json()
+
+        state = client.get("/api/undo").json()
+        assert state["can_undo"] is True
+        assert "Ephemeral" in state["undo"]
+
+        undone = client.post("/api/undo")
+        assert undone.status_code == 200
+        assert "Ephemeral" in undone.json()["message"]
+        assert client.get(f"/api/entities/{made['id']}").status_code == 404
+
+        redone = client.post("/api/redo")
+        assert redone.status_code == 200
+        assert client.get(f"/api/entities/{made['id']}").status_code == 200
+
+    def test_empty_stacks_answer_400(self, client):
+        # drain the redo side: a fresh action leaves nothing to redo
+        client.post("/api/entities", json={"type_key": "settlement", "name": "X"})
+        assert client.post("/api/redo").status_code == 400

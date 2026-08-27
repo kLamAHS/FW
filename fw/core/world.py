@@ -167,6 +167,14 @@ class World:
         self.project_id = project_id
         self.branch_id = branch_id
         self._calendar: Calendar | None = None
+        # Undo state. Actions are grouped in the log by action_id; inversions announce
+        # themselves with a marker record, so which actions currently stand undone is
+        # reconstructed from the file itself — undo history survives a restart.
+        self._session_token = new_id()[:10].lower()
+        self._undone: set[str] = set()                  # action ids currently undone
+        self._redo: list[tuple[str, str]] = []          # (target, its inversion)
+        self._inversions: dict[str, str] = {}           # inversion action -> target
+        self._load_undo_state()
 
     # ---- lifecycle --------------------------------------------------------
 
@@ -332,13 +340,22 @@ class World:
         readable diff — and because it is written inside the same transaction as the
         change, a rollback takes its log entry with it. `note` marks records that belong
         to a delete's cascade batch, so restore can find them by name rather than by
-        guessing from timestamps.
+        guessing from timestamps. `action_id` groups everything one transaction wrote
+        into one *user action* — the unit undo works on — and any genuinely new action
+        forfeits whatever was waiting to be redone, as undo systems must.
         """
+        action_id = self._current_action_id()
+        if action_id not in self._inversions and self._redo:
+            self._redo.clear()
         self.db.insert("revision", {
             "project_id": self.project_id, "table_name": table, "row_id": row_id,
             "action": action, "before": before, "after": after, "at": now_iso(),
-            "note": note,
+            "note": note, "action_id": action_id,
         })
+
+    def _current_action_id(self) -> str:
+        """The id of the user action being written: this session, this transaction."""
+        return f"{self._session_token}:{self.db.transaction_serial}"
 
     def revisions_for(self, row_id: str, *, limit: int = 50) -> list[dict]:
         """The change history of one row, newest first."""
@@ -469,13 +486,7 @@ class World:
                 raise WorldError(f"{snapshot.get('name', row_id)} already exists")
             if not {"id", "type_key", "name"} <= set(snapshot):
                 raise WorldError("this delete record is too incomplete to restore")
-            self.db.insert("entity", snapshot)
-            self._index_entity(row_id, snapshot["type_key"], snapshot["name"],
-                               snapshot.get("summary", ""), snapshot.get("tags") or [])
-            self._log_revision("entity", row_id, "insert", None, {
-                "name": snapshot["name"], "type_key": snapshot["type_key"],
-                "restored_from": rev["id"],
-            })
+            self._insert_entity_snapshot(snapshot, rev["id"])
             facts, others = self._restore_cascade(rev)
             name = snapshot.get("name", row_id)
             parts = []
@@ -496,6 +507,16 @@ class World:
             return (f"Restored the {label} connection and {extra} dependent "
                     f"record{'s' if extra != 1 else ''}.")
         return f"Restored the {label} connection."
+
+    def _insert_entity_snapshot(self, snapshot: dict, source_revision: int) -> None:
+        """Re-insert one entity row from its (column-filtered) delete snapshot."""
+        self.db.insert("entity", snapshot)
+        self._index_entity(snapshot["id"], snapshot["type_key"], snapshot["name"],
+                           snapshot.get("summary", ""), snapshot.get("tags") or [])
+        self._log_revision("entity", snapshot["id"], "insert", None, {
+            "name": snapshot["name"], "type_key": snapshot["type_key"],
+            "restored_from": source_revision,
+        })
 
     def _restore_cascade(self, rev: dict) -> tuple[int, int]:
         """Bring back the rows logged in the same delete batch as `rev`.
@@ -697,6 +718,255 @@ class World:
         self.db.update("fact", row_id, {**before, "updated_at": now_iso()})
         self._log_revision("fact", row_id, "update", current, before)
         return "Restored the earlier values."
+
+    # ---- undo / redo (§59) ------------------------------------------------
+    #
+    # Undo works on whole user actions: everything one transaction logged, grouped by
+    # action_id. Inverting an action writes ordinary revisions (the log stays
+    # append-only) under a new action id, announced by a marker record — so redo is
+    # just inverting the inversion, and which actions currently stand undone can be
+    # reconstructed from the file after a restart. Only what the revision log covers
+    # (entities and facts, with everything their deletes cascade through) is undoable;
+    # anything older than the action_id column simply sits beyond undo's reach.
+
+    def undo(self) -> str:
+        """Take back the most recent action. Raises when there is nothing to."""
+        with self.db.transaction():
+            target = self._newest_action()
+            if target is None:
+                raise WorldError("nothing to undo")
+            inversion = self._current_action_id()
+            self._inversions[inversion] = target
+            self._log_revision("undo", target, "undo", None, {"kind": "undo"})
+            self._invert_action(target)
+            self._undone.add(target)
+            self._redo.append((target, inversion))
+        return f"Undid {self._describe_action(target)}."
+
+    def redo(self) -> str:
+        """Reinstate the most recently undone action."""
+        if not self._redo:
+            raise WorldError("nothing to redo")
+        target, inversion = self._redo[-1]
+        with self.db.transaction():
+            fresh = self._current_action_id()
+            self._inversions[fresh] = inversion
+            self._log_revision("undo", inversion, "undo", None, {"kind": "redo"})
+            self._invert_action(inversion)
+            self._undone.discard(target)
+        self._redo.pop()
+        return f"Redid {self._describe_action(target)}."
+
+    def undo_state(self) -> dict:
+        """What the toolbar needs: whether each button would do anything, and to what."""
+        target = self._newest_action()
+        return {
+            "can_undo": target is not None,
+            "undo": self._describe_action(target) if target else None,
+            "can_redo": bool(self._redo),
+            "redo": (self._describe_action(self._redo[-1][0])
+                     if self._redo else None),
+        }
+
+    def _load_undo_state(self) -> None:
+        """Rebuild the undone-set and redo stack from the log's inversion markers."""
+        pending: dict[str, tuple[int, str]] = {}    # target -> (marker id, inversion)
+        for marker in self.db.query(
+            "SELECT id, row_id, action_id FROM revision "
+            "WHERE project_id = ? AND table_name = 'undo' ORDER BY id",
+            (self.project_id,),
+        ):
+            target = marker["row_id"]
+            # A marker whose target is itself a known inversion is a redo: the
+            # original action that inversion had taken back stands again.
+            original = self._inversions.get(target)
+            self._inversions[marker["action_id"]] = target
+            if original is not None:
+                self._undone.discard(original)
+                pending.pop(original, None)
+            else:
+                self._undone.add(target)
+                pending[target] = (marker["id"], marker["action_id"])
+        self._redo = [(t, inv) for t, (_, inv) in
+                      sorted(pending.items(), key=lambda kv: kv[1][0])]
+
+    def _newest_action(self) -> str | None:
+        """The most recent real user action that is not already undone."""
+        rows = self.db.query(
+            "SELECT action_id, max(id) AS newest FROM revision "
+            "WHERE project_id = ? AND action_id != '' "
+            "GROUP BY action_id ORDER BY newest DESC LIMIT 200",
+            (self.project_id,),
+        )
+        for row in rows:
+            aid = row["action_id"]
+            if aid in self._inversions or aid in self._undone:
+                continue
+            return aid
+        return None
+
+    def _invert_action(self, action_id: str) -> int:
+        """Apply the inverse of every record in one action.
+
+        Deletes are inverted first (newest-first, so a cascade's parent returns before
+        its children), then updates (their targets exist again by now), then inserts
+        (newest-first, children removed before parents). The mixed shapes — a delete
+        with its relink updates, a restore with its re-inserts, a transfer's
+        end-and-assert pair — all come out right under that one ordering.
+        """
+        revs = [
+            {**dict(r), "before": decode_json(r["before"], None),
+             "after": decode_json(r["after"], None)}
+            for r in self.db.query(
+                "SELECT * FROM revision WHERE action_id = ? AND table_name != 'undo' "
+                "ORDER BY id DESC",
+                (action_id,),
+            )
+        ]
+        changed = 0
+        for rev in revs:
+            if rev["action"] == "delete":
+                changed += self._undelete(rev)
+        for rev in revs:
+            if rev["action"] == "update":
+                changed += self._unupdate(rev)
+        for rev in revs:
+            if rev["action"] == "insert":
+                changed += self._uninsert(rev)
+        return changed
+
+    def _undelete(self, rev: dict) -> int:
+        """Inverse of a delete record: put the snapshotted row back."""
+        table = rev["table_name"]
+        snapshot = {k: v for k, v in (rev["before"] or {}).items()
+                    if k in self._table_columns(table)}
+        if table == "entity":
+            if not {"id", "type_key", "name"} <= set(snapshot) or self.db.one(
+                    "SELECT 1 FROM entity WHERE id = ?", (snapshot["id"],)):
+                return 0
+            self._insert_entity_snapshot(snapshot, rev["id"])
+            return 1
+        return 1 if self._restore_row(table, snapshot, rev["id"], strict=False) else 0
+
+    def _unupdate(self, rev: dict) -> int:
+        """Inverse of an update record: apply its `before` values again."""
+        table, row_id = rev["table_name"], rev["row_id"]
+        before = rev["before"] or {}
+        if not before:
+            return 0
+        if table == "entity":
+            if self.get_entity(row_id) is None:
+                return 0
+            payload = {k: v for k, v in before.items() if k in _ENTITY_EDITABLE}
+            if not payload:
+                return 0
+            self.update_entity(row_id, **payload)    # logs its own inverse record
+            return 1
+        if table == "fact":
+            row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
+            if row is None:
+                return 0
+            data = dict(row)
+            payload = {k: v for k, v in before.items() if k in data}
+            if not payload:
+                return 0
+            current = {k: data[k] for k in payload}
+            self.db.update("fact", row_id, {**payload, "updated_at": now_iso()})
+            self._log_revision("fact", row_id, "update", current, payload)
+            return 1
+        # a SET NULL relink written during a delete or restore
+        allowed = _RELINK_COLUMNS.get(table)
+        if not allowed:
+            return 0
+        row = self.db.one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+        if row is None:
+            return 0
+        changes: dict[str, Any] = {}
+        for column, value in before.items():
+            target = allowed.get(column)
+            if target is None:
+                continue
+            if value is not None and not self.db.one(
+                    f"SELECT 1 FROM {target} WHERE id = ?", (value,)):
+                continue
+            changes[column] = value
+        if not changes:
+            return 0
+        current = {column: row[column] for column in changes}
+        self.db.update(table, row_id, changes)
+        self._log_revision(table, row_id, "update", current, changes)
+        return 1
+
+    def _uninsert(self, rev: dict) -> int:
+        """Inverse of an insert record: remove the row it created."""
+        table, row_id = rev["table_name"], rev["row_id"]
+        if table == "entity":
+            if self.get_entity(row_id) is None:
+                return 0
+            self.delete_entity(row_id)               # logs its own full cascade
+            return 1
+        if table == "fact":
+            if self.db.one("SELECT 1 FROM fact WHERE id = ?", (row_id,)) is None:
+                return 0
+            self.delete_fact(row_id)
+            return 1
+        spec = _RESTORE_SPEC.get(table)
+        if spec is None:
+            return 0
+        key: tuple[str, ...] = spec.get("key", ("id",))
+        parts = row_id.split("/")
+        if len(parts) != len(key):
+            return 0     # a composite key whose value contained the separator
+        condition = " AND ".join(f"{column} = ?" for column in key)
+        row = self.db.one(f"SELECT * FROM {table} WHERE {condition}", parts)
+        if row is None:
+            return 0
+        if table == "geometry":
+            self.db.execute(
+                "DELETE FROM geometry_bbox WHERE id IN ("
+                " SELECT rtree_id FROM geometry_rtree_map WHERE geometry_id = ?)",
+                (row["id"],))
+        self._log_revision(table, row_id, "delete", _snapshot(row), None)
+        self.db.execute(f"DELETE FROM {table} WHERE {condition}", parts)
+        return 1
+
+    def _describe_action(self, action_id: str | None) -> str:
+        """A human phrase for an action, from its terminal (newest) record."""
+        if action_id is None:
+            return "nothing"
+        row = self.db.one(
+            "SELECT * FROM revision WHERE action_id = ? AND table_name != 'undo' "
+            "ORDER BY id DESC LIMIT 1",
+            (action_id,),
+        )
+        if row is None:
+            return "an empty action"
+        before = decode_json(row["before"], None) or {}
+        after = decode_json(row["after"], None) or {}
+        table, act = row["table_name"], row["action"]
+        if table == "entity":
+            name = after.get("name") or before.get("name")
+            if name is None:
+                entity = self.get_entity(row["row_id"])
+                name = entity.name if entity else "an entity"
+            if act == "insert":
+                return f"creating {name}"
+            if act == "delete":
+                return f"deleting {name}"
+            return f"an edit to {name}"
+        if table == "fact":
+            predicate = (after.get("predicate_key") or before.get("predicate_key")
+                         or "connection")
+            predicate = str(predicate).replace("_", " ")
+            if act == "insert":
+                return f"recording a {predicate} connection"
+            if act == "delete":
+                return f"removing a {predicate} connection"
+            return f"an edit to a {predicate} connection"
+        count = self.db.scalar(
+            "SELECT count(*) FROM revision WHERE action_id = ? "
+            "AND table_name != 'undo'", (action_id,))
+        return f"{count} recorded change{'s' if count != 1 else ''}"
 
     # ---- entities ---------------------------------------------------------
 
@@ -1120,10 +1390,15 @@ class World:
         being wrong.
         """
         object_id = obj.id if isinstance(obj, Entity) else obj
-        for existing in self.facts_where(predicate_key, object_id=object_id, at=on_day):
-            self.end_fact(existing.id, on_day)
-        return self.assert_fact(new_subject, predicate_key, object_id,
-                                valid_from=on_day, **kw)
+        # One transaction: the closing of the incumbent's interval and the opening of
+        # the successor's are one event in the world — atomic on disk, and one action
+        # to undo, never a half-transfer.
+        with self.db.transaction():
+            for existing in self.facts_where(predicate_key, object_id=object_id,
+                                             at=on_day):
+                self.end_fact(existing.id, on_day)
+            return self.assert_fact(new_subject, predicate_key, object_id,
+                                    valid_from=on_day, **kw)
 
     def get_fact(self, fact_id: str) -> Fact | None:
         row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))

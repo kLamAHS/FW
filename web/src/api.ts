@@ -413,6 +413,11 @@ export const api = {
   deleted: (limit = 10) => get<DeletedEntry[]>('/deleted', { limit }),
   restoreRevision: (id: number) =>
     send<{ message: string }>(`/revisions/${id}/restore`, 'POST'),
+  undoState: () => get<{
+    can_undo: boolean; undo: string | null; can_redo: boolean; redo: string | null
+  }>('/undo'),
+  undo: () => send<{ message: string }>('/undo', 'POST'),
+  redo: () => send<{ message: string }>('/redo', 'POST'),
   createScene: (draft: SceneDraft) =>
     send<{ id: string; title: string; day: number | null }>('/scenes', 'POST', draft),
   createEvent: (draft: EventDraft) =>

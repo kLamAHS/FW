@@ -15,7 +15,7 @@
  * in the panel repaints the map behind it — the two must never disagree about the world.
  */
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
@@ -70,6 +70,50 @@ export function App() {
     [currentDay, world.data !== null],
   )
 
+  // Undo/redo (§59). The buttons show what they would take back; Ctrl+Z / Ctrl+Y work
+  // anywhere the writer is not typing into a field.
+  const undoState = useAsync(
+    () => (world.data ? api.undoState() : Promise.resolve(null)),
+    [version, world.data !== null],
+  )
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
+  const announce = (text: string) => {
+    setToast(text)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 4000)
+  }
+  const timeTravel = useRef<(direction: 'undo' | 'redo') => void>(() => {})
+  timeTravel.current = async (direction) => {
+    try {
+      const result = direction === 'undo' ? await api.undo() : await api.redo()
+      announce(result.message)
+      bump()
+    } catch (err) {
+      announce(err instanceof Error ? err.message : String(err))
+    }
+  }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+                     || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return    // never steal the shortcut from a text field's own undo
+      }
+      if (!(e.ctrlKey || e.metaKey)) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        timeTravel.current('undo')
+      } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+        e.preventDefault()
+        timeTravel.current('redo')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   if (world.loading && !world.data) return <Loading what="Opening the world" />
   // No world open (409) means the launcher, not an error: the writer picks a save or
   // names a new world — nobody is forced into a template.
@@ -103,6 +147,20 @@ export function App() {
           ))}
         </nav>
         <span style={{ flex: 1 }} />
+        <button onClick={() => timeTravel.current('undo')}
+                disabled={!undoState.data?.can_undo}
+                aria-label="Undo"
+                title={undoState.data?.undo
+                  ? `Undo ${undoState.data.undo} (Ctrl+Z)` : 'Nothing to undo'}>
+          ↶
+        </button>
+        <button onClick={() => timeTravel.current('redo')}
+                disabled={!undoState.data?.can_redo}
+                aria-label="Redo"
+                title={undoState.data?.redo
+                  ? `Redo ${undoState.data.redo} (Ctrl+Y)` : 'Nothing to redo'}>
+          ↷
+        </button>
         <button onClick={() => setPicking(true)}
                 title="Open another world, or start a new one">
           Worlds
@@ -174,9 +232,12 @@ export function App() {
             onClose={() => setSelected(null)}
             onSelect={setSelected}
             onMutate={bump}
+            version={version}
           />
         )}
       </div>
+
+      {toast && <div className="toast" role="status">{toast}</div>}
 
       {picking && (
         <Modal title="Your worlds" onClose={() => setPicking(false)}>

@@ -63,6 +63,9 @@ class Database:
                 "the application cannot serve requests safely"
             )
         self._lock = threading.RLock()
+        # Counts outermost transactions. The revision log uses it to group every record
+        # written in one transaction into one user action — the unit undo operates on.
+        self.transaction_serial = 0
         self.conn = sqlite3.connect(
             self.path, isolation_level=None, check_same_thread=False
         )
@@ -131,6 +134,7 @@ class Database:
             if self.conn.in_transaction:
                 yield self.conn
                 return
+            self.transaction_serial += 1
             self.conn.execute("BEGIN")
             try:
                 yield self.conn

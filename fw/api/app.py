@@ -242,6 +242,19 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     def restore_revision(revision_id: int) -> dict[str, str]:
         return {"message": world.restore(revision_id)}
 
+    @app.get("/api/undo")
+    def get_undo_state() -> dict[str, Any]:
+        """Whether undo/redo would do anything, and what — for the toolbar."""
+        return world.undo_state()
+
+    @app.post("/api/undo")
+    def do_undo() -> dict[str, str]:
+        return {"message": world.undo()}
+
+    @app.post("/api/redo")
+    def do_redo() -> dict[str, str]:
+        return {"message": world.redo()}
+
     @app.get("/api/snapshots")
     def get_snapshots() -> list[dict[str, Any]]:
         return [

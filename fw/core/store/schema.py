@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -453,20 +453,23 @@ CREATE TABLE source (
 ) STRICT;
 
 -- §59 revision history. Append-only: the row records what changed, so history is never
--- lost to an overwrite, satisfying §106.3.
+-- lost to an overwrite, satisfying §106.3. `action_id` groups every record written in
+-- one transaction into one *user action* — the unit undo and redo operate on.
 CREATE TABLE revision (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id    TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     table_name    TEXT NOT NULL,
     row_id        TEXT NOT NULL,
-    action        TEXT NOT NULL,          -- insert | update | delete
+    action        TEXT NOT NULL,          -- insert | update | delete | undo
     before        TEXT,
     after         TEXT,
     at            TEXT NOT NULL,
-    note          TEXT NOT NULL DEFAULT ''
+    note          TEXT NOT NULL DEFAULT '',
+    action_id     TEXT NOT NULL DEFAULT ''
 ) STRICT;
 
-CREATE INDEX ix_revision_row ON revision(table_name, row_id, id);
+CREATE INDEX ix_revision_row    ON revision(table_name, row_id, id);
+CREATE INDEX ix_revision_action ON revision(action_id, id);
 
 -- §46 'allow intentional exceptions'
 CREATE TABLE continuity_suppression (
@@ -509,4 +512,12 @@ CREATE VIRTUAL TABLE entity_trigram USING fts5(
 MIGRATIONS: dict[int, str] = {
     # Version 1 is the initial schema above. Later versions append here; `user_version`
     # in the file records which have been applied.
+    #
+    # 2: revisions gain `action_id`, grouping the records of one transaction into one
+    #    undoable user action. Rows from before this migration keep '' and are simply
+    #    outside undo's reach — still restorable individually, never mis-grouped.
+    2: """
+        ALTER TABLE revision ADD COLUMN action_id TEXT NOT NULL DEFAULT '';
+        CREATE INDEX ix_revision_action ON revision(action_id, id);
+    """,
 }

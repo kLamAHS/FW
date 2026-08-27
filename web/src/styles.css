@@ -416,3 +416,19 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
           box-shadow: var(--shadow); }
   .content { padding: 12px; }
 }
+
+/* Transient confirmation for undo/redo and similar quiet actions. */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ink);
+  color: var(--paper);
+  padding: 9px 18px;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25);
+  font-size: 0.9rem;
+  z-index: 300;
+  max-width: min(80vw, 40rem);
+}

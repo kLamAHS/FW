@@ -129,6 +129,20 @@ with sync_playwright() as p:
         else:
             print("  connected Thornby to The Northmarch")
 
+        # Undo takes the connection back; redo records it again (§59).
+        page.click("button[aria-label='Undo']")
+        page.wait_for_timeout(1100)
+        if "The Northmarch" in (page.text_content(".side") or ""):
+            problems.append("undo did not take back the new connection")
+        else:
+            print("  undo took the connection back")
+        page.click("button[aria-label='Redo']")
+        page.wait_for_timeout(1100)
+        if "The Northmarch" not in (page.text_content(".side") or ""):
+            problems.append("redo did not restore the connection")
+        else:
+            print("  redo recorded it again")
+
         # End the fact on the current date, §106.3's easy path.
         page.click(".side .fact-actions button:has-text('end')")
         page.wait_for_timeout(300)

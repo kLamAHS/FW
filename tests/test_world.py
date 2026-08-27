@@ -858,3 +858,172 @@ class TestCascadeAtScale:
         for eid in (a.id, b.id, x.id):
             downstream = [i for i, _ in world.consequences_of(eid, max_depth=32)]
             assert eid not in downstream
+
+
+class TestUndoRedo:
+    """§59 taken to its natural end: whole actions taken back and reinstated."""
+
+    def test_undo_uncreates_and_redo_recreates(self, world: World):
+        e = world.add_entity("settlement", "Fleeting")
+        assert "Fleeting" in world.undo()
+        assert world.get_entity(e.id) is None
+        assert "Fleeting" in world.redo()
+        assert world.get_entity(e.id) is not None
+
+    def test_undo_walks_backwards_through_actions(self, world: World):
+        a = world.add_entity("person", "First")
+        b = world.add_entity("person", "Second")
+        world.undo()                                   # takes back Second
+        assert world.get_entity(b.id) is None
+        assert world.get_entity(a.id) is not None
+        world.undo()                                   # then First
+        assert world.get_entity(a.id) is None
+
+    def test_undo_of_an_edit_restores_the_earlier_values(self, world: World):
+        e = world.add_entity("settlement", "Oldtown", summary="original")
+        world.update_entity(e.id, name="Newtown", summary="rewritten")
+        world.undo()
+        back = world.get_entity(e.id)
+        assert back.name == "Oldtown"
+        assert back.summary == "original"
+        world.redo()
+        assert world.get_entity(e.id).name == "Newtown"
+
+    def test_undo_of_a_delete_brings_the_whole_cascade_back(self, world: World):
+        lord = world.add_entity("person", "Lord Brief")
+        seat = world.add_entity("settlement", "Seat")
+        world.assert_fact(lord, "rules", seat)
+        title = world.add_title("Lord of Seat", entity_id=lord.id)
+        world.grant_title(title.id, lord.id)
+
+        world.delete_entity(lord.id)
+        assert world.titles() == []
+
+        assert "Lord Brief" in world.undo()
+        assert world.get_entity(lord.id) is not None
+        assert len(world.facts_about(lord.id)) == 1
+        assert [t.name for t in world.titles()] == ["Lord of Seat"]
+
+        world.redo()                                   # deleted again, whole
+        assert world.get_entity(lord.id) is None
+        assert world.titles() == []
+
+    def test_undo_of_a_transfer_inverts_both_halves(self, world: World):
+        marr = world.add_entity("house", "House Marr")
+        orren = world.add_entity("house", "House Orren")
+        town = world.add_entity("settlement", "Greyhaven")
+        world.assert_fact(marr, "legally_owns", town, valid_from=world.day(312))
+        world.transfer("legally_owns", town, orren, world.day(428))
+
+        world.undo()
+        owners = world.facts_where("legally_owns", object_id=town.id,
+                                   at=world.day(500))
+        assert [f.subject_id for f in owners] == [marr.id]   # open again, alone
+
+        world.redo()
+        owners = world.facts_where("legally_owns", object_id=town.id,
+                                   at=world.day(500))
+        assert [f.subject_id for f in owners] == [orren.id]
+
+    def test_a_new_action_forfeits_the_redo(self, world: World):
+        world.add_entity("settlement", "A")
+        world.undo()
+        world.add_entity("settlement", "B")            # a real new action
+        with pytest.raises(WorldError, match="nothing to redo"):
+            world.redo()
+
+    def test_nothing_to_undo_is_an_answer(self, world: World):
+        with pytest.raises(WorldError, match="nothing to undo"):
+            world.undo()
+        with pytest.raises(WorldError, match="nothing to redo"):
+            world.redo()
+
+    def test_undo_state_reports_what_the_buttons_would_do(self, world: World):
+        state = world.undo_state()
+        assert state == {"can_undo": False, "undo": None,
+                         "can_redo": False, "redo": None}
+        world.add_entity("settlement", "Somewhere")
+        state = world.undo_state()
+        assert state["can_undo"] is True
+        assert "Somewhere" in state["undo"]
+        world.undo()
+        state = world.undo_state()
+        assert state["can_redo"] is True
+        assert "Somewhere" in state["redo"]
+
+    def test_undo_history_survives_a_reopen(self, tmp_path):
+        """The undone-set is reconstructed from the log's markers, so closing the
+        file mid-history does not resurrect what was taken back."""
+        path = tmp_path / "undoable.fwworld"
+        w = World.create(path, name="Persist")
+        w.add_entity("settlement", "Kept")
+        doomed = w.add_entity("settlement", "Taken back")
+        w.undo()
+        w.close()
+
+        reopened = World.open(path)
+        try:
+            assert reopened.get_entity(doomed.id) is None
+            # undo does not re-target the already-undone action…
+            assert "Kept" in reopened.undo_state()["undo"]
+            # …and the redo stack carried across, too
+            state = reopened.undo_state()
+            assert state["can_redo"] is True
+            assert "Taken back" in state["redo"]
+            reopened.redo()
+            assert reopened.get_entity(doomed.id) is not None
+        finally:
+            reopened.close()
+
+    def test_undoing_a_restore_is_just_another_undo(self, world: World):
+        e = world.add_entity("settlement", "Twice-lost")
+        world.delete_entity(e.id)
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.get_entity(e.id) is not None
+
+        assert "Twice-lost" in world.undo()            # takes back the restore
+        assert world.get_entity(e.id) is None
+        world.redo()
+        assert world.get_entity(e.id) is not None
+
+    def test_pre_migration_history_sits_beyond_undo(self, world: World):
+        """Rows logged before the action_id column exists carry '' — they must never
+        be mis-grouped into one giant action."""
+        e = world.add_entity("settlement", "Old times")
+        world.db.execute("UPDATE revision SET action_id = ''")
+        with pytest.raises(WorldError, match="nothing to undo"):
+            world.undo()
+        assert world.get_entity(e.id) is not None
+
+
+class TestSchemaMigration:
+    def test_a_version_1_file_is_upgraded_in_place(self, tmp_path):
+        """The first real migration: files from before action_id must open, gain the
+        column, and work — history intact."""
+        import sqlite3 as sql
+
+        from fw.core.world import World as W
+        path = tmp_path / "old.fwworld"
+        w = W.create(path, name="Elder")
+        w.add_entity("settlement", "Ancient")
+        w.close()
+
+        # forge a version-1 file: drop the column and the index, rewind user_version
+        conn = sql.connect(path)
+        conn.execute("DROP INDEX ix_revision_action")
+        conn.execute("ALTER TABLE revision DROP COLUMN action_id")
+        conn.execute("PRAGMA user_version = 1")
+        conn.close()
+
+        upgraded = W.open(path)
+        try:
+            assert upgraded.entity_named("Ancient") is not None
+            columns = {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(revision)")}
+            assert "action_id" in columns
+            # old rows carry '' (beyond undo); new actions are undoable again
+            fresh = upgraded.add_entity("settlement", "Modern")
+            assert "Modern" in upgraded.undo()
+            assert upgraded.get_entity(fresh.id) is None
+        finally:
+            upgraded.close()
