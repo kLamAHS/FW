@@ -12,6 +12,7 @@ nothing else.
 
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 from typing import Any
 
@@ -27,7 +28,9 @@ from fw.core.derive.scene_context import SceneContextEngine
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import PROFILES, Router
+from fw.core.library import Library, LibraryError
 from fw.core.model.vocabulary import PREDICATES_BY_KEY
+from fw.core.store.db import StoreError
 from fw.core.succession.engine import SuccessionEngine
 from fw.core.succession.laws import LAWS
 from fw.core.world import World, WorldError
@@ -35,20 +38,113 @@ from fw.core.world import World, WorldError
 WEB_DIST = Path(__file__).resolve().parents[2] / "web" / "dist"
 
 
-def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
+class OpenWorld:
+    """The world the server currently has open — switchable while it runs.
+
+    The launcher screen exists so the writer is never forced into a template world;
+    that means the server must be able to start with *no* world and open one later.
+    """
+
+    def __init__(self, world: World | None = None) -> None:
+        self.world = world
+
+    def get(self) -> World:
+        if self.world is None:
+            raise HTTPException(
+                409, "no world is open — create one or open a save first")
+        return self.world
+
+    def replace(self, world: World) -> World | None:
+        old, self.world = self.world, world
+        return old
+
+
+class _WorldProxy:
+    """Lets every route keep saying `world.entities()` while the world can change.
+
+    Attribute access resolves against whatever is open *now*; with nothing open it is
+    a 409, which the client reads as "show the launcher"."""
+
+    def __init__(self, holder: OpenWorld) -> None:
+        object.__setattr__(self, "_holder", holder)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self._holder.get(), name)
+
+
+def create_app(world: World | None = None, *, library: Library | None = None,
+               present_day: int | None = None) -> FastAPI:
     app = FastAPI(
         title="FW — worldbuilding",
         description="An external cognitive model of a fictional world.",
         version="0.1.0",
     )
-    app.state.world = world
+    holder = OpenWorld(world)
+    app.state.holder = holder
     app.state.present_day = (
-        present_day if present_day is not None else _guess_present_day(world)
+        present_day if present_day is not None
+        else (_guess_present_day(world) if world is not None else 0)
     )
+    # From here down, `world` is the proxy: every route reads through the holder, so
+    # opening a different save retargets all of them at once.
+    world = _WorldProxy(holder)  # type: ignore[assignment]
 
     @app.exception_handler(WorldError)
     async def _world_error(_request, exc: WorldError):
         return JSONResponse(status_code=400, content={"detail": str(exc)})
+
+    # ---- the library (saves) ----------------------------------------------
+
+    def _open_path(path: Path) -> dict[str, str]:
+        try:
+            fresh = World.open(path)
+        except (StoreError, WorldError, sqlite3.DatabaseError) as exc:
+            # A corrupt or foreign file is an answer for the launcher, not a crash.
+            raise HTTPException(400, str(exc)) from exc
+        stale = holder.replace(fresh)
+        if stale is not None:
+            stale.close()
+        app.state.present_day = _guess_present_day(fresh)
+        return {"file": path.name, "name": fresh.name}
+
+    @app.get("/api/worlds")
+    def list_worlds() -> dict[str, Any]:
+        """The launcher's data: every save, and which one is open."""
+        current = holder.world
+        open_name = None
+        if current is not None:
+            open_name = Path(str(current.db.path)).name
+        if library is None:
+            return {"library": None, "worlds": [], "open": open_name}
+        library.ensure()
+        return {
+            "library": str(library.directory),
+            "worlds": [vars(entry) for entry in library.worlds()],
+            "open": open_name,
+        }
+
+    @app.post("/api/worlds", status_code=201)
+    def create_world(payload: S.WorldCreate) -> dict[str, str]:
+        """A new save — empty, or seeded with the example kingdom if asked."""
+        if library is None:
+            raise HTTPException(
+                400, "this server was started on a single world file")
+        try:
+            path = library.create(payload.name, example=payload.example)
+        except LibraryError as exc:
+            raise HTTPException(400, str(exc)) from exc
+        return _open_path(path)
+
+    @app.post("/api/worlds/open")
+    def open_world(payload: S.WorldOpen) -> dict[str, str]:
+        if library is None:
+            raise HTTPException(
+                400, "this server was started on a single world file")
+        try:
+            path = library.path_of(payload.file)
+        except LibraryError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return _open_path(path)
 
     # ---- world ------------------------------------------------------------
 

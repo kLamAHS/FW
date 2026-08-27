@@ -16,9 +16,10 @@
  */
 
 import { useState } from 'react'
-import { api } from './api'
+import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
+import { Launcher, WorldPicker } from './components/WorldPicker'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
 import { Dashboard } from './views/Dashboard'
@@ -48,12 +49,20 @@ export function App() {
   const bump = () => setVersion((v) => v + 1)
 
   const world = useAsync(() => api.world(), [version])
-  const vocabulary = useAsync(() => api.vocabulary(), [])
-  const snapshots = useAsync(() => api.snapshots(), [])
+  // Gated on the world being open: on the launcher these would only 409.
+  const vocabulary = useAsync(
+    () => (world.data ? api.vocabulary() : Promise.resolve(null)),
+    [world.data !== null],
+  )
+  const snapshots = useAsync(
+    () => (world.data ? api.snapshots() : Promise.resolve(null)),
+    [world.data !== null],
+  )
   const [view, setView] = useState<string>('dashboard')
   const [day, setDay] = useState<number | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [picking, setPicking] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -62,6 +71,11 @@ export function App() {
   )
 
   if (world.loading && !world.data) return <Loading what="Opening the world" />
+  // No world open (409) means the launcher, not an error: the writer picks a save or
+  // names a new world — nobody is forced into a template.
+  if (!world.data && world.error instanceof ApiError && world.error.status === 409) {
+    return <Launcher />
+  }
   // Fatal only when there is nothing to show. /api/world now refetches after every
   // edit, and one failed refetch must not tear down the writer's whole session —
   // stale-but-present data keeps the app alive until the next successful load.
@@ -89,6 +103,10 @@ export function App() {
           ))}
         </nav>
         <span style={{ flex: 1 }} />
+        <button onClick={() => setPicking(true)}
+                title="Open another world, or start a new one">
+          Worlds
+        </button>
         <button className="active" onClick={() => setCreating(true)}
                 title="Add something to the world">
           + New
@@ -159,6 +177,12 @@ export function App() {
           />
         )}
       </div>
+
+      {picking && (
+        <Modal title="Your worlds" onClose={() => setPicking(false)}>
+          <WorldPicker />
+        </Modal>
+      )}
 
       {creating && (
         <Modal title="Add to the world" onClose={() => setCreating(false)}>

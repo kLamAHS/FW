@@ -18,16 +18,31 @@ temporal model that can be asked questions.
 
 ## Running it
 
+**Windows:** double-click `run.bat`. **macOS / Linux:** run `./run.sh`. The first run
+installs everything it needs (Python 3.11+ must already be on the machine); after that it
+goes straight to the app in your browser. You start on the launcher: name a new world and
+begin, open one of your saves, or — only if you ask for it — create the example Kingdom of
+Renn to see what everything does.
+
+Every world is one portable `.fwworld` file in the `worlds/` folder. Copying that file is
+a backup; copying it to another machine is moving your world.
+
+From a terminal instead:
+
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 
-.venv/bin/fw seed demo.fwworld     # the worked example world (§115)
-cd web && npm install && npm run build && cd ..
-.venv/bin/fw serve demo.fwworld    # http://127.0.0.1:8000
+.venv/bin/fw serve                 # the launcher: create/open worlds in the browser
+.venv/bin/fw serve my.fwworld     # or serve one specific world file
 ```
 
-The browser client is optional. The API and the CLI are complete without it, and `fw serve`
-will say so rather than showing a broken page.
+The browser client ships prebuilt in `web/dist` (so the launchers need no Node); to
+rebuild it from source, `cd web && npm install && npm run build`. The API and the CLI are
+complete without it, and `fw serve` will say so rather than showing a broken page.
+
+```bash
+.venv/bin/fw seed demo.fwworld     # write the worked example world (§115) to a file
+```
 
 ```bash
 fw succession demo.fwworld --title "King of Renn" --year 240 --month 5 --day 61

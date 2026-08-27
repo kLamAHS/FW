@@ -380,7 +380,28 @@ export interface RevisionEntry {
   at: string
 }
 
+export interface LibraryWorld {
+  file: string
+  name: string
+  modified: number
+  size: number
+  entities: number
+  problem: string
+}
+
+export interface LibraryInfo {
+  library: string | null
+  worlds: LibraryWorld[]
+  open: string | null
+}
+
 export const api = {
+  worlds: () => get<LibraryInfo>('/worlds'),
+  createWorld: (name: string, example: boolean) =>
+    send<{ file: string; name: string }>('/worlds', 'POST', { name, example }),
+  openWorld: (file: string) =>
+    send<{ file: string; name: string }>('/worlds/open', 'POST', { file }),
+
   world: () => get<WorldSummary>('/world'),
   vocabulary: () => get<Vocabulary>('/vocabulary'),
   date: (day: number) => get<WorldDate>(`/date/${day}`),

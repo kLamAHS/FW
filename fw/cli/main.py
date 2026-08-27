@@ -339,11 +339,31 @@ def cmd_serve(args) -> None:
     import uvicorn
 
     from fw.api.app import create_app
+    from fw.core.library import Library
 
-    world = _open(args.path)
-    app = create_app(world)
-    print(f"“{world.name}” is at http://{args.host}:{args.port}")
+    # A named path is opened directly. With no path (and no world at the default
+    # name), the app starts on the launcher instead: the writer picks a save or makes
+    # a new world in the browser, rather than being forced into any template.
+    library = Library(args.library)
+    world = None
+    if args.path != DEFAULT_PATH or Path(args.path).exists():
+        world = _open(args.path)
+
+    app = create_app(world, library=library)
+    url = f"http://{args.host}:{args.port}"
+    if world is not None:
+        print(f"“{world.name}” is at {url}")
+    else:
+        print(f"FW is at {url} — create or open a world from there.")
+        print(f"  Saves live in {library.directory.resolve()}, one portable file each.")
     print("  Nothing leaves this machine; the server is bound to localhost.")
+
+    if args.open_browser:
+        import threading
+        import webbrowser
+
+        # uvicorn.run blocks; give it a moment to bind before the browser knocks.
+        threading.Timer(1.2, webbrowser.open, [url]).start()
     uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
 
 
@@ -437,6 +457,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--log-level", default="warning")
+    p.add_argument("--library", default="worlds",
+                   help="directory the launcher lists worlds from (default: worlds/)")
+    p.add_argument("--open", dest="open_browser", action="store_true",
+                   help="open the app in the default browser once the server is up")
 
     return parser
 

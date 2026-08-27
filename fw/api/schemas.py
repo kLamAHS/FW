@@ -234,3 +234,12 @@ class SuppressIn(BaseModel):
     rule_key: str
     fingerprint: str
     reason: str = ""
+
+
+class WorldCreate(BaseModel):
+    name: str
+    example: bool = False     # seed the §115 Kingdom of Renn instead of starting empty
+
+
+class WorldOpen(BaseModel):
+    file: str                 # a bare *.fwworld name inside the library, never a path
