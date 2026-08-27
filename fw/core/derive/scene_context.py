@@ -31,6 +31,19 @@ from fw.core.world import World
 # §11's authorities, which are what a scene's location most needs stated.
 CONTROL_PREDICATES = ("legally_owns", "administers", "occupies", "taxes", "claims", "rules")
 
+
+def join_names(names: list[str]) -> str:
+    """"Mara", "Mara and Sera", "Mara, Sera and Tomas" — this is prose the writer reads."""
+    if not names:
+        return "nobody"
+    if len(names) == 1:
+        return names[0]
+    return f"{', '.join(names[:-1])} and {names[-1]}"
+
+
+def verb(subjects: list[str], singular: str, plural: str) -> str:
+    return singular if len(subjects) == 1 else plural
+
 # Predicates whose presence in a room is inherently dramatic. Weighted because "X hates Y"
 # earns its place at a dinner table more than "X speaks Rennish".
 CHARGED_PREDICATES = {
@@ -275,23 +288,48 @@ class SceneContextEngine:
         lines: list[str] = []
         present = {p.id for p in ctx.participants}
 
-        # Someone knows something about someone else in the room who does not know it.
+        # Dramatic irony: someone in the room knows a thing that someone else in the room
+        # does not. Reported per secret rather than per pair, because "four people know
+        # and two do not" is one fact about the room, not eight.
+        by_secret: dict[str, list[KnowledgeLine]] = {}
         for line in ctx.secrets:
-            if line.stance != "knows" or line.about_observer is not None:
-                continue
-            subject = (self.world.get_entity(line.secret.about_id)
-                       if line.secret.about_id else None)
-            if subject is None or subject.id not in present:
-                continue
-            unaware = [
-                other.observer.name for other in ctx.secrets
-                if other.observer.id == subject.id
-                and other.stance in ("misinformed", "unaware")
+            if line.about_observer is None:
+                by_secret.setdefault(line.secret.id, []).append(line)
+
+        for lines_for_secret in by_secret.values():
+            secret = lines_for_secret[0].secret
+            knowing = [line for line in lines_for_secret if line.stance == "knows"]
+            in_the_dark = [
+                line for line in lines_for_secret
+                if line.stance in ("misinformed", "unaware")
             ]
-            if unaware:
+            if not knowing or not in_the_dark:
+                continue
+
+            # If the secret is *about* one of the people who does not know it, say so —
+            # that is the sharpest version, and the brief's own example (§44: Mara knows
+            # Oren's parentage; Oren does not).
+            about_subject = [
+                line for line in in_the_dark if line.observer.id == secret.about_id
+            ]
+            unknowing = about_subject or in_the_dark
+
+            knowers = [line.observer.name for line in knowing]
+            unknowers = [line.observer.name for line in unknowing]
+            lines.append(
+                f"{join_names(knowers)} {verb(knowers, 'knows', 'know')} "
+                f"“{secret.name}” and {join_names(unknowers)}, "
+                f"who {verb(unknowers, 'is', 'are')} in the room, "
+                f"{verb(unknowers, 'does not', 'do not')}."
+            )
+
+        # Second-order awareness is its own kind of tension (§6): knowing that someone
+        # else knows changes how a conversation is conducted.
+        for line in ctx.secrets:
+            if line.about_observer is not None:
                 lines.append(
-                    f"{line.observer.name} knows “{line.secret.name}” and "
-                    f"{subject.name}, who is in the room, does not."
+                    f"{line.observer.name} knows that {line.about_observer.name} knows "
+                    f"“{line.secret.name}”, and both are in the room."
                 )
 
         # Two people in the room want incompatible things (§95).
@@ -331,8 +369,11 @@ class SceneContextEngine:
         """
         opposed = (
             ("crowned", "discredited"), ("crowned", "disinherited"),
-            ("reveal", "suppress"), ("reveal", "conceal"), ("protect", "destroy"),
-            ("war", "peace"), ("keep", "take"),
+            ("reveal", "suppress"), ("reveal", "conceal"), ("reveal", "buried"),
+            ("reveal", "hidden"), ("reveal", "silence"),
+            ("protect", "destroy"), ("protect", "kill"),
+            ("war", "peace"), ("keep", "take"), ("marry", "prevent"),
+            ("inherit", "disinherit"), ("free", "imprison"),
         )
         a_low, b_low = a.lower(), b.lower()
         return any(
