@@ -585,10 +585,12 @@ MIGRATIONS: dict[int, str] = {
         CREATE INDEX ix_causal_branch ON causal_link(branch_id)
     """,
     # 4: title grants become branch-scoped too — a coup tried on a what-if must not
-    #    crown anyone on the main timeline. Existing rows keep NULL, which every
-    #    timeline reads as canon's.
+    #    crown anyone on the main timeline. Existing rows are backfilled to canon;
+    #    readers still tolerate NULL (as canon's) for files a pre-backfill build of
+    #    this migration already stamped as version 4.
     4: """
         ALTER TABLE title_holding ADD COLUMN branch_id TEXT REFERENCES branch(id) ON DELETE CASCADE;
+        UPDATE title_holding SET branch_id = (SELECT id FROM branch WHERE is_canon = 1);
         CREATE INDEX ix_holding_branch ON title_holding(branch_id)
     """,
 }

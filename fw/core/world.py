@@ -14,6 +14,7 @@ reason the temporal decision had to be made before any feature work.
 
 from __future__ import annotations
 
+import contextlib
 import dataclasses
 import json
 import secrets
@@ -622,8 +623,11 @@ class World:
         return f"{self.branch_id}:{self._session_token}:{self.db.transaction_serial}"
 
     def _action_is_ours(self, action_id: str) -> bool:
-        """Whether an action belongs to this timeline. Ids from before branches carry
-        no prefix and belong to canon."""
+        """Whether an action belongs to this timeline.
+
+        Two-part ids predate branch-prefixed ids and are attributed to canon — the
+        only build that wrote branch actions without a prefix was never released, so
+        in practice every unprefixed action really was canon's."""
         head, _, rest = action_id.partition(":")
         if ":" not in rest:                     # legacy two-part id -> canon's
             return len(self._chain) == 1
@@ -1256,9 +1260,13 @@ class World:
             self.delete_entity(row_id)               # logs its own full cascade
             return 1
         if table == "fact":
-            if self.db.one("SELECT 1 FROM fact WHERE id = ?", (row_id,)) is None:
+            fact_row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
+            if fact_row is None:
                 return 0
-            self.delete_fact(row_id)
+            # Physical, not routed: undoing an insert removes exactly that row. The
+            # tombstone-preserving routing would otherwise turn undo of a branch
+            # override into yet another override.
+            self._delete_fact_row(fact_row)
             return 1
         spec = _RESTORE_SPEC.get(table)
         if spec is None:
@@ -1797,8 +1805,15 @@ class World:
                 # inherited one gets its own tombstone, a branch-local one is simply
                 # deleted.
                 closure = [row, *self._reified_dependants([fact_id]).values()]
+                closure_ids = {doomed["id"] for doomed in closure}
                 for doomed in closure:
                     if doomed["branch_id"] == self.branch_id:
+                        if (doomed["supersedes_id"] is not None
+                                and doomed["supersedes_id"] in closure_ids):
+                            # the branch's own edit of an inherited row also in this
+                            # closure: its tombstone is written when that row is
+                            # processed — deleting it here would destroy the tombstone
+                            continue
                         if self.db.one("SELECT 1 FROM fact WHERE id = ?",
                                        (doomed["id"],)):
                             self.delete_fact(doomed["id"])   # own row: the real path
@@ -1812,6 +1827,30 @@ class World:
                     props["branch_tombstone"] = True
                     self._override_fact(doomed, {"props": props})
                 return
+            if row["supersedes_id"] is not None:
+                target = self.db.one("SELECT * FROM fact WHERE id = ?",
+                                     (row["supersedes_id"],))
+                if (target is not None and target["branch_id"] != self.branch_id
+                        and target["branch_id"] in self._chain):
+                    # This row is the branch's own edit of an inherited fact, and the
+                    # writer is deleting the fact they see. Hard-deleting the override
+                    # would resurrect the inherited original here — the intent is
+                    # "gone in this timeline", so the override becomes a tombstone.
+                    props = decode_json(row["props"], {}) or {}
+                    props["branch_tombstone"] = True
+                    self._override_fact(target, {"props": props})
+                    return
+            self._delete_fact_row(row)
+
+    def _delete_fact_row(self, row) -> None:
+        """Physically remove one fact row, with its full cascade logged.
+
+        The raw operation behind delete_fact's routing — and the one undo must use
+        directly, because inverting an "insert" means removing exactly that row, never
+        re-routing through intent-preserving tombstone logic.
+        """
+        fact_id = row["id"]
+        with self.db.transaction():
             marker = f"cascade:{fact_id}"
             dependants = self._reified_dependants([fact_id])
             dependants.pop(fact_id, None)      # its own record closes the batch below
@@ -1979,7 +2018,8 @@ class World:
                 AND (h.{self._in_chain} OR h.branch_id IS NULL)
                 AND (h.from_day IS NULL OR h.from_day <= ?)
                 AND (h.to_day   IS NULL OR h.to_day   >= ?)
-               WHERE t.{self._in_chain}""",
+               WHERE t.{self._in_chain}
+               ORDER BY h.from_day ASC NULLS FIRST""",
             (*self._chain, day, day, *self._chain),
         ):
             holders[row["title_id"]] = row["holder_id"]
@@ -2115,37 +2155,55 @@ class World:
         ids: list[str] = []
         seen: set[str] = set()
 
-        try:
-            # Weighted ranking: a hit in the NAME outranks a hit in the summary or
-            # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
-            # "Northmarch", because Northwatch's summary mentions the region — precisely
-            # the wrong entity picked with full confidence.
-            # The index is not branch-aware, so other timelines' rows can occupy
-            # candidate slots; fetch generously and let hydration scope-filter.
-            pool = limit if len(self._chain) == 1 else limit * 4
-            for row in self.db.query(
+        def in_scope(entity_id: str) -> bool:
+            return self.db.one(
+                f"SELECT 1 FROM entity WHERE id = ? AND {self._in_chain}",
+                (entity_id, *self._chain)) is not None
+
+        def collect(sql: str, params: tuple) -> None:
+            """Page through ranked candidates until `limit` in-scope ids are found.
+
+            The indexes are not branch-aware, so any other timeline's rows can crowd
+            the top of the ranking without bound — a fixed pool merely raises the
+            bar. Filtering to this timeline *while* paging is the only exact answer.
+            """
+            offset = 0
+            page = max(limit, 25)
+            while len(ids) < limit:
+                rows = self.db.query(f"{sql} LIMIT ? OFFSET ?",
+                                     (*params, page, offset))
+                if not rows:
+                    return
+                offset += page
+                for row in rows:
+                    eid = row["entity_id"]
+                    if eid in seen:
+                        continue
+                    seen.add(eid)
+                    if in_scope(eid):
+                        ids.append(eid)
+                        if len(ids) >= limit:
+                            return
+
+        # Weighted ranking: a hit in the NAME outranks a hit in the summary or
+        # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
+        # "Northmarch", because Northwatch's summary mentions the region — precisely
+        # the wrong entity picked with full confidence. A query the FTS parser
+        # rejects degrades to the fuzzy pass rather than raising at the user.
+        with contextlib.suppress(Exception):
+            collect(
                 "SELECT entity_id FROM entity_fts WHERE entity_fts MATCH ? "
-                "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0) LIMIT ?",
-                (_fts_query(text), pool),
-            ):
-                if row["entity_id"] not in seen:
-                    seen.add(row["entity_id"])
-                    ids.append(row["entity_id"])
-        except Exception:
-            # A query the FTS parser rejects should degrade to fuzzy, not raise at the user.
-            pass
+                "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0)",
+                (_fts_query(text),),
+            )
 
         if len(ids) < limit:
-            pool = (limit - len(ids)) if len(self._chain) == 1 else limit * 4
-            for row in self.db.query(
-                "SELECT entity_id FROM entity_trigram WHERE name LIKE ? LIMIT ?",
-                (f"%{text}%", pool),
-            ):
-                if row["entity_id"] not in seen:
-                    seen.add(row["entity_id"])
-                    ids.append(row["entity_id"])
+            collect(
+                "SELECT entity_id FROM entity_trigram WHERE name LIKE ?",
+                (f"%{text}%",),
+            )
 
-        found = [self.get_entity(i) for i in ids]     # scope-checks and patches
+        found = [self.get_entity(i) for i in ids]     # patches branch overrides
         result = [e for e in found if e is not None]
         if type_key:
             result = [e for e in result if e.type_key == type_key]
@@ -2384,14 +2442,20 @@ class World:
         )
 
     def titles_held_by(self, holder_id: str, *, at: int | None = None) -> list[Title]:
-        sql = (f"SELECT t.* FROM title t JOIN title_holding h ON h.title_id = t.id "
+        sql = (f"SELECT DISTINCT t.* FROM title t "
+               f"JOIN title_holding h ON h.title_id = t.id "
                f"WHERE h.holder_id = ? AND (h.{self._in_chain} OR h.branch_id IS NULL)")
         params: list[Any] = [holder_id, *self._chain]
         if at is not None:
             sql += (" AND (h.from_day IS NULL OR h.from_day <= ?)"
                     " AND (h.to_day   IS NULL OR h.to_day   >= ?)")
             params.extend([at, at])
-        return [_title(r) for r in self.db.query(sql, params)]
+        titles = [_title(r) for r in self.db.query(sql, params)]
+        if at is None:
+            return titles
+        # Agree with title_holder_on: on a day, you hold a title only if you are the
+        # one it resolves to — a later grant (a branch's coup, say) displaces you.
+        return [t for t in titles if self.title_holder_on(t.id, at) == holder_id]
 
     # ---- secrets and knowledge (§6) ---------------------------------------
 

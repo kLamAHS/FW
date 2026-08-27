@@ -1461,3 +1461,72 @@ class TestBranches:
         fork = world.on_branch("doubt")
         fork.end_fact(fact.id, fork.day(300))
         assert "timeline change" in fork.undo_state()["undo"]
+
+    def test_deleting_a_branch_edited_fact_does_not_resurrect_the_original(
+            self, world: World):
+        """The writer edits an inherited fact, then deletes the fact they see —
+        the fact must be gone in the branch, not reset to canon's version."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("souring")
+        fork = world.on_branch("souring")
+
+        fork.end_fact(fact.id, fork.day(300))
+        visible = fork.facts_where("trusts")[0]     # the branch's override row
+        fork.delete_fact(visible.id)
+
+        assert fork.facts_where("trusts") == []      # gone, not resurrected
+        assert fork.get_fact(fact.id) is None
+        assert len(world.facts_where("trusts")) == 1  # canon untouched
+
+    def test_tombstone_cascade_survives_a_pre_edited_meta_fact(self, world: World):
+        """A branch edits the fact-about-a-fact, then deletes the underlying fact:
+        both must be gone, and stay gone on a second delete."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        meta = world.assert_fact(b, "trusts", a, about_fact_id=fact.id)
+        world.create_branch("severing")
+        fork = world.on_branch("severing")
+
+        fork.end_fact(meta.id, fork.day(200))        # edit the meta first
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []
+        assert fork.get_fact(meta.id) is None
+        fork.delete_fact(fact.id)                    # idempotent, no resurrection
+        assert fork.facts_where("trusts") == []
+        assert len(world.facts_where("trusts")) == 2  # canon whole
+
+    def test_canon_search_survives_branch_name_squatting(self, world: World):
+        """A branch full of entities named like the query must not crowd canon's
+        genuine matches out of the ranked candidate pool."""
+        for i in range(4):
+            world.add_entity("person", f"Keeper {i}", summary="haunted by the ghost")
+        world.create_branch("haunted")
+        fork = world.on_branch("haunted")
+        for i in range(30):
+            fork.add_entity("person", f"Ghost {i}")
+
+        names = {e.name for e in world.search("ghost", limit=5)}
+        assert names == {f"Keeper {i}" for i in range(4)}
+        assert any("Ghost" in e.name for e in fork.search("ghost", limit=10))
+
+    def test_the_two_title_views_agree_about_a_coup(self, world: World):
+        king = world.add_entity("person", "King")
+        usurper = world.add_entity("person", "Usurper")
+        crown = world.add_title("The Crown")
+        world.grant_title(crown.id, king.id, from_day=world.day(200))
+        world.create_branch("coup")
+        fork = world.on_branch("coup")
+        fork.grant_title(crown.id, usurper.id, from_day=fork.day(220))
+
+        day = world.day(230)
+        # on the branch, the deposed king no longer *holds* the crown on that day
+        assert fork.title_holder_on(crown.id, day) == usurper.id
+        assert [t.name for t in fork.titles_held_by(king.id, at=day)] == []
+        assert [t.name for t in fork.titles_held_by(usurper.id, at=day)] == ["The Crown"]
+        assert fork.state_at(day).titles[crown.id] == usurper.id
+        # on canon, nothing happened
+        assert [t.name for t in world.titles_held_by(king.id, at=day)] == ["The Crown"]
+        assert world.state_at(day).titles[crown.id] == king.id
