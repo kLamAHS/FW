@@ -129,8 +129,8 @@ class TestContinuityEngine:
         """§47's worked example: died 229, listed at a battle in 231."""
         elia = world.add_entity("person", "Elia", exists_from=world.day(200),
                                 exists_to=world.day(229))
-        battle = world.add_event("The Battle of Orren", start_day=world.day(231),
-                                 participants=[(elia.id, "participant")])
+        world.add_event("The Battle of Orren", start_day=world.day(231),
+                        participants=[(elia.id, "participant")])
         report = ContinuityEngine(world).run()
         messages = [v.message for v in report.errors]
         assert any("Elia" in m and "died" in m for m in messages)

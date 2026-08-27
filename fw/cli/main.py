@@ -20,7 +20,7 @@ from fw.core.genealogy.kinship import Genealogy
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.seed.renn import PRESENT_YEAR, seed_renn
 from fw.core.succession.engine import SuccessionEngine
-from fw.core.world import World
+from fw.core.world import World, WorldError
 
 DEFAULT_PATH = "world.fwworld"
 
@@ -305,19 +305,31 @@ def cmd_export(args) -> None:
 
 def cmd_restore(args) -> None:
     """§59: undo a recorded change from the command line."""
+    # Two optional positionals means `fw restore 123` parses 123 as the *path* and
+    # then tries to open a world file named "123". A bare number in the path slot is
+    # the revision id the writer obviously meant.
+    if args.revision is None and args.path != DEFAULT_PATH and args.path.isdigit():
+        args.revision = int(args.path)
+        args.path = DEFAULT_PATH
     world = _open(args.path)
-    if args.list:
-        deleted = world.recently_deleted(limit=20)
-        if not deleted:
-            print("Nothing deleted that can be restored.")
-        for d in deleted:
-            print(f"  {d['revision_id']:6}  {d['name']}  ({d['type_key']}, {d['at']})")
+    try:
+        if args.list:
+            deleted = world.recently_deleted(limit=20)
+            if not deleted:
+                print("Nothing deleted that can be restored.")
+            for d in deleted:
+                print(f"  {d['revision_id']:6}  {d['name']}  ({d['type_key']}, {d['at']})")
+            return
+        if args.revision is None:
+            sys.exit("Give a revision id, or --list to see what can be restored.")
+        try:
+            print(world.restore(args.revision))
+        except WorldError as exc:
+            # A refusal ("already exists", "restore that entity first") is an answer,
+            # not a crash — no traceback.
+            sys.exit(str(exc))
+    finally:
         world.close()
-        return
-    if args.revision is None:
-        sys.exit("Give a revision id, or --list to see what can be restored.")
-    print(world.restore(args.revision))
-    world.close()
 
 
 def cmd_serve(args) -> None:

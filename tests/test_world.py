@@ -606,3 +606,193 @@ class TestRestore:
         world.restore(rev_id)                      # must not raise, must not execute
         assert world.entity_named("Victim") is not None
         assert world.db.scalar("SELECT count(*) FROM entity") >= 1
+
+
+class TestRestoreCascade:
+    """A delete logs its whole FK cascade under a batch marker, and restore replays it."""
+
+    def test_restore_brings_back_everything_the_cascade_took(self, world: World):
+        """Not just facts: titles, holdings, participations, knowledge, secrets,
+        geometry and route segments all die with an entity and must all return."""
+        day = world.day(200, 1, 1)
+        lord = world.add_entity("person", "Lord Doomed")
+        friend = world.add_entity("person", "Friend")
+        seat = world.add_entity("settlement", "Seat")
+
+        world.assert_fact(lord, "trusts", friend, strength="deeply_trusts")
+        title = world.add_title("Lord of Seat", entity_id=lord.id)
+        world.grant_title(title.id, lord.id, from_day=day)
+        event = world.add_event(
+            "The duel", start_day=day,
+            participants=[(lord.id, "duelist"), (friend.id, "witness")])
+        scene = world.add_scene("A quiet word", day=day, location_id=seat.id,
+                                pov_id=lord.id, participants=[lord.id, friend.id])
+        secret = world.add_secret("The lord's debt", about_id=lord.id)
+        world.set_knowledge(friend.id, secret.id, "suspects")
+        world.add_geometry(lord.id, "point", [3.0, 4.0])
+        world.add_route_segment(seat.id, lord.id, 12.0)
+
+        world.delete_entity(lord.id)
+
+        # the cascade really did run this deep
+        assert world.titles() == []
+        assert world.secrets() == []
+        assert world.route_segments() == []
+        assert [p.id for p in world.scene_participants(scene.id)] == [friend.id]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [friend.id]
+        assert world.get_scene(scene.id).pov_id is None   # SET NULL on a survivor
+
+        message = world.restore(world.recently_deleted()[0]["revision_id"])
+        assert "Lord Doomed" in message and "related record" in message
+
+        back = world.entity_named("Lord Doomed")
+        assert back is not None and back.id == lord.id
+        assert len(world.facts_about(lord.id)) == 1
+        title_back = world.title_named("Lord of Seat")
+        assert title_back is not None
+        holdings = world.title_holdings(title_back.id)
+        assert [h.holder_id for h in holdings] == [lord.id]
+        assert {p.id for p, _ in world.event_participants(event.id)} == {lord.id,
+                                                                         friend.id}
+        assert {p.id for p in world.scene_participants(scene.id)} == {lord.id,
+                                                                      friend.id}
+        secrets = world.secrets()
+        assert [s.name for s in secrets] == ["The lord's debt"]
+        assert [k.observer_id for k in world.knowledge_of(secrets[0].id)] == [friend.id]
+        assert world.geometry_for(lord.id) is not None
+        assert len(world.route_segments()) == 1
+        # and the surviving scene got its point-of-view re-linked
+        assert world.get_scene(scene.id).pov_id == lord.id
+
+    def test_two_deletes_in_the_same_second_stay_separate(self, world: World):
+        """The old batch heuristic matched on the timestamp, so two entities deleted
+        in the same second swept each other's facts into one restore."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        c = world.add_entity("person", "C")
+        world.assert_fact(a, "trusts", c)
+        world.assert_fact(b, "trusts", c)
+
+        world.delete_entity(a.id)
+        world.delete_entity(b.id)          # lands within the same wall-clock second
+
+        rev_b = next(d for d in world.recently_deleted() if d["name"] == "B")
+        world.restore(rev_b["revision_id"])
+        assert world.get_entity(b.id) is not None
+        assert world.get_entity(a.id) is None            # A stays deleted
+        assert len(world.facts_about(b.id)) == 1
+        # and A's own restore still has its fact waiting
+        rev_a = next(d for d in world.recently_deleted() if d["name"] == "A")
+        world.restore(rev_a["revision_id"])
+        assert len(world.facts_about(a.id)) == 1
+
+    def test_delete_restore_delete_offers_only_the_newest_version(self, world: World):
+        region = world.add_entity("region", "The March")
+        e = world.add_entity("settlement", "Phoenix")
+        world.assert_fact(e, "located_in", region)
+
+        world.delete_entity(e.id)
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        world.update_entity(e.id, summary="Risen once")
+        world.assert_fact(region, "administers", e)
+        world.delete_entity(e.id)
+
+        offers = [d for d in world.recently_deleted() if d["name"] == "Phoenix"]
+        assert len(offers) == 1                          # not one per deletion
+        world.restore(offers[0]["revision_id"])
+        back = world.get_entity(e.id)
+        assert back.summary == "Risen once"              # the newest version returned
+        assert len(world.facts_about(e.id)) == 2
+
+    def test_deleting_a_fact_takes_and_restores_the_claims_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        f1 = world.assert_fact(a, "trusts", b)
+        f2 = world.assert_fact(b, "trusts", a, about_fact_id=f1.id, note="doubted")
+        world.add_secret("Sealed letter", about_id=a.id, fact_id=f1.id)
+
+        world.delete_fact(f1.id)
+        assert world.get_fact(f2.id) is None             # cascaded with its subject
+        assert world.secrets()[0].fact_id is None        # SET NULL on the survivor
+
+        rev = world.revisions_for(f1.id)[0]
+        message = world.restore(rev["id"])
+        assert "dependent" in message
+        assert world.get_fact(f1.id) is not None
+        restored_about = world.get_fact(f2.id)
+        assert restored_about is not None
+        assert restored_about.note == "doubted"
+        assert world.secrets()[0].fact_id == f1.id       # re-linked
+
+    def test_deleting_an_entity_cleans_and_restore_rebuilds_its_map_index(
+            self, world: World):
+        e = world.add_entity("settlement", "Mapped")
+        world.add_geometry(e.id, "point", [10.0, 20.0])
+        boxes = world.db.scalar("SELECT count(*) FROM geometry_bbox")
+
+        world.delete_entity(e.id)
+        # the R*Tree is not FK-aware; a leak here grows the file forever
+        assert world.db.scalar("SELECT count(*) FROM geometry_bbox") == boxes - 1
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.db.scalar("SELECT count(*) FROM geometry_bbox") == boxes
+        assert world.geometry_for(e.id) is not None
+
+    def test_restoring_a_fact_twice_says_it_is_already_there(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.delete_fact(fact.id)
+        rev = world.revisions_for(fact.id)[0]
+
+        world.restore(rev["id"])
+        with pytest.raises(WorldError, match="already exists"):
+            world.restore(rev["id"])
+
+    def test_restoring_an_update_with_no_usable_columns_refuses(self, world: World):
+        """A restore that would change nothing must not report success."""
+        import json
+        e = world.add_entity("settlement", "S")
+        world.update_entity(e.id, name="S2")
+        rev = world.revisions_for(e.id)[0]
+        world.db.execute("UPDATE revision SET before = ? WHERE id = ?",
+                         (json.dumps({"bogus_column": 1}), rev["id"]))
+        with pytest.raises(WorldError, match="no restorable columns"):
+            world.restore(rev["id"])
+
+
+class TestCausality:
+    """§32: causal chains must stay a DAG and read back deduplicated."""
+
+    def test_linking_twice_is_a_quiet_no_op(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        assert world.link_cause(a.id, b.id) is True
+        assert world.link_cause(a.id, b.id) is False
+        assert world.db.scalar("SELECT count(*) FROM causal_link") == 1
+
+    def test_self_links_and_loops_are_refused(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        c = world.add_event("Unrest")
+        world.link_cause(a.id, b.id)
+        world.link_cause(b.id, c.id)
+        with pytest.raises(WorldError, match="cause itself"):
+            world.link_cause(a.id, a.id)
+        with pytest.raises(WorldError, match="causal loop"):
+            world.link_cause(c.id, a.id)      # would make the chain circular
+
+    def test_a_diamond_reports_each_consequence_once(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        c = world.add_event("Livestock loss")
+        d = world.add_event("Famine")
+        world.link_cause(a.id, b.id)
+        world.link_cause(a.id, c.id)
+        world.link_cause(b.id, d.id)
+        world.link_cause(c.id, d.id)
+
+        out = world.consequences_of(a.id)
+        ids = [eid for eid, _ in out]
+        assert ids.count(d.id) == 1
+        assert dict(out)[d.id] == 2            # at its shortest distance

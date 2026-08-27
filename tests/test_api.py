@@ -555,3 +555,44 @@ class TestRestoreEndpoint:
 
     def test_restoring_nonsense_is_a_clean_400(self, client):
         assert client.post("/api/revisions/999999/restore").status_code == 400
+
+    def test_duplicate_causal_link_is_answered_not_crashed(self, client):
+        a = client.post("/api/events", json={"name": "Storm"}).json()
+        b = client.post("/api/events", json={"name": "Shipwreck"}).json()
+        first = client.post("/api/causal-links",
+                            json={"cause_id": a["id"], "effect_id": b["id"]})
+        assert first.status_code == 201
+        again = client.post("/api/causal-links",
+                            json={"cause_id": a["id"], "effect_id": b["id"]})
+        assert again.status_code == 200
+        assert again.json()["status"] == "already linked"
+
+    def test_causal_loops_are_refused(self, client):
+        a = client.post("/api/events", json={"name": "Coup"}).json()
+        b = client.post("/api/events", json={"name": "Exile"}).json()
+        c = client.post("/api/events", json={"name": "Return"}).json()
+        client.post("/api/causal-links", json={"cause_id": a["id"], "effect_id": b["id"]})
+        client.post("/api/causal-links", json={"cause_id": b["id"], "effect_id": c["id"]})
+        response = client.post("/api/causal-links",
+                               json={"cause_id": c["id"], "effect_id": a["id"]})
+        assert response.status_code == 400
+        assert "loop" in response.json()["detail"]
+
+    def test_scene_with_ghost_participant_is_a_404_not_a_crash(self, client):
+        response = client.post("/api/scenes", json={
+            "title": "Haunted", "participants": ["no-such-entity"],
+        })
+        assert response.status_code == 404
+        assert "no entity" in response.json()["detail"]
+        response = client.post("/api/scenes", json={
+            "title": "Haunted", "location_id": "nowhere",
+        })
+        assert response.status_code == 404
+
+    def test_event_with_ghost_references_is_a_404_not_a_crash(self, client):
+        assert client.post("/api/events", json={
+            "name": "Nowhere", "location_id": "nowhere",
+        }).status_code == 404
+        assert client.post("/api/events", json={
+            "name": "Nobody", "participants": [{"id": "no-such-entity"}],
+        }).status_code == 404

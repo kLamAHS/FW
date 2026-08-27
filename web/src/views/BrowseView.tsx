@@ -81,6 +81,7 @@ export function EventsView(
   const [expanded, setExpanded] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [causePick, setCausePick] = useState('')
+  const [linkError, setLinkError] = useState<string | null>(null)
   const consequences = useAsync(
     () => (expanded ? api.consequences(expanded) : Promise.resolve([])),
     [expanded, version],
@@ -89,11 +90,25 @@ export function EventsView(
   if (loading) return <Loading />
   if (error) return <ErrorBox error={error} />
 
+  // One picker state serves whichever event is expanded, so switching events must
+  // not carry a stale selection (or a stale refusal) across.
+  const expand = (id: string | null) => {
+    setExpanded(id)
+    setCausePick('')
+    setLinkError(null)
+  }
+
   const recordConsequence = async (causeId: string) => {
     if (!causePick) return
-    await api.linkCause(causeId, causePick)
-    setCausePick('')
-    onMutate()
+    setLinkError(null)
+    try {
+      await api.linkCause(causeId, causePick)
+      setCausePick('')
+      onMutate()
+    } catch (err) {
+      // A refused link (a causal loop, a vanished event) must be read, not lost.
+      setLinkError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   return (
@@ -127,7 +142,7 @@ export function EventsView(
                 {future && <Badge>has not happened yet</Badge>}
                 <span className="spacer" style={{ flex: 1 }} />
                 <button className="small"
-                        onClick={() => setExpanded(expanded === e.id ? null : e.id)}>
+                        onClick={() => expand(expanded === e.id ? null : e.id)}>
                   {expanded === e.id ? 'hide' : 'consequences'}
                 </button>
               </div>
@@ -173,6 +188,7 @@ export function EventsView(
                       Record
                     </button>
                   </div>
+                  {linkError && <div className="error-box small">{linkError}</div>}
                 </div>
               )}
             </li>

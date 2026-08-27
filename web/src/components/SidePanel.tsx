@@ -285,15 +285,19 @@ function ChangeHistory(
 ) {
   const [open, setOpen] = useState(false)
   const [restoreError, setRestoreError] = useState<string | null>(null)
+  // A restore appends its own inverse record, so the list it was clicked in is stale
+  // the moment it succeeds — refetch, or the writer can click the same restore twice.
+  const [generation, setGeneration] = useState(0)
   const history = useAsync(
     () => (open ? api.history(entityId) : Promise.resolve(null)),
-    [open, entityId],
+    [open, entityId, generation],
   )
 
   const restore = async (revisionId: number) => {
     setRestoreError(null)
     try {
       await api.restoreRevision(revisionId)
+      setGeneration((g) => g + 1)
       onChanged()
     } catch (err) {
       setRestoreError(err instanceof Error ? err.message : String(err))

@@ -10,6 +10,8 @@
  * home screen rather than waiting to be looked for.
  */
 
+import { useState } from 'react'
+
 import { api } from '../api'
 import type { WorldSummary } from '../api'
 import { Badge, ErrorBox, Loading, Panel, SEVERITY_GLYPH, useAsync } from '../components/common'
@@ -35,9 +37,17 @@ export function Dashboard(
   const recent = useAsync(() => api.recent(8), [version])
   const deleted = useAsync(() => api.deleted(6), [version])
 
+  const [restoreError, setRestoreError] = useState<string | null>(null)
   const restore = async (revisionId: number) => {
-    await api.restoreRevision(revisionId)
-    onMutate()
+    setRestoreError(null)
+    try {
+      await api.restoreRevision(revisionId)
+      onMutate()
+    } catch (err) {
+      // A refusal ("already exists", "restore that entity first") must be read,
+      // not swallowed as an unhandled rejection with a button that did nothing.
+      setRestoreError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   const succession = useAsync(async () => {
@@ -207,6 +217,7 @@ export function Dashboard(
             <div style={{ marginTop: 12, paddingTop: 10,
                           borderTop: '1px solid var(--line-soft)' }}>
               <h3 style={{ marginBottom: 5 }}>Recently deleted</h3>
+              {restoreError && <div className="error-box small">{restoreError}</div>}
               {(deleted.data ?? []).map((d) => (
                 <div key={d.revision_id}
                      style={{ display: 'flex', gap: 8, alignItems: 'baseline',

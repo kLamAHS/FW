@@ -48,6 +48,79 @@ class WorldError(RuntimeError):
     pass
 
 
+# The entity columns a writer may edit — shared by update_entity and the restore path so
+# a restore can never write a column an edit could not.
+_ENTITY_EDITABLE = frozenset({
+    "name", "summary", "exists_from", "exists_to", "exists_from_hi", "exists_to_lo",
+    "confidence", "tags",
+})
+
+# How to put back each kind of row a delete cascade destroys. `refs` maps a column to
+# (target table, what-to-do-when-the-target-is-missing): 'skip' mirrors ON DELETE
+# CASCADE (the row cannot outlive its target), 'null' mirrors ON DELETE SET NULL (the
+# row survives with the link cleared). `key` names the columns that identify a row for
+# duplicate checks when the table has no `id`; `unique` adds a schema UNIQUE constraint
+# the insert would otherwise trip over. Tables absent from this map cannot be restored,
+# whatever a crafted revision row claims.
+_RESTORE_SPEC: dict[str, dict[str, Any]] = {
+    "fact": {"refs": {"subject_id": ("entity", "skip"), "object_id": ("entity", "skip"),
+                      "about_fact_id": ("fact", "skip"),
+                      "source_id": ("source", "null")}},
+    "event": {"refs": {"entity_id": ("entity", "skip"),
+                       "location_id": ("entity", "null")}},
+    "title": {"refs": {"entity_id": ("entity", "skip"),
+                       "territory_id": ("entity", "null"),
+                       "dynasty_root_id": ("entity", "null")}},
+    "secret": {"refs": {"about_id": ("entity", "skip"), "fact_id": ("fact", "null")}},
+    "geometry": {"refs": {"entity_id": ("entity", "skip")}},
+    "route_segment": {"refs": {"entity_id": ("entity", "skip"),
+                               "from_entity_id": ("entity", "skip"),
+                               "to_entity_id": ("entity", "skip"),
+                               "toll_holder_id": ("entity", "null")}},
+    "title_holding": {"refs": {"title_id": ("title", "skip"),
+                               "holder_id": ("entity", "skip")}},
+    "event_participant": {"refs": {"event_id": ("event", "skip"),
+                                   "entity_id": ("entity", "skip")},
+                          "key": ("event_id", "entity_id", "role")},
+    "scene_participant": {"refs": {"scene_id": ("scene", "skip"),
+                                   "entity_id": ("entity", "skip")},
+                          "key": ("scene_id", "entity_id")},
+    "interpretation": {"refs": {"event_id": ("event", "skip"),
+                                "holder_id": ("entity", "skip")}},
+    "knowledge_state": {"refs": {"observer_id": ("entity", "skip"),
+                                 "secret_id": ("secret", "skip"),
+                                 "about_observer_id": ("entity", "skip"),
+                                 "acquired_from": ("entity", "null")}},
+    "causal_link": {"refs": {"cause_id": ("event", "skip"),
+                             "effect_id": ("event", "skip")},
+                    "unique": ("cause_id", "effect_id")},
+}
+
+# Parents before children, so an event exists again before its participants do. Facts
+# are handled separately (they can be about each other and need a fixpoint).
+_RESTORE_ORDER = ("event", "title", "secret", "geometry", "route_segment",
+                  "title_holding", "event_participant", "scene_participant",
+                  "interpretation", "knowledge_state", "causal_link")
+
+# SET NULL columns on rows that *survive* a delete: the cascade clears the reference
+# but keeps the row, so a restore should offer to re-link it. Only these (table,
+# column) pairs may ever be relinked, whatever a crafted revision row claims.
+_RELINK_COLUMNS: dict[str, dict[str, str]] = {
+    "scene": {"location_id": "entity", "pov_id": "entity"},
+    "event": {"location_id": "entity"},
+    "title": {"territory_id": "entity", "dynasty_root_id": "entity"},
+    "knowledge_state": {"acquired_from": "entity"},
+    "route_segment": {"toll_holder_id": "entity"},
+    "secret": {"fact_id": "fact"},
+}
+
+
+def _row_key(table: str, row: Any) -> str:
+    """The revision-log row_id for a row — its id, or the joined composite key."""
+    key = _RESTORE_SPEC.get(table, {}).get("key", ("id",))
+    return "/".join(str(row[column]) for column in key)
+
+
 @dataclass
 class StateAtDate:
     """A snapshot of what was true on one day (§3, §36)."""
@@ -228,17 +301,21 @@ class World:
     # ---- revisions (§59) --------------------------------------------------
 
     def _log_revision(self, table: str, row_id: str, action: str,
-                      before: dict | None, after: dict | None) -> None:
+                      before: dict | None, after: dict | None,
+                      *, note: str = "") -> None:
         """Append to the revision log. Never updated, never deleted.
 
         §59 asks for revision history and restore points, and §106.3 forbids overwriting
         history. The log records what changed rather than snapshotting the row, so it is a
         readable diff — and because it is written inside the same transaction as the
-        change, a rollback takes its log entry with it.
+        change, a rollback takes its log entry with it. `note` marks records that belong
+        to a delete's cascade batch, so restore can find them by name rather than by
+        guessing from timestamps.
         """
         self.db.insert("revision", {
             "project_id": self.project_id, "table_name": table, "row_id": row_id,
             "action": action, "before": before, "after": after, "at": now_iso(),
+            "note": note,
         })
 
     def revisions_for(self, row_id: str, *, limit: int = 50) -> list[dict]:
@@ -305,15 +382,21 @@ class World:
         """Entity deletions that have not been restored — the way back in (§59).
 
         A deleted entity has no page left to restore it from, so this list is where the
-        writer finds it again.
+        writer finds it again. Only the *newest* deletion of an entity is offered: after
+        a delete–restore–delete cycle the older record still exists, but restoring it
+        would resurrect a stale version, so it is not presented as the way back.
         """
         out: list[dict] = []
+        seen: set[str] = set()
         for row in self.db.query(
             "SELECT id, row_id, before, at FROM revision "
             "WHERE project_id = ? AND table_name = 'entity' AND action = 'delete' "
             "ORDER BY id DESC LIMIT ?",
-            (self.project_id, limit * 2),
+            (self.project_id, limit * 4),
         ):
+            if row["row_id"] in seen:
+                continue                     # an older deletion of the same entity
+            seen.add(row["row_id"])
             if self.get_entity(row["row_id"]) is not None:
                 continue                     # already restored
             snapshot = decode_json(row["before"], None) or {}
@@ -330,8 +413,10 @@ class World:
         """Undo one recorded change (§59 restore points).
 
         Restoring is itself a logged change — the log stays append-only, and undoing a
-        restore is just restoring the restore. A deleted entity comes back with the
-        facts the FK cascade took with it, because those were logged in the same batch.
+        restore is just restoring the restore. A deleted entity comes back with
+        everything the FK cascade took with it — facts, but also its events, titles,
+        secrets, geometry, participations and knowledge — because the delete logged the
+        whole batch under a marker before the cascade ran.
         """
         rev = self.get_revision(revision_id)
         if rev is None:
@@ -369,75 +454,182 @@ class World:
                 "name": snapshot["name"], "type_key": snapshot["type_key"],
                 "restored_from": rev["id"],
             })
-            brought_back = self._restore_cascaded_facts(rev)
+            facts, others = self._restore_cascade(rev)
             name = snapshot.get("name", row_id)
-            if brought_back:
-                plural = "connection" if brought_back == 1 else "connections"
-                return f"Restored {name} and {brought_back} {plural}."
+            parts = []
+            if facts:
+                parts.append(f"{facts} connection{'s' if facts != 1 else ''}")
+            if others:
+                parts.append(f"{others} related record{'s' if others != 1 else ''}")
+            if parts:
+                return f"Restored {name} and {' and '.join(parts)}."
             return f"Restored {name}."
 
-        # a single fact
-        self._restore_fact_row(snapshot, rev["id"], strict=True)
-        return f"Restored the {snapshot.get('predicate_key', 'fact')} connection."
+        # a single fact — plus whatever its own deletion cascaded (facts about it)
+        self._restore_row("fact", snapshot, rev["id"], strict=True)
+        facts, others = self._restore_cascade(rev)
+        label = snapshot.get("predicate_key", "fact")
+        extra = facts + others
+        if extra:
+            return (f"Restored the {label} connection and {extra} dependent "
+                    f"record{'s' if extra != 1 else ''}.")
+        return f"Restored the {label} connection."
 
-    def _restore_cascaded_facts(self, rev: dict) -> int:
-        """Re-insert the facts logged in the same delete batch as an entity.
+    def _restore_cascade(self, rev: dict) -> tuple[int, int]:
+        """Bring back the rows logged in the same delete batch as `rev`.
 
-        The batch wrote its fact deletions contiguously before the entity deletion,
-        under the transaction lock, so walking revision ids downwards from the entity
-        record until the pattern breaks recovers exactly that batch — no more.
+        The delete wrote every cascade victim contiguously before its own record, all
+        under the transaction lock and all carrying a `cascade:<row_id>` note — so
+        walking revision ids downwards while the note matches recovers exactly that
+        batch, whatever the clock said. (The earlier version matched on the second-
+        resolution timestamp, which both split batches across a second boundary and
+        merged unrelated same-second deletes.)
+
+        Restores parents before children so FK targets exist when their dependants are
+        inserted, then re-links surviving rows whose SET NULL references the cascade
+        cleared. Returns (facts, other rows) restored.
         """
-        entity_id = rev["row_id"]
-        restored = 0
+        marker = f"cascade:{rev['row_id']}"
+        batch: list[dict] = []
         cursor = rev["id"] - 1
         while True:
             prior = self.get_revision(cursor)
-            if (prior is None or prior["table_name"] != "fact"
-                    or prior["action"] != "delete" or prior["at"] != rev["at"]):
+            if prior is None or prior.get("note") != marker:
                 break
-            snapshot = prior["before"] or {}
-            if entity_id not in (snapshot.get("subject_id"), snapshot.get("object_id")):
-                break
-            if self._restore_fact_row(snapshot, prior["id"], strict=False):
-                restored += 1
+            batch.append(prior)
             cursor -= 1
-        return restored
 
-    def _restore_fact_row(self, snapshot: dict, source_revision: int,
-                          *, strict: bool) -> bool:
-        """Re-insert one fact from its delete snapshot.
+        deletes: dict[str, list[dict]] = {}
+        relinks: list[dict] = []
+        for prior in batch:
+            if prior["action"] == "delete":
+                deletes.setdefault(prior["table_name"], []).append(prior)
+            elif prior["action"] == "update":
+                relinks.append(prior)
 
-        `strict` raises when an endpoint entity is missing (the writer asked for this
-        exact fact back); the batch path skips instead, because an entity restore should
-        bring back what it can rather than fail on one absent counterpart.
+        facts = others = 0
+        # Facts can be *about* other facts in the same batch (reification). Insert in
+        # passes until a pass makes no progress, so a claim precedes the facts about it;
+        # what is left is about a fact that never came back, and stays gone exactly as
+        # the FK would insist.
+        pending = deletes.pop("fact", [])
+        while pending:
+            waiting: list[dict] = []
+            for prior in pending:
+                snapshot = prior["before"] or {}
+                about = snapshot.get("about_fact_id")
+                if about and not self.db.one(
+                        "SELECT 1 FROM fact WHERE id = ?", (about,)):
+                    waiting.append(prior)
+                    continue
+                if self._restore_row("fact", snapshot, prior["id"], strict=False):
+                    facts += 1
+            if len(waiting) == len(pending):
+                break
+            pending = waiting
+        for table in _RESTORE_ORDER:
+            for prior in deletes.get(table, []):
+                if self._restore_row(table, prior["before"] or {}, prior["id"],
+                                     strict=False):
+                    others += 1
+        for prior in relinks:
+            others += self._apply_relink(prior)
+        return facts, others
+
+    def _restore_row(self, table: str, snapshot: dict, source_revision: int,
+                     *, strict: bool) -> bool:
+        """Re-insert one row from its delete snapshot.
+
+        `strict` raises when the row cannot come back (the writer asked for this exact
+        record); the batch path skips instead, because an entity restore should bring
+        back what it can rather than fail on one absent counterpart. Both the table
+        name and the snapshot keys come from the world file, so both are validated
+        against the real schema before they touch SQL.
         """
-        snapshot = {k: v for k, v in snapshot.items()
-                    if k in self._table_columns("fact")}
-        fact_id = snapshot.get("id")
-        if not fact_id or self.db.one("SELECT 1 FROM fact WHERE id = ?", (fact_id,)):
+        spec = _RESTORE_SPEC.get(table)
+        if spec is None:
+            if strict:
+                raise WorldError(f"cannot restore {table!r} rows")
             return False
-        for endpoint in ("subject_id", "object_id"):
-            eid = snapshot.get(endpoint)
-            if eid and not self.db.one("SELECT 1 FROM entity WHERE id = ?", (eid,)):
+        snapshot = {k: v for k, v in snapshot.items()
+                    if k in self._table_columns(table)}
+        key: tuple[str, ...] = spec.get("key", ("id",))
+        if any(snapshot.get(column) is None for column in key):
+            if strict:
+                raise WorldError("this delete record is too incomplete to restore")
+            return False
+        for identity in (key, spec.get("unique")):
+            if identity is None:
+                continue
+            condition = " AND ".join(f"{column} = ?" for column in identity)
+            if self.db.one(f"SELECT 1 FROM {table} WHERE {condition}",
+                           [snapshot.get(column) for column in identity]):
                 if strict:
+                    raise WorldError("this record already exists — nothing to restore")
+                return False
+        for column, (target, on_missing) in spec["refs"].items():
+            value = snapshot.get(column)
+            if value is None:
+                continue
+            if self.db.one(f"SELECT 1 FROM {target} WHERE id = ?", (value,)):
+                continue
+            if on_missing == "null":
+                # An ON DELETE SET NULL reference: the row survives without it.
+                snapshot[column] = None
+                continue
+            # An ON DELETE CASCADE reference: the row cannot outlive its target.
+            if strict:
+                if target == "entity":
                     raise WorldError(
                         "one side of this connection no longer exists — "
                         "restore that entity first"
                     )
-                return False
-        # A reference to a fact that itself no longer exists cannot survive the FK.
-        about = snapshot.get("about_fact_id")
-        if about and not self.db.one("SELECT 1 FROM fact WHERE id = ?", (about,)):
-            snapshot["about_fact_id"] = None
-        self.db.insert("fact", snapshot)
-        self._log_revision("fact", fact_id, "insert", None, {
-            "subject_id": snapshot.get("subject_id"),
-            "predicate_key": snapshot.get("predicate_key"),
-            "object_id": snapshot.get("object_id"),
-            "value": snapshot.get("value"),
-            "restored_from": source_revision,
-        })
+                raise WorldError(
+                    f"this record depends on a {target} that no longer exists — "
+                    "restore that first"
+                )
+            return False
+        self.db.insert(table, snapshot)
+        if table == "geometry":
+            coordinates = snapshot.get("coordinates")
+            if isinstance(coordinates, str):
+                coordinates = decode_json(coordinates, [])
+            self._index_geometry(snapshot["id"], coordinates)
+        after = {column: snapshot[column]
+                 for column in ("name", "subject_id", "predicate_key", "object_id",
+                                "value", "title", "role", "stance", "kind")
+                 if column in snapshot}
+        after["restored_from"] = source_revision
+        self._log_revision(table, _row_key(table, snapshot), "insert", None, after)
         return True
+
+    def _apply_relink(self, prior: dict) -> int:
+        """Put back one SET NULL reference the cascade cleared, if still safe to.
+
+        Skipped when the row is gone, the column has been re-pointed since, or the old
+        target did not come back — a relink must never overwrite a later decision.
+        """
+        table = prior["table_name"]
+        allowed = _RELINK_COLUMNS.get(table)
+        if not allowed:
+            return 0
+        row = self.db.one(f"SELECT * FROM {table} WHERE id = ?", (prior["row_id"],))
+        if row is None:
+            return 0
+        changes: dict[str, Any] = {}
+        for column, value in (prior["before"] or {}).items():
+            target = allowed.get(column)
+            if target is None or value is None or row[column] is not None:
+                continue
+            if not self.db.one(f"SELECT 1 FROM {target} WHERE id = ?", (value,)):
+                continue
+            changes[column] = value
+        if not changes:
+            return 0
+        self.db.update(table, prior["row_id"], changes)
+        self._log_revision(table, prior["row_id"], "update",
+                           dict.fromkeys(changes), changes)
+        return 1
 
     def _restore_update(self, rev: dict) -> str:
         row_id = rev["row_id"]
@@ -448,7 +640,12 @@ class World:
             if self.get_entity(row_id) is None:
                 raise WorldError(
                     "the entity no longer exists — restore its deletion first")
-            self.update_entity(row_id, **before)     # logs its own inverse record
+            payload = {k: v for k, v in before.items() if k in _ENTITY_EDITABLE}
+            if not payload:
+                # update_entity would silently no-op on an empty payload, and a restore
+                # that changes nothing must not report success.
+                raise WorldError("this change names no restorable columns")
+            self.update_entity(row_id, **payload)    # logs its own inverse record
             return "Restored the earlier values."
         row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
         if row is None:
@@ -546,9 +743,7 @@ class World:
         })
 
     def update_entity(self, entity_id: str, **changes: Any) -> None:
-        allowed = {"name", "summary", "exists_from", "exists_to", "exists_from_hi",
-                   "exists_to_lo", "confidence", "tags"}
-        payload = {k: v for k, v in changes.items() if k in allowed}
+        payload = {k: v for k, v in changes.items() if k in _ENTITY_EDITABLE}
         if not payload:
             return
         payload["updated_at"] = now_iso()
@@ -574,19 +769,141 @@ class World:
         with self.db.transaction():
             row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
             if row is not None:
-                # The FK cascade is about to take every fact touching this entity with
-                # it. Log each one first, in full, or the most destructive operation in
-                # the application would be the one the recovery log knows least about.
-                for fact_row in self.db.query(
-                    "SELECT * FROM fact WHERE subject_id = ? OR object_id = ?",
-                    (entity_id, entity_id),
-                ):
-                    self._log_revision("fact", fact_row["id"], "delete",
-                                       _snapshot(fact_row), None)
+                # The FK cascade is about to take every row that hangs off this entity —
+                # facts, but also its events, titles, secrets, geometry, participations,
+                # holdings and knowledge. Log each one first, in full, under a batch
+                # marker, or the most destructive operation in the application would be
+                # the one the recovery log knows least about. The marker is what restore
+                # walks: matching on it is exact where matching on the timestamp split
+                # batches across a second boundary and merged same-second deletes.
+                marker = f"cascade:{entity_id}"
+                doomed = self._entity_cascade(entity_id)
+                for table, victim in doomed:
+                    self._log_revision(table, _row_key(table, victim), "delete",
+                                       _snapshot(victim), None, note=marker)
+                for table, rid, cleared in self._entity_relinks(entity_id, doomed):
+                    self._log_revision(table, rid, "update", cleared,
+                                       dict.fromkeys(cleared), note=marker)
+                # The R*Tree is not FK-aware; drop this entity's boxes by hand or they
+                # orphan when the geometry rows cascade.
+                self.db.execute(
+                    "DELETE FROM geometry_bbox WHERE id IN ("
+                    " SELECT m.rtree_id FROM geometry_rtree_map m"
+                    " JOIN geometry g ON g.id = m.geometry_id WHERE g.entity_id = ?)",
+                    (entity_id,))
                 self._log_revision("entity", entity_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM entity_fts WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity_trigram WHERE entity_id = ?", (entity_id,))
             self.db.execute("DELETE FROM entity WHERE id = ?", (entity_id,))
+
+    def _entity_cascade(self, entity_id: str) -> list[tuple[str, Any]]:
+        """Every row the FK cascade will delete with this entity, as (table, row).
+
+        Ordered parents before children — the same order restore replays them in.
+        """
+        q = self.db.query
+
+        def rows_in(table: str, column: str, ids: Iterable[str]) -> list:
+            ids = list(ids)
+            if not ids:
+                return []
+            marks = ",".join("?" for _ in ids)
+            return q(f"SELECT * FROM {table} WHERE {column} IN ({marks})", ids)
+
+        facts = {r["id"]: r for r in q(
+            "SELECT * FROM fact WHERE subject_id = ? OR object_id = ?",
+            (entity_id, entity_id))}
+        # facts *about* dying facts die with them, transitively (reification chains)
+        frontier = list(facts)
+        while frontier:
+            found = rows_in("fact", "about_fact_id", frontier)
+            frontier = [r["id"] for r in found if r["id"] not in facts]
+            for r in found:
+                facts.setdefault(r["id"], r)
+
+        events = {r["id"]: r for r in q(
+            "SELECT * FROM event WHERE entity_id = ?", (entity_id,))}
+        titles = {r["id"]: r for r in q(
+            "SELECT * FROM title WHERE entity_id = ?", (entity_id,))}
+        secrets = {r["id"]: r for r in q(
+            "SELECT * FROM secret WHERE about_id = ?", (entity_id,))}
+
+        def merged(direct: list, indirect: list, key=lambda r: r["id"]) -> list:
+            out: dict[Any, Any] = {}
+            for r in [*direct, *indirect]:
+                out.setdefault(key(r), r)
+            return list(out.values())
+
+        doomed: list[tuple[str, Any]] = []
+        doomed += [("fact", r) for r in facts.values()]
+        doomed += [("event", r) for r in events.values()]
+        doomed += [("title", r) for r in titles.values()]
+        doomed += [("secret", r) for r in secrets.values()]
+        doomed += [("geometry", r) for r in q(
+            "SELECT * FROM geometry WHERE entity_id = ?", (entity_id,))]
+        doomed += [("route_segment", r) for r in q(
+            "SELECT * FROM route_segment WHERE entity_id = ? "
+            "OR from_entity_id = ? OR to_entity_id = ?",
+            (entity_id, entity_id, entity_id))]
+        doomed += [("title_holding", r) for r in merged(
+            q("SELECT * FROM title_holding WHERE holder_id = ?", (entity_id,)),
+            rows_in("title_holding", "title_id", titles))]
+        doomed += [("event_participant", r) for r in merged(
+            q("SELECT * FROM event_participant WHERE entity_id = ?", (entity_id,)),
+            rows_in("event_participant", "event_id", events),
+            key=lambda r: (r["event_id"], r["entity_id"], r["role"]))]
+        doomed += [("scene_participant", r) for r in q(
+            "SELECT * FROM scene_participant WHERE entity_id = ?", (entity_id,))]
+        doomed += [("interpretation", r) for r in merged(
+            q("SELECT * FROM interpretation WHERE holder_id = ?", (entity_id,)),
+            rows_in("interpretation", "event_id", events))]
+        doomed += [("knowledge_state", r) for r in merged(
+            q("SELECT * FROM knowledge_state WHERE observer_id = ? "
+              "OR about_observer_id = ?", (entity_id, entity_id)),
+            rows_in("knowledge_state", "secret_id", secrets))]
+        doomed += [("causal_link", r) for r in merged(
+            rows_in("causal_link", "cause_id", events),
+            rows_in("causal_link", "effect_id", events))]
+        return doomed
+
+    def _entity_relinks(
+        self, entity_id: str, doomed: list[tuple[str, Any]],
+    ) -> list[tuple[str, str, dict]]:
+        """(table, row_id, cleared columns) for surviving rows whose reference to this
+        entity the cascade will SET NULL — logged so a restore can re-link them."""
+        dying: dict[str, set[str]] = {}
+        dying_facts: set[str] = set()
+        for table, victim in doomed:
+            if table == "fact":
+                dying_facts.add(victim["id"])
+            # sqlite3.Row iterates *values*, so `"id" in victim` would test the wrong
+            # thing — .keys() is the correct spelling here, not a SIM118 slip.
+            if "id" in victim.keys():  # noqa: SIM118
+                dying.setdefault(table, set()).add(victim["id"])
+
+        out: list[tuple[str, str, dict]] = []
+        for table, columns in (("scene", ("location_id", "pov_id")),
+                               ("event", ("location_id",)),
+                               ("title", ("territory_id", "dynasty_root_id")),
+                               ("knowledge_state", ("acquired_from",)),
+                               ("route_segment", ("toll_holder_id",))):
+            condition = " OR ".join(f"{c} = ?" for c in columns)
+            for r in self.db.query(f"SELECT * FROM {table} WHERE {condition}",
+                                   [entity_id] * len(columns)):
+                if r["id"] in dying.get(table, set()):
+                    continue        # the row itself dies; its snapshot keeps the link
+                cleared = {c: entity_id for c in columns if r[c] == entity_id}
+                out.append((table, r["id"], cleared))
+        # secrets that survive but point at a dying fact lose that link the same way
+        if dying_facts:
+            marks = ",".join("?" for _ in dying_facts)
+            for r in self.db.query(
+                f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})",
+                list(dying_facts),
+            ):
+                if r["id"] not in dying.get("secret", set()):
+                    out.append(("secret", r["id"], {"fact_id": r["fact_id"]}))
+        return out
 
     def get_entity(self, entity_id: str) -> Entity | None:
         row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
@@ -729,12 +1046,34 @@ class World:
         """Remove a fact outright.
 
         Ending a fact is almost always right; deletion is for the entry that was simply a
-        mistake. The revision log keeps what was deleted, so even this is recoverable.
+        mistake. The revision log keeps what was deleted, so even this is recoverable —
+        including any facts *about* this one, which the FK cascade takes with it.
         """
         with self.db.transaction():
             row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
             if row is None:
                 return
+            marker = f"cascade:{fact_id}"
+            dependants: dict[str, Any] = {}
+            frontier = [fact_id]
+            while frontier:
+                marks = ",".join("?" for _ in frontier)
+                found = self.db.query(
+                    f"SELECT * FROM fact WHERE about_fact_id IN ({marks})", frontier)
+                frontier = [r["id"] for r in found if r["id"] not in dependants]
+                for r in found:
+                    dependants.setdefault(r["id"], r)
+            for r in dependants.values():
+                self._log_revision("fact", r["id"], "delete", _snapshot(r), None,
+                                   note=marker)
+            dying = [fact_id, *dependants]
+            marks = ",".join("?" for _ in dying)
+            for r in self.db.query(
+                f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})", dying
+            ):
+                self._log_revision("secret", r["id"], "update",
+                                   {"fact_id": r["fact_id"]}, {"fact_id": None},
+                                   note=marker)
             self._log_revision("fact", fact_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM fact WHERE id = ?", (fact_id,))
 
@@ -1087,14 +1426,40 @@ class World:
         return [_event(r) for r in self.db.query(sql, params)]
 
     def link_cause(self, cause_id: str, effect_id: str, *, kind: str = "caused",
-                   note: str = "") -> None:
+                   note: str = "") -> bool:
+        """Record that one event led to another (§32).
+
+        Returns False when the link already exists: recording the same causation twice
+        is a double-click, not an error, and the schema's UNIQUE constraint should not
+        surface as a crash. Self-links and cycles are refused outright — a chain that
+        loops makes an event its own consequence and sends every downstream traversal
+        in circles.
+        """
+        if cause_id == effect_id:
+            raise WorldError("an event cannot cause itself")
+        if self.db.one(
+            "SELECT 1 FROM causal_link WHERE cause_id = ? AND effect_id = ?",
+            (cause_id, effect_id),
+        ):
+            return False
+        if any(eid == cause_id
+               for eid, _ in self.consequences_of(effect_id, max_depth=64)):
+            raise WorldError(
+                "that would close a causal loop — the second event already leads back "
+                "to the first"
+            )
         self.db.insert("causal_link", {
             "id": new_id(), "project_id": self.project_id, "cause_id": cause_id,
             "effect_id": effect_id, "kind": kind, "note": note,
         })
+        return True
 
     def consequences_of(self, event_id: str, *, max_depth: int = 6) -> list[tuple[str, int]]:
-        """§32's consequence explorer: the causal chain downstream of an event."""
+        """§32's consequence explorer: the causal chain downstream of an event.
+
+        An event reachable along two chains (a diamond) is reported once, at its
+        shortest distance — the UNION alone dedupes (id, depth) pairs, not ids.
+        """
         rows = self.db.query(
             """WITH RECURSIVE chain(id, depth) AS (
                    SELECT ?, 0
@@ -1103,8 +1468,10 @@ class World:
                    FROM causal_link c JOIN chain ON c.cause_id = chain.id
                    WHERE chain.depth < ?
                )
-               SELECT id, depth FROM chain WHERE depth > 0 ORDER BY depth""",
-            (event_id, max_depth),
+               SELECT id, min(depth) AS depth FROM chain
+               WHERE depth > 0 AND id <> ?
+               GROUP BY id ORDER BY depth, id""",
+            (event_id, max_depth, event_id),
         )
         return [(r["id"], r["depth"]) for r in rows]
 

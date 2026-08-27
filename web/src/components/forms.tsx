@@ -459,7 +459,11 @@ export function EntityPicker(
       {results.length > 0 && (
         <div className="picker-results">
           {results.map((e) => (
-            <button key={e.id} className="entity-line" onClick={() => onChoose(e)}>
+            // Clear the query on choose: without this, un-choosing (or adding the next
+            // participant through MultiEntityPicker) resurfaces the previous search's
+            // results under an input the writer believes is empty.
+            <button key={e.id} className="entity-line"
+                    onClick={() => { setText(''); onChoose(e) }}>
               <span className="name">{e.name}</span>
               <span className="type-chip">{e.type_key.replace(/_/g, ' ')}</span>
               <span className="desc">{e.summary}</span>

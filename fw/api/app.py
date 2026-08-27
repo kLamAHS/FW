@@ -513,8 +513,16 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
 
     # ---- events and causality (§31, §32) ----------------------------------
 
+    def _require_entities(*entity_ids: str | None) -> None:
+        """404 on any id that names no entity — a ghost reference would otherwise
+        surface as an FK failure halfway through the insert, which reads as a crash."""
+        for entity_id in entity_ids:
+            if entity_id and world.get_entity(entity_id) is None:
+                raise HTTPException(404, f"no entity {entity_id}")
+
     @app.post("/api/scenes", status_code=201)
     def create_scene(payload: S.SceneIn) -> dict[str, Any]:
+        _require_entities(payload.location_id, payload.pov_id, *payload.participants)
         scene = world.add_scene(
             payload.title, day=payload.day, end_day=payload.end_day,
             location_id=payload.location_id, pov_id=payload.pov_id,
@@ -526,6 +534,8 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
 
     @app.post("/api/events", status_code=201)
     def create_event(payload: S.EventIn) -> dict[str, Any]:
+        _require_entities(payload.location_id,
+                          *[p.id for p in payload.participants])
         event = world.add_event(
             payload.name, type_key=payload.type_key, summary=payload.summary,
             start_day=payload.start_day, end_day=payload.end_day,
@@ -535,15 +545,22 @@ def create_app(world: World, *, present_day: int | None = None) -> FastAPI:
         return {"id": event.id, "name": event.name, "start_day": event.start_day}
 
     @app.post("/api/causal-links", status_code=201)
-    def create_causal_link(payload: S.CausalLinkIn) -> dict[str, str]:
-        """§32: record that one event led to another."""
+    def create_causal_link(payload: S.CausalLinkIn) -> JSONResponse:
+        """§32: record that one event led to another.
+
+        Linking the same pair twice is answered with 200 rather than an error — the
+        writer's intent is already satisfied. Self-links and causal loops are refused
+        by the core (400 via the WorldError handler).
+        """
         for event_id in (payload.cause_id, payload.effect_id):
             if not world.db.one("SELECT 1 FROM event WHERE id = ?", (event_id,)):
                 raise HTTPException(404, f"no event {event_id}")
-        if payload.cause_id == payload.effect_id:
-            raise HTTPException(400, "an event cannot cause itself")
-        world.link_cause(payload.cause_id, payload.effect_id, note=payload.note)
-        return {"status": "linked"}
+        created = world.link_cause(payload.cause_id, payload.effect_id,
+                                   note=payload.note)
+        if not created:
+            return JSONResponse(status_code=200,
+                                content={"status": "already linked"})
+        return JSONResponse(status_code=201, content={"status": "linked"})
 
     @app.get("/api/events")
     def list_events(first: int | None = None, last: int | None = None) -> list[dict]:
