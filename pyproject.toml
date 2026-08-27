@@ -55,6 +55,7 @@ ignore = [
 # server and no browser. Enforced in CI rather than by convention, because conventions erode.
 [tool.importlinter]
 root_package = "fw"
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "core is independent of the delivery mechanism"

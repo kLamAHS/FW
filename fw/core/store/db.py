@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager, suppress
 from datetime import UTC, datetime
@@ -47,7 +48,24 @@ class Database:
         if is_new and not create:
             raise StoreError(f"no world file at {self.path}")
 
-        self.conn = sqlite3.connect(self.path, isolation_level=None)
+        # The web adapter runs sync endpoints in a threadpool, so requests do not all
+        # arrive on the thread that opened the file. SQLite itself is built in serialized
+        # mode here (threadsafety 3), so sharing the connection is safe at the C level —
+        # `check_same_thread` is a Python-side guard, not a SQLite constraint.
+        #
+        # What is *not* safe is our own transaction bracketing: two threads interleaving
+        # BEGIN and COMMIT would commit each other's work. The re-entrant lock below makes
+        # a transaction atomic with respect to other threads while still allowing nested
+        # calls on the same thread.
+        if sqlite3.threadsafety < 1:  # pragma: no cover - depends on the build
+            raise StoreError(
+                "this Python's sqlite3 was built without thread safety; "
+                "the application cannot serve requests safely"
+            )
+        self._lock = threading.RLock()
+        self.conn = sqlite3.connect(
+            self.path, isolation_level=None, check_same_thread=False
+        )
         self.conn.row_factory = sqlite3.Row
         self._configure()
 
@@ -109,57 +127,65 @@ class Database:
     @contextmanager
     def transaction(self) -> Iterator[sqlite3.Connection]:
         """Explicit transaction. Nesting reuses the outer one rather than failing."""
-        if self.conn.in_transaction:
-            yield self.conn
-            return
-        self.conn.execute("BEGIN")
-        try:
-            yield self.conn
-        except Exception:
-            self.conn.execute("ROLLBACK")
-            raise
-        else:
-            self.conn.execute("COMMIT")
+        with self._lock:
+            if self.conn.in_transaction:
+                yield self.conn
+                return
+            self.conn.execute("BEGIN")
+            try:
+                yield self.conn
+            except Exception:
+                self.conn.execute("ROLLBACK")
+                raise
+            else:
+                self.conn.execute("COMMIT")
 
     # ---- queries ----------------------------------------------------------
 
     def execute(self, sql: str, params: Sequence[Any] = ()) -> sqlite3.Cursor:
-        return self.conn.execute(sql, params)
+        with self._lock:
+            return self.conn.execute(sql, params)
 
     def query(self, sql: str, params: Sequence[Any] = ()) -> list[sqlite3.Row]:
-        return self.conn.execute(sql, params).fetchall()
+        with self._lock:
+            return self.conn.execute(sql, params).fetchall()
 
     def one(self, sql: str, params: Sequence[Any] = ()) -> sqlite3.Row | None:
-        return self.conn.execute(sql, params).fetchone()
+        with self._lock:
+            return self.conn.execute(sql, params).fetchone()
 
     def scalar(self, sql: str, params: Sequence[Any] = ()) -> Any:
-        row = self.conn.execute(sql, params).fetchone()
+        with self._lock:
+            row = self.conn.execute(sql, params).fetchone()
         return None if row is None else row[0]
 
     def insert(self, table: str, values: dict[str, Any]) -> None:
         columns = ", ".join(values)
         holders = ", ".join("?" for _ in values)
-        self.conn.execute(
-            f"INSERT INTO {table} ({columns}) VALUES ({holders})",
-            [_encode(v) for v in values.values()],
-        )
+        with self._lock:
+            self.conn.execute(
+                f"INSERT INTO {table} ({columns}) VALUES ({holders})",
+                [_encode(v) for v in values.values()],
+            )
 
     def insert_many(self, table: str, rows: list[dict[str, Any]]) -> None:
         if not rows:
             return
         columns = list(rows[0])
         holders = ", ".join("?" for _ in columns)
-        self.conn.executemany(
-            f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({holders})",
-            [[_encode(row[c]) for c in columns] for row in rows],
-        )
+        with self._lock:
+            self.conn.executemany(
+                f"INSERT INTO {table} ({', '.join(columns)}) VALUES ({holders})",
+                [[_encode(row[c]) for c in columns] for row in rows],
+            )
 
     def update(self, table: str, row_id: str, values: dict[str, Any]) -> None:
         assignments = ", ".join(f"{c} = ?" for c in values)
-        self.conn.execute(
-            f"UPDATE {table} SET {assignments} WHERE id = ?",
-            [*(_encode(v) for v in values.values()), row_id],
-        )
+        with self._lock:
+            self.conn.execute(
+                f"UPDATE {table} SET {assignments} WHERE id = ?",
+                [*(_encode(v) for v in values.values()), row_id],
+            )
 
     # ---- maintenance ------------------------------------------------------
 
