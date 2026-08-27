@@ -781,6 +781,7 @@ class World:
     def undo(self) -> str:
         """Take back the most recent action. Raises when there is nothing to."""
         with self.db.transaction():
+            self._load_undo_state()      # the log is the truth, other handles included
             target = self._newest_action()
             if target is None:
                 raise WorldError("nothing to undo")
@@ -797,6 +798,7 @@ class World:
         # Read and pop inside the transaction: it holds the connection lock, so two
         # concurrent requests cannot both grab (and doubly apply) the same entry.
         with self.db.transaction():
+            self._load_undo_state()      # the log is the truth, other handles included
             if not self._redo:
                 raise WorldError("nothing to redo")
             target, inversion = self._redo[-1]
@@ -810,6 +812,7 @@ class World:
 
     def undo_state(self) -> dict:
         """What the toolbar needs: whether each button would do anything, and to what."""
+        self._load_undo_state()
         target = self._newest_action()
         return {
             "can_undo": target is not None,
@@ -819,8 +822,39 @@ class World:
                      if self._redo else None),
         }
 
+    def _revisions_newest_first(self) -> Iterable[tuple[int, str]]:
+        """(id, action_id) for every grouped revision, newest first, in pages.
+
+        The one spelling of the walk that both undo-target selection and redo
+        forfeiture use — two copies would eventually disagree about what counts.
+        """
+        last_id: int | None = None
+        while True:
+            sql = ("SELECT id, action_id FROM revision "
+                   "WHERE project_id = ? AND action_id != ''")
+            params: list[Any] = [self.project_id]
+            if last_id is not None:
+                sql += " AND id < ?"
+                params.append(last_id)
+            sql += " ORDER BY id DESC LIMIT 500"
+            rows = self.db.query(sql, params)
+            if not rows:
+                return
+            for row in rows:
+                last_id = row["id"]
+                yield row["id"], row["action_id"]
+
     def _load_undo_state(self) -> None:
-        """Rebuild the undone-set and redo stack from the log's inversion markers."""
+        """(Re)build undo state from the log's inversion markers.
+
+        Called at open and again before every undo, redo and state read — the log is
+        the shared truth, so a second handle on the same file (a CLI beside the
+        server, say) forfeits this handle's redo exactly as an edit here would, and
+        this handle never mistakes the other's inversions for real actions.
+        """
+        self._undone.clear()
+        self._inversions.clear()
+        self._redo = []
         pending: dict[str, tuple[int, str]] = {}    # target -> (marker id, inversion)
         for marker in self.db.query(
             "SELECT id, row_id, action_id FROM revision "
@@ -838,27 +872,13 @@ class World:
             else:
                 self._undone.add(target)
                 pending[target] = (marker["id"], marker["action_id"])
-        # A real action recorded *after* an undo forfeits that undo's redo — in the
-        # session that clears the stack directly; across a reopen it must be read off
-        # the log, or a stale redo would clobber the newer edit it lost to.
+        # A real action recorded *after* an undo forfeits that undo's redo — a stale
+        # redo would clobber the newer edit it lost to.
         newest_real = 0
-        last_id: int | None = None
-        while newest_real == 0:
-            sql = ("SELECT id, action_id FROM revision "
-                   "WHERE project_id = ? AND action_id != ''")
-            params: list[Any] = [self.project_id]
-            if last_id is not None:
-                sql += " AND id < ?"
-                params.append(last_id)
-            sql += " ORDER BY id DESC LIMIT 500"
-            rows = self.db.query(sql, params)
-            if not rows:
+        for rev_id, action_id in self._revisions_newest_first():
+            if action_id not in self._inversions:
+                newest_real = rev_id
                 break
-            for row in rows:
-                last_id = row["id"]
-                if row["action_id"] not in self._inversions:
-                    newest_real = row["id"]
-                    break
         self._redo = [(t, inv) for t, (marker_id, inv) in
                       sorted(pending.items(), key=lambda kv: kv[1][0])
                       if marker_id > newest_real]
@@ -870,26 +890,13 @@ class World:
         whole history, and never a fixed window that heavy undo traffic could exhaust.
         """
         seen: set[str] = set()
-        last_id: int | None = None
-        while True:
-            sql = ("SELECT id, action_id FROM revision "
-                   "WHERE project_id = ? AND action_id != ''")
-            params: list[Any] = [self.project_id]
-            if last_id is not None:
-                sql += " AND id < ?"
-                params.append(last_id)
-            sql += " ORDER BY id DESC LIMIT 500"
-            rows = self.db.query(sql, params)
-            if not rows:
-                return None
-            for row in rows:
-                last_id = row["id"]
-                aid = row["action_id"]
-                if aid in seen:
-                    continue
-                seen.add(aid)
-                if aid not in self._inversions and aid not in self._undone:
-                    return aid
+        for _, aid in self._revisions_newest_first():
+            if aid in seen:
+                continue
+            seen.add(aid)
+            if aid not in self._inversions and aid not in self._undone:
+                return aid
+        return None
 
     def _invert_action(self, action_id: str) -> int:
         """Apply the inverse of every record in one action.
@@ -1027,16 +1034,26 @@ class World:
         """
         if action_id is None:
             return "nothing"
-        rows = self.db.query(
-            "SELECT * FROM revision WHERE action_id = ? AND table_name != 'undo' "
-            "ORDER BY id DESC LIMIT 40",
-            (action_id,),
-        )
-        if not rows:
-            return "an empty action"
+        # Fetch the best record by precedence directly — a windowed scan would let a
+        # big cascade push the entity that names the action out of view.
         precedence = ("entity", "fact", "event", "scene", "title", "secret")
-        row = next((r for want in precedence for r in rows
-                    if r["table_name"] == want), rows[0])
+        row = None
+        for want in precedence:
+            row = self.db.one(
+                "SELECT * FROM revision WHERE action_id = ? AND table_name = ? "
+                "ORDER BY id DESC LIMIT 1",
+                (action_id, want),
+            )
+            if row is not None:
+                break
+        if row is None:
+            row = self.db.one(
+                "SELECT * FROM revision WHERE action_id = ? "
+                "AND table_name != 'undo' ORDER BY id DESC LIMIT 1",
+                (action_id,),
+            )
+        if row is None:
+            return "an empty action"
         before = decode_json(row["before"], None) or {}
         after = decode_json(row["after"], None) or {}
         table, act = row["table_name"], row["action"]

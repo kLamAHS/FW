@@ -1140,3 +1140,52 @@ class TestUndoRedoHardening:
         assert world.consequences_of(second.id) == []
         world.redo()
         assert world.consequences_of(second.id) == [(event.id, 1)]
+
+    def test_child_tables_match_the_schema(self, world: World):
+        """_CHILD_TABLES mirrors the schema's ON DELETE CASCADE edges by hand; if the
+        schema grows an edge this map misses, undo would silently lose rows. Fail
+        loudly here instead."""
+        from fw.core.world import _CHILD_TABLES
+        tables = [r["name"] for r in world.db.query(
+            "SELECT name FROM sqlite_master WHERE type = 'table' "
+            "AND name NOT LIKE 'sqlite_%'")]
+        for parent, declared in _CHILD_TABLES.items():
+            actual = set()
+            for table in tables:
+                for fk in world.db.query(f"PRAGMA foreign_key_list({table})"):
+                    if fk["table"] == parent and fk["on_delete"] == "CASCADE":
+                        actual.add((table, fk["from"]))
+            assert set(declared) == actual, (
+                f"_CHILD_TABLES[{parent!r}] disagrees with the schema")
+
+    def test_a_big_cascade_is_still_described_by_its_entity(self, world: World):
+        """The toast must name what Ctrl+Z will take back even when the action holds
+        more records than any display window."""
+        hub = world.add_entity("region", "Manyfold")
+        for i in range(60):
+            other = world.add_entity("person", f"P{i}")
+            world.assert_fact(other, "located_in", hub)
+        world.delete_entity(hub.id)                     # one action, 60+ records
+        assert "Manyfold" in world.undo_state()["undo"]
+
+    def test_a_second_handle_forfeits_this_ones_redo(self, tmp_path):
+        """Two handles on one file: an edit through either forfeits a pending redo,
+        because the log — not any handle's memory — is the truth."""
+        path = tmp_path / "shared.fwworld"
+        a = World.create(path, name="Shared")
+        e = a.add_entity("settlement", "Town")
+        a.update_entity(e.id, name="Y")
+        a.undo()                                       # back to Town; redo holds Y
+        b = World.open(path)
+        try:
+            b.update_entity(e.id, name="Z")            # the other handle moves on
+            with pytest.raises(WorldError, match="nothing to redo"):
+                a.redo()                               # must not clobber Z with Y
+            assert a.get_entity(e.id).name == "Z"
+            # and undo through A takes back B's edit — the newest action — not
+            # something older from A's own history
+            assert "edit" in a.undo()
+            assert a.get_entity(e.id).name == "Town"
+        finally:
+            b.close()
+            a.close()

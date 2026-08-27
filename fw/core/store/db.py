@@ -121,16 +121,35 @@ class Database:
         # Each step commits atomically WITH its user_version bump: a crash between the
         # two would otherwise leave a file that re-runs the migration on every open and
         # dies on it ("duplicate column"). user_version lives in the database header
-        # and rolls back with the transaction, so wrapping both is enough. Migration
-        # scripts must therefore not manage their own transactions.
+        # and rolls back with the transaction, so wrapping both is enough.
+        #
+        # BEGIN IMMEDIATE takes the write lock up front, and the version is re-read
+        # inside it: two processes opening the same old file at once (the launcher and
+        # a CLI command, say) then migrate once — the loser sees the bumped version
+        # and steps over. This is why scripts are split here rather than fed to
+        # executescript (which would commit the guard transaction first): migration
+        # statements must not contain embedded semicolons or manage transactions.
         for version in range(from_version + 1, SCHEMA_VERSION + 1):
             statement = MIGRATIONS.get(version)
-            if statement:
-                self.conn.executescript(
-                    f"BEGIN;\n{statement}\n;\nPRAGMA user_version = {version};\nCOMMIT;"
-                )
-            else:
+            if not statement:
                 self.conn.execute(f"PRAGMA user_version = {version}")
+                continue
+            with self._lock:
+                self.conn.execute("BEGIN IMMEDIATE")
+                try:
+                    current = self.conn.execute("PRAGMA user_version").fetchone()[0]
+                    if current >= version:
+                        self.conn.execute("ROLLBACK")   # someone else got here first
+                        continue
+                    for piece in statement.split(";"):
+                        if piece.strip():
+                            self.conn.execute(piece)
+                    self.conn.execute(f"PRAGMA user_version = {version}")
+                except Exception:
+                    self.conn.execute("ROLLBACK")
+                    raise
+                else:
+                    self.conn.execute("COMMIT")
 
     # ---- transactions -----------------------------------------------------
 
