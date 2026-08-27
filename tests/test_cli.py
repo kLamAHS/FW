@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from fw.cli.main import main
@@ -75,3 +77,36 @@ class TestRestoreCommand:
         untouched = World.open("world.fwworld")
         assert untouched.entity_named("Casualty") is None
         untouched.close()
+
+
+class TestServeLibraryChoice:
+    """Where the Worlds screen looks for saves, per how the server was started."""
+
+    def _args(self, path="world.fwworld", library=None):
+        import argparse
+        return argparse.Namespace(path=path, library=library)
+
+    def test_explicit_library_always_wins(self, tmp_path):
+        from fw.cli.main import _library_dir
+        world = World.create(tmp_path / "solo.fwworld", name="Solo")
+        try:
+            assert _library_dir(self._args(library="elsewhere"), world) == Path("elsewhere")
+        finally:
+            world.close()
+
+    def test_a_served_file_makes_its_own_directory_the_library(self, tmp_path):
+        """Switching away from a directly-served world must never be a one-way door:
+        the file has to appear in the listing it switched from."""
+        from fw.cli.main import _library_dir
+        from fw.core.library import Library
+        world = World.create(tmp_path / "solo.fwworld", name="Solo")
+        try:
+            directory = _library_dir(self._args(path=str(tmp_path / "solo.fwworld")), world)
+            assert directory == tmp_path.resolve()
+            assert [w.name for w in Library(directory).worlds()] == ["Solo"]
+        finally:
+            world.close()
+
+    def test_the_bare_launcher_uses_worlds(self):
+        from fw.cli.main import _library_dir
+        assert _library_dir(self._args(), None) == Path("worlds")

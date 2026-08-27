@@ -28,6 +28,7 @@ export function WorldPicker() {
   }
 
   const open = async (file: string) => {
+    if (busy !== null) return
     setBusy(file)
     setError(null)
     try {
@@ -40,7 +41,9 @@ export function WorldPicker() {
   }
 
   const create = async () => {
-    if (!name.trim()) return
+    // Also guard on busy: Enter can fire twice before the disabled state renders,
+    // and the server would happily make my-saga.fwworld AND my-saga-2.fwworld.
+    if (!name.trim() || busy !== null) return
     setBusy('new')
     setError(null)
     try {

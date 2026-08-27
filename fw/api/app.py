@@ -103,7 +103,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             raise HTTPException(400, str(exc)) from exc
         stale = holder.replace(fresh)
         if stale is not None:
-            stale.close()
+            _retire(stale)
         app.state.present_day = _guess_present_day(fresh)
         return {"file": path.name, "name": fresh.name}
 
@@ -904,6 +904,22 @@ def create_app(world: World | None = None, *, library: Library | None = None,
 
 
 # ---------------------------------------------------------------- helpers
+
+# How long a switched-away world stays open before its connection is closed. Routes run
+# in a threadpool, so a request that resolved the old world through the proxy can still
+# be mid-query when the switch lands; closing immediately would fail it with "cannot
+# operate on a closed database". Requests finish in milliseconds — this is a wide margin,
+# not a schedule.
+RETIRE_AFTER_SECONDS = 10.0
+
+
+def _retire(world: World) -> None:
+    import threading
+
+    timer = threading.Timer(RETIRE_AFTER_SECONDS, world.close)
+    timer.daemon = True     # never keep the process alive for a courtesy close
+    timer.start()
+
 
 def _entity_out(entity) -> S.EntityOut:
     return S.EntityOut(

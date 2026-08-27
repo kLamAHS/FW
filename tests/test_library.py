@@ -117,3 +117,53 @@ class TestLauncherApi:
         assert info["library"] is None
         assert client.post("/api/worlds",
                            json={"name": "X"}).status_code == 400
+
+
+class TestLibraryEdgeCases:
+    def test_an_epic_name_becomes_a_file_not_an_oserror(self, tmp_path):
+        library = Library(tmp_path)
+        path = library.create("The " + "Very " * 80 + "Long Chronicle")
+        assert path.exists()
+        assert len(path.name.encode()) < 255
+
+    def test_a_filesystem_refusal_is_a_library_error(self, tmp_path):
+        """A library path that cannot be a directory (here: it is a file) must come
+        back as a message, not an OSError traceback. (A chmod-based test would lie
+        under root, which ignores permission bits.)"""
+        squatter = tmp_path / "occupied"
+        squatter.write_text("not a directory")
+        with pytest.raises(LibraryError, match="could not create"):
+            Library(squatter).create("Anything")
+
+    def test_a_dangling_symlink_does_not_take_down_the_listing(self, tmp_path):
+        library = Library(tmp_path)
+        library.create("Solid")
+        (tmp_path / "ghost.fwworld").symlink_to(tmp_path / "vanished.fwworld")
+        listed = {w.file: w for w in library.worlds()}
+        assert listed["solid.fwworld"].problem == ""
+        assert listed["ghost.fwworld"].problem != ""
+
+    def test_switching_leaves_the_old_connection_briefly_alive(self, tmp_path):
+        """Routes run in a threadpool: a request resolved against the old world can
+        still be mid-query when the switch lands, so the old connection must not be
+        closed out from under it."""
+        from fastapi.testclient import TestClient
+
+        from fw.api.app import create_app
+
+        client = TestClient(create_app(library=Library(tmp_path / "worlds")))
+        client.post("/api/worlds", json={"name": "First"})
+        old_world = client.app.state.holder.world
+        client.post("/api/worlds", json={"name": "Second"})
+        # the retired world answers queries during the grace period
+        assert old_world.db.scalar("SELECT count(*) FROM entity") == 0
+
+    def test_an_over_long_name_is_a_clean_400_over_http(self, tmp_path):
+        from fastapi.testclient import TestClient
+
+        from fw.api.app import create_app
+
+        client = TestClient(create_app(library=Library(tmp_path / "worlds")))
+        response = client.post("/api/worlds", json={"name": "x" * 300})
+        # the slug cap makes this creatable; what must never happen is a 500
+        assert response.status_code in (201, 400)

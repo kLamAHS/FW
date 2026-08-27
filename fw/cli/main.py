@@ -335,6 +335,21 @@ def cmd_restore(args) -> None:
         world.close()
 
 
+def _library_dir(args, world) -> Path:
+    """Where the Worlds screen looks for saves.
+
+    An explicitly chosen library always wins. Otherwise, serving a specific world file
+    makes that file's own directory the library — so the world being served appears in
+    the listing and switching away is never a one-way door — and the launcher with no
+    world at all uses ./worlds.
+    """
+    if args.library is not None:
+        return Path(args.library)
+    if world is not None:
+        return Path(str(world.db.path)).resolve().parent
+    return Path("worlds")
+
+
 def cmd_serve(args) -> None:
     import uvicorn
 
@@ -344,10 +359,10 @@ def cmd_serve(args) -> None:
     # A named path is opened directly. With no path (and no world at the default
     # name), the app starts on the launcher instead: the writer picks a save or makes
     # a new world in the browser, rather than being forced into any template.
-    library = Library(args.library)
     world = None
     if args.path != DEFAULT_PATH or Path(args.path).exists():
         world = _open(args.path)
+    library = Library(_library_dir(args, world))
 
     app = create_app(world, library=library)
     url = f"http://{args.host}:{args.port}"
@@ -457,8 +472,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--log-level", default="warning")
-    p.add_argument("--library", default="worlds",
-                   help="directory the launcher lists worlds from (default: worlds/)")
+    p.add_argument("--library", default=None,
+                   help="directory the Worlds screen lists saves from "
+                        "(default: worlds/, or the served file's own directory)")
     p.add_argument("--open", dest="open_browser", action="store_true",
                    help="open the app in the default browser once the server is up")
 

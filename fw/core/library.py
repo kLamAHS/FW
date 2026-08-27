@@ -59,22 +59,24 @@ class Library:
         if not self.directory.is_dir():
             return out
         for path in sorted(self.directory.glob(f"*{SUFFIX}"),
-                           key=lambda p: p.stat().st_mtime, reverse=True):
-            stat = path.stat()
+                           key=_safe_mtime, reverse=True):
+            modified = size = 0
             try:
+                stat = path.stat()      # a dangling symlink fails here, not in glob
+                modified, size = stat.st_mtime, stat.st_size
                 world = World.open(path)
                 try:
                     out.append(WorldEntry(
                         file=path.name, name=world.name,
-                        modified=stat.st_mtime, size=stat.st_size,
+                        modified=modified, size=size,
                         entities=world.count_entities(),
                     ))
                 finally:
                     world.close()
             except (StoreError, WorldError, sqlite3.DatabaseError, OSError) as exc:
                 out.append(WorldEntry(
-                    file=path.name, name=path.stem, modified=stat.st_mtime,
-                    size=stat.st_size, problem=str(exc),
+                    file=path.name, name=path.stem, modified=modified,
+                    size=size, problem=str(exc),
                 ))
         return out
 
@@ -89,18 +91,23 @@ class Library:
         name = name.strip()
         if not name:
             raise LibraryError("give the world a name")
-        self.ensure()
-        path = self._fresh_path(name)
-        if example:
-            from fw.core.seed.renn import seed_renn
+        try:
+            self.ensure()
+            path = self._fresh_path(name)
+            if example:
+                from fw.core.seed.renn import seed_renn
 
-            world = seed_renn(str(path))
-            world.close()
-        else:
-            # An empty world starts on an Earth-like calendar; §60 makes calendars
-            # data, so a custom one is an edit away rather than a blocking question.
-            world = World.create(path, name=name, calendar=GREGORIAN)
-            world.close()
+                world = seed_renn(str(path))
+                world.close()
+            else:
+                # An empty world starts on an Earth-like calendar; §60 makes calendars
+                # data, so a custom one is an edit away rather than a blocking question.
+                world = World.create(path, name=name, calendar=GREGORIAN)
+                world.close()
+        except OSError as exc:
+            # A filesystem refusal (read-only disk, exotic characters the slug kept,
+            # a full drive) is an answer for the writer, not a stack trace.
+            raise LibraryError(f"could not create that world here: {exc}") from exc
         return path
 
     def _fresh_path(self, name: str) -> Path:
@@ -130,7 +137,19 @@ class Library:
 
 
 def _slug(name: str) -> str:
-    """A file-system-safe stem from a world name; falls back rather than failing."""
+    """A file-system-safe stem from a world name; falls back rather than failing.
+
+    Capped well under NAME_MAX (255 bytes on the common filesystems) so an epic title
+    becomes a long-ish file name rather than an OSError — the world keeps its full
+    name inside the file either way.
+    """
     stem = re.sub(r"[^\w\- ]", "", name, flags=re.UNICODE).strip()
     stem = re.sub(r"\s+", "-", stem).lower()
-    return stem or "world"
+    return stem[:80].rstrip("-") or "world"
+
+
+def _safe_mtime(path: Path) -> float:
+    try:
+        return path.stat().st_mtime
+    except OSError:
+        return 0.0
