@@ -1,0 +1,71 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fw"
+version = "0.1.0"
+description = "A worldbuilding application for fiction writers: an external cognitive model of a fictional world."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "hypothesis>=6",
+    "httpx>=0.27",
+    "import-linter>=2",
+    "ruff>=0.6",
+    # scripts/screenshot.py drives the built client in a real browser.
+    "playwright>=1.40",
+]
+
+[project.scripts]
+fw = "fw.cli.main:main"
+
+[tool.setuptools.packages.find]
+include = ["fw*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["error::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = [
+    "E501",
+    # Sequential guard clauses read better than one negated compound condition when each
+    # clause answers a different question ("born yet?" / "dead yet?").
+    "SIM103",
+    # `str, Enum` keeps these values JSON-serialisable on Python 3.11 without a shim.
+    "UP042",
+]
+
+# The layering contract. `fw.core` is the domain model: it must stay pure so that the
+# succession engine, continuity checker and world-state query remain testable with no
+# server and no browser. Enforced in CI rather than by convention, because conventions erode.
+[tool.importlinter]
+root_package = "fw"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "core is independent of the delivery mechanism"
+type = "forbidden"
+source_modules = ["fw.core"]
+forbidden_modules = ["fastapi", "uvicorn", "starlette", "fw.api", "fw.cli"]
+
+[[tool.importlinter.contracts]]
+name = "layers run one way only"
+type = "layers"
+layers = ["fw.api", "fw.core"]

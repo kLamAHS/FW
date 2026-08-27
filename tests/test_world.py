@@ -1,0 +1,860 @@
+"""Store and world-model tests (spec §2, §3, §11, §49, §53, §60, §77)."""
+
+from __future__ import annotations
+
+import sqlite3
+from pathlib import Path
+
+import pytest
+
+from fw.core.calendar.uncertain import Interval, circa, exact
+from fw.core.store.db import Database, StoreError
+from fw.core.world import World, WorldError
+
+
+class TestWorldFile:
+    def test_a_world_is_one_portable_file(self, tmp_path: Path):
+        """§63: the project, the backup and the export are the same object."""
+        path = tmp_path / "renn.fwworld"
+        w = World.create(path, name="Renn")
+        w.add_entity("house", "House Marr")
+        w.close()
+
+        assert path.exists()
+        copy = tmp_path / "backup.fwworld"
+        copy.write_bytes(path.read_bytes())
+
+        reopened = World.open(copy)
+        assert reopened.name == "Renn"
+        assert [e.name for e in reopened.entities("house")] == ["House Marr"]
+        reopened.close()
+
+    def test_refuses_a_foreign_sqlite_file(self, tmp_path: Path):
+        alien = tmp_path / "notours.db"
+        conn = sqlite3.connect(alien)
+        conn.execute("CREATE TABLE t (a)")
+        conn.close()
+        with pytest.raises(StoreError, match="not a world file"):
+            Database(alien)
+
+    def test_refuses_a_file_from_a_newer_build(self, tmp_path: Path):
+        path = tmp_path / "future.fwworld"
+        World.create(path).close()
+        conn = sqlite3.connect(path)
+        conn.execute("PRAGMA user_version = 9999")
+        conn.close()
+        with pytest.raises(StoreError, match="newer version"):
+            Database(path)
+
+    def test_open_missing_file_is_an_error(self, tmp_path: Path):
+        with pytest.raises(StoreError):
+            Database(tmp_path / "nope.fwworld", create=False)
+
+    def test_foreign_keys_are_enforced(self, world: World):
+        """Off by default in SQLite, which would silently permit orphaned facts."""
+        with pytest.raises(sqlite3.IntegrityError):
+            world.db.insert("fact", {
+                "id": "x", "project_id": world.project_id, "branch_id": world.branch_id,
+                "subject_id": "nonexistent", "predicate_key": "trusts", "value": "yes",
+                "created_at": "now", "updated_at": "now",
+            })
+
+    def test_starting_vocabulary_is_installed(self, world: World):
+        assert world.db.scalar("SELECT count(*) FROM entity_type") > 20
+        assert world.db.scalar("SELECT count(*) FROM predicate") > 50
+        assert world.db.scalar("SELECT count(*) FROM scale") >= 4
+
+
+class TestEntities:
+    def test_add_and_read(self, world: World):
+        e = world.add_entity("person", "Lady Mara", summary="Of House Veyne")
+        assert world.get_entity(e.id).name == "Lady Mara"
+        assert world.entity_named("Lady Mara").id == e.id
+        assert world.count_entities("person") == 1
+
+    def test_unknown_type_is_refused_with_a_useful_message(self, world: World):
+        with pytest.raises(WorldError, match="unknown entity type"):
+            world.add_entity("wyvern", "Smoke")
+
+    def test_writers_can_invent_their_own_types(self, world: World):
+        """§60: a custom type must behave exactly like a built-in one."""
+        world.add_entity_type("wyvern", "Wyvern", "Wyverns", category="creatures")
+        w = world.add_entity("wyvern", "Smoke")
+        assert world.entities("wyvern") == [w]
+        assert world.search("Smoke")[0].id == w.id
+
+    def test_writers_can_invent_their_own_predicates(self, world: World):
+        world.add_predicate("bonded_to", "bonded to", symmetric=True)
+        a = world.add_entity("person", "Rider")
+        world.add_entity_type("wyvern", "Wyvern")
+        b = world.add_entity("wyvern", "Smoke")
+        world.assert_fact(a, "bonded_to", b)
+        assert len(world.facts_where("bonded_to")) == 1
+
+    def test_existence_is_temporal(self, world: World):
+        """A settlement founded in 240 must not appear on a map of 215."""
+        town = world.add_entity("settlement", "Newford", exists_from=world.day(240))
+        assert not town.exists_on(world.day(215))
+        assert town.exists_on(world.day(300))
+        assert town.id not in world.state_at(world.day(215)).entities
+        assert town.id in world.state_at(world.day(300)).entities
+
+    def test_undated_entities_exist_always(self, world: World):
+        """Silence means 'it is just there', not 'it does not exist'."""
+        e = world.add_entity("region", "The Marches")
+        assert e.exists_on(-10_000)
+        assert e.exists_on(10_000)
+
+    def test_update_reindexes_search(self, world: World):
+        e = world.add_entity("settlement", "Oldname")
+        world.update_entity(e.id, name="Newname")
+        assert world.search("Newname")
+        assert not [x for x in world.search("Oldname") if x.id == e.id]
+
+    def test_delete(self, world: World):
+        e = world.add_entity("settlement", "Doomed")
+        world.delete_entity(e.id)
+        assert world.get_entity(e.id) is None
+        assert not world.search("Doomed")
+
+
+class TestFacts:
+    def test_a_property_and_a_relationship_are_the_same_shape(self, world: World):
+        """The fact spine: both carry dates, confidence and secrecy identically."""
+        p = world.add_entity("person", "Mara")
+        h = world.add_entity("house", "House Veyne")
+        prop = world.assert_fact(p, "occupation", value="knight", valid_from=world.day(220))
+        rel = world.assert_fact(p, "member_of", h, valid_from=world.day(220))
+        assert not prop.is_relationship and rel.is_relationship
+        assert prop.holds_on(world.day(230)) and rel.holds_on(world.day(230))
+        assert not prop.holds_on(world.day(210))
+
+    def test_fact_needs_an_object_or_a_value(self, world: World):
+        p = world.add_entity("person", "Mara")
+        with pytest.raises(WorldError, match="object entity or a value"):
+            world.assert_fact(p, "occupation")
+
+    def test_unknown_predicate_is_refused(self, world: World):
+        p = world.add_entity("person", "Mara")
+        with pytest.raises(WorldError, match="unknown predicate"):
+            world.assert_fact(p, "vibes_with", value="x")
+
+    def test_asymmetric_feeling(self, world: World):
+        """§5: Mara may trust Edric while Edric distrusts Mara."""
+        mara = world.add_entity("person", "Mara")
+        edric = world.add_entity("person", "Edric")
+        world.assert_fact(mara, "trusts", edric, strength="deeply_trusts")
+        world.assert_fact(edric, "trusts", mara, strength="distrusts")
+        out = world.facts_where("trusts", subject_id=mara.id)
+        back = world.facts_where("trusts", subject_id=edric.id)
+        assert out[0].strength == "deeply_trusts"
+        assert back[0].strength == "distrusts"
+
+    def test_transfer_closes_history_rather_than_erasing_it(self, world: World):
+        """§106.3 / §79: conquest ends a fact, it does not make it never have been true."""
+        marr = world.add_entity("house", "House Marr")
+        orren = world.add_entity("house", "House Orren")
+        town = world.add_entity("settlement", "Greyhaven")
+        world.assert_fact(marr, "legally_owns", town, valid_from=world.day(312))
+        world.transfer("legally_owns", town, orren, world.day(428))
+
+        before = world.state_at(world.day(400)).facts_by_predicate("legally_owns")
+        after = world.state_at(world.day(500)).facts_by_predicate("legally_owns")
+        assert [f.subject_id for f in before] == [marr.id]
+        assert [f.subject_id for f in after] == [orren.id]
+
+    def test_uncertain_validity(self, world: World):
+        a = world.add_entity("house", "House Marr")
+        b = world.add_entity("settlement", "Greyhaven")
+        f = world.assert_fact(
+            a, "legally_owns", b,
+            interval=Interval(start=circa(world.day(312), 400), end=exact(world.day(428))),
+        )
+        stored = world.get_fact(f.id)
+        assert stored.valid_from < world.day(312) < stored.valid_from_hi
+
+    def test_secrecy_can_be_filtered(self, world: World):
+        """§6: what the world knows and what is true are different queries."""
+        a = world.add_entity("person", "Mara")
+        b = world.add_entity("person", "Edric")
+        world.assert_fact(a, "feels_about", b, strength="loves", secrecy="secret")
+        assert len(world.facts_where("feels_about")) == 1
+        assert len(world.facts_where("feels_about", include_secret=False)) == 0
+        assert world.facts_where("feels_about")[0].is_secret
+
+
+class TestBidirectionalLinking:
+    def test_the_inverse_is_resolved_not_duplicated(self, world: World):
+        """§77 and §106.1: never make the writer enter the same fact twice."""
+        veyne = world.add_entity("house", "House Veyne")
+        grey = world.add_entity("settlement", "Greyhaven")
+        world.assert_fact(veyne, "legally_owns", grey)
+
+        assert world.db.scalar("SELECT count(*) FROM fact") == 1     # one row, not two
+
+        from_house = world.facts_about(veyne.id)
+        from_town = world.facts_about(grey.id)
+        assert [(f.predicate_key, f.object_id) for f in from_house] == [("legally_owns", grey.id)]
+        assert [(f.predicate_key, f.object_id) for f in from_town] == [
+            ("legally_owned_by", veyne.id)
+        ]
+
+    def test_symmetric_predicates_read_the_same_from_both_sides(self, world: World):
+        a = world.add_entity("house", "House Marr")
+        b = world.add_entity("house", "House Orren")
+        world.assert_fact(a, "at_war_with", b)
+        assert world.facts_about(b.id)[0].predicate_key == "at_war_with"
+        assert world.facts_about(b.id)[0].object_id == a.id
+
+
+class TestTerritorialControl:
+    def test_four_authorities_at_once(self, world: World):
+        """§11: the brief's sharpest distinction, and it must hold simultaneously."""
+        orren = world.add_entity("house", "House Orren")
+        veyne = world.add_entity("house", "House Veyne")
+        marr = world.add_entity("house", "House Marr")
+        crown = world.add_entity("realm", "The Crown")
+        region = world.add_entity("region", "The Reach")
+
+        world.assert_fact(orren, "legally_owns", region)
+        world.assert_fact(veyne, "administers", region)
+        world.assert_fact(marr, "occupies", region)
+        world.assert_fact(crown, "taxes", region)
+        world.assert_fact(veyne, "claims", region)
+
+        state = world.state_at(world.day(300))
+        holders = {
+            f.predicate_key: state.entities[f.subject_id].name
+            for f in state.facts
+            if f.object_id == region.id
+        }
+        assert holders == {
+            "legally_owns": "House Orren",
+            "administers": "House Veyne",
+            "occupies": "House Marr",
+            "taxes": "The Crown",
+            "claims": "House Veyne",
+        }
+
+
+class TestTraversal:
+    @pytest.fixture
+    def feudal(self, world: World):
+        crown = world.add_entity("realm", "The Crown")
+        veyne = world.add_entity("house", "House Veyne")
+        marr = world.add_entity("house", "House Marr")
+        knight = world.add_entity("house", "Ser Aldric")
+        world.assert_fact(veyne, "vassal_of", crown)
+        world.assert_fact(marr, "vassal_of", veyne)
+        world.assert_fact(knight, "vassal_of", marr)
+        return world, crown, veyne, marr, knight
+
+    def test_upward_chain(self, feudal):
+        w, crown, veyne, marr, knight = feudal
+        chain = w.follow(knight.id, "vassal_of")
+        assert [w.get_entity(i).name for i, _ in chain] == [
+            "House Marr", "House Veyne", "The Crown"
+        ]
+
+    def test_downward_chain(self, feudal):
+        """§49: 'which houses serve House Veyne?'"""
+        w, crown, veyne, marr, knight = feudal
+        under = w.follow(veyne.id, "vassal_of", direction="in")
+        assert {w.get_entity(i).name for i, _ in under} == {"House Marr", "Ser Aldric"}
+
+    def test_depth_limit(self, feudal):
+        w, crown, veyne, marr, knight = feudal
+        assert len(w.follow(knight.id, "vassal_of", max_depth=1)) == 1
+
+    def test_traversal_respects_dates(self, world: World):
+        """An allegiance that had not been sworn yet must not appear in the chain."""
+        a = world.add_entity("house", "A")
+        b = world.add_entity("house", "B")
+        world.assert_fact(a, "vassal_of", b, valid_from=world.day(300))
+        assert world.follow(a.id, "vassal_of", at=world.day(250)) == []
+        assert len(world.follow(a.id, "vassal_of", at=world.day(350))) == 1
+
+    def test_kin_within_n_generations(self, world: World):
+        """§49: 'who is related to Lady Mara within three generations?'"""
+        people = {n: world.add_entity("person", n)
+                  for n in ("Great", "Grand", "Parent", "Mara", "Child", "Stranger")}
+        for parent, child in (("Great", "Grand"), ("Grand", "Parent"),
+                              ("Parent", "Mara"), ("Mara", "Child")):
+            world.assert_fact(people[parent], "parent_of", people[child])
+
+        near = world.neighbours(people["Mara"].id, ["parent_of"], hops=2)
+        names = {world.get_entity(i).name for i in near}
+        assert names == {"Parent", "Grand", "Child"}
+        assert "Stranger" not in names
+
+        far = world.neighbours(people["Mara"].id, ["parent_of"], hops=3)
+        assert "Great" in {world.get_entity(i).name for i in far}
+
+    def test_cycles_terminate(self, world: World):
+        """A world can contain a mutual oath; the walk must not spin."""
+        a = world.add_entity("house", "A")
+        b = world.add_entity("house", "B")
+        world.assert_fact(a, "vassal_of", b)
+        world.assert_fact(b, "vassal_of", a)
+        assert len(world.follow(a.id, "vassal_of", max_depth=20)) <= 2
+        assert len(world.neighbours(a.id, ["vassal_of"], hops=10)) == 1
+
+
+class TestSearch:
+    def test_exact_stemmed_and_fuzzy(self, world: World):
+        """§53 requires exact match, fuzzy match, and matching on properties."""
+        world.add_entity("settlement", "Greyhaven", summary="A port of the iron coast")
+        world.add_entity("settlement", "Rennford")
+        world.add_entity("house", "House Marr", tags=["northern"])
+
+        assert [e.name for e in world.search("Greyhaven")] == ["Greyhaven"]
+        assert "Greyhaven" in [e.name for e in world.search("eyhav")]      # fuzzy substring
+        assert "Greyhaven" in [e.name for e in world.search("iron")]       # summary
+        assert "House Marr" in [e.name for e in world.search("northern")]  # tags
+
+    def test_type_filter_and_empty_query(self, world: World):
+        world.add_entity("settlement", "Ford")
+        world.add_entity("house", "Ford")
+        assert len(world.search("Ford")) == 2
+        assert len(world.search("Ford", type_key="house")) == 1
+        assert world.search("   ") == []
+
+    def test_punctuation_does_not_raise(self, world: World):
+        world.add_entity("settlement", "Greyhaven")
+        assert world.search('"; DROP TABLE entity; --') == []
+        assert world.count_entities() == 1
+
+
+class TestStateAtDate:
+    def test_facts_about_the_unborn_are_excluded(self, world: World):
+        """A marriage cannot show on a map of a year before either party existed."""
+        a = world.add_entity("person", "Early", exists_from=world.day(100),
+                             exists_to=world.day(150))
+        b = world.add_entity("person", "Late", exists_from=world.day(300))
+        world.assert_fact(a, "married_to", b)          # deliberately undated
+        assert world.state_at(world.day(320)).facts == []
+
+    def test_secret_facts_can_be_hidden_from_a_view(self, world: World):
+        a = world.add_entity("person", "Mara")
+        b = world.add_entity("person", "Edric")
+        world.assert_fact(a, "feels_about", b, strength="loves", secrecy="secret")
+        assert len(world.state_at(world.day(300)).facts) == 1
+        assert world.state_at(world.day(300), include_secret=False).facts == []
+
+
+class TestReification:
+    """A fact about another fact (§33, §57).
+
+    The column exists before any feature needs it, because the alternative — a second,
+    parallel mechanism for assertions-about-assertions — would share none of the fact
+    spine's temporality, confidence or secrecy, and would split every related query.
+    """
+
+    def test_a_fact_can_be_about_another_fact(self, world: World):
+        aldren = world.add_entity("person", "King Aldren")
+        oren = world.add_entity("person", "Prince Oren")
+        crown = world.add_entity("house", "The Crown")
+
+        parentage = world.assert_fact(aldren, "legal_parent_of", oren)
+        account = world.assert_fact(
+            crown, "knows_about", oren, about_fact_id=parentage.id,
+            confidence="disputed", note="The Crown's public position on the parentage.",
+        )
+
+        assert world.get_fact(account.id).about_fact_id == parentage.id
+        assert world.get_fact(parentage.id).about_fact_id is None
+
+    def test_two_accounts_of_one_claim_coexist(self, world: World):
+        """§57: 'publicly believed' and 'canonical secret' are two assertions, not a field."""
+        aldren = world.add_entity("person", "King Aldren")
+        corren = world.add_entity("person", "Lord Corren")
+        oren = world.add_entity("person", "Prince Oren")
+
+        public = world.assert_fact(aldren, "legal_parent_of", oren, confidence="canon")
+        private = world.assert_fact(corren, "parent_of", oren,
+                                    confidence="canon", secrecy="deep_secret")
+
+        # Both are true at once, and each keeps its own provenance.
+        assert public.secrecy == "public"
+        assert private.is_secret
+        assert len(world.facts_where(subject_id=corren.id)) == 1
+        assert len(world.facts_where(object_id=oren.id, include_secret=False)) == 1
+
+    def test_deleting_the_subject_fact_removes_facts_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        base = world.assert_fact(a, "trusts", b)
+        about = world.assert_fact(b, "knows_about", a, about_fact_id=base.id)
+
+        world.db.execute("DELETE FROM fact WHERE id = ?", (base.id,))
+        assert world.get_fact(about.id) is None    # cascaded, not orphaned
+
+
+class TestRevisionLog:
+    """§59: every mutation leaves an append-only trace."""
+
+    def test_create_update_delete_are_all_logged(self, world: World):
+        e = world.add_entity("settlement", "Newtown")
+        world.update_entity(e.id, name="Renamed")
+        world.delete_entity(e.id)
+
+        history = world.revisions_for(e.id)
+        actions = [h["action"] for h in history]
+        assert actions == ["delete", "update", "insert"]     # newest first
+        update = history[1]
+        assert update["before"]["name"] == "Newtown"
+        assert update["after"]["name"] == "Renamed"
+
+    def test_fact_lifecycle_is_logged(self, world: World):
+        a = world.add_entity("house", "House A")
+        b = world.add_entity("settlement", "B-town")
+        fact = world.assert_fact(a, "legally_owns", b, valid_from=world.day(100))
+        world.end_fact(fact.id, world.day(200))
+        world.delete_fact(fact.id)
+
+        history = world.revisions_for(fact.id)
+        actions = [h["action"] for h in history]
+        assert actions == ["delete", "update", "insert"]
+        assert history[1]["after"]["valid_to"] == world.day(200)
+        # the deletion kept what was lost, so even a deletion is recoverable
+        assert history[0]["before"]["predicate_key"] == "legally_owns"
+
+    def test_deleting_a_missing_fact_is_a_quiet_no_op(self, world: World):
+        world.delete_fact("nonexistent")
+
+    def test_recently_edited_attributes_facts_to_their_subject(self, world: World):
+        person = world.add_entity("person", "Mara")
+        other = world.add_entity("person", "Edric")
+        world.assert_fact(person, "trusts", other, strength="deeply_trusts")
+
+        recent = world.recently_edited(limit=5)
+        names = [entity.name for entity, _ in recent]
+        # the fact edit surfaces as Mara, not as an opaque fact id
+        assert names[0] == "Mara"
+        # each entity appears once, however many changes it has
+        assert len(names) == len(set(names))
+
+    def test_recently_edited_skips_deleted_entities(self, world: World):
+        e = world.add_entity("settlement", "Doomed")
+        world.delete_entity(e.id)
+        assert "Doomed" not in [x.name for x, _ in world.recently_edited()]
+
+
+class TestSearchRanking:
+    def test_a_name_hit_outranks_a_summary_mention(self, renn: World):
+        """Searching 'Northmarch' must find The Northmarch itself first — not
+        Northwatch, whose summary merely mentions the region. Caught by driving the
+        entity picker in a browser: it chose the wrong entity with full confidence."""
+        names = [e.name for e in renn.search("Northmarch")]
+        assert names[0] == "The Northmarch"
+        assert "Northwatch" in names          # still found, just not first
+
+
+class TestReviewFindings:
+    """Regression tests for the adversarial review of the editing slice."""
+
+    def test_delete_entity_logs_every_cascaded_fact_in_full(self, world: World):
+        """The FK cascade must not destroy facts the log knows nothing about."""
+        hub = world.add_entity("house", "Hub House")
+        other = world.add_entity("person", "Vassal")
+        fact = world.assert_fact(other, "vassal_of", hub, secrecy="secret",
+                                 strength="overwhelming", note="sworn at midwinter")
+        world.delete_entity(hub.id)
+
+        history = world.revisions_for(fact.id)
+        assert [h["action"] for h in history] == ["delete", "insert"]
+        snapshot = history[0]["before"]
+        # the snapshot is the complete row, not a lossy subset
+        assert snapshot["secrecy"] == "secret"
+        assert snapshot["strength"] == "overwhelming"
+        assert snapshot["note"] == "sworn at midwinter"
+        assert snapshot["predicate_key"] == "vassal_of"
+
+    def test_entity_delete_snapshot_is_the_full_row(self, world: World):
+        e = world.add_entity("settlement", "Doomed", summary="A summary worth keeping",
+                             exists_from=world.day(100), tags=["northern"])
+        world.delete_entity(e.id)
+        snapshot = world.revisions_for(e.id)[0]["before"]
+        assert snapshot["summary"] == "A summary worth keeping"
+        assert snapshot["exists_from"] == world.day(100)
+        assert snapshot["tags"] == ["northern"]
+
+    def test_end_fact_refuses_a_day_before_the_fact_began(self, world: World):
+        """An inverted interval is true on no day — the fact would silently vanish."""
+        a = world.add_entity("house", "A")
+        b = world.add_entity("settlement", "B")
+        fact = world.assert_fact(a, "legally_owns", b, valid_from=world.day(300))
+        with pytest.raises(WorldError, match="before it began"):
+            world.end_fact(fact.id, world.day(200))
+        # the fact is untouched and still visible
+        assert world.get_fact(fact.id).valid_to is None
+
+    def test_end_fact_refuses_a_missing_fact(self, world: World):
+        """No phantom revisions for rows that never existed."""
+        with pytest.raises(WorldError, match="no fact"):
+            world.end_fact("ghost", 5)
+        assert world.revisions_for("ghost") == []
+
+    def test_recently_edited_survives_fact_deletion(self, world: World):
+        """The newest edit must not vanish because its fact row is gone."""
+        mara = world.add_entity("person", "Mara")
+        edric = world.add_entity("person", "Edric")
+        fact = world.assert_fact(mara, "trusts", edric, strength="deeply_trusts")
+        world.delete_fact(fact.id)
+
+        names = [e.name for e, _ in world.recently_edited(limit=5)]
+        assert names[0] == "Mara"       # the deletion is her newest edit
+
+    def test_update_before_and_after_share_one_shape(self, world: World):
+        """tags must not appear as a JSON string on one side and a list on the other."""
+        e = world.add_entity("settlement", "Tagged", tags=["north"])
+        world.update_entity(e.id, tags=["north", "ally"])
+        update = world.revisions_for(e.id)[0]
+        assert update["before"]["tags"] == ["north"]
+        assert update["after"]["tags"] == ["north", "ally"]
+
+    def test_decode_json_honours_an_explicit_none_default(self):
+        from fw.core.store.db import decode_json
+        assert decode_json(None, None) is None
+        assert decode_json("", None) is None
+        assert decode_json(None) == {}
+        assert decode_json("[1]", None) == [1]
+
+
+class TestRestore:
+    """§59 restore points: every recorded change can be walked back."""
+
+    def test_a_deleted_entity_returns_with_its_cascaded_facts(self, renn: World):
+        marr = renn.entity_named("House Marr")
+        connections = len(renn.facts_about(marr.id))
+        assert connections > 0
+
+        renn.delete_entity(marr.id)
+        assert renn.entity_named("House Marr") is None
+
+        deleted = renn.recently_deleted()
+        assert deleted[0]["name"] == "House Marr"
+
+        message = renn.restore(deleted[0]["revision_id"])
+        assert "House Marr" in message
+        back = renn.entity_named("House Marr")
+        assert back is not None
+        assert back.summary == marr.summary
+        assert len(renn.facts_about(back.id)) == connections
+        # and it no longer shows as deleted
+        assert all(d["name"] != "House Marr" for d in renn.recently_deleted())
+
+    def test_restoring_an_update_inverts_it_and_is_itself_reversible(self, world: World):
+        e = world.add_entity("settlement", "Oldname")
+        world.update_entity(e.id, name="Newname")
+
+        rename = world.revisions_for(e.id)[0]
+        world.restore(rename["id"])
+        assert world.get_entity(e.id).name == "Oldname"
+
+        # the restore logged its own inverse, so restoring it is a redo
+        undo = world.revisions_for(e.id)[0]
+        world.restore(undo["id"])
+        assert world.get_entity(e.id).name == "Newname"
+
+    def test_a_deleted_fact_can_come_back_alone(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b, strength="deeply_trusts",
+                                 note="a note worth keeping")
+        world.delete_fact(fact.id)
+        delete_rev = world.revisions_for(fact.id)[0]
+
+        world.restore(delete_rev["id"])
+        restored = world.get_fact(fact.id)
+        assert restored is not None
+        assert restored.strength == "deeply_trusts"
+        assert restored.note == "a note worth keeping"
+
+    def test_restoring_a_fact_whose_endpoint_is_gone_says_so(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.delete_fact(fact.id)
+        fact_delete = world.revisions_for(fact.id)[0]
+        world.delete_entity(b.id)
+
+        with pytest.raises(WorldError, match="restore that entity first"):
+            world.restore(fact_delete["id"])
+
+    def test_restore_refuses_nonsense(self, world: World):
+        with pytest.raises(WorldError, match="no revision"):
+            world.restore(999_999)
+        e = world.add_entity("settlement", "Made")
+        insert_rev = world.revisions_for(e.id)[0]
+        with pytest.raises(WorldError, match="nothing to restore"):
+            world.restore(insert_rev["id"])
+
+    def test_restore_ignores_hostile_snapshot_keys(self, world: World):
+        """A crafted world file must not smuggle SQL through revision JSON."""
+        e = world.add_entity("settlement", "Victim")
+        world.delete_entity(e.id)
+        rev_id = world.recently_deleted()[0]["revision_id"]
+        # poison the snapshot with a key that is not a column
+        import json
+        row = world.db.one("SELECT before FROM revision WHERE id = ?", (rev_id,))
+        poisoned = {**json.loads(row["before"]),
+                    "name) VALUES ('x'); DROP TABLE entity; --": 1}
+        world.db.execute("UPDATE revision SET before = ? WHERE id = ?",
+                         (json.dumps(poisoned), rev_id))
+
+        world.restore(rev_id)                      # must not raise, must not execute
+        assert world.entity_named("Victim") is not None
+        assert world.db.scalar("SELECT count(*) FROM entity") >= 1
+
+
+class TestRestoreCascade:
+    """A delete logs its whole FK cascade under a batch marker, and restore replays it."""
+
+    def test_restore_brings_back_everything_the_cascade_took(self, world: World):
+        """Not just facts: titles, holdings, participations, knowledge, secrets,
+        geometry and route segments all die with an entity and must all return."""
+        day = world.day(200, 1, 1)
+        lord = world.add_entity("person", "Lord Doomed")
+        friend = world.add_entity("person", "Friend")
+        seat = world.add_entity("settlement", "Seat")
+
+        world.assert_fact(lord, "trusts", friend, strength="deeply_trusts")
+        title = world.add_title("Lord of Seat", entity_id=lord.id)
+        world.grant_title(title.id, lord.id, from_day=day)
+        event = world.add_event(
+            "The duel", start_day=day,
+            participants=[(lord.id, "duelist"), (friend.id, "witness")])
+        scene = world.add_scene("A quiet word", day=day, location_id=seat.id,
+                                pov_id=lord.id, participants=[lord.id, friend.id])
+        secret = world.add_secret("The lord's debt", about_id=lord.id)
+        world.set_knowledge(friend.id, secret.id, "suspects")
+        world.add_geometry(lord.id, "point", [3.0, 4.0])
+        world.add_route_segment(seat.id, lord.id, 12.0)
+
+        world.delete_entity(lord.id)
+
+        # the cascade really did run this deep
+        assert world.titles() == []
+        assert world.secrets() == []
+        assert world.route_segments() == []
+        assert [p.id for p in world.scene_participants(scene.id)] == [friend.id]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [friend.id]
+        assert world.get_scene(scene.id).pov_id is None   # SET NULL on a survivor
+
+        message = world.restore(world.recently_deleted()[0]["revision_id"])
+        assert "Lord Doomed" in message and "related record" in message
+
+        back = world.entity_named("Lord Doomed")
+        assert back is not None and back.id == lord.id
+        assert len(world.facts_about(lord.id)) == 1
+        title_back = world.title_named("Lord of Seat")
+        assert title_back is not None
+        holdings = world.title_holdings(title_back.id)
+        assert [h.holder_id for h in holdings] == [lord.id]
+        assert {p.id for p, _ in world.event_participants(event.id)} == {lord.id,
+                                                                         friend.id}
+        assert {p.id for p in world.scene_participants(scene.id)} == {lord.id,
+                                                                      friend.id}
+        secrets = world.secrets()
+        assert [s.name for s in secrets] == ["The lord's debt"]
+        assert [k.observer_id for k in world.knowledge_of(secrets[0].id)] == [friend.id]
+        assert world.geometry_for(lord.id) is not None
+        assert len(world.route_segments()) == 1
+        # and the surviving scene got its point-of-view re-linked
+        assert world.get_scene(scene.id).pov_id == lord.id
+
+    def test_two_deletes_in_the_same_second_stay_separate(self, world: World):
+        """The old batch heuristic matched on the timestamp, so two entities deleted
+        in the same second swept each other's facts into one restore."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        c = world.add_entity("person", "C")
+        world.assert_fact(a, "trusts", c)
+        world.assert_fact(b, "trusts", c)
+
+        world.delete_entity(a.id)
+        world.delete_entity(b.id)          # lands within the same wall-clock second
+
+        rev_b = next(d for d in world.recently_deleted() if d["name"] == "B")
+        world.restore(rev_b["revision_id"])
+        assert world.get_entity(b.id) is not None
+        assert world.get_entity(a.id) is None            # A stays deleted
+        assert len(world.facts_about(b.id)) == 1
+        # and A's own restore still has its fact waiting
+        rev_a = next(d for d in world.recently_deleted() if d["name"] == "A")
+        world.restore(rev_a["revision_id"])
+        assert len(world.facts_about(a.id)) == 1
+
+    def test_delete_restore_delete_offers_only_the_newest_version(self, world: World):
+        region = world.add_entity("region", "The March")
+        e = world.add_entity("settlement", "Phoenix")
+        world.assert_fact(e, "located_in", region)
+
+        world.delete_entity(e.id)
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        world.update_entity(e.id, summary="Risen once")
+        world.assert_fact(region, "administers", e)
+        world.delete_entity(e.id)
+
+        offers = [d for d in world.recently_deleted() if d["name"] == "Phoenix"]
+        assert len(offers) == 1                          # not one per deletion
+        world.restore(offers[0]["revision_id"])
+        back = world.get_entity(e.id)
+        assert back.summary == "Risen once"              # the newest version returned
+        assert len(world.facts_about(e.id)) == 2
+
+    def test_deleting_a_fact_takes_and_restores_the_claims_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        f1 = world.assert_fact(a, "trusts", b)
+        f2 = world.assert_fact(b, "trusts", a, about_fact_id=f1.id, note="doubted")
+        world.add_secret("Sealed letter", about_id=a.id, fact_id=f1.id)
+
+        world.delete_fact(f1.id)
+        assert world.get_fact(f2.id) is None             # cascaded with its subject
+        assert world.secrets()[0].fact_id is None        # SET NULL on the survivor
+
+        rev = world.revisions_for(f1.id)[0]
+        message = world.restore(rev["id"])
+        assert "dependent" in message
+        assert world.get_fact(f1.id) is not None
+        restored_about = world.get_fact(f2.id)
+        assert restored_about is not None
+        assert restored_about.note == "doubted"
+        assert world.secrets()[0].fact_id == f1.id       # re-linked
+
+    def test_deleting_an_entity_cleans_and_restore_rebuilds_its_map_index(
+            self, world: World):
+        e = world.add_entity("settlement", "Mapped")
+        world.add_geometry(e.id, "point", [10.0, 20.0])
+        boxes = world.db.scalar("SELECT count(*) FROM geometry_bbox")
+
+        world.delete_entity(e.id)
+        # the R*Tree is not FK-aware; a leak here grows the file forever
+        assert world.db.scalar("SELECT count(*) FROM geometry_bbox") == boxes - 1
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.db.scalar("SELECT count(*) FROM geometry_bbox") == boxes
+        assert world.geometry_for(e.id) is not None
+
+    def test_restoring_a_fact_twice_says_it_is_already_there(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.delete_fact(fact.id)
+        rev = world.revisions_for(fact.id)[0]
+
+        world.restore(rev["id"])
+        with pytest.raises(WorldError, match="already exists"):
+            world.restore(rev["id"])
+
+    def test_restoring_an_update_with_no_usable_columns_refuses(self, world: World):
+        """A restore that would change nothing must not report success."""
+        import json
+        e = world.add_entity("settlement", "S")
+        world.update_entity(e.id, name="S2")
+        rev = world.revisions_for(e.id)[0]
+        world.db.execute("UPDATE revision SET before = ? WHERE id = ?",
+                         (json.dumps({"bogus_column": 1}), rev["id"]))
+        with pytest.raises(WorldError, match="no restorable columns"):
+            world.restore(rev["id"])
+
+
+class TestCausality:
+    """§32: causal chains must stay a DAG and read back deduplicated."""
+
+    def test_linking_twice_is_a_quiet_no_op(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        assert world.link_cause(a.id, b.id) is True
+        assert world.link_cause(a.id, b.id) is False
+        assert world.db.scalar("SELECT count(*) FROM causal_link") == 1
+
+    def test_self_links_and_loops_are_refused(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        c = world.add_event("Unrest")
+        world.link_cause(a.id, b.id)
+        world.link_cause(b.id, c.id)
+        with pytest.raises(WorldError, match="cause itself"):
+            world.link_cause(a.id, a.id)
+        with pytest.raises(WorldError, match="causal loop"):
+            world.link_cause(c.id, a.id)      # would make the chain circular
+
+    def test_a_diamond_reports_each_consequence_once(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Crop failure")
+        c = world.add_event("Livestock loss")
+        d = world.add_event("Famine")
+        world.link_cause(a.id, b.id)
+        world.link_cause(a.id, c.id)
+        world.link_cause(b.id, d.id)
+        world.link_cause(c.id, d.id)
+
+        out = world.consequences_of(a.id)
+        ids = [eid for eid, _ in out]
+        assert ids.count(d.id) == 1
+        assert dict(out)[d.id] == 2            # at its shortest distance
+
+    def test_a_loop_is_refused_however_long_the_chain(self, world: World):
+        """The guard must walk the whole chain — a depth cap would let a saga-length
+        causal chain close a cycle unnoticed."""
+        chain = [world.add_event(f"Event {i}") for i in range(70)]
+        for a, b in zip(chain, chain[1:], strict=False):
+            world.link_cause(a.id, b.id)
+        with pytest.raises(WorldError, match="causal loop"):
+            world.link_cause(chain[-1].id, chain[0].id)
+
+
+class TestCascadeAtScale:
+    def test_a_hub_entity_with_hundreds_of_facts_deletes_and_restores(
+            self, world: World):
+        """The id lists behind the cascade queries must be chunked: SQLite caps bound
+        variables at 999 on common builds, and a kingdom everyone is located_in
+        would otherwise be impossible to delete at exactly the scale that matters."""
+        hub = world.add_entity("region", "Everywhere")
+        others = [world.add_entity("person", f"P{i}") for i in range(120)]
+        for i, other in enumerate(others):
+            f = world.assert_fact(other, "located_in", hub, note=f"n{i}")
+            # pile several facts per person, and a claim about each placement,
+            # so the dying-fact id list comfortably exceeds one chunk
+            world.assert_fact(other, "claims", hub)
+            world.assert_fact(other, "occupies", hub)
+            world.assert_fact(other, "administers", hub)
+            world.assert_fact(other, "taxes", hub, about_fact_id=f.id)
+
+        n_facts = len(world.facts_about(hub.id))
+        assert n_facts == 600
+        world.delete_entity(hub.id)
+        assert world.facts_about(hub.id) == []
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert len(world.facts_about(hub.id)) == n_facts
+
+    def test_restore_will_not_replay_a_link_that_now_closes_a_loop(self, world: World):
+        """The world can move on while a link sits deleted: if the DAG grew a path the
+        other way, replaying the old link must be skipped, not commit a cycle."""
+        owner = world.add_entity("person", "Chronicler")
+        a = world.add_event("A", entity_id=owner.id)   # dies (and returns) with them
+        x = world.add_event("X")
+        b = world.add_event("B")
+        world.link_cause(x.id, a.id)
+        world.link_cause(a.id, b.id)
+
+        world.delete_entity(owner.id)                  # takes A and both links
+        world.link_cause(b.id, x.id)                   # legal now: A's chain is gone
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.get_entity(owner.id) is not None
+        # A and one of its links return; the one that would close B→X→A→B does not
+        events = {e.name for e in world.events()}
+        assert "A" in events
+        links = world.db.query("SELECT cause_id, effect_id FROM causal_link")
+        pairs = {(r["cause_id"], r["effect_id"]) for r in links}
+        assert (b.id, x.id) in pairs                   # the newer decision stands
+        assert len(pairs & {(x.id, a.id), (a.id, b.id)}) == 1
+        # and the graph is still a DAG: nothing reaches itself
+        for eid in (a.id, b.id, x.id):
+            downstream = [i for i, _ in world.consequences_of(eid, max_depth=32)]
+            assert eid not in downstream
