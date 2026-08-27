@@ -103,6 +103,7 @@ class WorldSummary(BaseModel):
     calendar: CalendarOut
     counts: dict[str, int]
     span: dict[str, int]
+    branch: dict[str, Any] = Field(default_factory=dict)   # {name, is_canon}
 
 
 class StateOut(BaseModel):
@@ -243,3 +244,12 @@ class WorldCreate(BaseModel):
 
 class WorldOpen(BaseModel):
     file: str                 # a bare *.fwworld name inside the library, never a path
+
+
+class BranchIn(BaseModel):
+    name: str
+    branched_at: int | None = None    # the day the timeline forks, usually "today"
+
+
+class BranchOpen(BaseModel):
+    name: str

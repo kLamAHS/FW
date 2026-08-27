@@ -1008,10 +1008,27 @@ class TestSchemaMigration:
         w.add_entity("settlement", "Ancient")
         w.close()
 
-        # forge a version-1 file: drop the column and the index, rewind user_version
+        # forge a version-1 file: strip everything the later migrations add, then
+        # rewind user_version — the reopen below must walk v1 → v2 → v3 cleanly
         conn = sql.connect(path)
         conn.execute("DROP INDEX ix_revision_action")
         conn.execute("ALTER TABLE revision DROP COLUMN action_id")
+        conn.execute("DROP INDEX ix_fact_supersedes")
+        conn.execute("ALTER TABLE fact DROP COLUMN supersedes_id")
+        conn.execute("DROP TABLE entity_override")
+        conn.executescript("""
+            CREATE TABLE causal_link_v1 (
+                id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
+                effect_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'caused',
+                confidence TEXT NOT NULL DEFAULT 'canon',
+                note TEXT NOT NULL DEFAULT '',
+                UNIQUE (cause_id, effect_id)) STRICT;
+            INSERT INTO causal_link_v1
+                SELECT id, project_id, cause_id, effect_id, kind, confidence, note
+                FROM causal_link;
+            DROP TABLE causal_link;
+            ALTER TABLE causal_link_v1 RENAME TO causal_link;
+        """)
         conn.execute("PRAGMA user_version = 1")
         conn.close()
 
@@ -1021,6 +1038,10 @@ class TestSchemaMigration:
             columns = {r["name"] for r in upgraded.db.query(
                 "PRAGMA table_info(revision)")}
             assert "action_id" in columns
+            assert "supersedes_id" in {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(fact)")}
+            assert upgraded.db.one("SELECT 1 FROM sqlite_master "
+                                   "WHERE name = 'entity_override'") is not None
             # old rows carry '' (beyond undo); new actions are undoable again
             fresh = upgraded.add_entity("settlement", "Modern")
             assert "Modern" in upgraded.undo()
@@ -1189,3 +1210,161 @@ class TestUndoRedoHardening:
         finally:
             b.close()
             a.close()
+
+
+class TestBranches:
+    """§105 alternate timelines: overlays, never copies; canon never written from a
+    branch."""
+
+    def test_a_branch_inherits_the_world_and_keeps_its_own_additions(
+            self, world: World):
+        mara = world.add_entity("person", "Mara")
+        world.create_branch("what if")
+        fork = world.on_branch("what if")
+
+        assert fork.get_entity(mara.id) is not None       # inherited
+        ghost = fork.add_entity("person", "Only Here")
+        assert fork.get_entity(ghost.id) is not None
+        assert world.get_entity(ghost.id) is None          # invisible to canon
+        assert world.count_entities("person") == 1
+        assert fork.count_entities("person") == 2
+
+    def test_ending_an_inherited_fact_is_branch_local(self, world: World):
+        marr = world.add_entity("house", "House Marr")
+        town = world.add_entity("settlement", "Greyhaven")
+        fact = world.assert_fact(marr, "legally_owns", town,
+                                 valid_from=world.day(300))
+        world.create_branch("the fall")
+        fork = world.on_branch("the fall")
+
+        fork.end_fact(fact.id, fork.day(320))
+        # the branch sees ownership closed…
+        assert fork.facts_where("legally_owns", at=fork.day(330)) == []
+        assert len(fork.facts_where("legally_owns", at=fork.day(310))) == 1
+        # …canon never felt it
+        canon = world.facts_where("legally_owns", at=world.day(330))
+        assert [f.id for f in canon] == [fact.id]
+        assert world.get_fact(fact.id).valid_to is None
+
+        # a second branch edit updates the same override, not a second copy
+        fork.end_fact(fact.id, fork.day(325))
+        overrides = fork.db.query(
+            "SELECT * FROM fact WHERE supersedes_id = ?", (fact.id,))
+        assert len(overrides) == 1
+
+    def test_deleting_an_inherited_fact_is_a_tombstone(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("estranged")
+        fork = world.on_branch("estranged")
+
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []
+        assert fork.facts_about(a.id) == []
+        assert len(world.facts_where("trusts")) == 1       # canon keeps it
+
+    def test_inherited_entities_are_patched_not_copied(self, world: World):
+        town = world.add_entity("settlement", "Greyhaven", summary="A port.")
+        world.create_branch("renamed")
+        fork = world.on_branch("renamed")
+
+        fork.update_entity(town.id, name="Blackhaven")
+        assert fork.get_entity(town.id).name == "Blackhaven"
+        assert fork.get_entity(town.id).summary == "A port."
+        assert world.get_entity(town.id).name == "Greyhaven"
+
+        # a branch of the branch merges field patches, nearest winning per field
+        fork.create_branch("deeper")
+        deeper = fork.on_branch("deeper")
+        deeper.update_entity(town.id, summary="A ruin.")
+        e = deeper.get_entity(town.id)
+        assert e.name == "Blackhaven"                      # parent's rename holds
+        assert e.summary == "A ruin."                      # own patch on top
+
+    def test_a_branch_death_changes_state_and_succession(self, renn: World):
+        """The flagship §105 question: what if the heir were already dead?"""
+        oren = renn.entity_named("Prince Oren")
+        crown = renn.title_named("King of Renn")
+        day = renn.day(241, 1, 1)
+        canon_line = [c.name for c in __import__(
+            "fw.core.succession.engine", fromlist=["SuccessionEngine"]
+        ).SuccessionEngine(renn).compute(crown.id, day).line]
+        assert canon_line[0] == "Prince Oren"
+
+        renn.create_branch("orenless")
+        fork = renn.on_branch("orenless")
+        fork.update_entity(oren.id, exists_to=fork.day(240, 1, 1))
+
+        assert oren.id in renn.state_at(day).entities       # canon: alive
+        assert oren.id not in fork.state_at(day).entities   # branch: gone
+
+        from fw.core.succession.engine import SuccessionEngine
+        branch_line = [c.name for c in
+                       SuccessionEngine(fork).compute(crown.id, day).line]
+        assert branch_line[0] != "Prince Oren"
+        assert canon_line[0] == "Prince Oren"               # canon unchanged
+
+    def test_inherited_entities_cannot_be_deleted_from_a_branch(self, world: World):
+        keep = world.add_entity("person", "Kept")
+        world.create_branch("careful")
+        fork = world.on_branch("careful")
+        with pytest.raises(WorldError, match="end its existence"):
+            fork.delete_entity(keep.id)
+        # but the branch's own creations are its to delete
+        own = fork.add_entity("person", "Fleeting")
+        fork.delete_entity(own.id)
+        assert fork.get_entity(own.id) is None
+
+    def test_branch_causal_links_stay_in_the_branch(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Famine")
+        world.create_branch("worse")
+        fork = world.on_branch("worse")
+        fork.link_cause(a.id, b.id)
+        assert fork.consequences_of(a.id) == [(b.id, 1)]
+        assert world.consequences_of(a.id) == []
+
+    def test_graph_walks_respect_overrides(self, world: World):
+        region = world.add_entity("region", "March")
+        town = world.add_entity("settlement", "Town")
+        village = world.add_entity("settlement", "Village")
+        world.assert_fact(town, "located_in", region)
+        fact = world.assert_fact(village, "located_in", town)
+        world.create_branch("moved")
+        fork = world.on_branch("moved")
+        fork.delete_fact(fact.id)                           # village unmoored here
+
+        assert dict(world.follow(region.id, "located_in", direction="in")) == {
+            town.id: 1, village.id: 2}
+        assert dict(fork.follow(region.id, "located_in", direction="in")) == {
+            town.id: 1}
+        assert village.id not in fork.neighbours(region.id, ["located_in"], hops=3)
+
+    def test_search_is_branch_aware(self, world: World):
+        world.add_entity("settlement", "Common Town")
+        world.create_branch("alt")
+        fork = world.on_branch("alt")
+        fork.add_entity("settlement", "Fork Town")
+
+        assert {e.name for e in fork.search("Town")} == {"Common Town", "Fork Town"}
+        assert {e.name for e in world.search("Town")} == {"Common Town"}
+
+    def test_branch_overrides_are_undoable(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("doubt")
+        fork = world.on_branch("doubt")
+
+        fork.end_fact(fact.id, fork.day(300))
+        assert fork.facts_where("trusts", at=fork.day(400)) == []
+        fork.undo()
+        assert len(fork.facts_where("trusts", at=fork.day(400))) == 1
+        fork.redo()
+        assert fork.facts_where("trusts", at=fork.day(400)) == []
+
+    def test_duplicate_branch_names_are_refused(self, world: World):
+        world.create_branch("twice")
+        with pytest.raises(WorldError, match="already exists"):
+            world.create_branch("twice")

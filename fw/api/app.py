@@ -146,23 +146,40 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             raise HTTPException(404, str(exc)) from exc
         return _open_path(path)
 
+    # ---- timelines (§105) --------------------------------------------------
+
+    @app.get("/api/branches")
+    def list_branches() -> list[dict[str, Any]]:
+        return world.branches()
+
+    @app.post("/api/branches", status_code=201)
+    def create_branch(payload: S.BranchIn) -> dict[str, str]:
+        """Fork a new timeline from the current one, and switch to it."""
+        current = holder.get()
+        name = current.create_branch(payload.name, branched_at=payload.branched_at)
+        # Same connection, different branch — nothing to retire or close.
+        holder.world = current.on_branch(name)
+        app.state.present_day = _guess_present_day(holder.world)
+        return {"name": name}
+
+    @app.post("/api/branches/open")
+    def open_branch(payload: S.BranchOpen) -> dict[str, str]:
+        current = holder.get()
+        try:
+            holder.world = current.on_branch(payload.name)
+        except WorldError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        app.state.present_day = _guess_present_day(holder.world)
+        return {"name": payload.name}
+
     # ---- world ------------------------------------------------------------
 
     @app.get("/api/world", response_model=S.WorldSummary)
     def get_world() -> S.WorldSummary:
-        counts = {
-            row["type_key"]: row["n"]
-            for row in world.db.query(
-                "SELECT type_key, count(*) AS n FROM entity WHERE branch_id = ? "
-                "GROUP BY type_key ORDER BY n DESC",
-                (world.branch_id,),
-            )
-        }
+        counts = world.counts_by_type()
         counts["total"] = sum(counts.values())
-        counts["facts"] = world.db.scalar(
-            "SELECT count(*) FROM fact WHERE branch_id = ?", (world.branch_id,))
-        counts["events"] = world.db.scalar(
-            "SELECT count(*) FROM event WHERE branch_id = ?", (world.branch_id,))
+        counts["facts"] = world.count_facts()
+        counts["events"] = world.count_events()
         counts["scenes"] = len(world.scenes())
         counts["secrets"] = len(world.secrets())
 
@@ -174,6 +191,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             calendar=_calendar_out(world),
             counts=counts,
             span=_world_span(world),
+            branch={"name": world.branch_name, "is_canon": world.is_canon},
         )
 
     @app.get("/api/vocabulary")
@@ -988,21 +1006,10 @@ def _calendar_out(world: World) -> S.CalendarOut:
 
 def _world_span(world: World) -> dict[str, int]:
     """The range the timeline slider should cover: everything the world talks about."""
-    bounds = world.db.one(
-        """SELECT min(d) AS lo, max(d) AS hi FROM (
-               SELECT min(exists_from) AS d FROM entity WHERE branch_id = :b
-               UNION ALL SELECT max(exists_to)  FROM entity WHERE branch_id = :b
-               UNION ALL SELECT min(valid_from) FROM fact   WHERE branch_id = :b
-               UNION ALL SELECT max(valid_to)   FROM fact   WHERE branch_id = :b
-               UNION ALL SELECT min(start_day)  FROM event  WHERE branch_id = :b
-               UNION ALL SELECT max(end_day)    FROM event  WHERE branch_id = :b
-               UNION ALL SELECT max(start_day)  FROM event  WHERE branch_id = :b
-           )""",
-        {"b": world.branch_id},
-    )
+    bounds = world.span()
     calendar = world.calendar
-    lo = bounds["lo"] if bounds and bounds["lo"] is not None else 0
-    hi = bounds["hi"] if bounds and bounds["hi"] is not None else calendar.date(2, 1, 1)
+    lo = bounds["lo"] if bounds["lo"] is not None else 0
+    hi = bounds["hi"] if bounds["hi"] is not None else calendar.date(2, 1, 1)
     if hi <= lo:
         hi = lo + calendar.common_year_days
     # A little air either side, so the ends of history are not flush with the slider.

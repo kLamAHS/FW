@@ -620,3 +620,41 @@ class TestUndoEndpoints:
         # drain the redo side: a fresh action leaves nothing to redo
         client.post("/api/entities", json={"type_key": "settlement", "name": "X"})
         assert client.post("/api/redo").status_code == 400
+
+
+class TestBranchEndpoints:
+    def test_fork_edit_and_return(self, client):
+        """Create a timeline, verify canon protection, switch back."""
+        listing = client.get("/api/branches").json()
+        assert [b["name"] for b in listing] == ["canon"]
+        assert client.get("/api/world").json()["branch"]["is_canon"] is True
+
+        made = client.post("/api/branches", json={"name": "what if", "branched_at": 85326})
+        assert made.status_code == 201
+        world = client.get("/api/world").json()
+        assert world["branch"] == {"name": "what if", "is_canon": False}
+
+        # an inherited entity cannot be deleted from the branch — 400, not data loss
+        marr = entity_named(client, "House Marr")
+        refusal = client.delete(f"/api/entities/{marr['id']}")
+        assert refusal.status_code == 400
+        assert "end its existence" in refusal.json()["detail"]
+
+        # ending an inherited fact works, branch-locally
+        facts = client.get(f"/api/entities/{marr['id']}").json()["facts"]
+        ended = client.post(f"/api/facts/{facts[0]['id']}/end", params={"on_day": 85326})
+        assert ended.status_code == 200
+
+        back = client.post("/api/branches/open", json={"name": "canon"})
+        assert back.status_code == 200
+        canon_facts = client.get(f"/api/entities/{marr['id']}").json()["facts"]
+        assert any(f["id"] == facts[0]["id"] and f["valid_to"] is None
+                   for f in canon_facts)     # canon untouched
+
+    def test_unknown_branch_is_a_404(self, client):
+        assert client.post("/api/branches/open",
+                           json={"name": "never made"}).status_code == 404
+
+    def test_duplicate_branch_name_is_a_400(self, client):
+        client.post("/api/branches", json={"name": "twice"})
+        assert client.post("/api/branches", json={"name": "twice"}).status_code == 400

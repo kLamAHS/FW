@@ -19,6 +19,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
+import { BranchPicker } from './components/BranchPicker'
 import { Launcher, WorldPicker } from './components/WorldPicker'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
@@ -63,6 +64,7 @@ export function App() {
   const [selected, setSelected] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [picking, setPicking] = useState(false)
+  const [branching, setBranching] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -161,6 +163,11 @@ export function App() {
                   ? `Redo ${undoState.data.redo} (Ctrl+Y)` : 'Nothing to redo'}>
           ↷
         </button>
+        <button onClick={() => setBranching(true)}
+                className={world.data.branch.is_canon ? '' : 'active'}
+                title="Alternate timelines: fork a what-if, or switch between them">
+          ⑂ {world.data.branch.is_canon ? 'Timelines' : world.data.branch.name}
+        </button>
         <button onClick={() => setPicking(true)}
                 title="Open another world, or start a new one">
           Worlds
@@ -171,6 +178,18 @@ export function App() {
         </button>
         <SearchBox onSelect={(id) => setSelected(id)} version={version} />
       </header>
+
+      {!world.data.branch.is_canon && (
+        <div className="branch-banner" role="status">
+          You are on the <strong>{world.data.branch.name}</strong> timeline — nothing
+          here touches the main one.
+          <button className="small"
+                  onClick={() => void api.openBranch('canon')
+                    .then(() => window.location.reload())}>
+            Return to the main timeline
+          </button>
+        </div>
+      )}
 
       <Timeline
         world={world.data}
@@ -242,6 +261,12 @@ export function App() {
       {picking && (
         <Modal title="Your worlds" onClose={() => setPicking(false)}>
           <WorldPicker />
+        </Modal>
+      )}
+
+      {branching && (
+        <Modal title="Alternate timelines" onClose={() => setBranching(false)}>
+          <BranchPicker day={currentDay} dateText={dateText} />
         </Modal>
       )}
 

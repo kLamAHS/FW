@@ -432,3 +432,15 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
   z-index: 300;
   max-width: min(80vw, 40rem);
 }
+
+/* §105: the strip that says "you are in a what-if" — visible without shouting. */
+.branch-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 18px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 0.9rem;
+}
+.branch-banner button { margin-left: auto; }

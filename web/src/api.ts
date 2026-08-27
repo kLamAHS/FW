@@ -63,6 +63,7 @@ export interface WorldSummary {
   calendar: CalendarInfo
   counts: Record<string, number>
   span: { first: number; last: number }
+  branch: { name: string; is_canon: boolean }
 }
 
 export interface Vocabulary {
@@ -389,6 +390,15 @@ export interface LibraryWorld {
   problem: string
 }
 
+export interface BranchInfo {
+  id: string
+  name: string
+  is_canon: boolean
+  parent_id: string | null
+  branched_at: number | null
+  open: boolean
+}
+
 export interface LibraryInfo {
   library: string | null
   worlds: LibraryWorld[]
@@ -403,6 +413,11 @@ export const api = {
     send<{ file: string; name: string }>('/worlds/open', 'POST', { file }),
 
   world: () => get<WorldSummary>('/world'),
+  branches: () => get<BranchInfo[]>('/branches'),
+  createBranch: (name: string, branched_at: number | null) =>
+    send<{ name: string }>('/branches', 'POST', { name, branched_at }),
+  openBranch: (name: string) =>
+    send<{ name: string }>('/branches/open', 'POST', { name }),
   vocabulary: () => get<Vocabulary>('/vocabulary'),
   date: (day: number) => get<WorldDate>(`/date/${day}`),
   dayIndex: (year: number, month = 1, day = 1) =>
