@@ -86,7 +86,8 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                                "to_entity_id": ("entity", "skip"),
                                "toll_holder_id": ("entity", "null")}},
     "title_holding": {"refs": {"title_id": ("title", "skip"),
-                               "holder_id": ("entity", "skip")}},
+                               "holder_id": ("entity", "skip"),
+                               "branch_id": ("branch", "skip")}},
     "event_participant": {"refs": {"event_id": ("event", "skip"),
                                    "entity_id": ("entity", "skip")},
                           "key": ("event_id", "entity_id", "role")},
@@ -471,12 +472,24 @@ class World:
         """
         if len(self._chain) == 1:
             return "1 = 1", []
+        # Rank branches by distance: nearer overrides beat farther ones, so when an
+        # ancestor and a descendant both supersede the same fact, only the nearest
+        # row speaks — never both, never the farther one.
+        rank = "CASE {col} " + " ".join(
+            f"WHEN ? THEN {i}" for i in range(len(self._chain))) + " END"
+        my_rank = rank.format(col=f"{alias}.branch_id")
+        their_rank = rank.format(col="__s.branch_id")
         condition = (
             f"json_extract({alias}.props, '$.branch_tombstone') IS NULL "
             f"AND NOT EXISTS (SELECT 1 FROM fact __o "
-            f"WHERE __o.supersedes_id = {alias}.id AND __o.{self._in_chain})"
+            f"WHERE __o.supersedes_id = {alias}.id AND __o.{self._in_chain}) "
+            f"AND ({alias}.supersedes_id IS NULL OR NOT EXISTS ("
+            f"SELECT 1 FROM fact __s "
+            f"WHERE __s.supersedes_id = {alias}.supersedes_id "
+            f"AND __s.{self._in_chain} AND ({their_rank}) < ({my_rank})))"
         )
-        return condition, list(self._chain)
+        chain = list(self._chain)
+        return condition, chain + chain + chain + chain
 
     def _override_map(self) -> dict[str, dict]:
         """entity_id -> merged field patch for this chain, farthest branch first, so
@@ -600,8 +613,21 @@ class World:
         })
 
     def _current_action_id(self) -> str:
-        """The id of the user action being written: this session, this transaction."""
-        return f"{self._session_token}:{self.db.transaction_serial}"
+        """The id of the user action being written: branch, session, transaction.
+
+        The branch prefix is what keeps undo timeline-scoped: an action made on a
+        what-if is never the target of Ctrl+Z on canon, and vice versa — the shared
+        log stays one history, read through the timeline that wrote each entry.
+        """
+        return f"{self.branch_id}:{self._session_token}:{self.db.transaction_serial}"
+
+    def _action_is_ours(self, action_id: str) -> bool:
+        """Whether an action belongs to this timeline. Ids from before branches carry
+        no prefix and belong to canon."""
+        head, _, rest = action_id.partition(":")
+        if ":" not in rest:                     # legacy two-part id -> canon's
+            return len(self._chain) == 1
+        return head == self.branch_id
 
     def revisions_for(self, row_id: str, *, limit: int = 50) -> list[dict]:
         """The change history of one row, newest first."""
@@ -1080,6 +1106,11 @@ class World:
             (self.project_id,),
         ):
             target = marker["row_id"]
+            if not self._action_is_ours(marker["action_id"]):
+                # another timeline's undo history; register the inversion so it is
+                # never mistaken for a real action, but track nothing else from it
+                self._inversions[marker["action_id"]] = target
+                continue
             # A marker whose target is itself a known inversion is a redo: the
             # original action that inversion had taken back stands again.
             original = self._inversions.get(target)
@@ -1094,7 +1125,7 @@ class World:
         # redo would clobber the newer edit it lost to.
         newest_real = 0
         for rev_id, action_id in self._revisions_newest_first():
-            if action_id not in self._inversions:
+            if action_id not in self._inversions and self._action_is_ours(action_id):
                 newest_real = rev_id
                 break
         self._redo = [(t, inv) for t, (marker_id, inv) in
@@ -1112,7 +1143,8 @@ class World:
             if aid in seen:
                 continue
             seen.add(aid)
-            if aid not in self._inversions and aid not in self._undone:
+            if (self._action_is_ours(aid)
+                    and aid not in self._inversions and aid not in self._undone):
                 return aid
         return None
 
@@ -1309,6 +1341,8 @@ class World:
             predicate = (after.get("predicate_key") or before.get("predicate_key")
                          or "connection")
             predicate = str(predicate).replace("_", " ")
+            if act == "insert" and after.get("supersedes"):
+                return f"a timeline change to a {predicate} connection"
             if act == "insert":
                 return f"recording a {predicate} connection"
             if act == "delete":
@@ -1757,12 +1791,26 @@ class World:
             if row["branch_id"] != self.branch_id:
                 if row["branch_id"] not in self._chain:
                     raise WorldError("that fact is not part of this timeline")
-                # deleting an inherited fact is a branch-local tombstone: the row
-                # stands in every other timeline, hidden in this one
-                effective = self._branch_override_row(fact_id) or row
-                props = decode_json(effective["props"], {}) or {}
-                props["branch_tombstone"] = True
-                self._override_fact(row, {"props": props})
+                # Deleting an inherited fact is a branch-local tombstone: the row
+                # stands in every other timeline, hidden in this one. Facts *about*
+                # it die with it in canon, so they must be hidden here too — an
+                # inherited one gets its own tombstone, a branch-local one is simply
+                # deleted.
+                closure = [row, *self._reified_dependants([fact_id]).values()]
+                for doomed in closure:
+                    if doomed["branch_id"] == self.branch_id:
+                        if self.db.one("SELECT 1 FROM fact WHERE id = ?",
+                                       (doomed["id"],)):
+                            self.delete_fact(doomed["id"])   # own row: the real path
+                        continue
+                    if doomed["branch_id"] not in self._chain:
+                        continue        # another timeline's row; not ours to hide
+                    effective = self._branch_override_row(doomed["id"]) or doomed
+                    props = decode_json(effective["props"], {}) or {}
+                    if props.get("branch_tombstone"):
+                        continue
+                    props["branch_tombstone"] = True
+                    self._override_fact(doomed, {"props": props})
                 return
             marker = f"cascade:{fact_id}"
             dependants = self._reified_dependants([fact_id])
@@ -1807,14 +1855,16 @@ class World:
         if row is None or row["branch_id"] not in self._chain:
             return None
         # Follow this timeline's overrides to the row that actually speaks for the
-        # fact here — possibly through several branches, ending at a tombstone.
+        # fact here — possibly through several branches, ending at a tombstone. When
+        # more than one chain branch overrides the same row, the nearest one speaks.
+        rank = {b: i for i, b in enumerate(self._chain)}
         while len(self._chain) > 1:
-            override = self.db.one(
+            overrides = self.db.query(
                 f"SELECT * FROM fact WHERE supersedes_id = ? AND {self._in_chain}",
                 (row["id"], *self._chain))
-            if override is None:
+            if not overrides:
                 break
-            row = override
+            row = min(overrides, key=lambda r: rank[r["branch_id"]])
         if (decode_json(row["props"], {}) or {}).get("branch_tombstone"):
             return None
         return _fact(row)
@@ -1926,10 +1976,11 @@ class World:
             f"""SELECT t.id AS title_id, h.holder_id
                FROM title t LEFT JOIN title_holding h
                  ON h.title_id = t.id
+                AND (h.{self._in_chain} OR h.branch_id IS NULL)
                 AND (h.from_day IS NULL OR h.from_day <= ?)
                 AND (h.to_day   IS NULL OR h.to_day   >= ?)
                WHERE t.{self._in_chain}""",
-            (day, day, *self._chain),
+            (*self._chain, day, day, *self._chain),
         ):
             holders[row["title_id"]] = row["holder_id"]
 
@@ -2069,10 +2120,13 @@ class World:
             # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
             # "Northmarch", because Northwatch's summary mentions the region — precisely
             # the wrong entity picked with full confidence.
+            # The index is not branch-aware, so other timelines' rows can occupy
+            # candidate slots; fetch generously and let hydration scope-filter.
+            pool = limit if len(self._chain) == 1 else limit * 4
             for row in self.db.query(
                 "SELECT entity_id FROM entity_fts WHERE entity_fts MATCH ? "
                 "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0) LIMIT ?",
-                (_fts_query(text), limit),
+                (_fts_query(text), pool),
             ):
                 if row["entity_id"] not in seen:
                     seen.add(row["entity_id"])
@@ -2082,9 +2136,10 @@ class World:
             pass
 
         if len(ids) < limit:
+            pool = (limit - len(ids)) if len(self._chain) == 1 else limit * 4
             for row in self.db.query(
                 "SELECT entity_id FROM entity_trigram WHERE name LIKE ? LIMIT ?",
-                (f"%{text}%", limit - len(ids)),
+                (f"%{text}%", pool),
             ):
                 if row["entity_id"] not in seen:
                     seen.add(row["entity_id"])
@@ -2136,6 +2191,12 @@ class World:
         return Event(id=eid, name=name, type_key=type_key, summary=summary,
                      start_day=start_day, end_day=end_day, location_id=location_id,
                      confidence=confidence, secrecy=secrecy, props=props or {})
+
+    def get_event(self, event_id: str) -> Event | None:
+        row = self.db.one("SELECT * FROM event WHERE id = ?", (event_id,))
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _event(row)
 
     def events(self, *, first: int | None = None, last: int | None = None) -> list[Event]:
         sql = f"SELECT * FROM event WHERE {self._in_chain}"
@@ -2279,7 +2340,9 @@ class World:
 
     def get_title(self, title_id: str) -> Title | None:
         row = self.db.one("SELECT * FROM title WHERE id = ?", (title_id,))
-        return _title(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _title(row)
 
     def title_named(self, name: str) -> Title | None:
         row = self.db.one(f"SELECT * FROM title WHERE {self._in_chain} AND name = ?",
@@ -2295,6 +2358,7 @@ class World:
                 "id": hid, "title_id": title_id, "holder_id": holder_id,
                 "from_day": from_day, "to_day": to_day, "how": how,
                 "disputed": int(disputed), "note": note,
+                "branch_id": self.branch_id,
             })
             self._log_revision("title_holding", hid, "insert", None, {"how": how})
         return TitleHolding(id=hid, title_id=title_id, holder_id=holder_id,
@@ -2303,24 +2367,26 @@ class World:
 
     def title_holdings(self, title_id: str) -> list[TitleHolding]:
         return [_holding(r) for r in self.db.query(
-            "SELECT * FROM title_holding WHERE title_id = ? ORDER BY from_day",
-            (title_id,),
+            f"SELECT * FROM title_holding WHERE title_id = ? "
+            f"AND ({self._in_chain} OR branch_id IS NULL) ORDER BY from_day",
+            (title_id, *self._chain),
         )]
 
     def title_holder_on(self, title_id: str, day: int) -> str | None:
         return self.db.scalar(
-            """SELECT holder_id FROM title_holding
+            f"""SELECT holder_id FROM title_holding
                WHERE title_id = ?
+                 AND ({self._in_chain} OR branch_id IS NULL)
                  AND (from_day IS NULL OR from_day <= ?)
                  AND (to_day   IS NULL OR to_day   >= ?)
                ORDER BY from_day DESC LIMIT 1""",
-            (title_id, day, day),
+            (title_id, *self._chain, day, day),
         )
 
     def titles_held_by(self, holder_id: str, *, at: int | None = None) -> list[Title]:
-        sql = ("SELECT t.* FROM title t JOIN title_holding h ON h.title_id = t.id "
-               "WHERE h.holder_id = ?")
-        params: list[Any] = [holder_id]
+        sql = (f"SELECT t.* FROM title t JOIN title_holding h ON h.title_id = t.id "
+               f"WHERE h.holder_id = ? AND (h.{self._in_chain} OR h.branch_id IS NULL)")
+        params: list[Any] = [holder_id, *self._chain]
         if at is not None:
             sql += (" AND (h.from_day IS NULL OR h.from_day <= ?)"
                     " AND (h.to_day   IS NULL OR h.to_day   >= ?)")
@@ -2439,7 +2505,9 @@ class World:
 
     def get_scene(self, scene_id: str) -> Scene | None:
         row = self.db.one("SELECT * FROM scene WHERE id = ?", (scene_id,))
-        return _scene(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _scene(row)
 
     def scene_participants(self, scene_id: str) -> list[Entity]:
         overrides = self._override_map()

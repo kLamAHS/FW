@@ -80,14 +80,11 @@ def cmd_info(args) -> None:
     print(f"  calendar: {world.calendar.name} — "
           f"{len(world.calendar.months)} months, "
           f"{world.calendar.common_year_days} days a year")
-    rows = world.db.query(
-        "SELECT type_key, count(*) AS n FROM entity WHERE branch_id = ? "
-        "GROUP BY type_key ORDER BY n DESC", (world.branch_id,))
     print(f"  {world.count_entities()} entities:")
-    for row in rows:
-        print(f"    {row['n']:4}  {row['type_key']}")
-    print(f"  {world.db.scalar('SELECT count(*) FROM fact')} facts, "
-          f"{len(world.events())} events, {len(world.secrets())} secrets, "
+    for type_key, n in world.counts_by_type().items():
+        print(f"    {n:4}  {type_key}")
+    print(f"  {world.count_facts()} facts, "
+          f"{world.count_events()} events, {len(world.secrets())} secrets, "
           f"{len(world.scenes())} scenes")
     world.close()
 

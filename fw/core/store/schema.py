@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -349,6 +349,7 @@ CREATE TABLE title (
     created_at        TEXT NOT NULL
 ) STRICT;
 
+-- branch_id is nullable for files from before branches; NULL reads as canon.
 CREATE TABLE title_holding (
     id            TEXT PRIMARY KEY,
     title_id      TEXT NOT NULL REFERENCES title(id) ON DELETE CASCADE,
@@ -357,10 +358,12 @@ CREATE TABLE title_holding (
     to_day        INTEGER,
     how           TEXT NOT NULL DEFAULT 'inheritance',
     disputed      INTEGER NOT NULL DEFAULT 0,
-    note          TEXT NOT NULL DEFAULT ''
+    note          TEXT NOT NULL DEFAULT '',
+    branch_id     TEXT REFERENCES branch(id) ON DELETE CASCADE
 ) STRICT;
 
-CREATE INDEX ix_holding_title ON title_holding(title_id, from_day, to_day);
+CREATE INDEX ix_holding_title  ON title_holding(title_id, from_day, to_day);
+CREATE INDEX ix_holding_branch ON title_holding(branch_id);
 
 -- ---------------------------------------------------------------- geography (§34, §91)
 
@@ -580,5 +583,12 @@ MIGRATIONS: dict[int, str] = {
         CREATE UNIQUE INDEX ux_causal_pair
             ON causal_link(cause_id, effect_id, ifnull(branch_id, ''));
         CREATE INDEX ix_causal_branch ON causal_link(branch_id)
+    """,
+    # 4: title grants become branch-scoped too — a coup tried on a what-if must not
+    #    crown anyone on the main timeline. Existing rows keep NULL, which every
+    #    timeline reads as canon's.
+    4: """
+        ALTER TABLE title_holding ADD COLUMN branch_id TEXT REFERENCES branch(id) ON DELETE CASCADE;
+        CREATE INDEX ix_holding_branch ON title_holding(branch_id)
     """,
 }

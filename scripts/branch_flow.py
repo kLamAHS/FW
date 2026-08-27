@@ -19,18 +19,6 @@ OUT.mkdir(parents=True, exist_ok=True)
 problems: list[str] = []
 
 
-def open_greyhaven(page) -> int:
-    """Open Greyhaven's side panel; return its connection count."""
-    page.fill(".search-box input", "Greyhaven")
-    page.wait_for_timeout(700)
-    exact = page.locator(".search-results .entity-line",
-                         has=page.locator(".name", has_text="Greyhaven"))
-    exact.first.click()
-    page.wait_for_timeout(900)
-    return page.locator(".side .fact-line, .side .fact-actions").count() or \
-        len(page.locator(".side").text_content() or "")
-
-
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=find_chromium(),
                                 args=["--no-sandbox", "--disable-dev-shm-usage"])

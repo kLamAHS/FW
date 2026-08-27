@@ -680,7 +680,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         by the core (400 via the WorldError handler).
         """
         for event_id in (payload.cause_id, payload.effect_id):
-            if not world.db.one("SELECT 1 FROM event WHERE id = ?", (event_id,)):
+            if world.get_event(event_id) is None:
                 raise HTTPException(404, f"no event {event_id}")
         created = world.link_cause(payload.cause_id, payload.effect_id,
                                    note=payload.note)

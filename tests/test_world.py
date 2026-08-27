@@ -1016,6 +1016,8 @@ class TestSchemaMigration:
         conn.execute("DROP INDEX ix_fact_supersedes")
         conn.execute("ALTER TABLE fact DROP COLUMN supersedes_id")
         conn.execute("DROP TABLE entity_override")
+        conn.execute("DROP INDEX ix_holding_branch")
+        conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
         conn.executescript("""
             CREATE TABLE causal_link_v1 (
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
@@ -1368,3 +1370,94 @@ class TestBranches:
         world.create_branch("twice")
         with pytest.raises(WorldError, match="already exists"):
             world.create_branch("twice")
+
+    def test_a_branch_title_grant_never_crowns_anyone_on_canon(self, world: World):
+        king = world.add_entity("person", "King")
+        usurper = world.add_entity("person", "Usurper")
+        crown = world.add_title("The Crown")
+        world.grant_title(crown.id, king.id, from_day=world.day(200))
+
+        world.create_branch("coup")
+        fork = world.on_branch("coup")
+        fork.grant_title(crown.id, usurper.id, from_day=fork.day(220))
+
+        day = world.day(230)
+        assert world.title_holder_on(crown.id, day) == king.id      # canon safe
+        assert fork.title_holder_on(crown.id, day) == usurper.id    # coup real here
+        assert world.state_at(day).titles[crown.id] == king.id
+        assert [t.name for t in world.titles_held_by(usurper.id)] == []
+        assert [t.name for t in fork.titles_held_by(usurper.id)] == ["The Crown"]
+
+    def test_undo_is_timeline_scoped(self, world: World):
+        """Ctrl+Z on canon must never target a branch's action, and vice versa."""
+        world.add_entity("person", "Canon One")
+        world.create_branch("aside")
+        fork = world.on_branch("aside")
+        ghost = fork.add_entity("person", "Branch Ghost")
+
+        # canon's undo takes back canon's newest action, not the branch's
+        assert "Canon One" in world.undo_state()["undo"]
+        world.undo()
+        assert world.entity_named("Canon One") is None
+        assert fork.get_entity(ghost.id) is not None    # untouched
+
+        # the branch's undo takes back its own
+        assert "Branch Ghost" in fork.undo_state()["undo"]
+        fork.undo()
+        assert fork.get_entity(ghost.id) is None
+
+    def test_competing_overrides_resolve_to_the_nearest_branch(self, world: World):
+        """When an ancestor and a descendant both supersede one fact, the descendant
+        must see exactly one row — the nearest — never both."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("b1")
+        b1 = world.on_branch("b1")
+        b1.create_branch("b2")
+        b2 = b1.on_branch("b2")
+
+        b2.end_fact(fact.id, b2.day(200))      # child overrides first
+        b1.end_fact(fact.id, b1.day(100))      # then the parent, independently
+
+        seen = b2.facts_where("trusts")
+        assert len(seen) == 1
+        assert seen[0].valid_to == b2.day(200)             # b2's own, not b1's
+        assert b2.get_fact(fact.id).valid_to == b2.day(200)
+        assert [f.valid_to for f in b1.facts_where("trusts")] == [b1.day(100)]
+
+    def test_a_branch_tombstone_takes_the_facts_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        meta = world.assert_fact(b, "trusts", a, about_fact_id=fact.id)
+        world.create_branch("severed")
+        fork = world.on_branch("severed")
+
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []             # meta went with it
+        assert fork.get_fact(meta.id) is None
+        assert len(world.facts_where("trusts")) == 2        # canon keeps both
+
+    def test_by_id_getters_are_timeline_scoped(self, world: World):
+        world.create_branch("aside")
+        fork = world.on_branch("aside")
+        scene = fork.add_scene("Only there")
+        title = fork.add_title("Only theirs")
+        event = fork.add_event("Only then")
+
+        assert world.get_scene(scene.id) is None
+        assert world.get_title(title.id) is None
+        assert world.get_event(event.id) is None
+        assert fork.get_scene(scene.id) is not None
+        assert fork.get_title(title.id) is not None
+        assert fork.get_event(event.id) is not None
+
+    def test_the_toast_names_a_timeline_change_for_what_it_is(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("doubt")
+        fork = world.on_branch("doubt")
+        fork.end_fact(fact.id, fork.day(300))
+        assert "timeline change" in fork.undo_state()["undo"]
