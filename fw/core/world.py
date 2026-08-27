@@ -121,6 +121,18 @@ def _row_key(table: str, row: Any) -> str:
     return "/".join(str(row[column]) for column in key)
 
 
+def _chunked(values: Iterable[Any], size: int = 500) -> Iterable[list[Any]]:
+    """Split ids into groups small enough for one IN (...) list.
+
+    SQLITE_MAX_VARIABLE_NUMBER is 999 on many builds; one flat list over every fact
+    touching a hub entity would make that entity impossible to delete at exactly the
+    scale (§99) where deletion matters most.
+    """
+    values = list(values)
+    for start in range(0, len(values), size):
+        yield values[start:start + size]
+
+
 @dataclass
 class StateAtDate:
     """A snapshot of what was true on one day (§3, §36)."""
@@ -804,11 +816,11 @@ class World:
         q = self.db.query
 
         def rows_in(table: str, column: str, ids: Iterable[str]) -> list:
-            ids = list(ids)
-            if not ids:
-                return []
-            marks = ",".join("?" for _ in ids)
-            return q(f"SELECT * FROM {table} WHERE {column} IN ({marks})", ids)
+            out = []
+            for chunk in _chunked(ids):
+                marks = ",".join("?" for _ in chunk)
+                out += q(f"SELECT * FROM {table} WHERE {column} IN ({marks})", chunk)
+            return out
 
         facts = {r["id"]: r for r in q(
             "SELECT * FROM fact WHERE subject_id = ? OR object_id = ?",
@@ -882,11 +894,13 @@ class World:
                 dying.setdefault(table, set()).add(victim["id"])
 
         out: list[tuple[str, str, dict]] = []
-        for table, columns in (("scene", ("location_id", "pov_id")),
-                               ("event", ("location_id",)),
-                               ("title", ("territory_id", "dynasty_root_id")),
-                               ("knowledge_state", ("acquired_from",)),
-                               ("route_segment", ("toll_holder_id",))):
+        # Derived from _RELINK_COLUMNS — the same map restore reads — so a SET NULL
+        # column registered there is logged here by construction, never by a second
+        # hand-kept list that can drift.
+        for table, column_targets in _RELINK_COLUMNS.items():
+            columns = [c for c, target in column_targets.items() if target == "entity"]
+            if not columns:
+                continue
             condition = " OR ".join(f"{c} = ?" for c in columns)
             for r in self.db.query(f"SELECT * FROM {table} WHERE {condition}",
                                    [entity_id] * len(columns)):
@@ -895,11 +909,10 @@ class World:
                 cleared = {c: entity_id for c in columns if r[c] == entity_id}
                 out.append((table, r["id"], cleared))
         # secrets that survive but point at a dying fact lose that link the same way
-        if dying_facts:
-            marks = ",".join("?" for _ in dying_facts)
+        for chunk in _chunked(dying_facts):
+            marks = ",".join("?" for _ in chunk)
             for r in self.db.query(
-                f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})",
-                list(dying_facts),
+                f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})", chunk,
             ):
                 if r["id"] not in dying.get("secret", set()):
                     out.append(("secret", r["id"], {"fact_id": r["fact_id"]}))
@@ -1057,23 +1070,25 @@ class World:
             dependants: dict[str, Any] = {}
             frontier = [fact_id]
             while frontier:
-                marks = ",".join("?" for _ in frontier)
-                found = self.db.query(
-                    f"SELECT * FROM fact WHERE about_fact_id IN ({marks})", frontier)
+                found: list[Any] = []
+                for chunk in _chunked(frontier):
+                    marks = ",".join("?" for _ in chunk)
+                    found += self.db.query(
+                        f"SELECT * FROM fact WHERE about_fact_id IN ({marks})", chunk)
                 frontier = [r["id"] for r in found if r["id"] not in dependants]
                 for r in found:
                     dependants.setdefault(r["id"], r)
             for r in dependants.values():
                 self._log_revision("fact", r["id"], "delete", _snapshot(r), None,
                                    note=marker)
-            dying = [fact_id, *dependants]
-            marks = ",".join("?" for _ in dying)
-            for r in self.db.query(
-                f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})", dying
-            ):
-                self._log_revision("secret", r["id"], "update",
-                                   {"fact_id": r["fact_id"]}, {"fact_id": None},
-                                   note=marker)
+            for chunk in _chunked([fact_id, *dependants]):
+                marks = ",".join("?" for _ in chunk)
+                for r in self.db.query(
+                    f"SELECT id, fact_id FROM secret WHERE fact_id IN ({marks})", chunk
+                ):
+                    self._log_revision("secret", r["id"], "update",
+                                       {"fact_id": r["fact_id"]}, {"fact_id": None},
+                                       note=marker)
             self._log_revision("fact", fact_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM fact WHERE id = ?", (fact_id,))
 
@@ -1437,21 +1452,37 @@ class World:
         """
         if cause_id == effect_id:
             raise WorldError("an event cannot cause itself")
-        if self.db.one(
-            "SELECT 1 FROM causal_link WHERE cause_id = ? AND effect_id = ?",
-            (cause_id, effect_id),
-        ):
-            return False
-        if any(eid == cause_id
-               for eid, _ in self.consequences_of(effect_id, max_depth=64)):
-            raise WorldError(
-                "that would close a causal loop — the second event already leads back "
-                "to the first"
-            )
-        self.db.insert("causal_link", {
-            "id": new_id(), "project_id": self.project_id, "cause_id": cause_id,
-            "effect_id": effect_id, "kind": kind, "note": note,
-        })
+        # One transaction around check-then-insert: it holds the connection lock, so
+        # two concurrent requests cannot both pass the guards and then collide on the
+        # UNIQUE constraint — or worse, commit A→B and B→A as a loop.
+        with self.db.transaction():
+            if self.db.one(
+                "SELECT 1 FROM causal_link WHERE cause_id = ? AND effect_id = ?",
+                (cause_id, effect_id),
+            ):
+                return False
+            # Full reachability, no depth cap: the graph is a DAG before this insert,
+            # so the walk terminates on its own, and a UNION over bare ids reaches a
+            # fixpoint even if a crafted file already holds a loop. A cap would let a
+            # chain longer than the cap close a cycle unnoticed.
+            if self.db.one(
+                """WITH RECURSIVE reach(id) AS (
+                       SELECT ?
+                       UNION
+                       SELECT c.effect_id FROM causal_link c
+                       JOIN reach ON c.cause_id = reach.id
+                   )
+                   SELECT 1 FROM reach WHERE id = ?""",
+                (effect_id, cause_id),
+            ):
+                raise WorldError(
+                    "that would close a causal loop — the second event already leads "
+                    "back to the first"
+                )
+            self.db.insert("causal_link", {
+                "id": new_id(), "project_id": self.project_id, "cause_id": cause_id,
+                "effect_id": effect_id, "kind": kind, "note": note,
+            })
         return True
 
     def consequences_of(self, event_id: str, *, max_depth: int = 6) -> list[tuple[str, int]]:

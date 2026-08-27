@@ -307,8 +307,10 @@ def cmd_restore(args) -> None:
     """§59: undo a recorded change from the command line."""
     # Two optional positionals means `fw restore 123` parses 123 as the *path* and
     # then tries to open a world file named "123". A bare number in the path slot is
-    # the revision id the writer obviously meant.
-    if args.revision is None and args.path != DEFAULT_PATH and args.path.isdigit():
+    # the revision id the writer obviously meant — unless --list is given, where no
+    # revision is expected and a numeric path really is a path.
+    if (args.revision is None and not args.list
+            and args.path != DEFAULT_PATH and args.path.isdigit()):
         args.revision = int(args.path)
         args.path = DEFAULT_PATH
     world = _open(args.path)

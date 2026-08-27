@@ -43,3 +43,16 @@ class TestRestoreCommand:
         home.close()
         main(["restore", "--list"])
         assert "Gone" in capsys.readouterr().out
+
+    def test_list_with_a_numeric_path_is_not_hijacked(self, tmp_path, monkeypatch,
+                                                      capsys):
+        """`fw restore 2024 --list` names a world *file* called 2024 — the bare-number
+        convenience must not rewrite it into a revision id."""
+        monkeypatch.chdir(tmp_path)
+        world = World.create(tmp_path / "2024", name="Numeric world")
+        e = world.add_entity("settlement", "Yearling")
+        world.delete_entity(e.id)
+        world.close()
+
+        main(["restore", "2024", "--list"])
+        assert "Yearling" in capsys.readouterr().out

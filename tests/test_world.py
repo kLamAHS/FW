@@ -796,3 +796,38 @@ class TestCausality:
         ids = [eid for eid, _ in out]
         assert ids.count(d.id) == 1
         assert dict(out)[d.id] == 2            # at its shortest distance
+
+    def test_a_loop_is_refused_however_long_the_chain(self, world: World):
+        """The guard must walk the whole chain — a depth cap would let a saga-length
+        causal chain close a cycle unnoticed."""
+        chain = [world.add_event(f"Event {i}") for i in range(70)]
+        for a, b in zip(chain, chain[1:], strict=False):
+            world.link_cause(a.id, b.id)
+        with pytest.raises(WorldError, match="causal loop"):
+            world.link_cause(chain[-1].id, chain[0].id)
+
+
+class TestCascadeAtScale:
+    def test_a_hub_entity_with_hundreds_of_facts_deletes_and_restores(
+            self, world: World):
+        """The id lists behind the cascade queries must be chunked: SQLite caps bound
+        variables at 999 on common builds, and a kingdom everyone is located_in
+        would otherwise be impossible to delete at exactly the scale that matters."""
+        hub = world.add_entity("region", "Everywhere")
+        others = [world.add_entity("person", f"P{i}") for i in range(120)]
+        for i, other in enumerate(others):
+            f = world.assert_fact(other, "located_in", hub, note=f"n{i}")
+            # pile several facts per person, and a claim about each placement,
+            # so the dying-fact id list comfortably exceeds one chunk
+            world.assert_fact(other, "claims", hub)
+            world.assert_fact(other, "occupies", hub)
+            world.assert_fact(other, "administers", hub)
+            world.assert_fact(other, "taxes", hub, about_fact_id=f.id)
+
+        n_facts = len(world.facts_about(hub.id))
+        assert n_facts == 600
+        world.delete_entity(hub.id)
+        assert world.facts_about(hub.id) == []
+
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert len(world.facts_about(hub.id)) == n_facts
