@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -385,7 +385,12 @@ CREATE TABLE geometry (
     valid_from    INTEGER,
     valid_to      INTEGER,
     layer         TEXT NOT NULL DEFAULT 'base',
+    -- `style` is what the client draws with and passes through to the shape; `props`
+    -- is machine-readable provenance the client never renders (which generation made
+    -- this, which feature of it, what rank). Keeping them apart is what lets a
+    -- regeneration recognise its own work without painting its bookkeeping on the map.
     style         TEXT NOT NULL DEFAULT '{}',
+    props         TEXT NOT NULL DEFAULT '{}',
     -- §92 fictional maps may be intentionally vague
     approximate   INTEGER NOT NULL DEFAULT 0,
     created_at    TEXT NOT NULL
@@ -620,5 +625,13 @@ MIGRATIONS: dict[int, str] = {
             FROM era;
         DROP TABLE era;
         ALTER TABLE era_v5 RENAME TO era
+    """,
+    # 6: geometry gains `props` — machine-readable provenance beside the human-facing
+    #    `style`. The generator has to know which shapes are its own work, from which
+    #    plan, and which feature of it, and `style` is the wrong place: the client
+    #    passes every style key through to the drawing, so provenance smuggled in
+    #    there is one careless render away from being painted on the map.
+    6: """
+        ALTER TABLE geometry ADD COLUMN props TEXT NOT NULL DEFAULT '{}'
     """,
 }

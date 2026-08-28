@@ -1018,6 +1018,7 @@ class TestSchemaMigration:
         conn.execute("DROP TABLE entity_override")
         conn.execute("DROP INDEX ix_holding_branch")
         conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
+        conn.execute("ALTER TABLE geometry DROP COLUMN props")
         conn.executescript("""
             CREATE TABLE causal_link_v1 (
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
@@ -1044,6 +1045,8 @@ class TestSchemaMigration:
                 "PRAGMA table_info(fact)")}
             assert upgraded.db.one("SELECT 1 FROM sqlite_master "
                                    "WHERE name = 'entity_override'") is not None
+            assert "props" in {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(geometry)")}
             # old rows carry '' (beyond undo); new actions are undoable again
             fresh = upgraded.add_entity("settlement", "Modern")
             assert "Modern" in upgraded.undo()
@@ -1614,6 +1617,7 @@ class TestEras:
                 ifnull(start_year, 1), end_year FROM era;
             DROP TABLE era;
             ALTER TABLE era_v4 RENAME TO era;
+            ALTER TABLE geometry DROP COLUMN props;
         """)
         conn.execute("PRAGMA user_version = 4")
         conn.close()
@@ -1656,3 +1660,52 @@ class TestEras:
             world.update_era(second, start_year=900, end_year=100)
         world.update_era(first, name="Renamed")        # a legitimate edit still works
         assert world.calendar.era_named("F1").name == "Renamed"
+
+
+class TestGeometryProvenance:
+    """`style` is what the client draws with; `props` is what the application knows.
+
+    Keeping them apart is what lets a regeneration find its own work without the
+    bookkeeping ending up painted on the map — the client passes every style key
+    straight through to the shape it renders.
+    """
+
+    def test_props_round_trip_and_stay_out_of_style(self, world: World):
+        place = world.add_entity("region", "The Weald")
+        world.add_geometry(place.id, "polygon", [[[0, 0], [1, 0], [1, 1], [0, 0]]],
+                           style={"fill": "#456"}, props={"by": "mapgen/2", "key": "r:1"})
+        [shape] = world.geometries()
+        assert shape.props == {"by": "mapgen/2", "key": "r:1"}
+        assert shape.style == {"fill": "#456"}          # untouched by the provenance
+
+    def test_a_shape_with_no_props_reads_as_empty(self, world: World):
+        place = world.add_entity("region", "The Bare")
+        world.add_geometry(place.id, "point", [4, 4])
+        assert world.geometries()[0].props == {}
+
+    def test_provenance_survives_an_undone_delete(self, world: World):
+        place = world.add_entity("region", "The Lost")
+        shape = world.add_geometry(place.id, "point", [2, 3], props={"key": "s:7"})
+        world.delete_geometry(shape.id)
+        assert world.geometries() == []
+        world.undo()
+        assert world.geometries()[0].props == {"key": "s:7"}
+
+    def test_route_segments_carry_provenance(self, world: World):
+        a = world.add_entity("settlement", "Aford")
+        b = world.add_entity("settlement", "Bmoor")
+        world.add_route_segment(a.id, b.id, 10, props={"rank": "trunk"})
+        assert world.route_segments()[0].props == {"rank": "trunk"}
+
+    def test_route_segments_read_back_in_a_stable_order(self, world: World):
+        """An unordered network cannot be diffed against the last one, which is what a
+        regeneration and a golden test both need."""
+        names = ["Aford", "Bmoor", "Cleeve", "Dray"]
+        ids = [world.add_entity("settlement", n).id for n in names]
+        for a in ids:
+            for b in ids:
+                if a != b:
+                    world.add_route_segment(a, b, 10)
+        segments = world.route_segments()
+        assert segments == sorted(
+            segments, key=lambda s: (s.from_entity_id, s.to_entity_id, s.id))

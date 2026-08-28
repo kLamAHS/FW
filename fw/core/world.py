@@ -2757,21 +2757,24 @@ class World:
     def add_geometry(self, entity_id: str, kind: str, coordinates: Any, *,
                      valid_from: int | None = None, valid_to: int | None = None,
                      layer: str = "base", style: dict | None = None,
-                     approximate: bool = False) -> Geometry:
+                     approximate: bool = False,
+                     props: dict | None = None) -> Geometry:
+        """Draw a shape. `style` is what the client renders with; `props` is what the
+        application knows about the shape and never draws — provenance above all."""
         gid = new_id()
         with self.db.transaction():
             self.db.insert("geometry", {
                 "id": gid, "project_id": self.project_id, "branch_id": self.branch_id,
                 "entity_id": entity_id, "kind": kind, "coordinates": coordinates,
                 "valid_from": valid_from, "valid_to": valid_to, "layer": layer,
-                "style": style or {}, "approximate": int(approximate),
-                "created_at": now_iso(),
+                "style": style or {}, "props": props or {},
+                "approximate": int(approximate), "created_at": now_iso(),
             })
             self._index_geometry(gid, coordinates)
             self._log_revision("geometry", gid, "insert", None, {"kind": kind})
         return Geometry(id=gid, entity_id=entity_id, kind=kind, coordinates=coordinates,
                         valid_from=valid_from, valid_to=valid_to, layer=layer,
-                        style=style or {}, approximate=approximate)
+                        style=style or {}, approximate=approximate, props=props or {})
 
     def _index_geometry(self, geometry_id: str, coordinates: Any) -> None:
         xs, ys = _flatten_coords(coordinates)
@@ -2857,7 +2860,8 @@ class World:
                           terrain: str = "plain", entity_id: str | None = None,
                           built_on: int | None = None, ruined_on: int | None = None,
                           closed_seasons: Sequence[str] = (), danger: str = "low",
-                          toll_holder_id: str | None = None) -> RouteSegment:
+                          toll_holder_id: str | None = None,
+                          props: dict | None = None) -> RouteSegment:
         # A closure is tested against the season the day falls in, so a name that is not
         # one of this calendar's seasons closes the route on no day of any year — the road
         # reads as impassable in the writer's notes and is wide open in every travel
@@ -2880,6 +2884,7 @@ class World:
                 "quality": quality, "terrain": terrain, "built_on": built_on,
                 "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
                 "danger": danger, "toll_holder_id": toll_holder_id,
+                "props": props or {},
             })
             self._log_revision("route_segment", sid, "insert", None, {"medium": medium})
         return RouteSegment(id=sid, from_entity_id=from_entity_id,
@@ -2887,11 +2892,14 @@ class World:
                             quality=quality, terrain=terrain, entity_id=entity_id,
                             built_on=built_on, ruined_on=ruined_on,
                             closed_seasons=tuple(closed_seasons), danger=danger,
-                            toll_holder_id=toll_holder_id)
+                            toll_holder_id=toll_holder_id, props=props or {})
 
     def route_segments(self) -> list[RouteSegment]:
+        # Ordered, because an unordered read makes a generated network impossible to
+        # diff against the last one and a golden test impossible to write.
         return [_segment(r) for r in self.db.query(
-            f"SELECT * FROM route_segment WHERE {self._in_chain}", self._chain
+            f"SELECT * FROM route_segment WHERE {self._in_chain} "
+            "ORDER BY from_entity_id, to_entity_id, id", self._chain
         )]
 
     # ---- snapshots (§80) --------------------------------------------------
@@ -3020,6 +3028,7 @@ def _geometry(row) -> Geometry:
         coordinates=decode_json(row["coordinates"], []),
         valid_from=row["valid_from"], valid_to=row["valid_to"], layer=row["layer"],
         style=decode_json(row["style"], {}), approximate=bool(row["approximate"]),
+        props=decode_json(row["props"], {}),
     )
 
 
@@ -3031,6 +3040,7 @@ def _segment(row) -> RouteSegment:
         built_on=row["built_on"], ruined_on=row["ruined_on"],
         closed_seasons=tuple(decode_json(row["closed_seasons"], [])),
         danger=row["danger"], toll_holder_id=row["toll_holder_id"],
+        props=decode_json(row["props"], {}),
     )
 
 
