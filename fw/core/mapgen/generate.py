@@ -28,7 +28,12 @@ import math
 from dataclasses import dataclass, field
 
 from fw.core.mapgen import noise
-from fw.core.mapgen.attributes import RegionProfile, profile_region
+from fw.core.mapgen.attributes import (
+    DEFAULT_TERRAIN,
+    ROUTING_TERRAIN,
+    RegionProfile,
+    profile_region,
+)
 from fw.core.world import World, WorldError
 
 # The canvas. Fictional worlds have no coordinate system (§34), so these are the same
@@ -779,9 +784,36 @@ class MapGenerator:
             self.world.add_route_segment(
                 p.entity_id, q.entity_id, round(length, 1),
                 medium="road", quality=0.8, entity_id=self._road_entity(),
-                terrain=self.profiles[p.region_id].dominant)
+                terrain=self._road_terrain(path))
             laid += 1
         self.report.roads = laid
+
+    def _road_terrain(self, path: list[tuple[int, int]]) -> str:
+        """What ground this road crosses, said in the travel engine's words.
+
+        A road drawn on the map is only half a road: the writer's real question is "how
+        long does it take", and that is answered by the router, which costs a whole
+        segment at one terrain. So the honest single answer is the ground the road spends
+        most of its length on — not the terrain of the region it starts in, which
+        described a mountain road as running over ice and made it untravellable.
+
+        Water is skipped rather than counted. A road never crosses the sea (those cells
+        cost infinity), but a region the writer named for its coast or its gulf can still
+        be mostly ocean, and a road tagged `water` is one no traveller on land can use.
+        """
+        tally: dict[str, int] = {}
+        for i, j in path:
+            region_id = self.owner[j][i]
+            kind = self.profiles[region_id].dominant if region_id else DEFAULT_TERRAIN
+            going = ROUTING_TERRAIN.get(kind, "plain")
+            if going == "water":
+                continue
+            tally[going] = tally.get(going, 0) + 1
+        if not tally:
+            return "plain"
+        # Most cells wins; ties break alphabetically, so the same world always names the
+        # same road the same way.
+        return min(tally, key=lambda t: (-tally[t], t))
 
     def _already_placed(self, placements: list[Placement]) -> list[Placement]:
         """Settlements the writer positioned themselves, so roads reach them too."""

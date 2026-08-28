@@ -2858,6 +2858,19 @@ class World:
                           built_on: int | None = None, ruined_on: int | None = None,
                           closed_seasons: Sequence[str] = (), danger: str = "low",
                           toll_holder_id: str | None = None) -> RouteSegment:
+        # A closure is tested against the season the day falls in, so a name that is not
+        # one of this calendar's seasons closes the route on no day of any year — the road
+        # reads as impassable in the writer's notes and is wide open in every travel
+        # answer. The example world shipped with exactly that, closing a mountain pass in
+        # "Darkening", which is a month. Refusing here is the only place that can tell the
+        # difference, and it can say what the calendar does call its seasons.
+        known = {s.name for s in self.calendar.seasons}
+        unknown = [s for s in closed_seasons if s not in known]
+        if unknown:
+            names = ", ".join(sorted(known)) or "none — this calendar has no seasons"
+            raise WorldError(
+                f"{unknown[0]!r} is not a season of the {self.calendar.name} calendar "
+                f"(its seasons are: {names})")
         sid = new_id()
         with self.db.transaction():
             self.db.insert("route_segment", {

@@ -36,6 +36,26 @@ TERRAIN_KINDS: dict[str, tuple[float, float]] = {
     "glacier": (0.82, 0.20),
 }
 
+# The travel engine (§22) knows a coarser set of grounds than the map does, and a route
+# segment whose terrain is not one of them is silently unusable: `TransportProfile.speed_on`
+# returns 0 for an unknown terrain and the router drops the segment. So a generated road
+# has to be described in the router's words, not the map's — "hills" is a landscape, "hill"
+# is a travel cost. Every kind above needs an entry here; a test enforces both halves.
+ROUTING_TERRAIN: dict[str, str] = {
+    "ocean": "water",
+    "coast": "plain",
+    "marsh": "marsh",
+    "plain": "plain",
+    "farmland": "plain",
+    "steppe": "plain",
+    "desert": "desert",
+    "forest": "forest",
+    "hills": "hill",
+    "highland": "hill",
+    "mountain": "mountain",
+    "glacier": "mountain",
+}
+
 # Words a writer plausibly uses, mapped to those kinds. Longest match wins, so
 # "mountain pass" reads as mountain rather than nothing.
 TERRAIN_WORDS: dict[str, str] = {

@@ -162,7 +162,10 @@ def seed_renn(path: str = ":memory:") -> World:
                         quality=1.0, terrain="plain", built_on=d(148))
     w.add_route_segment(greyhaven.id, northwatch.id, 95, entity_id=pass_road.id,
                         quality=0.5, terrain="mountain", built_on=d(202),
-                        closed_seasons=["Darkening", "Deepwinter"])
+                        # Closures are tested against the *season*, so the month the prose
+                        # names — Darkening — has to be written as the season it falls in.
+                        # "Darkening" here closed the pass on no day of any year.
+                        closed_seasons=["Fading", "Deepwinter"])
     w.add_route_segment(northwatch.id, rennford.id, 70, entity_id=pass_road.id,
                         quality=0.6, terrain="hill", built_on=d(202))
     w.add_route_segment(rennford.id, blackmere.id, 55, quality=0.9, terrain="plain")

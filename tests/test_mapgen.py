@@ -4,8 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-from fw.core.calendar.kernel import GREGORIAN
-from fw.core.mapgen.attributes import profile_region, read_climate, read_terrain
+from fw.core.calendar.kernel import GREGORIAN, CivilDate
+from fw.core.geo.routing import LAND, Router
+from fw.core.mapgen.attributes import (
+    ROUTING_TERRAIN,
+    TERRAIN_KINDS,
+    profile_region,
+    read_climate,
+    read_terrain,
+)
 from fw.core.mapgen.generate import (
     CELL,
     GENERATED,
@@ -339,3 +346,97 @@ class TestProseIsReadAsWritten:
     def test_plurals_and_endings_still_count(self):
         assert read_terrain("mountains and forested slopes") == {
             "mountain": 1.0, "forest": 0.5}
+
+
+class TestGeneratedRoadsAreTravellable:
+    """A road on the map that no traveller can use is worse than no road.
+
+    The map's terrain vocabulary is richer than the travel engine's — the map draws
+    "hills", the router costs "hill" — and an unknown terrain does not raise: it scores
+    zero and the segment is silently dropped from every route. So the whole generated
+    network was drawn, and invisible to "how long does it take to get there?".
+    """
+
+    def test_every_map_terrain_has_a_travel_equivalent(self):
+        assert set(ROUTING_TERRAIN) == set(TERRAIN_KINDS), (
+            "a terrain kind the map can draw has no travel cost, so roads through it "
+            "vanish from every journey")
+
+    def test_no_travel_equivalent_is_unknown_to_the_router(self):
+        unknown = set(ROUTING_TERRAIN.values()) - set(LAND)
+        assert not unknown, f"the router has no terrain named {sorted(unknown)}"
+
+    def test_generated_roads_carry_a_terrain_the_router_understands(self, blank: World):
+        generate_map(blank)
+        segments = [s for s in blank.route_segments() if s.medium == "road"]
+        assert segments, "the fixture should have produced roads to check"
+        for segment in segments:
+            assert segment.terrain in LAND, (
+                f"road tagged {segment.terrain!r}, which no land profile can travel")
+            assert LAND[segment.terrain] > 0, "a road that is water is nobody's road"
+
+    def test_a_traveller_can_actually_use_a_generated_road(self, blank: World):
+        """The end-to-end version: generate, then ask for a journey and get one."""
+        report = generate_map(blank)
+        placed = [p for p in report.placements if p.entity_id]
+        assert len(placed) >= 2
+        router = Router(blank)
+        journeys = [router.route(a.entity_id, b.entity_id, profile="horse")
+                    for a, b in zip(placed, placed[1:], strict=False)]
+        assert any(j is not None for j in journeys), (
+            "no pair of generated settlements is reachable over the generated roads")
+
+    def test_a_road_is_named_for_the_ground_it_crosses(self, blank: World):
+        """Not for the region it starts in — a road out of the mountains is not all
+        mountain, and the router charges the whole segment at whatever it is told."""
+        generator = MapGenerator(blank, seed="ashmere")
+        generator.generate()
+        spine = next(rid for rid, p in generator.profiles.items()
+                     if p.name == "The Iron Spine")
+        crags = [(i, j) for j in range(GRID) for i in range(GRID)
+                 if generator.owner[j][i] == spine]
+        assert crags
+        assert generator._road_terrain(crags) == "mountain"
+        assert generator._road_terrain([]) == "plain"
+
+    def test_a_road_over_a_region_named_for_the_sea_is_still_dry_land(self, blank: World):
+        """A writer may call a region the Gulf or the Shallows. The road across it is
+        still a road, and tagging it `water` would hide it from every land traveller."""
+        generator = MapGenerator(blank, seed="ashmere")
+        generator.generate()
+        drowned = next(iter(sorted(generator.profiles)))
+        generator.profiles[drowned].terrain_mix = {"ocean": 1.0}
+        cells = [(i, j) for j in range(GRID) for i in range(GRID)
+                 if generator.owner[j][i] == drowned]
+        assert cells
+        assert generator._road_terrain(cells) == "plain"
+
+
+class TestClosuresUseSeasonNames:
+    def test_a_month_name_is_refused_as_a_closed_season(self, renn: World):
+        """The pass was shipped closed in "Darkening", which is a month, so it was
+        closed on no day of any year while reading as impassable in the notes."""
+        a, b = (renn.entity_named("Greyhaven").id, renn.entity_named("Rennford").id)
+        with pytest.raises(WorldError) as caught:
+            renn.add_route_segment(a, b, 10, closed_seasons=["Darkening"])
+        assert "Fading" in str(caught.value)          # says what it should have written
+
+    def test_the_seeded_pass_really_closes(self, renn: World):
+        """§115's pass road is described as shut by snow; it has to actually shut."""
+        pass_road = renn.entity_named("The Northwatch Pass Road")
+        segments = [s for s in renn.route_segments() if s.entity_id == pass_road.id]
+        assert segments
+        closures = {season for s in segments for season in s.closed_seasons}
+        assert closures, "the pass closes in no season at all"
+        seasons = {s.name for s in renn.calendar.seasons}
+        assert closures <= seasons, f"{closures - seasons} are not seasons"
+
+        # A day in Darkening, the month the pass's own summary says it shuts in.
+        winter = renn.calendar.to_index(CivilDate(PRESENT_YEAR, 5, 40))
+        assert renn.calendar.season(winter) in closures
+        summer = renn.calendar.to_index(CivilDate(PRESENT_YEAR, 3, 20))   # in Highsun
+        for segment in segments:
+            season = renn.calendar.season(winter)
+            if season in segment.closed_seasons:
+                assert not segment.usable_on(winter, season)
+            assert segment.usable_on(summer, renn.calendar.season(summer))
