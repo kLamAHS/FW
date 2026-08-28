@@ -27,7 +27,7 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import noise
+from fw.core.mapgen import guards, noise
 from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
@@ -357,13 +357,13 @@ class MapGenerator:
                 # Sit beside what it borders, pushed outward from their centre of mass.
                 nx = sum(p[0] for p in neighbours) / len(neighbours)
                 ny = sum(p[1] for p in neighbours) / len(neighbours)
-                angle = noise.unit(self.seed, index, 7) * math.tau
-                x = nx + math.cos(angle) * radius * 0.75
-                y = ny + math.sin(angle) * radius * 0.75
+                dx, dy = noise.bearing(self.seed, index, 7)
+                x = nx + dx * radius * 0.75
+                y = ny + dy * radius * 0.75
             else:
-                angle = (index / max(1, len(ordered))) * math.tau
-                x = centre + math.cos(angle) * radius
-                y = centre + math.sin(angle) * radius
+                dx, dy = noise.around(index, max(1, len(ordered)))
+                x = centre + dx * radius
+                y = centre + dy * radius
             # Keyed on the region's NAME, never its id: ids are random per world, so
             # seeding from them would mean two identical worlds grew different maps —
             # and `hash()` is salted per process, so even one world would drift between
@@ -401,10 +401,12 @@ class MapGenerator:
 
     def _borders_of(self, region_id: str) -> list[str]:
         out = []
-        for fact in self.world.facts_where("borders", subject_id=region_id, at=self.at):
+        for fact in guards.sorted_facts(
+                self.world.facts_where("borders", subject_id=region_id, at=self.at)):
             if fact.object_id:
                 out.append(fact.object_id)
-        for fact in self.world.facts_where("borders", object_id=region_id, at=self.at):
+        for fact in guards.sorted_facts(
+                self.world.facts_where("borders", object_id=region_id, at=self.at)):
             out.append(fact.subject_id)
         return sorted(set(out))
 
@@ -450,7 +452,9 @@ class MapGenerator:
         nearest = min(i, j, GRID - 1 - i, GRID - 1 - j)
         if nearest >= shore:
             return 1.0
-        return max(0.0, nearest / shore) ** 0.65
+        # t ** 0.75, by two correctly-rounded square roots rather than a libm pow.
+        t = max(0.0, nearest / shore)
+        return math.sqrt(math.sqrt(t * t * t))
 
     def _fill_depressions(self) -> None:
         """Raise every pit to its lowest outlet, so all land drains to the sea.
@@ -966,8 +970,7 @@ class MapGenerator:
 
         ring: list[list[float]] = []
         for step in range(OUTLINE_RAYS):
-            angle = (step / OUTLINE_RAYS) * math.tau
-            dx, dy = math.cos(angle), math.sin(angle)
+            dx, dy = noise.around(step, OUTLINE_RAYS)
             reach = 0.0
             distance = 0.0
             while distance < GRID:
@@ -1064,14 +1067,16 @@ class MapGenerator:
         return max(drops) if drops else 0.0
 
     def _population_of(self, entity_id: str) -> int:
-        facts = self.world.facts_where("population", subject_id=entity_id, at=self.at)
+        facts = guards.sorted_facts(
+            self.world.facts_where("population", subject_id=entity_id, at=self.at))
         if not facts or not facts[-1].value:
             return 0
         digits = "".join(ch for ch in facts[-1].value if ch.isdigit())
         return int(digits) if digits else 0
 
     def _is_capital(self, entity_id: str) -> bool:
-        return bool(self.world.facts_where("capital_of", subject_id=entity_id, at=self.at))
+        return bool(guards.sorted_facts(
+            self.world.facts_where("capital_of", subject_id=entity_id, at=self.at)))
 
 
 def _terrain_colour(kind: str) -> str:

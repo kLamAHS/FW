@@ -17,6 +17,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+from fw.core.mapgen import guards
 from fw.core.world import World
 
 # Terrain kinds the generator understands, each with the elevation and roughness it
@@ -216,7 +217,10 @@ def profile_region(world: World, entity_id: str, *, at: int | None = None) -> Re
     profile = RegionProfile(entity_id=entity_id, name=entity.name)
 
     def value_of(key: str) -> str | None:
-        facts = world.facts_where(key, subject_id=entity_id, at=at)
+        # Sorted, because SQLite returns rows in whatever order it finds them and that
+        # order shifts as the file is edited — so an unsorted read makes "the latest
+        # assertion" mean something different after an unrelated change elsewhere.
+        facts = guards.sorted_facts(world.facts_where(key, subject_id=entity_id, at=at))
         return facts[-1].value if facts else None
 
     # ---- terrain: a token if the writer set one, else their prose, else a default
@@ -275,10 +279,12 @@ def profile_region(world: World, entity_id: str, *, at: int | None = None) -> Re
 
     # ---- what it makes. The seed tags resources with `note`, so read both.
     resources: list[str] = []
-    for fact in world.facts_where("produces", subject_id=entity_id, at=at):
+    for fact in guards.sorted_facts(
+            world.facts_where("produces", subject_id=entity_id, at=at)):
         target = world.get_entity(fact.object_id) if fact.object_id else None
         resources.append(target.name if target else (fact.value or ""))
-    for fact in world.facts_where("note", subject_id=entity_id, at=at):
+    for fact in guards.sorted_facts(
+            world.facts_where("note", subject_id=entity_id, at=at)):
         if fact.value:
             resources.append(fact.value)
     profile.resources = tuple(r for r in dict.fromkeys(resources) if r)
@@ -296,7 +302,8 @@ def profile_region(world: World, entity_id: str, *, at: int | None = None) -> Re
         profile.traces["coastal"] = Trace(True, "its description reaches the sea")
 
     profile.settlements = tuple(
-        f.subject_id for f in world.facts_where("located_in", object_id=entity_id, at=at)
+        f.subject_id for f in guards.sorted_facts(
+            world.facts_where("located_in", object_id=entity_id, at=at))
         if (e := world.get_entity(f.subject_id)) is not None
         and e.type_key in ("settlement", "holding", "site")
     )

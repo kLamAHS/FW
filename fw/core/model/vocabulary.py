@@ -233,6 +233,11 @@ PREDICATES: tuple[PredicateDef, ...] = (
          description="Where a group is seated — its hall, chapterhouse or stronghold."),
     _rel("active_in", "active in", "has_presence", category="geography",
          description="Where a group operates, which may be far wider than its seat."),
+    # A river system is a tree: the Renn is one river with tributaries, not five
+    # rivers that happen to touch. Naming that relation is what lets a generated
+    # channel take the writer's river name up its own largest branch and stop.
+    _rel("flows_into", "flows into", "has_tributary", category="geography",
+         description="A watercourse joining a greater one, or reaching the sea."),
 
     # -- economy (§17, §19)
     _rel("produces", "produces", "produced_by", category="economy"),
@@ -261,6 +266,19 @@ PREDICATES: tuple[PredicateDef, ...] = (
 
     # -- properties. Anything a writer might want dated goes through the same spine, which
     # is why 'current location' and 'social rank' are facts rather than entity columns.
+    # -- geography, for things a map derives and a writer may correct
+    _prop("feature_kind", "Feature kind", category="geography",
+          description="What a natural feature is: forest, marsh, downs, waste, ice."),
+    _prop("navigable", "Navigable", category="geography",
+          description="Whether a watercourse carries traffic, and to what draught."),
+    _prop("extent", "Extent", category="geography",
+          description="How much ground something covers, in the writer's own words."),
+    _prop("area", "Area", category="geography",
+          description="Ground covered, in square world units."),
+    # Where a generated feature remembers what it was called. Without it a regenerated
+    # map renames every town the writer has renamed.
+    _prop("map_key", "Map key", category="geography",
+          description="The generator's stable name for this feature."),
     _prop("gender", "Gender", category="identity"),
     _prop("alias", "Alias", category="identity"),
     _prop("honorific", "Honorific", category="identity"),

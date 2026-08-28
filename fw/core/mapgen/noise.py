@@ -100,3 +100,77 @@ def shuffled(seed: str, items: list) -> list:
     """A stable permutation — a deterministic stand-in for random.shuffle."""
     order = sorted(range(len(items)), key=lambda i: (unit(seed, i), i))
     return [items[i] for i in order]
+
+
+# ---------------------------------------------------------------------------
+# A fixed ring of unit vectors, so nothing in the generator ever calls sin or cos.
+#
+# `math.sin` and `math.cos` are libm calls, and libm is not required to be correctly
+# rounded: two machines can disagree in the last bit. That is enough to move a
+# coastline by a cell, which is enough to break a golden file and to break the promise
+# that a world generates the same map everywhere. These values were computed once, at
+# the time this was written, and are now literals like any other constant.
+DIRECTIONS: tuple[tuple[float, float], ...] = (
+    (+1, +0),
+    (+0.98078528040323043, +0.19509032201612825),
+    (+0.92387953251128674, +0.38268343236508978),
+    (+0.83146961230254524, +0.55557023301960218),
+    (+0.70710678118654757, +0.70710678118654746),
+    (+0.55557023301960229, +0.83146961230254524),
+    (+0.38268343236508984, +0.92387953251128674),
+    (+0.19509032201612833, +0.98078528040323043),
+    (+6.123233995736766e-17, +1),
+    (-0.19509032201612819, +0.98078528040323043),
+    (-0.38268343236508973, +0.92387953251128674),
+    (-0.55557023301960196, +0.83146961230254546),
+    (-0.70710678118654746, +0.70710678118654757),
+    (-0.83146961230254535, +0.55557023301960218),
+    (-0.92387953251128674, +0.38268343236508989),
+    (-0.98078528040323043, +0.19509032201612861),
+    (-1, +1.2246467991473532e-16),
+    (-0.98078528040323043, -0.19509032201612836),
+    (-0.92387953251128685, -0.38268343236508967),
+    (-0.83146961230254546, -0.55557023301960196),
+    (-0.70710678118654768, -0.70710678118654746),
+    (-0.55557023301960218, -0.83146961230254524),
+    (-0.38268343236509034, -0.92387953251128652),
+    (-0.19509032201612866, -0.98078528040323032),
+    (-1.8369701987210297e-16, -1),
+    (+0.1950903220161283, -0.98078528040323043),
+    (+0.38268343236509, -0.92387953251128663),
+    (+0.55557023301960184, -0.83146961230254546),
+    (+0.70710678118654735, -0.70710678118654768),
+    (+0.83146961230254524, -0.55557023301960218),
+    (+0.92387953251128652, -0.38268343236509039),
+    (+0.98078528040323032, -0.19509032201612872),
+)
+
+
+def direction(index: int) -> tuple[float, float]:
+    """The unit vector at `index`/32 of a turn."""
+    return DIRECTIONS[index % len(DIRECTIONS)]
+
+
+def bearing(seed: str, *coords: int) -> tuple[float, float]:
+    """A stable unit vector for a seed and a lattice point."""
+    return direction(int(unit(seed, *coords) * len(DIRECTIONS)))
+
+
+def around(step: int, of: int) -> tuple[float, float]:
+    """The unit vector `step`/`of` of the way round a circle.
+
+    Interpolated between two table entries and renormalised, so any number of evenly
+    spread directions is available without a libm call. `sqrt` is exempt from that ban:
+    IEEE 754 requires it to be correctly rounded, so every machine agrees.
+    """
+    if of <= 0:
+        return DIRECTIONS[0]
+    position = (step % of) * len(DIRECTIONS) / of
+    low = int(position) % len(DIRECTIONS)
+    high = (low + 1) % len(DIRECTIONS)
+    t = position - int(position)
+    ax, ay = DIRECTIONS[low]
+    bx, by = DIRECTIONS[high]
+    x, y = ax + (bx - ax) * t, ay + (by - ay) * t
+    length = math.sqrt(x * x + y * y) or 1.0
+    return (x / length, y / length)

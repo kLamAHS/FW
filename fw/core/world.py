@@ -46,7 +46,7 @@ from fw.core.model.vocabulary import (
     SCALES,
     inverse_of,
 )
-from fw.core.store.db import Database, decode_json, now_iso
+from fw.core.store.db import Database, decode_json, encode_json, now_iso
 
 
 class WorldError(RuntimeError):
@@ -82,6 +82,7 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                        "dynasty_root_id": ("entity", "null")}},
     "secret": {"refs": {"about_id": ("entity", "skip"), "fact_id": ("fact", "null")}},
     "geometry": {"refs": {"entity_id": ("entity", "skip")}},
+    "app_state": {"refs": {"branch_id": ("branch", "skip")}},
     "route_segment": {"refs": {"entity_id": ("entity", "skip"),
                                "from_entity_id": ("entity", "skip"),
                                "to_entity_id": ("entity", "skip"),
@@ -113,14 +114,14 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
 
 # Tables whose updates undo by writing the previous values straight back. Anything
 # here must be in _RESTORE_SPEC too, so its inserts and deletes invert as well.
-_PLAIN_UPDATABLE = ("era",)
+_PLAIN_UPDATABLE = ("era", "app_state")
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
 _RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
                   "interpretation", "knowledge_state", "causal_link",
-                  "entity_override", "era")
+                  "entity_override", "era", "app_state")
 
 # How undo's toast names a change to each kind of row.
 _ACTION_NOUNS: dict[str, str] = {
@@ -131,6 +132,7 @@ _ACTION_NOUNS: dict[str, str] = {
     "event_participant": "an event participation",
     "scene_participant": "a scene participation",
     "interpretation": "an interpretation",
+    "app_state": "a map decision",
 }
 
 # What the FK cascade takes with a row of each table — the children a raw DELETE must
@@ -2854,6 +2856,69 @@ class World:
         )
         wanted = {r["geometry_id"] for r in rows}
         return [g for g in self.geometries(at=at) if g.id in wanted]
+
+    # ---- remembered decisions (§66) ---------------------------------------
+
+    def remember(self, namespace: str, key: str, value: Any) -> None:
+        """Record a decision the writer made, so the next run honours it.
+
+        This is where "I rejected that river" and "I renamed that town" live. It is not
+        a fact about the world — the world does not contain a rejected river — and it
+        cannot live in the client, because a decision the writer loses by opening a new
+        browser is a decision they have to make again every time.
+
+        Branch-scoped, because a what-if may keep what canon rejected. Logged like any
+        other change, so it undoes with the action that made it.
+        """
+        row = self._state_row(namespace, key)
+        with self.db.transaction():
+            if row is None:
+                sid = new_id()
+                # Encoded here rather than left to the insert helper: that only
+                # JSON-encodes dicts and lists, so a bare string would be stored raw
+                # and read back as undecodable.
+                self.db.insert("app_state", {
+                    "id": sid, "project_id": self.project_id,
+                    "branch_id": self.branch_id, "namespace": namespace, "key": key,
+                    "value": encode_json(value), "updated_at": now_iso(),
+                })
+                self._log_revision("app_state", sid, "insert", None, {"value": value})
+            else:
+                before = decode_json(row["value"], None)
+                self.db.execute(
+                    "UPDATE app_state SET value = ?, updated_at = ? WHERE id = ?",
+                    (encode_json(value), now_iso(), row["id"]))
+                self._log_revision("app_state", row["id"], "update",
+                                   {"value": before}, {"value": value})
+
+    def _state_row(self, namespace: str, key: str):
+        return self.db.one(
+            "SELECT * FROM app_state WHERE project_id = ? AND branch_id = ? "
+            "AND namespace = ? AND key = ?",
+            (self.project_id, self.branch_id, namespace, key))
+
+    def recall(self, namespace: str, key: str) -> Any | None:
+        row = self._state_row(namespace, key)
+        return decode_json(row["value"], None) if row else None
+
+    def recall_all(self, namespace: str) -> dict[str, Any]:
+        """Every decision in a namespace, in key order."""
+        return {r["key"]: decode_json(r["value"], None) for r in self.db.query(
+            "SELECT key, value FROM app_state WHERE project_id = ? AND branch_id = ? "
+            "AND namespace = ? ORDER BY key",
+            (self.project_id, self.branch_id, namespace))}
+
+    def forget(self, namespace: str, key: str) -> None:
+        row = self._state_row(namespace, key)
+        if row is None:
+            return
+        with self.db.transaction():
+            self.db.execute("DELETE FROM app_state WHERE id = ?", (row["id"],))
+            self._log_revision("app_state", row["id"], "delete", _snapshot(row), None)
+
+    def current_action_id(self) -> str:
+        """The id of the action being written — what undo groups on."""
+        return self._current_action_id()
 
     def add_route_segment(self, from_entity_id: str, to_entity_id: str, length: float, *,
                           medium: str = "road", quality: float = 1.0,

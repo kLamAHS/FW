@@ -108,10 +108,13 @@ def _start(sites: list[Site], edges: list[tuple[int, int]],
         gy = (order // columns) * 6.0
         radius = 0.6 + 0.34 * len(group)
         for k, n in enumerate(group):
-            angle = 2.0 * math.pi * k / len(group)
+            # A direction from the fixed table rather than sin and cos: libm is not
+            # required to be correctly rounded and differs between builds, and one
+            # differing bit here is a different continent.
+            dx, dy = noise.around(k, len(group))
             wobble = noise.signed(f"{seed}|start", n) * 0.28
-            places[n] = [gx + math.cos(angle) * radius * (1.0 + wobble),
-                         gy + math.sin(angle) * radius * (1.0 + wobble)]
+            places[n] = [gx + dx * radius * (1.0 + wobble),
+                         gy + dy * radius * (1.0 + wobble)]
     for n, site in enumerate(sites):
         if site.fixed is not None:
             places[n] = [site.fixed[0], site.fixed[1]]

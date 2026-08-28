@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -375,6 +375,20 @@ CREATE INDEX ix_holding_branch ON title_holding(branch_id);
 
 -- Geometry is versioned by validity, never overwritten: §91 insists that political
 -- geography support changing boundaries rather than replacing current regions.
+-- Decisions the writer has made about generated content, and anything else the
+-- application needs to remember between sessions. Branch-scoped, because a what-if
+-- may reject a river the main timeline keeps.
+CREATE TABLE app_state (
+    id          TEXT PRIMARY KEY,
+    project_id  TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    branch_id   TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+    namespace   TEXT NOT NULL,
+    key         TEXT NOT NULL,
+    value       TEXT NOT NULL DEFAULT '{}',
+    updated_at  TEXT NOT NULL
+) STRICT;
+CREATE UNIQUE INDEX ux_app_state ON app_state(project_id, branch_id, namespace, key);
+
 CREATE TABLE geometry (
     id            TEXT PRIMARY KEY,
     project_id    TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
@@ -633,5 +647,20 @@ MIGRATIONS: dict[int, str] = {
     #    there is one careless render away from being painted on the map.
     6: """
         ALTER TABLE geometry ADD COLUMN props TEXT NOT NULL DEFAULT '{}'
+    """,
+    # 7: the writer's standing decisions about the generated map — a rejected river
+    #    stays rejected, a renamed town keeps its name — need somewhere to live that
+    #    is neither a fact about the world nor client state that a new browser loses.
+    7: """
+        CREATE TABLE app_state (
+            id          TEXT PRIMARY KEY,
+            project_id  TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+            branch_id   TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+            namespace   TEXT NOT NULL,
+            key         TEXT NOT NULL,
+            value       TEXT NOT NULL DEFAULT '{}',
+            updated_at  TEXT NOT NULL
+        ) STRICT;
+        CREATE UNIQUE INDEX ux_app_state ON app_state(project_id, branch_id, namespace, key)
     """,
 }

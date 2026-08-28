@@ -1019,6 +1019,7 @@ class TestSchemaMigration:
         conn.execute("DROP INDEX ix_holding_branch")
         conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
         conn.execute("ALTER TABLE geometry DROP COLUMN props")
+        conn.execute("DROP TABLE app_state")
         conn.executescript("""
             CREATE TABLE causal_link_v1 (
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
@@ -1047,6 +1048,8 @@ class TestSchemaMigration:
                                    "WHERE name = 'entity_override'") is not None
             assert "props" in {r["name"] for r in upgraded.db.query(
                 "PRAGMA table_info(geometry)")}
+            assert upgraded.db.one("SELECT 1 FROM sqlite_master "
+                                   "WHERE name = 'app_state'") is not None
             # old rows carry '' (beyond undo); new actions are undoable again
             fresh = upgraded.add_entity("settlement", "Modern")
             assert "Modern" in upgraded.undo()
@@ -1618,6 +1621,7 @@ class TestEras:
             DROP TABLE era;
             ALTER TABLE era_v4 RENAME TO era;
             ALTER TABLE geometry DROP COLUMN props;
+            DROP TABLE app_state;
         """)
         conn.execute("PRAGMA user_version = 4")
         conn.close()
