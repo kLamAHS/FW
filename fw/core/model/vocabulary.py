@@ -63,6 +63,14 @@ ENTITY_TYPES: tuple[EntityTypeDef, ...] = (
     EntityTypeDef("faction", "Faction", "Factions", "politics", "flag"),
     EntityTypeDef("organization", "Organization", "Organizations", "politics", "building"),
     EntityTypeDef("guild", "Guild", "Guilds", "economy", "hammer"),
+    # Groups of people are not only noble houses. These are defaults, not a closed list:
+    # §60 means a writer who needs a caste, a lodge or a crew adds one in a click.
+    EntityTypeDef("order", "Order", "Orders", "politics", "shield",
+                  ("founded", "seat", "vows")),
+    EntityTypeDef("tribe", "Tribe", "Tribes", "people", "people"),
+    EntityTypeDef("company", "Company", "Companies", "military", "banner",
+                  ("founded", "captain", "strength")),
+    EntityTypeDef("household", "Household", "Households", "people", "hearth"),
     EntityTypeDef("religion", "Religion", "Religions", "culture", "temple"),
     EntityTypeDef("culture", "Culture", "Cultures", "culture", "mask"),
     EntityTypeDef("language", "Language", "Languages", "culture", "speech"),
@@ -188,6 +196,15 @@ PREDICATES: tuple[PredicateDef, ...] = (
     _rel("sworn_to", "sworn to", "has_sworn", category="politics"),
     _rel("member_of", "member of", "has_member", category="politics"),
     _rel("head_of", "head of", "headed_by", category="politics"),
+    # A minor house is minor because of what it is sworn to, so the hierarchy is a
+    # relationship rather than a type. `subgroup_of` generalises it past houses: a
+    # chapter of an order, a lodge of a guild, a sept of a clan. Transitive, so one
+    # walk answers "everything ultimately under this banner".
+    _rel("subgroup_of", "a branch of", "has_branch", transitive=True, category="politics",
+         description="A lesser body within a greater one — a cadet house, a chapter, "
+                     "a lodge, a sept."),
+    _rel("cadet_branch_of", "a cadet branch of", "has_cadet_branch", category="politics",
+         description="Descended from a greater house rather than merely sworn to it."),
     _rel("allied_with", "allied with", symmetric=True, category="politics"),
     _rel("at_war_with", "at war with", symmetric=True, category="politics"),
     _rel("claims", "claims", "claimed_by", category="politics"),
@@ -209,6 +226,13 @@ PREDICATES: tuple[PredicateDef, ...] = (
     _rel("connects", "connects", "connected_by", category="geography"),
     _rel("flows_through", "flows through", "has_flowing_through", category="geography"),
     _rel("capital_of", "capital of", "has_capital", category="geography"),
+    # Where a *group* belongs. Distinct from located_in, which places a thing inside a
+    # place: a guild is seated in one city and active across three regions, and
+    # flattening those into one predicate loses the question a writer actually asks.
+    _rel("based_in", "based in", "hosts", category="geography",
+         description="Where a group is seated — its hall, chapterhouse or stronghold."),
+    _rel("active_in", "active in", "has_presence", category="geography",
+         description="Where a group operates, which may be far wider than its seat."),
 
     # -- economy (§17, §19)
     _rel("produces", "produces", "produced_by", category="economy"),

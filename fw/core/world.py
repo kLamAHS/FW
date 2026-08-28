@@ -269,7 +269,9 @@ class World:
         )
         if branch_row is None:
             raise WorldError(f"no branch named {branch!r}")
-        return cls(db, project_id, branch_row["id"])
+        world = cls(db, project_id, branch_row["id"])
+        world.sync_vocabulary()      # defaults added since this world was created
+        return world
 
     def close(self) -> None:
         self.db.close()
@@ -283,6 +285,53 @@ class World:
     @property
     def name(self) -> str:
         return self.db.scalar("SELECT name FROM project WHERE id = ?", (self.project_id,))
+
+    def sync_vocabulary(self) -> int:
+        """Add builtin types and predicates a world was created before.
+
+        The default vocabulary grows as the application does, and a world written last
+        year should not be locked out of a predicate this year's build knows about —
+        that would make "unknown predicate" the reward for having started early. Only
+        *missing* keys are inserted, so a writer's edits to a builtin row, and every
+        row they invented themselves, are left exactly alone.
+        """
+        added = 0
+        have_types = {r["key"] for r in self.db.query(
+            "SELECT key FROM entity_type WHERE project_id = ?", (self.project_id,))}
+        missing_types = [t for t in ENTITY_TYPES if t.key not in have_types]
+        if missing_types:
+            self.db.insert_many("entity_type", [{
+                "id": new_id(), "project_id": self.project_id, "key": t.key,
+                "label": t.label, "plural": t.plural, "category": t.category,
+                "icon": t.icon, "core_fields": list(t.core_fields), "is_builtin": 1,
+            } for t in missing_types])
+            added += len(missing_types)
+
+        have_scales = {r["key"] for r in self.db.query(
+            "SELECT key FROM scale WHERE project_id = ?", (self.project_id,))}
+        missing_scales = [s for s in SCALES if s.key not in have_scales]
+        if missing_scales:
+            self.db.insert_many("scale", [{
+                "id": new_id(), "project_id": self.project_id, "key": s.key,
+                "label": s.label, "steps": list(s.steps),
+            } for s in missing_scales])
+            added += len(missing_scales)
+
+        have_predicates = {r["key"] for r in self.db.query(
+            "SELECT key FROM predicate WHERE project_id = ?", (self.project_id,))}
+        missing_predicates = [p for p in PREDICATES if p.key not in have_predicates]
+        if missing_predicates:
+            self.db.insert_many("predicate", [{
+                "id": new_id(), "project_id": self.project_id, "key": p.key,
+                "label": p.label, "kind": p.kind, "inverse_key": p.inverse_key,
+                "symmetric": int(p.symmetric), "transitive": int(p.transitive),
+                "datatype": p.datatype, "scale_key": p.scale_key,
+                "domain_type_keys": list(p.domain_type_keys),
+                "range_type_keys": list(p.range_type_keys), "category": p.category,
+                "description": p.description, "is_builtin": 1,
+            } for p in missing_predicates])
+            added += len(missing_predicates)
+        return added
 
     def _install_vocabulary(self) -> None:
         """Seed the starting types, predicates and scales. All of them editable after."""

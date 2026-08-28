@@ -32,6 +32,7 @@ import { SceneView } from './views/SceneView'
 import { SuccessionView } from './views/SuccessionView'
 import { TravelView } from './views/TravelView'
 import { ContinuityView, EntitiesView, EventsView } from './views/BrowseView'
+import { GroupsView } from './views/GroupsView'
 
 const VIEWS = [
   { key: 'dashboard', label: 'World' },
@@ -42,6 +43,7 @@ const VIEWS = [
   { key: 'succession', label: 'Succession' },
   { key: 'scenes', label: 'Scenes' },
   { key: 'travel', label: 'Travel' },
+  { key: 'groups', label: 'Groups' },
   { key: 'entities', label: 'Everything' },
   { key: 'continuity', label: 'Checks' },
 ] as const
@@ -235,6 +237,9 @@ export function App() {
                        calendar={world.data.calendar} onMutate={bump} />
           )}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
+          {view === 'groups' && (
+            <GroupsView day={currentDay} onSelect={setSelected} version={version} />
+          )}
           {view === 'entities' && (
             <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}
                           version={version} vocabulary={vocabulary.data} />

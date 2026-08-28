@@ -34,7 +34,12 @@ class TestWorldEndpoints:
     def test_world_summary(self, client):
         body = client.get("/api/world").json()
         assert body["name"] == "The Kingdom of Renn"
-        assert body["counts"]["total"] == 35
+        # A count, not a pinned number: the example world is meant to grow, and a
+        # literal here only ever fails for the wrong reason.
+        assert body["counts"]["total"] == sum(
+            n for key, n in body["counts"].items()
+            if key not in ("total", "facts", "events", "scenes", "secrets"))
+        assert body["counts"]["total"] >= 35     # §115's floor
         assert body["calendar"]["name"] == "Rennish"
         assert body["calendar"]["days_in_year"] == 355
         assert len(body["calendar"]["months"]) == 5
@@ -66,7 +71,8 @@ class TestWorldEndpoints:
 
 class TestEntities:
     def test_list_and_filter(self, client):
-        assert len(client.get("/api/entities").json()) == 35
+        everything = client.get("/api/entities").json()
+        assert len(everything) == client.get("/api/world").json()["counts"]["total"]
         people = client.get("/api/entities", params={"type_key": "person"}).json()
         assert len(people) == 10
         assert all(e["type_key"] == "person" for e in people)

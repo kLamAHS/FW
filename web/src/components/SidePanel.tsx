@@ -59,6 +59,7 @@ export function SidePanel(
   if (!bundle.data) return null
 
   const { entity, facts, events, titles, knowledge, scenes } = bundle.data
+  const within = bundle.data.within ?? []
 
   const changed = () => {
     bundle.reload()
@@ -79,6 +80,19 @@ export function SidePanel(
         <TypeChip type={entity.type_key} />
         {entity.confidence !== 'canon' && <Badge kind="disputed">{entity.confidence}</Badge>}
       </div>
+      {within.length > 0 && (
+        <div className="small muted" style={{ marginBottom: 8 }}>
+          in{' '}
+          {within.map((place, i) => (
+            <span key={place.id}>
+              {i > 0 && ' → '}
+              <button className="link" onClick={() => onSelect(place.id)}>
+                {place.name}
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {mode === 'edit' && vocabulary ? (
         <EntityForm

@@ -256,6 +256,8 @@ export interface SecretInfo {
 
 export interface EntityBundle {
   entity: Entity
+  /** Containment chain upward — the region, then the realm. */
+  within: { id: string; name: string; type_key: string }[]
   facts: Fact[]
   events: { id: string; name: string; start_day: number | null; type_key: string; summary: string }[]
   titles: { id: string; name: string; rank: number; succession_law: string }[]
@@ -265,6 +267,41 @@ export interface EntityBundle {
   }[]
   geometry: { kind: string; coordinates: unknown; layer: string } | null
   scenes: { id: string; title: string; day: number | null }[]
+}
+
+export interface PlaceNode {
+  entity: Entity
+  depth: number
+  settlement_type: string | null
+  /** How many things sit at or below this node. */
+  inside: number
+  children: PlaceNode[]
+  groups: Entity[]
+  people: Entity[]
+  other: Entity[]
+}
+
+export interface PlaceContents {
+  tree: PlaceNode
+  /** The containment chain upward: region, then realm. */
+  within: Entity[]
+  groups: { entity: Entity; how: string }[]
+}
+
+export interface GroupSummary {
+  entity: Entity
+  members: number
+  branches: number
+  seats: { id: string; name: string; how: string }[]
+}
+
+export interface GroupDetail {
+  entity: Entity
+  members: { entity: Entity; relation: string; note: string }[]
+  branches: { entity: Entity; depth: number }[]
+  seats: { entity: Entity; how: string }[]
+  above: Entity[]
+  group_types: string[]
 }
 
 export interface Finding {
@@ -502,6 +539,11 @@ export const api = {
   consequences: (id: string) =>
     get<{ id: string; name: string; depth: number; start_day: number | null; summary: string }[]>(
       `/events/${id}/consequences`),
+
+  placeContents: (id: string, at?: number) =>
+    get<PlaceContents>(`/places/${id}/contents`, { at }),
+  groups: (at?: number) => get<GroupSummary[]>('/groups', { at }),
+  group: (id: string, at?: number) => get<GroupDetail>(`/groups/${id}`, { at }),
 
   secrets: (at?: number) => get<SecretInfo[]>('/secrets', { at }),
   scenes: () => get<SceneSummary[]>('/scenes'),
