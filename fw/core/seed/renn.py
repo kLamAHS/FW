@@ -44,7 +44,12 @@ RENNISH = Calendar(
     weekdays=("Kingsday", "Mareday", "Orrenday", "Veyneday", "Marrday",
               "Fordday", "Restday", "Hallow", "Emberday", "Lastday"),
     leap_every=4,
-    eras=(Era("Age of Founding", "AF", 1, 199), Era("Age of Kings", "AK", 200)),
+    # Three ages, two of which are the ordinary kind — a name appended to the year — and
+    # one that shows what §3's dividers are really for: the Long Dark counts *backwards*
+    # toward the founding, exactly as BC does, so 120 BD is older than 40 BD.
+    eras=(Era("The Long Dark", "BD", end_year=0, counts_backward=True),
+          Era("Age of Founding", "AF", 1, 199),
+          Era("Age of Kings", "AK", 200)),
     seasons=(Season("Deepwinter", 1), Season("Greening", 62), Season("Highsummer", 135),
              Season("Harvest", 215), Season("Fading", 288)),
 )

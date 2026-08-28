@@ -38,6 +38,7 @@ export interface Fact {
 export interface WorldDate {
   day: number
   text: string
+  /** The absolute year facts are stored against. */
   year: number
   month: number
   month_name: string
@@ -45,6 +46,24 @@ export interface WorldDate {
   weekday: string
   season: string | null
   era: string | null
+  era_name: string | null
+  /** What the world's own reckoning calls this year — counts the other way in a BC-style era. */
+  era_year: number | null
+}
+
+export interface EraInfo {
+  name: string
+  abbreviation: string
+  start_year: number | null
+  end_year: number | null
+  counts_backward: boolean
+  reckons_from: number | null
+}
+
+/** An era as stored, with its row id — what the editor lists. */
+export interface EraRow extends EraInfo {
+  id: string
+  calendar_id: string
 }
 
 export interface CalendarInfo {
@@ -52,7 +71,7 @@ export interface CalendarInfo {
   months: { name: string; days: number }[]
   weekdays: string[]
   days_in_year: number
-  eras: { name: string; abbreviation: string; start_year: number; end_year: number | null }[]
+  eras: EraInfo[]
   seasons: { name: string; start: number }[]
 }
 
@@ -420,8 +439,14 @@ export const api = {
     send<{ name: string }>('/branches/open', 'POST', { name }),
   vocabulary: () => get<Vocabulary>('/vocabulary'),
   date: (day: number) => get<WorldDate>(`/date/${day}`),
-  dayIndex: (year: number, month = 1, day = 1) =>
-    get<WorldDate>('/day', { year, month, day }),
+  dayIndex: (year: number, month = 1, day = 1, era?: string | null) =>
+    get<WorldDate>('/day', { year, month, day, era: era || undefined }),
+
+  eras: () => get<EraRow[]>('/eras'),
+  createEra: (era: EraInfo) => send<{ id: string }>('/eras', 'POST', era),
+  updateEra: (id: string, patch: Partial<EraInfo>) =>
+    send<void>(`/eras/${id}`, 'PATCH', patch),
+  deleteEra: (id: string) => send<void>(`/eras/${id}`, 'DELETE'),
   recent: (limit = 8) => get<{ entity: Entity; at: string }[]>('/recent', { limit }),
   history: (id: string) => get<RevisionEntry[]>(`/entities/${id}/history`),
 

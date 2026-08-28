@@ -223,17 +223,42 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         return _date_out(world, day)
 
     @app.get("/api/day", response_model=S.DateOut)
-    def get_day(year: int, month: int = 1, day: int = 1) -> S.DateOut:
+    def get_day(year: int, month: int = 1, day: int = 1,
+                era: str | None = None) -> S.DateOut:
         """Civil date → day index, for form inputs.
 
         The client could compute this itself from the calendar payload, but leap rules
         make client-side conversion a second implementation waiting to disagree with the
         first. One source of truth; the round trip is a few milliseconds on localhost.
+
+        Naming an era reads the year in that era's terms, so "100 BR" can be typed as
+        readily as it is displayed — a backward era means 100 BR is an earlier year than
+        50 BR, and the conversion is the calendar's business, not the form's.
         """
         try:
-            return _date_out(world, world.day(year, month, day))
+            return _date_out(world, world.calendar.date_in_era(year, month, day, era))
         except CalendarError as exc:
             raise HTTPException(400, str(exc)) from exc
+
+    @app.get("/api/eras")
+    def list_eras() -> list[dict[str, Any]]:
+        """§3: the world's own time dividers."""
+        return world.eras()
+
+    @app.post("/api/eras", status_code=201)
+    def create_era(payload: S.EraIn) -> dict[str, str]:
+        return {"id": world.add_era(
+            payload.name, payload.abbreviation, start_year=payload.start_year,
+            end_year=payload.end_year, counts_backward=payload.counts_backward,
+            reckons_from=payload.reckons_from)}
+
+    @app.patch("/api/eras/{era_id}", status_code=204)
+    def patch_era(era_id: str, payload: S.EraPatch) -> None:
+        world.update_era(era_id, **payload.model_dump(exclude_unset=True))
+
+    @app.delete("/api/eras/{era_id}", status_code=204)
+    def remove_era(era_id: str) -> None:
+        world.delete_era(era_id)
 
     @app.get("/api/recent")
     def get_recent(limit: int = Query(8, le=50)) -> list[dict[str, Any]]:
@@ -986,6 +1011,8 @@ def _date_out(world: World, day: int) -> S.DateOut:
         month_name=calendar.month_name(civil.month), day_of_month=civil.day,
         weekday=calendar.weekday(day), season=calendar.season(day),
         era=era.abbreviation if era else None,
+        era_name=era.name if era else None,
+        era_year=era.year_of(civil.year) if era else None,
     )
 
 
@@ -997,7 +1024,9 @@ def _calendar_out(world: World) -> S.CalendarOut:
         weekdays=list(calendar.weekdays),
         days_in_year=calendar.common_year_days,
         eras=[{"name": e.name, "abbreviation": e.abbreviation,
-               "start_year": e.start_year, "end_year": e.end_year}
+               "start_year": e.start_year, "end_year": e.end_year,
+               "counts_backward": e.counts_backward,
+               "reckons_from": e.reckons_from}
               for e in calendar.eras],
         seasons=[{"name": s.name, "start": s.start_day_of_year}
                  for s in calendar.seasons],

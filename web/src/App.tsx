@@ -20,6 +20,7 @@ import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
 import { BranchPicker } from './components/BranchPicker'
+import { EraEditor } from './components/EraEditor'
 import { Launcher, WorldPicker } from './components/WorldPicker'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
@@ -65,6 +66,7 @@ export function App() {
   const [creating, setCreating] = useState(false)
   const [picking, setPicking] = useState(false)
   const [branching, setBranching] = useState(false)
+  const [editingEras, setEditingEras] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -198,6 +200,7 @@ export function App() {
         snapshots={(snapshots.data ?? []).map((s) => ({ name: s.name, day: s.day }))}
         dateText={dateText}
         season={date.data?.season ?? null}
+        onEditEras={() => setEditingEras(true)}
       />
 
       <div className="main">
@@ -267,6 +270,13 @@ export function App() {
       {branching && (
         <Modal title="Alternate timelines" onClose={() => setBranching(false)}>
           <BranchPicker day={currentDay} dateText={dateText} />
+        </Modal>
+      )}
+
+      {editingEras && (
+        <Modal title="The ages of this world" onClose={() => setEditingEras(false)}>
+          {/* Naming an age changes how every date reads, so the whole app refetches. */}
+          <EraEditor onChanged={bump} />
         </Modal>
       )}
 

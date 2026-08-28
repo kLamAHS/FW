@@ -278,3 +278,78 @@ class TestInterval:
         assert str(Interval()) == "always"
         assert str(Interval(start=exact(5))) == "from 5"
         assert str(Interval(end=exact(9))) == "until 9"
+
+
+class TestEraReckoning:
+    """§3: a world's own BC/AD — time dividers the writer defines."""
+
+    # Before the Reckoning / After the Reckoning: the same shape as BC/AD, with the
+    # earlier era counting backwards and no year zero between them.
+    RECKONING = Calendar(
+        name="Reckoned",
+        months=RENNISH.months,
+        weekdays=RENNISH.weekdays,
+        leap_every=4,
+        eras=(Era("Before the Reckoning", "BR", end_year=0, counts_backward=True),
+              Era("After the Reckoning", "AR", start_year=1, reckons_from=1)),
+    )
+
+    def test_a_backward_era_counts_the_other_way(self):
+        cal = self.RECKONING
+        assert cal.era(-99).abbreviation == "BR"
+        assert cal.era(-99).year_of(-99) == 100
+        assert cal.era(0).year_of(0) == 1           # absolute 0 is 1 BR
+        assert cal.era(1).year_of(1) == 1           # absolute 1 is 1 AR
+
+    def test_there_is_no_year_zero_between_the_eras(self):
+        """The BC/AD convention falls out of the bounds rather than needing a rule."""
+        cal = self.RECKONING
+        rendered = [cal.format(cal.date(y, 1, 1)) for y in (-1, 0, 1, 2)]
+        assert [r.split()[-2:] for r in rendered] == [
+            ["2", "BR"], ["1", "BR"], ["1", "AR"], ["2", "AR"]]
+
+    def test_era_years_round_trip_through_the_day_index(self):
+        cal = self.RECKONING
+        for era_year, abbrev in ((100, "BR"), (1, "BR"), (1, "AR"), (241, "AR")):
+            day = cal.date_in_era(era_year, 2, 3, abbrev)
+            year, era = cal.year_in_era(cal.from_index(day).year)
+            assert (year, era.abbreviation) == (era_year, abbrev)
+
+    def test_a_backward_era_orders_the_way_time_runs(self):
+        """100 BR must be *earlier* than 50 BR, however the numbers read."""
+        cal = self.RECKONING
+        assert cal.date_in_era(100, 1, 1, "BR") < cal.date_in_era(50, 1, 1, "BR")
+        assert cal.date_in_era(50, 1, 1, "BR") < cal.date_in_era(1, 1, 1, "AR")
+
+    def test_parsing_an_unknown_era_says_so(self):
+        with pytest.raises(CalendarError, match="no era called"):
+            self.RECKONING.absolute_year(5, "ZZ")
+
+    def test_a_label_only_era_keeps_the_absolute_year(self):
+        """The existing worlds' behaviour: an era with no reckoning just adds its name."""
+        assert RENNISH.era(312).year_of(312) == 312
+        assert RENNISH.format(RENNISH.date(312, 1, 1)).endswith("312 AK")
+
+    def test_a_forward_era_can_renumber_from_its_own_founding(self):
+        cal = Calendar(name="Founded", months=RENNISH.months,
+                       eras=(Era("Age of Founding", "AF", start_year=200,
+                                 reckons_from=200),))
+        assert cal.era(312).year_of(312) == 113
+        assert cal.absolute_year(113, "AF") == 312
+
+    def test_the_narrowest_era_wins_when_they_overlap(self):
+        """A regency inside an age is the more specific answer, whatever the row order."""
+        cal = Calendar(name="Overlapping", months=RENNISH.months,
+                       eras=(Era("Long Age", "LA", start_year=1, end_year=500),
+                             Era("The Regency", "RG", start_year=240, end_year=246)))
+        assert cal.era(243).abbreviation == "RG"
+        assert cal.era(250).abbreviation == "LA"
+        flipped = Calendar(name="Overlapping", months=RENNISH.months,
+                           eras=tuple(reversed(cal.eras)))
+        assert flipped.era(243).abbreviation == "RG"      # order must not decide it
+
+    def test_a_year_outside_every_era_still_renders(self):
+        cal = Calendar(name="Gapped", months=RENNISH.months,
+                       eras=(Era("Late Age", "LA", start_year=500),))
+        assert cal.era(100) is None
+        assert cal.format(cal.date(100, 1, 1)).endswith("100")

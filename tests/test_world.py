@@ -1530,3 +1530,103 @@ class TestBranches:
         # on canon, nothing happened
         assert [t.name for t in world.titles_held_by(king.id, at=day)] == ["The Crown"]
         assert world.state_at(day).titles[crown.id] == king.id
+
+
+class TestEras:
+    """§3: the writer's own time dividers, stored and reloaded."""
+
+    def test_an_era_added_to_a_finished_world_renames_nothing_stored(self):
+        """A world can grow a BC/AD long after its history is written."""
+        from fw.core.calendar.kernel import GREGORIAN
+        w = World.create(name="Unreckoned", calendar=GREGORIAN)   # no eras yet
+        try:
+            e = w.add_entity("person", "Ancient", exists_from=w.day(-99, 1, 1))
+            stored = w.get_entity(e.id).exists_from
+
+            w.add_era("Before the Reckoning", "BR", end_year=0, counts_backward=True)
+            w.add_era("After the Reckoning", "AR", start_year=1, reckons_from=1)
+
+            assert w.get_entity(e.id).exists_from == stored   # the day index is untouched
+            assert w.calendar.format(stored).endswith("100 BR")
+            assert w.calendar.format(w.day(241, 1, 1)).endswith("241 AR")
+        finally:
+            w.close()
+
+    def test_an_existing_era_keeps_precedence_over_a_wider_new_one(self, world: World):
+        """The seeded world already names its ages; a new open-ended era must not
+        silently rename years an authored era already claims."""
+        world.add_era("After the Reckoning", "AR", start_year=1, reckons_from=1)
+        # Age of Kings starts at 200 and is the later, more specific claim on 241.
+        assert world.calendar.era(241).abbreviation == "AK"
+        # but a year no authored era covers is the new era's to name
+        assert world.calendar.era(-5) is None or world.calendar.era(-5).abbreviation == "AR"
+
+    def test_eras_survive_a_reopen(self, tmp_path):
+        path = tmp_path / "reckoned.fwworld"
+        w = World.create(path, name="Reckoned")
+        w.add_era("Before the Reckoning", "BR", end_year=0, counts_backward=True)
+        w.close()
+
+        again = World.open(path)
+        try:
+            era = again.calendar.era_named("BR")
+            assert era is not None
+            assert era.counts_backward is True
+            assert era.year_of(-49) == 50
+        finally:
+            again.close()
+
+    def test_editing_and_deleting_an_era_refreshes_the_calendar(self, world: World):
+        era_id = world.add_era("Old Name", "ON", start_year=1)
+        assert world.calendar.era_named("ON") is not None
+
+        world.update_era(era_id, name="New Name", abbreviation="NN")
+        assert world.calendar.era_named("ON") is None
+        assert world.calendar.era_named("NN").name == "New Name"
+
+        world.delete_era(era_id)
+        assert world.calendar.era_named("NN") is None
+
+    def test_nonsense_eras_are_refused(self, world: World):
+        with pytest.raises(WorldError, match="name and a short form"):
+            world.add_era("  ", "  ")
+        with pytest.raises(WorldError, match="end before it begins"):
+            world.add_era("Backwards", "BW", start_year=200, end_year=100)
+        world.add_era("First", "F1", start_year=1)
+        with pytest.raises(WorldError, match="already has an era"):
+            world.add_era("Second", "f1", start_year=500)   # case-insensitive clash
+
+    def test_a_version_4_file_gains_era_reckoning(self, tmp_path):
+        """Migration 5 rebuilds the era table; existing eras stay exactly as they read."""
+        import sqlite3 as sql
+        path = tmp_path / "v4.fwworld"
+        w = World.create(path, name="Elder")
+        w.add_era("Age of Kings", "AK", start_year=200)
+        w.close()
+
+        conn = sql.connect(path)
+        conn.executescript("""
+            CREATE TABLE era_v4 (
+                id TEXT PRIMARY KEY, calendar_id TEXT NOT NULL,
+                name TEXT NOT NULL, abbreviation TEXT NOT NULL,
+                start_year INTEGER NOT NULL, end_year INTEGER) STRICT;
+            INSERT INTO era_v4 SELECT id, calendar_id, name, abbreviation,
+                ifnull(start_year, 1), end_year FROM era;
+            DROP TABLE era;
+            ALTER TABLE era_v4 RENAME TO era;
+        """)
+        conn.execute("PRAGMA user_version = 4")
+        conn.close()
+
+        upgraded = World.open(path)
+        try:
+            columns = {r["name"] for r in upgraded.db.query("PRAGMA table_info(era)")}
+            assert {"counts_backward", "reckons_from"} <= columns
+            old = upgraded.calendar.era_named("AK")
+            assert old.start_year == 200 and old.counts_backward is False
+            assert old.year_of(312) == 312            # still label-only, as it read before
+            # and the upgraded file can now express a backward era
+            upgraded.add_era("Before the Kings", "BK", end_year=199, counts_backward=True)
+            assert upgraded.calendar.era_named("BK").year_of(100) == 100
+        finally:
+            upgraded.close()

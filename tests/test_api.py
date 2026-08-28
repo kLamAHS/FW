@@ -658,3 +658,53 @@ class TestBranchEndpoints:
     def test_duplicate_branch_name_is_a_400(self, client):
         client.post("/api/branches", json={"name": "twice"})
         assert client.post("/api/branches", json={"name": "twice"}).status_code == 400
+
+
+class TestEraEndpoints:
+    def test_declare_a_backward_era_and_read_dates_through_it(self, client):
+        made = client.post("/api/eras", json={
+            "name": "Before the Reckoning", "abbreviation": "BR",
+            "end_year": 0, "counts_backward": True,
+        })
+        assert made.status_code == 201
+
+        listed = client.get("/api/eras").json()
+        assert any(e["abbreviation"] == "BR" and e["counts_backward"] for e in listed)
+
+        # the calendar payload carries the reckoning so the client can render an editor
+        eras = client.get("/api/world").json()["calendar"]["eras"]
+        assert any(e["abbreviation"] == "BR" and e["counts_backward"] for e in eras)
+
+        # a date can now be TYPED in era terms, and reads back the same way
+        typed = client.get("/api/day", params={
+            "year": 100, "month": 1, "day": 1, "era": "BR"}).json()
+        assert typed["era"] == "BR"
+        assert typed["era_year"] == 100
+        assert typed["year"] == -99                 # the absolute year that gets stored
+        assert typed["text"].endswith("100 BR")
+
+        # and 100 BR is genuinely earlier than 50 BR
+        later = client.get("/api/day", params={
+            "year": 50, "month": 1, "day": 1, "era": "BR"}).json()
+        assert typed["day"] < later["day"]
+
+    def test_an_unknown_era_is_a_clean_400(self, client):
+        response = client.get("/api/day", params={
+            "year": 5, "month": 1, "day": 1, "era": "NOPE"})
+        assert response.status_code == 400
+        assert "no era called" in response.json()["detail"]
+
+    def test_eras_can_be_renamed_and_removed(self, client):
+        era_id = client.post("/api/eras", json={
+            "name": "Provisional", "abbreviation": "PV", "start_year": 900}).json()["id"]
+        assert client.patch(f"/api/eras/{era_id}",
+                            json={"name": "Settled"}).status_code == 204
+        assert any(e["name"] == "Settled" for e in client.get("/api/eras").json())
+        assert client.delete(f"/api/eras/{era_id}").status_code == 204
+        assert not any(e["id"] == era_id for e in client.get("/api/eras").json())
+
+    def test_a_duplicate_abbreviation_is_refused(self, client):
+        client.post("/api/eras", json={"name": "One", "abbreviation": "XX"})
+        clash = client.post("/api/eras", json={"name": "Two", "abbreviation": "xx"})
+        assert clash.status_code == 400
+        assert "already has an era" in clash.json()["detail"]

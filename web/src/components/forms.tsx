@@ -52,9 +52,11 @@ export interface CivilDraft {
   year: string
   month: number
   day: string
+  /** Abbreviation of the age the year is said in; '' means a plain absolute year. */
+  era?: string
 }
 
-export const EMPTY_DATE: CivilDraft = { year: '', month: 1, day: '1' }
+export const EMPTY_DATE: CivilDraft = { year: '', month: 1, day: '1', era: '' }
 
 export function WorldDateInput(
   { label, calendar, value, onChange, hint }:
@@ -99,6 +101,23 @@ export function WorldDateInput(
           style={{ width: 64 }}
           aria-label={`${label}: day`}
         />
+        {/* §3: a world that names its ages must let a date be *typed* in them too —
+            otherwise "100 BR" can be read but never entered, and a backward age is
+            unusable. Hidden entirely when the world has no ages. */}
+        {calendar.eras.length > 0 && (
+          <select
+            value={value.era ?? ''}
+            onChange={(e) => onChange({ ...value, era: e.target.value })}
+            disabled={value.year === ''}
+            aria-label={`${label}: age`}
+            title="Which age the year is counted in"
+          >
+            <option value="">plain year</option>
+            {calendar.eras.map((e) => (
+              <option key={e.abbreviation} value={e.abbreviation}>{e.abbreviation}</option>
+            ))}
+          </select>
+        )}
       </div>
     </label>
   )
@@ -108,8 +127,19 @@ export function WorldDateInput(
 export async function resolveDate(draft: CivilDraft): Promise<number | null> {
   if (draft.year.trim() === '') return null
   const result = await api.dayIndex(
-    Number(draft.year), draft.month, Number(draft.day) || 1)
+    Number(draft.year), draft.month, Number(draft.day) || 1, draft.era || null)
   return result.day
+}
+
+/** The inverse: a stored day index as a draft the form can show, in era terms. */
+export async function draftFromDay(day: number): Promise<CivilDraft> {
+  const date = await api.date(day)
+  return {
+    year: String(date.era && date.era_year !== null ? date.era_year : date.year),
+    month: date.month,
+    day: String(date.day_of_month),
+    era: date.era ?? '',
+  }
 }
 
 /* ------------------------------------------------------------- entity form */
@@ -143,11 +173,10 @@ export function EntityForm(
     let cancelled = false
     const load = async (day: number | null, set: (d: CivilDraft) => void) => {
       if (day === null) return
-      const civil = await api.date(day)
-      if (!cancelled) {
-        set({ year: String(civil.year), month: civil.month,
-              day: String(civil.day_of_month) })
-      }
+      // Show the date the way the world says it — in its age, if it has one — so
+      // editing a date entered as "100 BR" does not silently redisplay it as -99.
+      const draft = await draftFromDay(day)
+      if (!cancelled) set(draft)
     }
     if (existing) {
       void load(existing.exists_from, setFrom)

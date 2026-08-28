@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -75,13 +75,19 @@ CREATE TABLE calendar_month (
     PRIMARY KEY (calendar_id, position)
 ) STRICT;
 
+-- An era names a span of years. Both bounds are nullable: an era open at the start is
+-- how "everything before the founding" is said, and it is what makes a world's own BC
+-- expressible. `counts_backward` makes years grow as time runs earlier; `reckons_from`
+-- names the absolute year the era calls its first. See fw/core/calendar/kernel.py.
 CREATE TABLE era (
-    id            TEXT PRIMARY KEY,
-    calendar_id   TEXT NOT NULL REFERENCES calendar(id) ON DELETE CASCADE,
-    name          TEXT NOT NULL,
-    abbreviation  TEXT NOT NULL,
-    start_year    INTEGER NOT NULL,
-    end_year      INTEGER
+    id              TEXT PRIMARY KEY,
+    calendar_id     TEXT NOT NULL REFERENCES calendar(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    abbreviation    TEXT NOT NULL,
+    start_year      INTEGER,
+    end_year        INTEGER,
+    counts_backward INTEGER NOT NULL DEFAULT 0,
+    reckons_from    INTEGER
 ) STRICT;
 
 -- ---------------------------------------------------------------- the type system (§60)
@@ -592,5 +598,27 @@ MIGRATIONS: dict[int, str] = {
         ALTER TABLE title_holding ADD COLUMN branch_id TEXT REFERENCES branch(id) ON DELETE CASCADE;
         UPDATE title_holding SET branch_id = (SELECT id FROM branch WHERE is_canon = 1);
         CREATE INDEX ix_holding_branch ON title_holding(branch_id)
+    """,
+    # 5: eras gain a direction and a reckoning, so a world can have its own BC/AD, and
+    #    start_year becomes nullable so an era can be open at its start. STRICT tables
+    #    cannot drop a NOT NULL in place, so the table is rebuilt; existing eras keep
+    #    their bounds and stay label-only, which is exactly how they read today.
+    5: """
+        CREATE TABLE era_v5 (
+            id              TEXT PRIMARY KEY,
+            calendar_id     TEXT NOT NULL REFERENCES calendar(id) ON DELETE CASCADE,
+            name            TEXT NOT NULL,
+            abbreviation    TEXT NOT NULL,
+            start_year      INTEGER,
+            end_year        INTEGER,
+            counts_backward INTEGER NOT NULL DEFAULT 0,
+            reckons_from    INTEGER
+        ) STRICT;
+        INSERT INTO era_v5 (id, calendar_id, name, abbreviation, start_year, end_year,
+                            counts_backward, reckons_from)
+            SELECT id, calendar_id, name, abbreviation, start_year, end_year, 0, NULL
+            FROM era;
+        DROP TABLE era;
+        ALTER TABLE era_v5 RENAME TO era
     """,
 }

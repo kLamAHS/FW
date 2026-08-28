@@ -328,6 +328,8 @@ class World:
                 "id": new_id(), "calendar_id": cal_id, "name": e.name,
                 "abbreviation": e.abbreviation, "start_year": e.start_year,
                 "end_year": e.end_year,
+                "counts_backward": int(e.counts_backward),
+                "reckons_from": e.reckons_from,
             } for e in calendar.eras])
             self.db.update("project", self.project_id,
                            {"calendar_id": cal_id, "updated_at": now_iso()})
@@ -356,9 +358,14 @@ class World:
             )
         )
         eras = tuple(
-            Era(e["name"], e["abbreviation"], e["start_year"], e["end_year"])
+            Era(e["name"], e["abbreviation"], e["start_year"], e["end_year"],
+                counts_backward=bool(e["counts_backward"]),
+                reckons_from=e["reckons_from"])
             for e in self.db.query(
-                "SELECT * FROM era WHERE calendar_id = ? ORDER BY start_year", (cal_id,)
+                "SELECT * FROM era WHERE calendar_id = ? "
+                # NULLs sort first, which puts an era open at the start — a world's
+                # own BC — before everything it precedes.
+                "ORDER BY start_year, name", (cal_id,)
             )
         )
         seasons = tuple(
@@ -379,6 +386,81 @@ class World:
 
     def day(self, year: int, month: int = 1, day: int = 1) -> int:
         return self.calendar.date(year, month, day)
+
+    # ---- eras (§3): the writer's own time dividers ------------------------
+
+    def _calendar_id(self) -> str:
+        cal_id = self.db.scalar(
+            "SELECT calendar_id FROM project WHERE id = ?", (self.project_id,))
+        if not cal_id:
+            raise WorldError("this world has no calendar to add eras to")
+        return cal_id
+
+    def eras(self) -> list[dict]:
+        """Every era of this world's calendar, earliest first."""
+        return [dict(r) | {"counts_backward": bool(r["counts_backward"])}
+                for r in self.db.query(
+                    "SELECT * FROM era WHERE calendar_id = ? ORDER BY start_year, name",
+                    (self._calendar_id(),))]
+
+    def add_era(self, name: str, abbreviation: str, *, start_year: int | None = None,
+                end_year: int | None = None, counts_backward: bool = False,
+                reckons_from: int | None = None) -> str:
+        """Declare a time divider — a world's own AD, or its own BC.
+
+        Nothing about stored facts changes: eras rename years for reading and writing,
+        which is why one can be added to a finished world without touching its history.
+        """
+        name, abbreviation = name.strip(), abbreviation.strip()
+        if not name or not abbreviation:
+            raise WorldError("an era needs a name and a short form")
+        if (start_year is not None and end_year is not None
+                and end_year < start_year):
+            raise WorldError("an era cannot end before it begins")
+        cal_id = self._calendar_id()
+        if self.db.one(
+            "SELECT 1 FROM era WHERE calendar_id = ? AND lower(abbreviation) = lower(?)",
+            (cal_id, abbreviation),
+        ):
+            raise WorldError(f"this calendar already has an era called {abbreviation!r}")
+        eid = new_id()
+        with self.db.transaction():
+            self.db.insert("era", {
+                "id": eid, "calendar_id": cal_id, "name": name,
+                "abbreviation": abbreviation, "start_year": start_year,
+                "end_year": end_year, "counts_backward": int(counts_backward),
+                "reckons_from": reckons_from,
+            })
+            self._log_revision("era", eid, "insert", None,
+                               {"name": name, "abbreviation": abbreviation})
+        self._calendar = None            # the cached calendar is now stale
+        return eid
+
+    def update_era(self, era_id: str, **changes: Any) -> None:
+        allowed = {"name", "abbreviation", "start_year", "end_year",
+                   "counts_backward", "reckons_from"}
+        payload = {k: v for k, v in changes.items() if k in allowed}
+        if not payload:
+            return
+        if "counts_backward" in payload:
+            payload["counts_backward"] = int(bool(payload["counts_backward"]))
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM era WHERE id = ?", (era_id,))
+            if row is None:
+                raise WorldError("no such era")
+            before = {k: row[k] for k in payload}
+            self.db.update("era", era_id, payload)
+            self._log_revision("era", era_id, "update", before, payload)
+        self._calendar = None
+
+    def delete_era(self, era_id: str) -> None:
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM era WHERE id = ?", (era_id,))
+            if row is None:
+                return
+            self._log_revision("era", era_id, "delete", dict(row), None)
+            self.db.execute("DELETE FROM era WHERE id = ?", (era_id,))
+        self._calendar = None
 
     # ---- branches (§105) --------------------------------------------------
     #

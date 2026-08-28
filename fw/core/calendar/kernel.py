@@ -30,18 +30,74 @@ class Month:
 
 @dataclass(frozen=True)
 class Era:
-    """A named span of years, e.g. 'Age of Kings', counted from `start_year`.
+    """A named span of years — 'Age of Kings', or a world's own equivalent of BC and AD.
 
     Eras are display-level: they rename years without changing the underlying day index,
-    which is why a world can rename its eras without rewriting every stored fact.
+    which is why a world can rename its eras, or invent new ones, without rewriting a
+    single stored fact.
+
+    Three behaviours, in rising order of ambition:
+
+    - **Label only** (`reckons_from` unset, forward): the year keeps its absolute number
+      and the era's abbreviation is appended — "312 AK".
+    - **Renumbering** (`reckons_from` set): the era counts its own years from that
+      absolute year, so an era reckoning from 200 calls absolute 312 "113".
+    - **Backward** (`counts_backward`): years grow as time runs *earlier*, which is what
+      makes BC expressible. An era reckoning backwards from 1 calls absolute year 0
+      "1 BC" and absolute -99 "100 BC".
+
+    The BC/AD pair's famous missing year zero needs no special rule: with the earlier era
+    ending at absolute 0 and reckoning backwards from 1, and the later era starting at
+    absolute 1, absolute 0 *is* "1 BC" and absolute 1 *is* "1 AD". A world that would
+    rather have a year zero simply starts its forward era at absolute 0.
+
+    `start_year` and `end_year` are inclusive; either may be None for an era that is open
+    at that end — which is how "everything before the founding" is said.
     """
     name: str
     abbreviation: str
-    start_year: int
+    start_year: int | None = None
     end_year: int | None = None
+    counts_backward: bool = False
+    reckons_from: int | None = None
 
     def contains(self, year: int) -> bool:
-        return year >= self.start_year and (self.end_year is None or year <= self.end_year)
+        return ((self.start_year is None or year >= self.start_year)
+                and (self.end_year is None or year <= self.end_year))
+
+    @property
+    def origin(self) -> int:
+        """The absolute year this era calls its year 1 (or 0, counting backwards)."""
+        if self.reckons_from is not None:
+            return self.reckons_from
+        if self.counts_backward:
+            # An unstated backward reckoning starts just after the era's last year, so
+            # the final year of the era is its year 1 — "1 BC" ends the age.
+            return (self.end_year + 1) if self.end_year is not None else 1
+        return self.start_year if self.start_year is not None else 1
+
+    def year_of(self, year: int) -> int:
+        """What this era calls an absolute year."""
+        if self.counts_backward:
+            return self.origin - year
+        if self.reckons_from is None:
+            return year            # label-only: the absolute year keeps its number
+        return year - self.origin + 1
+
+    def absolute_year(self, era_year: int) -> int:
+        """The inverse of `year_of` — what the world stores for a year said in era terms."""
+        if self.counts_backward:
+            return self.origin - era_year
+        if self.reckons_from is None:
+            return era_year
+        return era_year + self.origin - 1
+
+    @property
+    def span(self) -> float:
+        """How many years the era covers; infinite when open at either end."""
+        if self.start_year is None or self.end_year is None:
+            return float("inf")
+        return self.end_year - self.start_year
 
 
 @dataclass(frozen=True)
@@ -216,19 +272,60 @@ class Calendar:
         return current
 
     def era(self, year: int) -> Era | None:
+        """The era a year belongs to.
+
+        Eras may overlap — a writer can declare a Regency inside an Age — so the rule is
+        *most specific wins*: the narrowest era containing the year, then the one that
+        starts latest, then declaration order. Picking merely the first match would make
+        the answer depend on the order rows came back from the database.
+        """
+        candidates = [e for e in self.eras if e.contains(year)]
+        if not candidates:
+            return None
+        return min(
+            candidates,
+            key=lambda e: (e.span, -(e.start_year if e.start_year is not None else -10**9)),
+        )
+
+    def era_named(self, abbreviation: str) -> Era | None:
+        """Look an era up by abbreviation (case-insensitively), for parsing dates."""
+        wanted = abbreviation.strip().casefold()
         for e in self.eras:
-            if e.contains(year):
+            if e.abbreviation.casefold() == wanted:
                 return e
         return None
+
+    def year_in_era(self, year: int) -> tuple[int, Era | None]:
+        """An absolute year as the world says it, with the era that names it."""
+        era = self.era(year)
+        return (era.year_of(year) if era else year), era
+
+    def absolute_year(self, era_year: int, abbreviation: str | None = None) -> int:
+        """Turn a year said in era terms back into the absolute year facts are stored by.
+
+        With no era named, the number is already absolute. This is the parsing half of
+        the calendar: without it a writer could read '100 BR' but never type it.
+        """
+        if not abbreviation:
+            return era_year
+        era = self.era_named(abbreviation)
+        if era is None:
+            raise CalendarError(f"this calendar has no era called {abbreviation!r}")
+        return era.absolute_year(era_year)
+
+    def date_in_era(self, era_year: int, month: int = 1, day: int = 1,
+                    abbreviation: str | None = None) -> int:
+        """Day index from a date said in era terms — '3 Frostwane, 100 BR'."""
+        return self.to_index(
+            CivilDate(self.absolute_year(era_year, abbreviation), month, day))
 
     def format(self, index: int, *, with_weekday: bool = False, with_era: bool = True) -> str:
         """Render a day index the way the world would say it."""
         d = self.from_index(index)
-        text = f"{d.day} {self.month_name(d.month)} {d.year}"
-        if with_era:
-            era = self.era(d.year)
-            if era is not None:
-                text += f" {era.abbreviation}"
+        year, era = self.year_in_era(d.year) if with_era else (d.year, None)
+        text = f"{d.day} {self.month_name(d.month)} {year}"
+        if era is not None:
+            text += f" {era.abbreviation}"
         if with_weekday:
             text = f"{self.weekday(index)}, {text}"
         return text
