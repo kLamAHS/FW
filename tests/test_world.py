@@ -1630,3 +1630,29 @@ class TestEras:
             assert upgraded.calendar.era_named("BK").year_of(100) == 100
         finally:
             upgraded.close()
+
+    def test_declaring_and_deleting_an_era_is_undoable(self, world: World):
+        """Undo used to report success and change nothing, and a deleted age was gone
+        for good — the button lied."""
+        era_id = world.add_era("Age of Ash", "AA", start_year=400)
+        assert world.calendar.era_named("AA") is not None
+
+        world.undo()
+        assert world.calendar.era_named("AA") is None
+        world.redo()
+        assert world.calendar.era_named("AA") is not None
+
+        world.delete_era(era_id)
+        assert world.calendar.era_named("AA") is None
+        world.undo()
+        assert world.calendar.era_named("AA") is not None
+
+    def test_editing_an_era_obeys_the_rules_creating_one_does(self, world: World):
+        first = world.add_era("First", "F1", start_year=1)
+        second = world.add_era("Second", "S2", start_year=900)
+        with pytest.raises(WorldError, match="already has an era"):
+            world.update_era(second, abbreviation="f1")
+        with pytest.raises(WorldError, match="end before it begins"):
+            world.update_era(second, start_year=900, end_year=100)
+        world.update_era(first, name="Renamed")        # a legitimate edit still works
+        assert world.calendar.era_named("F1").name == "Renamed"

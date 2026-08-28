@@ -141,3 +141,81 @@ class TestVocabularySync:
             "SELECT label FROM predicate WHERE key = 'allied_with'") == "stands with"
         assert world.db.scalar(
             "SELECT count(*) FROM predicate WHERE key = 'bonded_to'") == 1
+
+
+class TestReviewRegressions:
+    """Defects the adversarial review of this slice reproduced."""
+
+    def test_a_place_inside_two_regions_appears_in_both(self, world: World):
+        """One shared `seen` set treated legitimate sharing as a cycle, so whichever
+        parent was walked second read as empty."""
+        realm = world.add_entity("realm", "The Realm")
+        north = world.add_entity("region", "North March")
+        south = world.add_entity("region", "South March")
+        keep = world.add_entity("settlement", "Shared Keep")
+        for region in (north, south):
+            world.assert_fact(region, "located_in", realm)
+            world.assert_fact(keep, "located_in", region)
+
+        tree = Hierarchy(world).contents(realm.id)
+        inside = {c.entity.name: [g.entity.name for g in c.children]
+                  for c in tree.children}
+        assert inside["North March"] == ["Shared Keep"]
+        assert inside["South March"] == ["Shared Keep"]
+
+    def test_the_breadcrumb_obeys_the_date_the_tree_obeys(self, world: World):
+        """It listed ancestors that had not been founded yet, while the tree — three
+        lines away — filtered them correctly."""
+        realm = world.add_entity("realm", "Later Realm",
+                                 exists_from=world.day(500))
+        town = world.add_entity("settlement", "Early Town", exists_from=world.day(10))
+        world.assert_fact(town, "located_in", realm)
+        early = world.day(20)
+        assert Hierarchy(world).chain_above(town.id, at=early) == []
+        assert [e.name for e in Hierarchy(world).chain_above(town.id,
+                                                             at=world.day(600))] == \
+            ["Later Realm"]
+
+    def test_a_promoted_village_reads_as_a_city(self, world: World):
+        """The rank came from the oldest assertion, so a promoted city sorted below
+        every hamlet in its region."""
+        region = world.add_entity("region", "The March")
+        town = world.add_entity("settlement", "Risen")
+        world.assert_fact(town, "located_in", region)
+        world.assert_fact(town, "settlement_type", value="village")
+        world.assert_fact(town, "settlement_type", value="city")
+        tree = Hierarchy(world).contents(region.id)
+        assert tree.children[0].settlement_type == "city"
+
+    def test_the_roster_summary_matches_the_detailed_answer(self, renn: World):
+        """The batched list must agree with the per-group walk it replaced."""
+        day = renn.day(PRESENT_YEAR)
+        hierarchy = Hierarchy(renn)
+        for summary in hierarchy.summaries(at=day):
+            group = summary["entity"]
+            assert summary["branches"] == len(
+                hierarchy.branches_of(group.id, at=day))
+            seats = {s["name"] for s in summary["seats"]}
+            assert seats == {p.name for p, _ in hierarchy.seats_of(group.id, at=day)}
+
+    def test_listing_the_library_does_not_rewrite_the_saves(self, tmp_path):
+        """Opening a world tops up its vocabulary; the launcher opens every save just
+        to list them, and must not rewrite the writer's whole library to draw a screen."""
+        from fw.core.library import Library
+        library = Library(tmp_path / "worlds")
+        path = library.create("Elder")
+        w = World.open(path)
+        w.db.execute("DELETE FROM predicate WHERE key = 'based_in'")
+        w.close()
+        before = path.stat().st_mtime_ns
+
+        listed = library.worlds()
+        assert [entry.name for entry in listed] == ["Elder"]
+        assert path.stat().st_mtime_ns == before        # listing is a read
+
+        opened = World.open(path)                       # opening to *use* still syncs
+        try:
+            assert opened.db.scalar(
+                "SELECT count(*) FROM predicate WHERE key = 'based_in'") == 1
+        finally:
+            opened.close()

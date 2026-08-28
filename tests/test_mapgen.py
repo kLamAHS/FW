@@ -10,6 +10,7 @@ from fw.core.mapgen.generate import (
     CELL,
     GENERATED,
     GENERATOR,
+    GRID,
     MIN_SPACING_CELLS,
     MapGenerator,
     generate_map,
@@ -263,3 +264,78 @@ class TestExplanations:
         assert vale and reach
         assert not any("harbour" in r for p in vale for r in p.reasons)
         assert any("harbour" in r for p in reach for r in p.reasons)
+
+
+class TestRegenerationIsClean:
+    """Regressions from the adversarial review of this slice."""
+
+    def test_rerunning_leaves_no_orphans_behind(self, renn: World):
+        """The first draft swept geometry only, so every rerun leaked a river entity
+        and duplicated every road segment — forever."""
+        day = renn.day(PRESENT_YEAR)
+        counts = []
+        for _ in range(3):
+            generate_map(renn, at=day)
+            counts.append((
+                len(renn.entities("waterway")),
+                len(renn.entities("road")),
+                renn.db.scalar("SELECT count(*) FROM route_segment"),
+            ))
+        assert counts[0] == counts[1] == counts[2]
+
+    def test_a_city_keeps_its_own_shape(self, renn: World):
+        """Roads used to hang off the settlement they started from, so asking a city
+        for its geometry handed back a road."""
+        day = renn.day(PRESENT_YEAR)
+        greyhaven = renn.entity_named("Greyhaven")
+        generate_map(renn, at=day)
+        shape = renn.geometry_for(greyhaven.id)
+        assert shape.kind == "point"
+        assert shape.layer == "settlements"
+
+    def test_generating_on_a_branch_explains_itself_instead_of_crashing(self, renn: World):
+        day = renn.day(PRESENT_YEAR)
+        generate_map(renn, at=day)
+        renn.create_branch("what if")
+        fork = renn.on_branch("what if")
+        report = generate_map(fork, at=day)          # must not raise
+        assert any("what-if cannot redraw" in note for note in report.notes)
+
+    def test_a_drawn_region_grows_from_its_own_ground(self, renn: World):
+        """An authored region was being re-seeded somewhere else entirely, so it ended
+        up owning an island far from anything the writer drew."""
+        generator = MapGenerator(renn, at=renn.day(PRESENT_YEAR))
+        generator.generate()
+        for region_id, drawn in generator.authored_cells.items():
+            owned = {(i, j) for j in range(GRID) for i in range(GRID)
+                     if generator.owner[j][i] == region_id}
+            assert owned & drawn, "a region owns no part of what the writer drew"
+            # and its territory is one piece, reachable from the drawn ground — the bug
+            # gave a region a disconnected island forty cells from anything it owned
+            reached = set(owned & drawn)
+            frontier = list(reached)
+            while frontier:
+                i, j = frontier.pop()
+                for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    step = (i + di, j + dj)
+                    if step in owned and step not in reached:
+                        reached.add(step)
+                        frontier.append(step)
+            assert reached == owned, "a region owns ground detached from what was drawn"
+
+
+class TestProseIsReadAsWritten:
+    def test_ordinary_words_are_not_mistaken_for_terrain(self):
+        """'a nice year' was read as arctic, because 'ice' is inside 'nice'."""
+        assert read_climate("a nice year") == (None, None)
+        assert read_climate("well drained") == (None, None)
+        assert read_terrain("orange groves") == {}
+        assert "ocean" not in read_terrain("seasonal marshland")
+
+    def test_order_decides_which_terrain_dominates(self):
+        assert read_terrain("hills and forest")["hills"] == 1.0
+        assert read_terrain("forest and hills")["forest"] == 1.0
+
+    def test_plurals_and_endings_still_count(self):
+        assert read_terrain("mountains and forested slopes") == {
+            "mountain": 1.0, "forest": 0.5}

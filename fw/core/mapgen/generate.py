@@ -47,6 +47,7 @@ MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cel
 # the writer's alone. The client passes unknown style keys through untouched.
 GENERATED = "generated_by"
 GENERATOR = "mapgen/1"
+GENERATED_TAG = "generated-map"
 
 LAYER_REGIONS = "regions"
 LAYER_WATER = "waterways"
@@ -131,6 +132,7 @@ class MapGenerator:
         self.inland_max: int = 1
         self.authored_cells: dict[str, set[tuple[int, int]]] = {}
         self.cost: list[list[float]] = []
+        self._roads_entity: str | None = None
         self.report = GenerationReport()
 
     # ---- the whole run ----------------------------------------------------
@@ -193,26 +195,30 @@ class MapGenerator:
         water at the canvas edge; only afterwards is it divided.
         """
         self.sea = [[True] * GRID for _ in range(GRID)]
+        # Rasterise each drawn ring once. Ray-casting 44 vertices against 7,744 cells is
+        # the dominant cost of a run, and it was being paid three times over.
+        self.authored_cells = {
+            region_id: {(i, j) for j in range(GRID) for i in range(GRID)
+                        if _inside(ring, *self._centre(i, j))}
+            for region_id, ring in authored.items()
+        }
         if authored:
             # The writer has drawn land. The continent is what they drew, plus a
             # hinterland margin — inventing an unrelated fractal coastline here is how
             # the first draft put a harbour in the middle of an inland vale.
             drawn = [[False] * GRID for _ in range(GRID)]
-            for ring in authored.values():
-                for j in range(GRID):
-                    for i in range(GRID):
-                        if not drawn[j][i] and _inside(ring, *self._centre(i, j)):
-                            drawn[j][i] = True
+            for cells in self.authored_cells.values():
+                for i, j in cells:
+                    drawn[j][i] = True
             # The hinterland grows from inland regions only. A region the writer called
             # coastal must keep its drawn edge as its shoreline — pad it and the port
             # it was named for ends up six cells from the water.
             spread = 6
             frontier = [
                 (i, j)
-                for region_id, ring in authored.items()
+                for region_id, cells in self.authored_cells.items()
                 if not self.profiles[region_id].coastal
-                for j in range(GRID) for i in range(GRID)
-                if drawn[j][i] and _inside(ring, *self._centre(i, j))
+                for i, j in sorted(cells)
             ]
             for _ in range(spread):
                 nxt = []
@@ -260,22 +266,18 @@ class MapGenerator:
         """
         self.owner = [[None] * GRID for _ in range(GRID)]
 
-        self.authored_cells = {}
-        for region_id, ring in authored.items():
-            owned = set()
-            for j in range(GRID):
-                for i in range(GRID):
-                    if not self.sea[j][i] and _inside(ring, *self._centre(i, j)):
-                        owned.add((i, j))
-                        if self.owner[j][i] is None:
-                            self.owner[j][i] = region_id
-            self.authored_cells[region_id] = owned
+        for region_id, cells in self.authored_cells.items():
+            dry = {(i, j) for i, j in cells if not self.sea[j][i]}
+            self.authored_cells[region_id] = dry
+            for i, j in sorted(dry):
+                if self.owner[j][i] is None:
+                    self.owner[j][i] = region_id
 
         # Every cell gets an owner. Leaving the rest of the canvas unclaimed would make
         # each region an island — which is why the first draft gave an inland vale a
         # harbour. Land is continuous; the sea is decided by height, further down.
         ungrown = [r for r in regions if r.id not in authored]
-        seeds = self._seed_points(ungrown or regions, authored)
+        seeds = self._seed_points(ungrown, authored)
         # Multi-source breadth-first growth. Each region takes a turn per round, so a
         # small region does not get swallowed before it starts.
         frontiers: dict[str, list[tuple[int, int]]] = {}
@@ -770,13 +772,13 @@ class MapGenerator:
                                                   for i, j in path[1:-1])]
             points.append([q.x, q.y])
             self.world.add_geometry(
-                p.entity_id, "line", points, layer=LAYER_ROADS,
+                self._road_entity(), "line", points, layer=LAYER_ROADS,
                 style={"stroke": "#8a7550", GENERATED: GENERATOR})
             length = sum(math.dist(points[n], points[n + 1])
                          for n in range(len(points) - 1))
             self.world.add_route_segment(
                 p.entity_id, q.entity_id, round(length, 1),
-                medium="road", quality=0.8,
+                medium="road", quality=0.8, entity_id=self._road_entity(),
                 terrain=self.profiles[p.region_id].dominant)
             laid += 1
         self.report.roads = laid
@@ -867,13 +869,37 @@ class MapGenerator:
     def _clear_previous(self) -> None:
         """Sweep away the last run's work, and only that.
 
-        Every shape this module writes carries its mark, so a regenerate can remove its
-        own output without touching a line the writer drew.
+        Everything this module writes is marked, so a rerun removes its own output and
+        never a line the writer drew. The rivers and the road network are *entities*,
+        so they are deleted outright — the FK cascade takes their geometry and route
+        segments with them, and without that a second run left orphan rivers and a
+        duplicate road for every road it laid.
+
+        Only this timeline's rows are touched. A branch inherits canon's generated map
+        but cannot delete canon's rows, so its own map is layered over the top and the
+        writer is told rather than crashed at.
         """
+        for entity in self.world.entities("waterway") + self.world.entities("road"):
+            if GENERATED_TAG in entity.tags:
+                try:
+                    self.world.delete_entity(entity.id)
+                except WorldError:
+                    self._note_inherited()
+
         for geometries in self.world.geometry_index(at=self.at).values():
             for geometry in geometries:
-                if (geometry.style or {}).get(GENERATED) == GENERATOR:
+                if (geometry.style or {}).get(GENERATED) != GENERATOR:
+                    continue
+                try:
                     self.world.delete_geometry(geometry.id)
+                except WorldError:
+                    self._note_inherited()
+
+    def _note_inherited(self) -> None:
+        note = ("Some of this map was generated on the main timeline, which a what-if "
+                "cannot redraw. Regenerate there to replace it.")
+        if note not in self.report.notes:
+            self.report.notes.append(note)
 
     def _write_regions(self, authored: dict[str, list[list[float]]]) -> None:
         for region_id in sorted(self.profiles):
@@ -925,13 +951,29 @@ class MapGenerator:
         ring.append(list(ring[0]))         # closed, as every seeded ring is
         return ring
 
+    def _road_entity(self) -> str:
+        """One entity owning every generated road.
+
+        Hanging road lines off the settlements they start from made a city's own
+        geometry ambiguous — `geometry_for` would hand back a road polyline instead of
+        the city's point. One road network, like the example world's Iron Road, keeps
+        each entity's shape its own and gives a rerun a single thing to remove.
+        """
+        if self._roads_entity is None:
+            self._roads_entity = self.world.add_entity(
+                "road", "Generated roads", confidence="speculative",
+                tags=[GENERATED_TAG],
+                summary="Laid by the map generator between the settlements it knows.",
+            ).id
+        return self._roads_entity
+
     def _write_rivers(self, rivers: list[list[tuple[int, int]]]) -> None:
         for n, path in enumerate(rivers):
             points = [[round(x, 1), round(y, 1)]
                       for x, y in (self._centre(i, j) for i, j in path)]
             name = f"Unnamed river {n + 1}"
             river = self.world.add_entity(
-                "waterway", name,
+                "waterway", name, confidence="speculative", tags=[GENERATED_TAG],
                 summary="Traced by the map generator; rename it and it is yours.")
             self.world.add_geometry(
                 river.id, "line", points, layer=LAYER_WATER,

@@ -816,17 +816,10 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     def list_groups(at: int | None = None) -> list[dict[str, Any]]:
         """§54: every group of people in the world, with its seat and its size."""
         day = at if at is not None else app.state.present_day
-        hierarchy = Hierarchy(holder.get())
-        out = []
-        for group in hierarchy.groups(at=day):
-            seats = hierarchy.seats_of(group.id, at=day)
-            out.append({
-                "entity": _entity_out(group).model_dump(),
-                "members": len(hierarchy.members_of(group.id, at=day)),
-                "branches": len(hierarchy.branches_of(group.id, at=day)),
-                "seats": [{"id": p.id, "name": p.name, "how": how} for p, how in seats],
-            })
-        return out
+        return [
+            {**summary, "entity": _entity_out(summary["entity"]).model_dump()}
+            for summary in Hierarchy(holder.get()).summaries(at=day)
+        ]
 
     @app.get("/api/groups/{group_id}")
     def get_group(group_id: str, at: int | None = None) -> dict[str, Any]:

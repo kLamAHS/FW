@@ -24,7 +24,12 @@ from fw.core.world import World
 # Where a group belongs. `based_in` is its seat, `active_in` its reach; a writer who has
 # only said `located_in` still gets found, because saying "the guild is in Greyhaven" is
 # a reasonable thing to have written before the finer predicates existed.
-PRESENCE_PREDICATES = ("based_in", "active_in", "located_in")
+#: How a group says where it belongs, and the words for each. `located_in` is read
+#: too, because "the guild is in Greyhaven" is a reasonable thing to have written
+#: before the finer predicates existed.
+PRESENCE_PREDICATES: tuple[tuple[str, str], ...] = (
+    ("based_in", "based in"), ("active_in", "active in"), ("located_in", "in"))
+SEAT_PREDICATES = PRESENCE_PREDICATES[:2]
 
 # What counts as a place rather than a group. Anything else that turns up inside a place
 # is reported under its own type rather than recursed into.
@@ -86,22 +91,26 @@ class Hierarchy:
         root = self.world.get_entity(place_id)
         if root is None:
             return None
-        return self._node(root, at=at, depth=0, max_depth=max_depth, seen={place_id})
+        return self._node(root, at=at, depth=0, max_depth=max_depth,
+                          path=frozenset({place_id}))
 
     def _node(self, entity: Entity, *, at: int | None, depth: int, max_depth: int,
-              seen: set[str]) -> PlaceNode:
+              path: frozenset[str]) -> PlaceNode:
         node = PlaceNode(entity=entity, depth=depth,
                          settlement_type=self._settlement_type(entity.id, at))
         if depth >= max_depth:
             return node
 
         for child in self._directly_inside(entity.id, at=at):
-            if child.id in seen:
+            # The guard is the path back to the root, not everything seen anywhere: a
+            # holding recorded inside two marches genuinely belongs to both, and a
+            # shared set would silently empty whichever march was walked second.
+            if child.id in path:
                 continue                      # already on this path; a loop
-            seen.add(child.id)
             if child.type_key in PLACE_TYPES:
-                node.children.append(self._node(child, at=at, depth=depth + 1,
-                                                max_depth=max_depth, seen=seen))
+                node.children.append(self._node(
+                    child, at=at, depth=depth + 1, max_depth=max_depth,
+                    path=path | {child.id}))
             elif child.type_key == "person":
                 node.people.append(child)
             elif child.type_key in GROUP_TYPES:
@@ -113,9 +122,8 @@ class Hierarchy:
         # containment, so they are gathered separately and merged without duplicates.
         known = {g.id for g in node.groups}
         for group in self._groups_at(entity.id, at=at):
-            if group.id not in known and group.id not in seen:
+            if group.id not in known:
                 known.add(group.id)
-                seen.add(group.id)
                 node.groups.append(group)
 
         node.children.sort(key=lambda c: (_rank_of(c.settlement_type), c.entity.name))
@@ -124,9 +132,13 @@ class Hierarchy:
         return node
 
     def _settlement_type(self, entity_id: str, at: int | None) -> str | None:
-        """A settlement's rank — city, town, village — as a dated property fact."""
-        facts = self.world.facts_where("settlement_type", subject_id=entity_id, at=at)
-        return facts[0].value if facts else None
+        """A settlement's rank — city, town, village — as a dated property fact.
+
+        The *latest* assertion, as World.value_of reads every other property: a village
+        promoted to a city is a city, and taking the first row would sort it below
+        every hamlet in its region.
+        """
+        return self.world.value_of(entity_id, "settlement_type", at=at)
 
     def _here_on(self, entity_id: str, at: int | None) -> Entity | None:
         """The entity, if it exists on this date.
@@ -153,7 +165,7 @@ class Hierarchy:
 
     def _groups_at(self, place_id: str, *, at: int | None) -> list[Entity]:
         out: dict[str, Entity] = {}
-        for predicate in ("based_in", "active_in"):
+        for predicate, _how in SEAT_PREDICATES:
             for fact in self.world.facts_where(predicate, object_id=place_id, at=at):
                 group = self._here_on(fact.subject_id, at)
                 if group is not None:
@@ -200,7 +212,7 @@ class Hierarchy:
                         if f.object_id and f.object_id not in seen), None)
             if nxt is None:
                 break
-            parent = self.world.get_entity(nxt)
+            parent = self._here_on(nxt, at)
             if parent is None:
                 break
             out.append(parent)
@@ -275,8 +287,7 @@ class Hierarchy:
         """Where a group belongs, from its own side — its seat, then its reach."""
         out: list[tuple[Entity, str]] = []
         seen: set[str] = set()
-        for predicate, how in (("based_in", "based in"), ("active_in", "active in"),
-                               ("located_in", "in")):
+        for predicate, how in PRESENCE_PREDICATES:
             for fact in self.world.facts_where(predicate, subject_id=group_id, at=at):
                 if not fact.object_id or fact.object_id in seen:
                     continue
@@ -285,6 +296,60 @@ class Hierarchy:
                     seen.add(place.id)
                     out.append((place, how))
         return out
+
+    def summaries(self, *, at: int | None = None) -> list[dict]:
+        """Every group with its size and its seat, for the roster list.
+
+        Asking each group separately meant roughly twenty queries per group — fine for
+        ten, ten thousand for a world with five hundred houses. Every predicate is read
+        once for the whole world instead, and the counting happens in memory.
+        """
+        groups = {g.id: g for g in self.groups(at=at)}
+        members: dict[str, set[str]] = {gid: set() for gid in groups}
+        under: dict[str, set[str]] = {gid: set() for gid in groups}
+        seats: dict[str, list[dict]] = {gid: [] for gid in groups}
+
+        for predicate in ("member_of", "sworn_to", "head_of", *self.UNDER_PREDICATES):
+            for fact in self.world.facts_where(predicate, at=at):
+                target = fact.object_id
+                if target not in members:
+                    continue
+                members[target].add(fact.subject_id)
+                if predicate in self.UNDER_PREDICATES:
+                    under[target].add(fact.subject_id)
+
+        # One walk outward per depth over the whole world, rather than per group.
+        for _ in range(4):
+            grew = False
+            for gid in groups:
+                reach = set(under[gid])
+                for child in list(reach):
+                    reach |= under.get(child, set())
+                if reach != under[gid]:
+                    under[gid] = reach
+                    grew = True
+            if not grew:
+                break
+
+        for predicate, how in PRESENCE_PREDICATES:
+            for fact in self.world.facts_where(predicate, at=at):
+                if fact.subject_id not in seats or not fact.object_id:
+                    continue
+                place = self._here_on(fact.object_id, at)
+                if place is None or any(s["id"] == place.id
+                                        for s in seats[fact.subject_id]):
+                    continue
+                seats[fact.subject_id].append(
+                    {"id": place.id, "name": place.name, "how": how})
+
+        return [
+            {"entity": group,
+             "members": len(members[gid] | under[gid]),
+             "branches": len(under[gid]),
+             "seats": seats[gid]}
+            for gid, group in sorted(groups.items(), key=lambda kv: (kv[1].type_key,
+                                                                    kv[1].name))
+        ]
 
     def groups(self, *, at: int | None = None) -> list[Entity]:
         """Every group in the world, for the roster view."""

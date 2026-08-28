@@ -14,6 +14,7 @@ nothing and everything defaults to temperate".
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from fw.core.world import World
@@ -127,41 +128,54 @@ class RegionProfile:
         return trace.because if trace else "left at its default"
 
 
+def _find_word(text: str, word: str) -> int | None:
+    """Where a keyword appears as a WORD, not as a fragment of another.
+
+    Bare substring matching read "a nice year" as arctic (ice), "well drained" as
+    drenched (rain) and "orange groves" as mountains (range). A writer's prose has to
+    be read the way they wrote it, and a generator that misreads it then explains
+    itself with the wrong reason is worse than one that says nothing.
+
+    Plural and adjectival endings still count, so "mountains" and "forested" match.
+    """
+    match = re.search(rf"\b{re.escape(word)}(?:s|es|ed|y|ish|land|lands)?\b",
+                      text or "", flags=re.IGNORECASE)
+    return match.start() if match else None
+
+
 def read_terrain(text: str) -> dict[str, float]:
     """Turn a phrase like 'mountains and forest' into weighted terrain kinds.
 
     Order of appearance decides weight: a writer who says "forest and some hills" means
     mostly forest. Nothing matched means nothing is claimed, and the caller defaults.
     """
-    lowered = (text or "").lower()
-    hits: list[str] = []
-    for word in sorted(TERRAIN_WORDS, key=len, reverse=True):
-        position = lowered.find(word)
-        if position >= 0:
-            kind = TERRAIN_WORDS[word]
-            if kind not in hits:
-                hits.append(kind)
+    hits: list[tuple[int, str]] = []
+    for word, kind in TERRAIN_WORDS.items():
+        position = _find_word(text, word)
+        if position is not None:
+            hits.append((position, kind))
     if not hits:
         return {}
     # First-named dominates, later ones taper — "mountains and forest" is mountains
-    # with forest in it, not an even split.
-    weights = {}
-    for i, kind in enumerate(hits):
-        weights[kind] = 1.0 / (i + 1)
+    # with forest in it, not an even split, and "hills and forest" is not the same
+    # region as "forest and hills".
+    weights: dict[str, float] = {}
+    for _, kind in sorted(hits):
+        weights.setdefault(kind, 1.0 / (len(weights) + 1))
     return weights
 
 
 def read_climate(text: str) -> tuple[float | None, float | None]:
     """Temperature and moisture from a climate phrase, either possibly unstated."""
-    lowered = (text or "").lower()
     temps: list[float] = []
     wets: list[float] = []
     for word, (temp, wet) in CLIMATE_WORDS.items():
-        if word in lowered:
-            if temp is not None:
-                temps.append(temp)
-            if wet is not None:
-                wets.append(wet)
+        if _find_word(text, word) is None:
+            continue
+        if temp is not None:
+            temps.append(temp)
+        if wet is not None:
+            wets.append(wet)
     return (sum(temps) / len(temps) if temps else None,
             sum(wets) / len(wets) if wets else None)
 

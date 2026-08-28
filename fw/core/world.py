@@ -108,14 +108,19 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
     "entity_override": {"refs": {"branch_id": ("branch", "skip"),
                                  "entity_id": ("entity", "skip")},
                         "key": ("branch_id", "entity_id")},
+    "era": {"refs": {"calendar_id": ("calendar", "skip")}},
 }
+
+# Tables whose updates undo by writing the previous values straight back. Anything
+# here must be in _RESTORE_SPEC too, so its inserts and deletes invert as well.
+_PLAIN_UPDATABLE = ("era",)
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
 _RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
                   "interpretation", "knowledge_state", "causal_link",
-                  "entity_override")
+                  "entity_override", "era")
 
 # How undo's toast names a change to each kind of row.
 _ACTION_NOUNS: dict[str, str] = {
@@ -258,7 +263,8 @@ class World:
         return world
 
     @classmethod
-    def open(cls, path: str | Path, *, branch: str = "canon") -> World:
+    def open(cls, path: str | Path, *, branch: str = "canon",
+             sync: bool = True) -> World:
         db = Database(path, create=False)
         row = db.one("SELECT id FROM project ORDER BY created_at LIMIT 1")
         if row is None:
@@ -270,7 +276,11 @@ class World:
         if branch_row is None:
             raise WorldError(f"no branch named {branch!r}")
         world = cls(db, project_id, branch_row["id"])
-        world.sync_vocabulary()      # defaults added since this world was created
+        if sync:
+            # Off when a world is only being *looked at*: the launcher opens every save
+            # to list it, and a vocabulary top-up there would rewrite — and re-sort —
+            # the writer's whole library just by rendering the screen.
+            world.sync_vocabulary()
         return world
 
     def close(self) -> None:
@@ -497,6 +507,21 @@ class World:
             row = self.db.one("SELECT * FROM era WHERE id = ?", (era_id,))
             if row is None:
                 raise WorldError("no such era")
+            # The same guards as add_era. Without them an edit could leave two ages
+            # sharing an abbreviation, and a date typed in one would silently parse
+            # against the other.
+            merged = {**dict(row), **payload}
+            if (merged["start_year"] is not None and merged["end_year"] is not None
+                    and merged["end_year"] < merged["start_year"]):
+                raise WorldError("an era cannot end before it begins")
+            if self.db.one(
+                "SELECT 1 FROM era WHERE calendar_id = ? AND id != ? "
+                "AND lower(abbreviation) = lower(?)",
+                (row["calendar_id"], era_id, merged["abbreviation"]),
+            ):
+                raise WorldError(
+                    f"this calendar already has an era called "
+                    f"{merged['abbreviation']!r}")
             before = {k: row[k] for k in payload}
             self.db.update("era", era_id, payload)
             self._log_revision("era", era_id, "update", before, payload)
@@ -1170,6 +1195,7 @@ class World:
             self._invert_action(target)
             self._undone.add(target)
             self._redo.append((target, inversion))
+        self._calendar = None      # an undone era changes how every date reads
         return f"Undid {self._describe_action(target)}."
 
     def redo(self) -> str:
@@ -1187,6 +1213,7 @@ class World:
             self._invert_action(inversion)
             self._undone.discard(target)
             self._redo.pop()
+        self._calendar = None
         return f"Redid {self._describe_action(target)}."
 
     def undo_state(self) -> dict:
@@ -1338,6 +1365,18 @@ class World:
             current = {k: data[k] for k in payload}
             self.db.update("fact", row_id, {**payload, "updated_at": now_iso()})
             self._log_revision("fact", row_id, "update", current, payload)
+            return 1
+        if table in _PLAIN_UPDATABLE:
+            row = self.db.one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+            if row is None:
+                return 0
+            data = dict(row)
+            payload = {k: v for k, v in before.items() if k in data}
+            if not payload:
+                return 0
+            current = {k: data[k] for k in payload}
+            self.db.update(table, row_id, payload)
+            self._log_revision(table, row_id, "update", current, payload)
             return 1
         if table == "entity_override":
             parts = row_id.split("/")
@@ -2745,18 +2784,6 @@ class World:
         self.db.insert("geometry_rtree_map",
                        {"rtree_id": cur.lastrowid, "geometry_id": geometry_id})
 
-    def replace_geometry(self, entity_id: str, kind: str, coordinates: Any, *,
-                         layer: str = "base", **kw: Any) -> Geometry:
-        """Give an entity a new shape on one layer, retiring the old one.
-
-        Regenerating a map has to be able to redraw; without this the only way to change
-        a shape was to delete the entity that owned it.
-        """
-        with self.db.transaction():
-            for existing in self.geometries_of(entity_id, layer=layer):
-                self.delete_geometry(existing.id)
-            return self.add_geometry(entity_id, kind, coordinates, layer=layer, **kw)
-
     def delete_geometry(self, geometry_id: str) -> None:
         """Remove one shape, its R*Tree box and its index row.
 
@@ -2777,12 +2804,6 @@ class World:
                 (geometry_id,))
             self._log_revision("geometry", geometry_id, "delete", _snapshot(row), None)
             self.db.execute("DELETE FROM geometry WHERE id = ?", (geometry_id,))
-
-    def geometries_of(self, entity_id: str, *, layer: str | None = None,
-                      at: int | None = None) -> list[Geometry]:
-        """Every shape an entity has, optionally on one layer."""
-        return [g for g in self.geometries(at=at, layer=layer)
-                if g.entity_id == entity_id]
 
     def geometry_index(self, *, at: int | None = None,
                        layer: str | None = None) -> dict[str, list[Geometry]]:
