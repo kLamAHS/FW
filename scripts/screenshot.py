@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+from browsers import find_chromium  # noqa: E402  (same directory)
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8100"
@@ -17,20 +18,6 @@ OUT = Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/fw-shots")
 OUT.mkdir(parents=True, exist_ok=True)
 
 
-def find_chromium() -> str | None:
-    """Use whatever Chromium build is on the machine.
-
-    Playwright pins an exact browser revision and refuses a different one, which is a
-    problem in any environment that ships its own. Pointing at the installed binary is
-    both faster and avoids a download that may not be possible offline.
-    """
-    for candidate in sorted(Path("/opt/pw-browsers").glob("chromium-*/chrome-linux/chrome")):
-        return str(candidate)
-    for candidate in ("/usr/bin/chromium", "/usr/bin/chromium-browser",
-                      "/usr/bin/google-chrome"):
-        if Path(candidate).exists():
-            return candidate
-    return None
 
 VIEWS = [
     ("World", "dashboard"),
@@ -141,6 +128,20 @@ with sync_playwright() as p:
             problems.append("recording 'Thornby located in The Northmarch' did not show")
         else:
             print("  connected Thornby to The Northmarch")
+
+        # Undo takes the connection back; redo records it again (§59).
+        page.click("button[aria-label='Undo']")
+        page.wait_for_timeout(1100)
+        if "The Northmarch" in (page.text_content(".side") or ""):
+            problems.append("undo did not take back the new connection")
+        else:
+            print("  undo took the connection back")
+        page.click("button[aria-label='Redo']")
+        page.wait_for_timeout(1100)
+        if "The Northmarch" not in (page.text_content(".side") or ""):
+            problems.append("redo did not restore the connection")
+        else:
+            print("  redo recorded it again")
 
         # End the fact on the current date, §106.3's easy path.
         page.click(".side .fact-actions button:has-text('end')")

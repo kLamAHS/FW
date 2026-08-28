@@ -28,18 +28,22 @@ interface Props {
   onClose: () => void
   onSelect: (id: string) => void
   onMutate: () => void
+  version: number
 }
 
 type Tab = 'facts' | 'why' | 'impact'
 type Mode = 'view' | 'edit' | 'add-fact'
 
 export function SidePanel(
-  { entityId, day, dateText, vocabulary, calendar, onClose, onSelect, onMutate }: Props,
+  { entityId, day, dateText, vocabulary, calendar, onClose, onSelect, onMutate,
+    version }: Props,
 ) {
   const [tab, setTab] = useState<Tab>('facts')
   const [mode, setMode] = useState<Mode>('view')
   const [armedDelete, setArmedDelete] = useState(false)
-  const bundle = useAsync(() => api.entity(entityId, day), [entityId, day])
+  // `version` is in the deps so changes made *outside* the panel — an undo from the
+  // topbar, a restore from the dashboard — refresh what it shows.
+  const bundle = useAsync(() => api.entity(entityId, day), [entityId, day, version])
 
   // A new selection starts fresh: on the details tab, in view mode, with nothing armed.
   // Without this, selecting a character while the panel sits on "If it vanished" opens

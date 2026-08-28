@@ -63,6 +63,9 @@ class Database:
                 "the application cannot serve requests safely"
             )
         self._lock = threading.RLock()
+        # Counts outermost transactions. The revision log uses it to group every record
+        # written in one transaction into one user action — the unit undo operates on.
+        self.transaction_serial = 0
         self.conn = sqlite3.connect(
             self.path, isolation_level=None, check_same_thread=False
         )
@@ -115,12 +118,38 @@ class Database:
     def _migrate(self, from_version: int) -> None:
         from fw.core.store.schema import MIGRATIONS
 
-        # Same reason as _create_schema: executescript manages its own transaction.
+        # Each step commits atomically WITH its user_version bump: a crash between the
+        # two would otherwise leave a file that re-runs the migration on every open and
+        # dies on it ("duplicate column"). user_version lives in the database header
+        # and rolls back with the transaction, so wrapping both is enough.
+        #
+        # BEGIN IMMEDIATE takes the write lock up front, and the version is re-read
+        # inside it: two processes opening the same old file at once (the launcher and
+        # a CLI command, say) then migrate once — the loser sees the bumped version
+        # and steps over. This is why scripts are split here rather than fed to
+        # executescript (which would commit the guard transaction first): migration
+        # statements must not contain embedded semicolons or manage transactions.
         for version in range(from_version + 1, SCHEMA_VERSION + 1):
             statement = MIGRATIONS.get(version)
-            if statement:
-                self.conn.executescript(statement)
-        self.conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
+            if not statement:
+                self.conn.execute(f"PRAGMA user_version = {version}")
+                continue
+            with self._lock:
+                self.conn.execute("BEGIN IMMEDIATE")
+                try:
+                    current = self.conn.execute("PRAGMA user_version").fetchone()[0]
+                    if current >= version:
+                        self.conn.execute("ROLLBACK")   # someone else got here first
+                        continue
+                    for piece in statement.split(";"):
+                        if piece.strip():
+                            self.conn.execute(piece)
+                    self.conn.execute(f"PRAGMA user_version = {version}")
+                except Exception:
+                    self.conn.execute("ROLLBACK")
+                    raise
+                else:
+                    self.conn.execute("COMMIT")
 
     # ---- transactions -----------------------------------------------------
 
@@ -131,6 +160,7 @@ class Database:
             if self.conn.in_transaction:
                 yield self.conn
                 return
+            self.transaction_serial += 1
             self.conn.execute("BEGIN")
             try:
                 yield self.conn

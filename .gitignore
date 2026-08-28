@@ -9,7 +9,7 @@ __pycache__/
 htmlcov/
 
 node_modules/
-web/dist/
+# web/dist is committed on purpose: run.bat must work without Node installed.
 *.local
 
 *.fwworld

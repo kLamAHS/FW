@@ -858,3 +858,675 @@ class TestCascadeAtScale:
         for eid in (a.id, b.id, x.id):
             downstream = [i for i, _ in world.consequences_of(eid, max_depth=32)]
             assert eid not in downstream
+
+
+class TestUndoRedo:
+    """§59 taken to its natural end: whole actions taken back and reinstated."""
+
+    def test_undo_uncreates_and_redo_recreates(self, world: World):
+        e = world.add_entity("settlement", "Fleeting")
+        assert "Fleeting" in world.undo()
+        assert world.get_entity(e.id) is None
+        assert "Fleeting" in world.redo()
+        assert world.get_entity(e.id) is not None
+
+    def test_undo_walks_backwards_through_actions(self, world: World):
+        a = world.add_entity("person", "First")
+        b = world.add_entity("person", "Second")
+        world.undo()                                   # takes back Second
+        assert world.get_entity(b.id) is None
+        assert world.get_entity(a.id) is not None
+        world.undo()                                   # then First
+        assert world.get_entity(a.id) is None
+
+    def test_undo_of_an_edit_restores_the_earlier_values(self, world: World):
+        e = world.add_entity("settlement", "Oldtown", summary="original")
+        world.update_entity(e.id, name="Newtown", summary="rewritten")
+        world.undo()
+        back = world.get_entity(e.id)
+        assert back.name == "Oldtown"
+        assert back.summary == "original"
+        world.redo()
+        assert world.get_entity(e.id).name == "Newtown"
+
+    def test_undo_of_a_delete_brings_the_whole_cascade_back(self, world: World):
+        lord = world.add_entity("person", "Lord Brief")
+        seat = world.add_entity("settlement", "Seat")
+        world.assert_fact(lord, "rules", seat)
+        title = world.add_title("Lord of Seat", entity_id=lord.id)
+        world.grant_title(title.id, lord.id)
+
+        world.delete_entity(lord.id)
+        assert world.titles() == []
+
+        assert "Lord Brief" in world.undo()
+        assert world.get_entity(lord.id) is not None
+        assert len(world.facts_about(lord.id)) == 1
+        assert [t.name for t in world.titles()] == ["Lord of Seat"]
+
+        world.redo()                                   # deleted again, whole
+        assert world.get_entity(lord.id) is None
+        assert world.titles() == []
+
+    def test_undo_of_a_transfer_inverts_both_halves(self, world: World):
+        marr = world.add_entity("house", "House Marr")
+        orren = world.add_entity("house", "House Orren")
+        town = world.add_entity("settlement", "Greyhaven")
+        world.assert_fact(marr, "legally_owns", town, valid_from=world.day(312))
+        world.transfer("legally_owns", town, orren, world.day(428))
+
+        world.undo()
+        owners = world.facts_where("legally_owns", object_id=town.id,
+                                   at=world.day(500))
+        assert [f.subject_id for f in owners] == [marr.id]   # open again, alone
+
+        world.redo()
+        owners = world.facts_where("legally_owns", object_id=town.id,
+                                   at=world.day(500))
+        assert [f.subject_id for f in owners] == [orren.id]
+
+    def test_a_new_action_forfeits_the_redo(self, world: World):
+        world.add_entity("settlement", "A")
+        world.undo()
+        world.add_entity("settlement", "B")            # a real new action
+        with pytest.raises(WorldError, match="nothing to redo"):
+            world.redo()
+
+    def test_nothing_to_undo_is_an_answer(self, world: World):
+        with pytest.raises(WorldError, match="nothing to undo"):
+            world.undo()
+        with pytest.raises(WorldError, match="nothing to redo"):
+            world.redo()
+
+    def test_undo_state_reports_what_the_buttons_would_do(self, world: World):
+        state = world.undo_state()
+        assert state == {"can_undo": False, "undo": None,
+                         "can_redo": False, "redo": None}
+        world.add_entity("settlement", "Somewhere")
+        state = world.undo_state()
+        assert state["can_undo"] is True
+        assert "Somewhere" in state["undo"]
+        world.undo()
+        state = world.undo_state()
+        assert state["can_redo"] is True
+        assert "Somewhere" in state["redo"]
+
+    def test_undo_history_survives_a_reopen(self, tmp_path):
+        """The undone-set is reconstructed from the log's markers, so closing the
+        file mid-history does not resurrect what was taken back."""
+        path = tmp_path / "undoable.fwworld"
+        w = World.create(path, name="Persist")
+        w.add_entity("settlement", "Kept")
+        doomed = w.add_entity("settlement", "Taken back")
+        w.undo()
+        w.close()
+
+        reopened = World.open(path)
+        try:
+            assert reopened.get_entity(doomed.id) is None
+            # undo does not re-target the already-undone action…
+            assert "Kept" in reopened.undo_state()["undo"]
+            # …and the redo stack carried across, too
+            state = reopened.undo_state()
+            assert state["can_redo"] is True
+            assert "Taken back" in state["redo"]
+            reopened.redo()
+            assert reopened.get_entity(doomed.id) is not None
+        finally:
+            reopened.close()
+
+    def test_undoing_a_restore_is_just_another_undo(self, world: World):
+        e = world.add_entity("settlement", "Twice-lost")
+        world.delete_entity(e.id)
+        world.restore(world.recently_deleted()[0]["revision_id"])
+        assert world.get_entity(e.id) is not None
+
+        assert "Twice-lost" in world.undo()            # takes back the restore
+        assert world.get_entity(e.id) is None
+        world.redo()
+        assert world.get_entity(e.id) is not None
+
+    def test_pre_migration_history_sits_beyond_undo(self, world: World):
+        """Rows logged before the action_id column exists carry '' — they must never
+        be mis-grouped into one giant action."""
+        e = world.add_entity("settlement", "Old times")
+        world.db.execute("UPDATE revision SET action_id = ''")
+        with pytest.raises(WorldError, match="nothing to undo"):
+            world.undo()
+        assert world.get_entity(e.id) is not None
+
+
+class TestSchemaMigration:
+    def test_a_version_1_file_is_upgraded_in_place(self, tmp_path):
+        """The first real migration: files from before action_id must open, gain the
+        column, and work — history intact."""
+        import sqlite3 as sql
+
+        from fw.core.world import World as W
+        path = tmp_path / "old.fwworld"
+        w = W.create(path, name="Elder")
+        w.add_entity("settlement", "Ancient")
+        w.close()
+
+        # forge a version-1 file: strip everything the later migrations add, then
+        # rewind user_version — the reopen below must walk v1 → v2 → v3 cleanly
+        conn = sql.connect(path)
+        conn.execute("DROP INDEX ix_revision_action")
+        conn.execute("ALTER TABLE revision DROP COLUMN action_id")
+        conn.execute("DROP INDEX ix_fact_supersedes")
+        conn.execute("ALTER TABLE fact DROP COLUMN supersedes_id")
+        conn.execute("DROP TABLE entity_override")
+        conn.execute("DROP INDEX ix_holding_branch")
+        conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
+        conn.executescript("""
+            CREATE TABLE causal_link_v1 (
+                id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
+                effect_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'caused',
+                confidence TEXT NOT NULL DEFAULT 'canon',
+                note TEXT NOT NULL DEFAULT '',
+                UNIQUE (cause_id, effect_id)) STRICT;
+            INSERT INTO causal_link_v1
+                SELECT id, project_id, cause_id, effect_id, kind, confidence, note
+                FROM causal_link;
+            DROP TABLE causal_link;
+            ALTER TABLE causal_link_v1 RENAME TO causal_link;
+        """)
+        conn.execute("PRAGMA user_version = 1")
+        conn.close()
+
+        upgraded = W.open(path)
+        try:
+            assert upgraded.entity_named("Ancient") is not None
+            columns = {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(revision)")}
+            assert "action_id" in columns
+            assert "supersedes_id" in {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(fact)")}
+            assert upgraded.db.one("SELECT 1 FROM sqlite_master "
+                                   "WHERE name = 'entity_override'") is not None
+            # old rows carry '' (beyond undo); new actions are undoable again
+            fresh = upgraded.add_entity("settlement", "Modern")
+            assert "Modern" in upgraded.undo()
+            assert upgraded.get_entity(fresh.id) is None
+        finally:
+            upgraded.close()
+
+
+class TestUndoRedoHardening:
+    """Regressions from the adversarial review of the undo slice."""
+
+    def test_undo_of_a_delete_keeps_the_grants_and_participations(self, world: World):
+        """Cascade children must replay through the dependency-ordered machinery:
+        a flat newest-first replay put holdings before their titles and lost them."""
+        lord = world.add_entity("person", "Held")
+        title = world.add_title("Holder of Things", entity_id=lord.id)
+        world.grant_title(title.id, lord.id)
+        event = world.add_event("A day", participants=[(lord.id, "participant")])
+
+        world.delete_entity(lord.id)
+        world.undo()
+        back_title = world.title_named("Holder of Things")
+        assert back_title is not None
+        assert [h.holder_id for h in world.title_holdings(back_title.id)] == [lord.id]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [lord.id]
+
+    def test_a_forfeited_redo_stays_forfeited_after_reopen(self, tmp_path):
+        """In-session, a new action clears the redo stack; the reconstruction must
+        reach the same answer, or a stale redo would clobber the newer edit."""
+        path = tmp_path / "forfeit.fwworld"
+        w = World.create(path, name="Forfeit")
+        e = w.add_entity("settlement", "Town")
+        w.update_entity(e.id, name="Y")
+        w.undo()                                      # back to Town
+        w.update_entity(e.id, name="Z")               # forfeits the redo of Y
+        with pytest.raises(WorldError, match="nothing to redo"):
+            w.redo()
+        w.close()
+
+        reopened = World.open(path)
+        try:
+            assert reopened.undo_state()["can_redo"] is False
+            with pytest.raises(WorldError, match="nothing to redo"):
+                reopened.redo()
+            assert reopened.get_entity(e.id).name == "Z"
+        finally:
+            reopened.close()
+
+    def test_two_handles_never_share_a_session_token(self, tmp_path):
+        """The token must be random, not a timestamp prefix: two handles opened in
+        the same millisecond would otherwise weave their actions together."""
+        path = tmp_path / "tokens.fwworld"
+        World.create(path, name="T").close()
+        handles = [World.open(path) for _ in range(8)]
+        try:
+            tokens = {h._session_token for h in handles}
+            assert len(tokens) == len(handles)
+        finally:
+            for h in handles:
+                h.close()
+
+    def test_uninsert_logs_what_its_cascade_takes(self, world: World):
+        """A child row that undo cannot reach (here: a grant whose history predates
+        the action_id column) still dies when its parent is uninserted — that loss
+        must be snapshotted into the log, and redo must bring both back."""
+        holder = world.add_entity("person", "Holder")
+        title = world.add_title("The Seat")
+        world.grant_title(title.id, holder.id)
+        # age the grant out of undo's reach, as pre-migration history is
+        world.db.execute(
+            "UPDATE revision SET action_id = '' WHERE table_name = 'title_holding'")
+
+        world.undo()          # targets the title creation; the grant still exists
+        assert world.title_named("The Seat") is None
+        assert world.db.one(
+            "SELECT 1 FROM revision WHERE table_name = 'title_holding' "
+            "AND action = 'delete' AND note LIKE 'cascade:%'") is not None
+
+        world.redo()          # title returns — and the grant its cascade took
+        again = world.title_named("The Seat")
+        assert again is not None
+        assert [h.holder_id for h in world.title_holdings(again.id)] == [holder.id]
+
+    def test_heavy_undo_traffic_does_not_starve_the_walk(self, world: World):
+        """Inversion records must never push real actions out of reach."""
+        e = world.add_entity("settlement", "Yo-yo")
+        for _ in range(120):
+            world.undo()
+            world.redo()
+        assert world.undo_state()["can_undo"] is True
+        world.undo()
+        assert world.get_entity(e.id) is None
+
+    def test_events_scenes_and_links_are_undoable_too(self, world: World):
+        """Ctrl+Z must target what the writer just did — and the UI creates events,
+        scenes and causal links, not only entities and facts."""
+        who = world.add_entity("person", "Witness")
+        event = world.add_event("The fire", participants=[(who.id, "witness")])
+        assert "The fire" in world.undo_state()["undo"]
+        world.undo()
+        assert world.events() == []
+        world.redo()
+        assert [e.name for e in world.events()] == ["The fire"]
+        assert [p.id for p, _ in world.event_participants(event.id)] == [who.id]
+
+        scene = world.add_scene("A parley", participants=[who.id])
+        world.undo()
+        assert world.get_scene(scene.id) is None
+        world.redo()
+        assert world.get_scene(scene.id) is not None
+        assert [p.id for p in world.scene_participants(scene.id)] == [who.id]
+
+        second = world.add_event("The flood")
+        world.link_cause(second.id, event.id)
+        assert "causal link" in world.undo_state()["undo"]
+        world.undo()
+        assert world.consequences_of(second.id) == []
+        world.redo()
+        assert world.consequences_of(second.id) == [(event.id, 1)]
+
+    def test_child_tables_match_the_schema(self, world: World):
+        """_CHILD_TABLES mirrors the schema's ON DELETE CASCADE edges by hand; if the
+        schema grows an edge this map misses, undo would silently lose rows. Fail
+        loudly here instead."""
+        from fw.core.world import _CHILD_TABLES
+        tables = [r["name"] for r in world.db.query(
+            "SELECT name FROM sqlite_master WHERE type = 'table' "
+            "AND name NOT LIKE 'sqlite_%'")]
+        for parent, declared in _CHILD_TABLES.items():
+            actual = set()
+            for table in tables:
+                for fk in world.db.query(f"PRAGMA foreign_key_list({table})"):
+                    if fk["table"] == parent and fk["on_delete"] == "CASCADE":
+                        actual.add((table, fk["from"]))
+            assert set(declared) == actual, (
+                f"_CHILD_TABLES[{parent!r}] disagrees with the schema")
+
+    def test_a_big_cascade_is_still_described_by_its_entity(self, world: World):
+        """The toast must name what Ctrl+Z will take back even when the action holds
+        more records than any display window."""
+        hub = world.add_entity("region", "Manyfold")
+        for i in range(60):
+            other = world.add_entity("person", f"P{i}")
+            world.assert_fact(other, "located_in", hub)
+        world.delete_entity(hub.id)                     # one action, 60+ records
+        assert "Manyfold" in world.undo_state()["undo"]
+
+    def test_a_second_handle_forfeits_this_ones_redo(self, tmp_path):
+        """Two handles on one file: an edit through either forfeits a pending redo,
+        because the log — not any handle's memory — is the truth."""
+        path = tmp_path / "shared.fwworld"
+        a = World.create(path, name="Shared")
+        e = a.add_entity("settlement", "Town")
+        a.update_entity(e.id, name="Y")
+        a.undo()                                       # back to Town; redo holds Y
+        b = World.open(path)
+        try:
+            b.update_entity(e.id, name="Z")            # the other handle moves on
+            with pytest.raises(WorldError, match="nothing to redo"):
+                a.redo()                               # must not clobber Z with Y
+            assert a.get_entity(e.id).name == "Z"
+            # and undo through A takes back B's edit — the newest action — not
+            # something older from A's own history
+            assert "edit" in a.undo()
+            assert a.get_entity(e.id).name == "Town"
+        finally:
+            b.close()
+            a.close()
+
+
+class TestBranches:
+    """§105 alternate timelines: overlays, never copies; canon never written from a
+    branch."""
+
+    def test_a_branch_inherits_the_world_and_keeps_its_own_additions(
+            self, world: World):
+        mara = world.add_entity("person", "Mara")
+        world.create_branch("what if")
+        fork = world.on_branch("what if")
+
+        assert fork.get_entity(mara.id) is not None       # inherited
+        ghost = fork.add_entity("person", "Only Here")
+        assert fork.get_entity(ghost.id) is not None
+        assert world.get_entity(ghost.id) is None          # invisible to canon
+        assert world.count_entities("person") == 1
+        assert fork.count_entities("person") == 2
+
+    def test_ending_an_inherited_fact_is_branch_local(self, world: World):
+        marr = world.add_entity("house", "House Marr")
+        town = world.add_entity("settlement", "Greyhaven")
+        fact = world.assert_fact(marr, "legally_owns", town,
+                                 valid_from=world.day(300))
+        world.create_branch("the fall")
+        fork = world.on_branch("the fall")
+
+        fork.end_fact(fact.id, fork.day(320))
+        # the branch sees ownership closed…
+        assert fork.facts_where("legally_owns", at=fork.day(330)) == []
+        assert len(fork.facts_where("legally_owns", at=fork.day(310))) == 1
+        # …canon never felt it
+        canon = world.facts_where("legally_owns", at=world.day(330))
+        assert [f.id for f in canon] == [fact.id]
+        assert world.get_fact(fact.id).valid_to is None
+
+        # a second branch edit updates the same override, not a second copy
+        fork.end_fact(fact.id, fork.day(325))
+        overrides = fork.db.query(
+            "SELECT * FROM fact WHERE supersedes_id = ?", (fact.id,))
+        assert len(overrides) == 1
+
+    def test_deleting_an_inherited_fact_is_a_tombstone(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("estranged")
+        fork = world.on_branch("estranged")
+
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []
+        assert fork.facts_about(a.id) == []
+        assert len(world.facts_where("trusts")) == 1       # canon keeps it
+
+    def test_inherited_entities_are_patched_not_copied(self, world: World):
+        town = world.add_entity("settlement", "Greyhaven", summary="A port.")
+        world.create_branch("renamed")
+        fork = world.on_branch("renamed")
+
+        fork.update_entity(town.id, name="Blackhaven")
+        assert fork.get_entity(town.id).name == "Blackhaven"
+        assert fork.get_entity(town.id).summary == "A port."
+        assert world.get_entity(town.id).name == "Greyhaven"
+
+        # a branch of the branch merges field patches, nearest winning per field
+        fork.create_branch("deeper")
+        deeper = fork.on_branch("deeper")
+        deeper.update_entity(town.id, summary="A ruin.")
+        e = deeper.get_entity(town.id)
+        assert e.name == "Blackhaven"                      # parent's rename holds
+        assert e.summary == "A ruin."                      # own patch on top
+
+    def test_a_branch_death_changes_state_and_succession(self, renn: World):
+        """The flagship §105 question: what if the heir were already dead?"""
+        oren = renn.entity_named("Prince Oren")
+        crown = renn.title_named("King of Renn")
+        day = renn.day(241, 1, 1)
+        canon_line = [c.name for c in __import__(
+            "fw.core.succession.engine", fromlist=["SuccessionEngine"]
+        ).SuccessionEngine(renn).compute(crown.id, day).line]
+        assert canon_line[0] == "Prince Oren"
+
+        renn.create_branch("orenless")
+        fork = renn.on_branch("orenless")
+        fork.update_entity(oren.id, exists_to=fork.day(240, 1, 1))
+
+        assert oren.id in renn.state_at(day).entities       # canon: alive
+        assert oren.id not in fork.state_at(day).entities   # branch: gone
+
+        from fw.core.succession.engine import SuccessionEngine
+        branch_line = [c.name for c in
+                       SuccessionEngine(fork).compute(crown.id, day).line]
+        assert branch_line[0] != "Prince Oren"
+        assert canon_line[0] == "Prince Oren"               # canon unchanged
+
+    def test_inherited_entities_cannot_be_deleted_from_a_branch(self, world: World):
+        keep = world.add_entity("person", "Kept")
+        world.create_branch("careful")
+        fork = world.on_branch("careful")
+        with pytest.raises(WorldError, match="end its existence"):
+            fork.delete_entity(keep.id)
+        # but the branch's own creations are its to delete
+        own = fork.add_entity("person", "Fleeting")
+        fork.delete_entity(own.id)
+        assert fork.get_entity(own.id) is None
+
+    def test_branch_causal_links_stay_in_the_branch(self, world: World):
+        a = world.add_event("Flood")
+        b = world.add_event("Famine")
+        world.create_branch("worse")
+        fork = world.on_branch("worse")
+        fork.link_cause(a.id, b.id)
+        assert fork.consequences_of(a.id) == [(b.id, 1)]
+        assert world.consequences_of(a.id) == []
+
+    def test_graph_walks_respect_overrides(self, world: World):
+        region = world.add_entity("region", "March")
+        town = world.add_entity("settlement", "Town")
+        village = world.add_entity("settlement", "Village")
+        world.assert_fact(town, "located_in", region)
+        fact = world.assert_fact(village, "located_in", town)
+        world.create_branch("moved")
+        fork = world.on_branch("moved")
+        fork.delete_fact(fact.id)                           # village unmoored here
+
+        assert dict(world.follow(region.id, "located_in", direction="in")) == {
+            town.id: 1, village.id: 2}
+        assert dict(fork.follow(region.id, "located_in", direction="in")) == {
+            town.id: 1}
+        assert village.id not in fork.neighbours(region.id, ["located_in"], hops=3)
+
+    def test_search_is_branch_aware(self, world: World):
+        world.add_entity("settlement", "Common Town")
+        world.create_branch("alt")
+        fork = world.on_branch("alt")
+        fork.add_entity("settlement", "Fork Town")
+
+        assert {e.name for e in fork.search("Town")} == {"Common Town", "Fork Town"}
+        assert {e.name for e in world.search("Town")} == {"Common Town"}
+
+    def test_branch_overrides_are_undoable(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("doubt")
+        fork = world.on_branch("doubt")
+
+        fork.end_fact(fact.id, fork.day(300))
+        assert fork.facts_where("trusts", at=fork.day(400)) == []
+        fork.undo()
+        assert len(fork.facts_where("trusts", at=fork.day(400))) == 1
+        fork.redo()
+        assert fork.facts_where("trusts", at=fork.day(400)) == []
+
+    def test_duplicate_branch_names_are_refused(self, world: World):
+        world.create_branch("twice")
+        with pytest.raises(WorldError, match="already exists"):
+            world.create_branch("twice")
+
+    def test_a_branch_title_grant_never_crowns_anyone_on_canon(self, world: World):
+        king = world.add_entity("person", "King")
+        usurper = world.add_entity("person", "Usurper")
+        crown = world.add_title("The Crown")
+        world.grant_title(crown.id, king.id, from_day=world.day(200))
+
+        world.create_branch("coup")
+        fork = world.on_branch("coup")
+        fork.grant_title(crown.id, usurper.id, from_day=fork.day(220))
+
+        day = world.day(230)
+        assert world.title_holder_on(crown.id, day) == king.id      # canon safe
+        assert fork.title_holder_on(crown.id, day) == usurper.id    # coup real here
+        assert world.state_at(day).titles[crown.id] == king.id
+        assert [t.name for t in world.titles_held_by(usurper.id)] == []
+        assert [t.name for t in fork.titles_held_by(usurper.id)] == ["The Crown"]
+
+    def test_undo_is_timeline_scoped(self, world: World):
+        """Ctrl+Z on canon must never target a branch's action, and vice versa."""
+        world.add_entity("person", "Canon One")
+        world.create_branch("aside")
+        fork = world.on_branch("aside")
+        ghost = fork.add_entity("person", "Branch Ghost")
+
+        # canon's undo takes back canon's newest action, not the branch's
+        assert "Canon One" in world.undo_state()["undo"]
+        world.undo()
+        assert world.entity_named("Canon One") is None
+        assert fork.get_entity(ghost.id) is not None    # untouched
+
+        # the branch's undo takes back its own
+        assert "Branch Ghost" in fork.undo_state()["undo"]
+        fork.undo()
+        assert fork.get_entity(ghost.id) is None
+
+    def test_competing_overrides_resolve_to_the_nearest_branch(self, world: World):
+        """When an ancestor and a descendant both supersede one fact, the descendant
+        must see exactly one row — the nearest — never both."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("b1")
+        b1 = world.on_branch("b1")
+        b1.create_branch("b2")
+        b2 = b1.on_branch("b2")
+
+        b2.end_fact(fact.id, b2.day(200))      # child overrides first
+        b1.end_fact(fact.id, b1.day(100))      # then the parent, independently
+
+        seen = b2.facts_where("trusts")
+        assert len(seen) == 1
+        assert seen[0].valid_to == b2.day(200)             # b2's own, not b1's
+        assert b2.get_fact(fact.id).valid_to == b2.day(200)
+        assert [f.valid_to for f in b1.facts_where("trusts")] == [b1.day(100)]
+
+    def test_a_branch_tombstone_takes_the_facts_about_it(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        meta = world.assert_fact(b, "trusts", a, about_fact_id=fact.id)
+        world.create_branch("severed")
+        fork = world.on_branch("severed")
+
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []             # meta went with it
+        assert fork.get_fact(meta.id) is None
+        assert len(world.facts_where("trusts")) == 2        # canon keeps both
+
+    def test_by_id_getters_are_timeline_scoped(self, world: World):
+        world.create_branch("aside")
+        fork = world.on_branch("aside")
+        scene = fork.add_scene("Only there")
+        title = fork.add_title("Only theirs")
+        event = fork.add_event("Only then")
+
+        assert world.get_scene(scene.id) is None
+        assert world.get_title(title.id) is None
+        assert world.get_event(event.id) is None
+        assert fork.get_scene(scene.id) is not None
+        assert fork.get_title(title.id) is not None
+        assert fork.get_event(event.id) is not None
+
+    def test_the_toast_names_a_timeline_change_for_what_it_is(self, world: World):
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("doubt")
+        fork = world.on_branch("doubt")
+        fork.end_fact(fact.id, fork.day(300))
+        assert "timeline change" in fork.undo_state()["undo"]
+
+    def test_deleting_a_branch_edited_fact_does_not_resurrect_the_original(
+            self, world: World):
+        """The writer edits an inherited fact, then deletes the fact they see —
+        the fact must be gone in the branch, not reset to canon's version."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        world.create_branch("souring")
+        fork = world.on_branch("souring")
+
+        fork.end_fact(fact.id, fork.day(300))
+        visible = fork.facts_where("trusts")[0]     # the branch's override row
+        fork.delete_fact(visible.id)
+
+        assert fork.facts_where("trusts") == []      # gone, not resurrected
+        assert fork.get_fact(fact.id) is None
+        assert len(world.facts_where("trusts")) == 1  # canon untouched
+
+    def test_tombstone_cascade_survives_a_pre_edited_meta_fact(self, world: World):
+        """A branch edits the fact-about-a-fact, then deletes the underlying fact:
+        both must be gone, and stay gone on a second delete."""
+        a = world.add_entity("person", "A")
+        b = world.add_entity("person", "B")
+        fact = world.assert_fact(a, "trusts", b)
+        meta = world.assert_fact(b, "trusts", a, about_fact_id=fact.id)
+        world.create_branch("severing")
+        fork = world.on_branch("severing")
+
+        fork.end_fact(meta.id, fork.day(200))        # edit the meta first
+        fork.delete_fact(fact.id)
+        assert fork.facts_where("trusts") == []
+        assert fork.get_fact(meta.id) is None
+        fork.delete_fact(fact.id)                    # idempotent, no resurrection
+        assert fork.facts_where("trusts") == []
+        assert len(world.facts_where("trusts")) == 2  # canon whole
+
+    def test_canon_search_survives_branch_name_squatting(self, world: World):
+        """A branch full of entities named like the query must not crowd canon's
+        genuine matches out of the ranked candidate pool."""
+        for i in range(4):
+            world.add_entity("person", f"Keeper {i}", summary="haunted by the ghost")
+        world.create_branch("haunted")
+        fork = world.on_branch("haunted")
+        for i in range(30):
+            fork.add_entity("person", f"Ghost {i}")
+
+        names = {e.name for e in world.search("ghost", limit=5)}
+        assert names == {f"Keeper {i}" for i in range(4)}
+        assert any("Ghost" in e.name for e in fork.search("ghost", limit=10))
+
+    def test_the_two_title_views_agree_about_a_coup(self, world: World):
+        king = world.add_entity("person", "King")
+        usurper = world.add_entity("person", "Usurper")
+        crown = world.add_title("The Crown")
+        world.grant_title(crown.id, king.id, from_day=world.day(200))
+        world.create_branch("coup")
+        fork = world.on_branch("coup")
+        fork.grant_title(crown.id, usurper.id, from_day=fork.day(220))
+
+        day = world.day(230)
+        # on the branch, the deposed king no longer *holds* the crown on that day
+        assert fork.title_holder_on(crown.id, day) == usurper.id
+        assert [t.name for t in fork.titles_held_by(king.id, at=day)] == []
+        assert [t.name for t in fork.titles_held_by(usurper.id, at=day)] == ["The Crown"]
+        assert fork.state_at(day).titles[crown.id] == usurper.id
+        # on canon, nothing happened
+        assert [t.name for t in world.titles_held_by(king.id, at=day)] == ["The Crown"]
+        assert world.state_at(day).titles[crown.id] == king.id

@@ -15,10 +15,12 @@
  * in the panel repaints the map behind it — the two must never disagree about the world.
  */
 
-import { useState } from 'react'
-import { api } from './api'
+import { useEffect, useRef, useState } from 'react'
+import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
+import { BranchPicker } from './components/BranchPicker'
+import { Launcher, WorldPicker } from './components/WorldPicker'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
 import { Dashboard } from './views/Dashboard'
@@ -48,12 +50,21 @@ export function App() {
   const bump = () => setVersion((v) => v + 1)
 
   const world = useAsync(() => api.world(), [version])
-  const vocabulary = useAsync(() => api.vocabulary(), [])
-  const snapshots = useAsync(() => api.snapshots(), [])
+  // Gated on the world being open: on the launcher these would only 409.
+  const vocabulary = useAsync(
+    () => (world.data ? api.vocabulary() : Promise.resolve(null)),
+    [world.data !== null],
+  )
+  const snapshots = useAsync(
+    () => (world.data ? api.snapshots() : Promise.resolve(null)),
+    [world.data !== null],
+  )
   const [view, setView] = useState<string>('dashboard')
   const [day, setDay] = useState<number | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [picking, setPicking] = useState(false)
+  const [branching, setBranching] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -61,7 +72,56 @@ export function App() {
     [currentDay, world.data !== null],
   )
 
+  // Undo/redo (§59). The buttons show what they would take back; Ctrl+Z / Ctrl+Y work
+  // anywhere the writer is not typing into a field.
+  const undoState = useAsync(
+    () => (world.data ? api.undoState() : Promise.resolve(null)),
+    [version, world.data !== null],
+  )
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef<number | undefined>(undefined)
+  const announce = (text: string) => {
+    setToast(text)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 4000)
+  }
+  const timeTravel = useRef<(direction: 'undo' | 'redo') => void>(() => {})
+  timeTravel.current = async (direction) => {
+    try {
+      const result = direction === 'undo' ? await api.undo() : await api.redo()
+      announce(result.message)
+      bump()
+    } catch (err) {
+      announce(err instanceof Error ? err.message : String(err))
+    }
+  }
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA'
+                     || target.tagName === 'SELECT' || target.isContentEditable)) {
+        return    // never steal the shortcut from a text field's own undo
+      }
+      if (!(e.ctrlKey || e.metaKey)) return
+      const key = e.key.toLowerCase()
+      if (key === 'z' && !e.shiftKey) {
+        e.preventDefault()
+        timeTravel.current('undo')
+      } else if (key === 'y' || (key === 'z' && e.shiftKey)) {
+        e.preventDefault()
+        timeTravel.current('redo')
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   if (world.loading && !world.data) return <Loading what="Opening the world" />
+  // No world open (409) means the launcher, not an error: the writer picks a save or
+  // names a new world — nobody is forced into a template.
+  if (!world.data && world.error instanceof ApiError && world.error.status === 409) {
+    return <Launcher />
+  }
   // Fatal only when there is nothing to show. /api/world now refetches after every
   // edit, and one failed refetch must not tear down the writer's whole session —
   // stale-but-present data keeps the app alive until the next successful load.
@@ -89,12 +149,47 @@ export function App() {
           ))}
         </nav>
         <span style={{ flex: 1 }} />
+        <button onClick={() => timeTravel.current('undo')}
+                disabled={!undoState.data?.can_undo}
+                aria-label="Undo"
+                title={undoState.data?.undo
+                  ? `Undo ${undoState.data.undo} (Ctrl+Z)` : 'Nothing to undo'}>
+          ↶
+        </button>
+        <button onClick={() => timeTravel.current('redo')}
+                disabled={!undoState.data?.can_redo}
+                aria-label="Redo"
+                title={undoState.data?.redo
+                  ? `Redo ${undoState.data.redo} (Ctrl+Y)` : 'Nothing to redo'}>
+          ↷
+        </button>
+        <button onClick={() => setBranching(true)}
+                className={world.data.branch.is_canon ? '' : 'active'}
+                title="Alternate timelines: fork a what-if, or switch between them">
+          ⑂ {world.data.branch.is_canon ? 'Timelines' : world.data.branch.name}
+        </button>
+        <button onClick={() => setPicking(true)}
+                title="Open another world, or start a new one">
+          Worlds
+        </button>
         <button className="active" onClick={() => setCreating(true)}
                 title="Add something to the world">
           + New
         </button>
         <SearchBox onSelect={(id) => setSelected(id)} version={version} />
       </header>
+
+      {!world.data.branch.is_canon && (
+        <div className="branch-banner" role="status">
+          You are on the <strong>{world.data.branch.name}</strong> timeline — nothing
+          here touches the main one.
+          <button className="small"
+                  onClick={() => void api.openBranch('canon')
+                    .then(() => window.location.reload())}>
+            Return to the main timeline
+          </button>
+        </div>
+      )}
 
       <Timeline
         world={world.data}
@@ -156,9 +251,24 @@ export function App() {
             onClose={() => setSelected(null)}
             onSelect={setSelected}
             onMutate={bump}
+            version={version}
           />
         )}
       </div>
+
+      {toast && <div className="toast" role="status">{toast}</div>}
+
+      {picking && (
+        <Modal title="Your worlds" onClose={() => setPicking(false)}>
+          <WorldPicker />
+        </Modal>
+      )}
+
+      {branching && (
+        <Modal title="Alternate timelines" onClose={() => setBranching(false)}>
+          <BranchPicker day={currentDay} dateText={dateText} />
+        </Modal>
+      )}
 
       {creating && (
         <Modal title="Add to the world" onClose={() => setCreating(false)}>

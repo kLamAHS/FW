@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 4
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -160,6 +160,16 @@ CREATE INDEX ix_entity_project_type ON entity(project_id, type_key, name);
 CREATE INDEX ix_entity_branch       ON entity(branch_id, type_key);
 CREATE INDEX ix_entity_existence    ON entity(project_id, exists_from, exists_to);
 
+-- §105: a branch never copies the world. An entity inherited from an ancestor branch
+-- is changed *in the branch* by a patch of field values laid over it at read time —
+-- canon rows are never written from a branch.
+CREATE TABLE entity_override (
+    branch_id     TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+    entity_id     TEXT NOT NULL REFERENCES entity(id) ON DELETE CASCADE,
+    changes       TEXT NOT NULL DEFAULT '{}',      -- JSON: the edited fields only
+    PRIMARY KEY (branch_id, entity_id)
+) STRICT;
+
 -- ---------------------------------------------------------------- the fact spine
 
 CREATE TABLE fact (
@@ -179,6 +189,12 @@ CREATE TABLE fact (
     -- that shares none of the spine's temporality or provenance. It is one nullable
     -- column now against a migration and a divided query surface later.
     about_fact_id   TEXT REFERENCES fact(id) ON DELETE CASCADE,
+
+    -- §105 branch overlays: a branch changes an inherited fact by writing its own row
+    -- that *supersedes* the ancestor's. Reads on the branch hide the superseded row;
+    -- reads on the ancestor never see the branch's. A superseding row whose props
+    -- carry {"branch_tombstone": true} deletes the fact for the branch alone.
+    supersedes_id   TEXT REFERENCES fact(id) ON DELETE CASCADE,
 
     -- §3 temporal validity. Bounds are day indices; the *_hi / *_lo columns carry the
     -- uncertainty, so 'from sometime in the 310s' is representable without losing the
@@ -212,6 +228,7 @@ CREATE INDEX ix_fact_pred_subj ON fact(branch_id, predicate_key, subject_id);
 CREATE INDEX ix_fact_pred_obj  ON fact(branch_id, predicate_key, object_id);
 CREATE INDEX ix_fact_temporal  ON fact(branch_id, predicate_key, valid_from, valid_to);
 CREATE INDEX ix_fact_about     ON fact(about_fact_id) WHERE about_fact_id IS NOT NULL;
+CREATE INDEX ix_fact_supersedes ON fact(supersedes_id) WHERE supersedes_id IS NOT NULL;
 
 -- ---------------------------------------------------------------- events & causality
 
@@ -248,7 +265,9 @@ CREATE TABLE event_participant (
 
 CREATE INDEX ix_participant_entity ON event_participant(entity_id);
 
--- §32 causal chains: flood -> crop failure -> grain shortage -> unrest -> rebellion
+-- §32 causal chains: flood -> crop failure -> grain shortage -> unrest -> rebellion.
+-- branch_id is nullable for files migrated from before branches; NULL reads as canon.
+-- Uniqueness of a (cause, effect) pair is per branch, via the expression index below.
 CREATE TABLE causal_link (
     id           TEXT PRIMARY KEY,
     project_id   TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
@@ -257,8 +276,12 @@ CREATE TABLE causal_link (
     kind         TEXT NOT NULL DEFAULT 'caused',
     confidence   TEXT NOT NULL DEFAULT 'canon',
     note         TEXT NOT NULL DEFAULT '',
-    UNIQUE (cause_id, effect_id)
+    branch_id    TEXT REFERENCES branch(id) ON DELETE CASCADE
 ) STRICT;
+
+CREATE UNIQUE INDEX ux_causal_pair
+    ON causal_link(cause_id, effect_id, ifnull(branch_id, ''));
+CREATE INDEX ix_causal_branch ON causal_link(branch_id);
 
 -- §33 the same event, told differently by different parties
 CREATE TABLE interpretation (
@@ -326,6 +349,7 @@ CREATE TABLE title (
     created_at        TEXT NOT NULL
 ) STRICT;
 
+-- branch_id is nullable for files from before branches; NULL reads as canon.
 CREATE TABLE title_holding (
     id            TEXT PRIMARY KEY,
     title_id      TEXT NOT NULL REFERENCES title(id) ON DELETE CASCADE,
@@ -334,10 +358,12 @@ CREATE TABLE title_holding (
     to_day        INTEGER,
     how           TEXT NOT NULL DEFAULT 'inheritance',
     disputed      INTEGER NOT NULL DEFAULT 0,
-    note          TEXT NOT NULL DEFAULT ''
+    note          TEXT NOT NULL DEFAULT '',
+    branch_id     TEXT REFERENCES branch(id) ON DELETE CASCADE
 ) STRICT;
 
-CREATE INDEX ix_holding_title ON title_holding(title_id, from_day, to_day);
+CREATE INDEX ix_holding_title  ON title_holding(title_id, from_day, to_day);
+CREATE INDEX ix_holding_branch ON title_holding(branch_id);
 
 -- ---------------------------------------------------------------- geography (§34, §91)
 
@@ -453,20 +479,23 @@ CREATE TABLE source (
 ) STRICT;
 
 -- §59 revision history. Append-only: the row records what changed, so history is never
--- lost to an overwrite, satisfying §106.3.
+-- lost to an overwrite, satisfying §106.3. `action_id` groups every record written in
+-- one transaction into one *user action* — the unit undo and redo operate on.
 CREATE TABLE revision (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id    TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
     table_name    TEXT NOT NULL,
     row_id        TEXT NOT NULL,
-    action        TEXT NOT NULL,          -- insert | update | delete
+    action        TEXT NOT NULL,          -- insert | update | delete | undo
     before        TEXT,
     after         TEXT,
     at            TEXT NOT NULL,
-    note          TEXT NOT NULL DEFAULT ''
+    note          TEXT NOT NULL DEFAULT '',
+    action_id     TEXT NOT NULL DEFAULT ''
 ) STRICT;
 
-CREATE INDEX ix_revision_row ON revision(table_name, row_id, id);
+CREATE INDEX ix_revision_row    ON revision(table_name, row_id, id);
+CREATE INDEX ix_revision_action ON revision(action_id, id);
 
 -- §46 'allow intentional exceptions'
 CREATE TABLE continuity_suppression (
@@ -509,4 +538,59 @@ CREATE VIRTUAL TABLE entity_trigram USING fts5(
 MIGRATIONS: dict[int, str] = {
     # Version 1 is the initial schema above. Later versions append here; `user_version`
     # in the file records which have been applied.
+    #
+    # 2: revisions gain `action_id`, grouping the records of one transaction into one
+    #    undoable user action. Rows from before this migration keep '' and are simply
+    #    outside undo's reach — still restorable individually, never mis-grouped.
+    #
+    # NOTE: migration statements are split on ';' and run one by one inside a guarded
+    # transaction — no statement may contain an embedded semicolon or manage its own
+    # transaction.
+    2: """
+        ALTER TABLE revision ADD COLUMN action_id TEXT NOT NULL DEFAULT '';
+        CREATE INDEX ix_revision_action ON revision(action_id, id);
+    """,
+    # 3: §105 branch overlays become real. Facts gain `supersedes_id` (a branch's own
+    #    row hiding an inherited one), entity_override carries per-branch field
+    #    patches, and causal links become branch-scoped — the old global UNIQUE pair
+    #    constraint is rebuilt as a per-branch unique index, with existing rows
+    #    assigned to the canon branch.
+    3: """
+        ALTER TABLE fact ADD COLUMN supersedes_id TEXT REFERENCES fact(id) ON DELETE CASCADE;
+        CREATE INDEX ix_fact_supersedes ON fact(supersedes_id) WHERE supersedes_id IS NOT NULL;
+        CREATE TABLE entity_override (
+            branch_id  TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+            entity_id  TEXT NOT NULL REFERENCES entity(id) ON DELETE CASCADE,
+            changes    TEXT NOT NULL DEFAULT '{}',
+            PRIMARY KEY (branch_id, entity_id)
+        ) STRICT;
+        CREATE TABLE causal_link_v3 (
+            id           TEXT PRIMARY KEY,
+            project_id   TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+            cause_id     TEXT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+            effect_id    TEXT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+            kind         TEXT NOT NULL DEFAULT 'caused',
+            confidence   TEXT NOT NULL DEFAULT 'canon',
+            note         TEXT NOT NULL DEFAULT '',
+            branch_id    TEXT REFERENCES branch(id) ON DELETE CASCADE
+        ) STRICT;
+        INSERT INTO causal_link_v3
+            SELECT id, project_id, cause_id, effect_id, kind, confidence, note,
+                   (SELECT id FROM branch WHERE is_canon = 1)
+            FROM causal_link;
+        DROP TABLE causal_link;
+        ALTER TABLE causal_link_v3 RENAME TO causal_link;
+        CREATE UNIQUE INDEX ux_causal_pair
+            ON causal_link(cause_id, effect_id, ifnull(branch_id, ''));
+        CREATE INDEX ix_causal_branch ON causal_link(branch_id)
+    """,
+    # 4: title grants become branch-scoped too — a coup tried on a what-if must not
+    #    crown anyone on the main timeline. Existing rows are backfilled to canon;
+    #    readers still tolerate NULL (as canon's) for files a pre-backfill build of
+    #    this migration already stamped as version 4.
+    4: """
+        ALTER TABLE title_holding ADD COLUMN branch_id TEXT REFERENCES branch(id) ON DELETE CASCADE;
+        UPDATE title_holding SET branch_id = (SELECT id FROM branch WHERE is_canon = 1);
+        CREATE INDEX ix_holding_branch ON title_holding(branch_id)
+    """,
 }

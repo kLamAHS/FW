@@ -14,6 +14,10 @@ reason the temporal decision had to be made before any feature work.
 
 from __future__ import annotations
 
+import contextlib
+import dataclasses
+import json
+import secrets
 import sqlite3
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -66,9 +70,13 @@ _ENTITY_EDITABLE = frozenset({
 _RESTORE_SPEC: dict[str, dict[str, Any]] = {
     "fact": {"refs": {"subject_id": ("entity", "skip"), "object_id": ("entity", "skip"),
                       "about_fact_id": ("fact", "skip"),
+                      "supersedes_id": ("fact", "null"),
                       "source_id": ("source", "null")}},
     "event": {"refs": {"entity_id": ("entity", "skip"),
                        "location_id": ("entity", "null")}},
+    "scene": {"refs": {"chapter_id": ("chapter", "null"),
+                       "location_id": ("entity", "null"),
+                       "pov_id": ("entity", "null")}},
     "title": {"refs": {"entity_id": ("entity", "skip"),
                        "territory_id": ("entity", "null"),
                        "dynasty_root_id": ("entity", "null")}},
@@ -79,7 +87,8 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                                "to_entity_id": ("entity", "skip"),
                                "toll_holder_id": ("entity", "null")}},
     "title_holding": {"refs": {"title_id": ("title", "skip"),
-                               "holder_id": ("entity", "skip")}},
+                               "holder_id": ("entity", "skip"),
+                               "branch_id": ("branch", "skip")}},
     "event_participant": {"refs": {"event_id": ("event", "skip"),
                                    "entity_id": ("entity", "skip")},
                           "key": ("event_id", "entity_id", "role")},
@@ -93,15 +102,41 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                                  "about_observer_id": ("entity", "skip"),
                                  "acquired_from": ("entity", "null")}},
     "causal_link": {"refs": {"cause_id": ("event", "skip"),
-                             "effect_id": ("event", "skip")},
-                    "unique": ("cause_id", "effect_id")},
+                             "effect_id": ("event", "skip"),
+                             "branch_id": ("branch", "null")},
+                    "unique": ("cause_id", "effect_id", "branch_id")},
+    "entity_override": {"refs": {"branch_id": ("branch", "skip"),
+                                 "entity_id": ("entity", "skip")},
+                        "key": ("branch_id", "entity_id")},
 }
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
-_RESTORE_ORDER = ("event", "title", "secret", "geometry", "route_segment",
+_RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
-                  "interpretation", "knowledge_state", "causal_link")
+                  "interpretation", "knowledge_state", "causal_link",
+                  "entity_override")
+
+# How undo's toast names a change to each kind of row.
+_ACTION_NOUNS: dict[str, str] = {
+    "event": "the event", "scene": "the scene", "title": "the title",
+    "secret": "the secret", "title_holding": "a title grant",
+    "knowledge_state": "a knowledge note", "geometry": "map geometry",
+    "route_segment": "a route segment", "causal_link": "a causal link",
+    "event_participant": "an event participation",
+    "scene_participant": "a scene participation",
+    "interpretation": "an interpretation",
+}
+
+# What the FK cascade takes with a row of each table — the children a raw DELETE must
+# snapshot into the log first, or they would be the one loss the log cannot repair.
+_CHILD_TABLES: dict[str, tuple[tuple[str, str], ...]] = {
+    "event": (("event_participant", "event_id"), ("causal_link", "cause_id"),
+              ("causal_link", "effect_id"), ("interpretation", "event_id")),
+    "title": (("title_holding", "title_id"),),
+    "secret": (("knowledge_state", "secret_id"),),
+    "scene": (("scene_participant", "scene_id"),),
+}
 
 # SET NULL columns on rows that *survive* a delete: the cascade clears the reference
 # but keeps the row, so a restore should offer to re-link it. Only these (table,
@@ -167,6 +202,31 @@ class World:
         self.project_id = project_id
         self.branch_id = branch_id
         self._calendar: Calendar | None = None
+        # §105: a branch reads its whole ancestor chain, overlaid with its own rows.
+        # The chain is ordered nearest-first (this branch, its parent, … canon), which
+        # is also the precedence order for entity overrides.
+        chain: list[str] = [branch_id]
+        cursor = branch_id
+        while True:
+            row = self.db.one("SELECT parent_id FROM branch WHERE id = ?", (cursor,))
+            parent = row["parent_id"] if row else None
+            if not parent or parent in chain:
+                break
+            chain.append(parent)
+            cursor = parent
+        self._chain: tuple[str, ...] = tuple(chain)
+        self._in_chain = "branch_id IN (" + ",".join("?" for _ in chain) + ")"
+        # Undo state. Actions are grouped in the log by action_id; inversions announce
+        # themselves with a marker record, so which actions currently stand undone is
+        # reconstructed from the file itself — undo history survives a restart.
+        # The token must be genuinely random: a ULID prefix is a millisecond timestamp,
+        # and two handles opened in the same millisecond would then weave their
+        # transactions into each other's actions.
+        self._session_token = secrets.token_hex(6)
+        self._undone: set[str] = set()                  # action ids currently undone
+        self._redo: list[tuple[str, str]] = []          # (target, its inversion)
+        self._inversions: dict[str, str] = {}           # inversion action -> target
+        self._load_undo_state()
 
     # ---- lifecycle --------------------------------------------------------
 
@@ -320,6 +380,214 @@ class World:
     def day(self, year: int, month: int = 1, day: int = 1) -> int:
         return self.calendar.date(year, month, day)
 
+    # ---- branches (§105) --------------------------------------------------
+    #
+    # A branch is an alternate timeline that *overlays* its ancestors rather than
+    # copying them: reads see the ancestor chain's rows plus the branch's own; writes
+    # from a branch never touch an ancestor's rows. Changing something inherited makes
+    # a branch-local override — a superseding fact row, or an entity field patch —
+    # and deleting an inherited fact makes a tombstone. Canon stays exactly as it was.
+
+    @property
+    def branch_name(self) -> str:
+        return self.db.scalar("SELECT name FROM branch WHERE id = ?", (self.branch_id,))
+
+    @property
+    def is_canon(self) -> bool:
+        return bool(self.db.scalar(
+            "SELECT is_canon FROM branch WHERE id = ?", (self.branch_id,)))
+
+    def branches(self) -> list[dict]:
+        return [
+            {"id": r["id"], "name": r["name"], "is_canon": bool(r["is_canon"]),
+             "parent_id": r["parent_id"], "branched_at": r["branched_at"],
+             "open": r["id"] == self.branch_id}
+            for r in self.db.query(
+                "SELECT * FROM branch WHERE project_id = ? ORDER BY created_at",
+                (self.project_id,))
+        ]
+
+    def create_branch(self, name: str, *, branched_at: int | None = None) -> str:
+        """A new timeline forking from this one. Returns the new branch's name."""
+        name = name.strip()
+        if not name:
+            raise WorldError("give the timeline a name")
+        try:
+            self.db.insert("branch", {
+                "id": new_id(), "project_id": self.project_id, "name": name,
+                "parent_id": self.branch_id, "branched_at": branched_at,
+                "is_canon": 0, "created_at": now_iso(),
+            })
+        except sqlite3.IntegrityError as exc:
+            raise WorldError(f"a timeline named {name!r} already exists") from exc
+        return name
+
+    def counts_by_type(self) -> dict[str, int]:
+        return {r["type_key"]: r["n"] for r in self.db.query(
+            f"SELECT type_key, count(*) AS n FROM entity WHERE {self._in_chain} "
+            "GROUP BY type_key ORDER BY n DESC", self._chain)}
+
+    def count_facts(self) -> int:
+        live, live_params = self._live_fact("fact")
+        return self.db.scalar(
+            f"SELECT count(*) FROM fact WHERE {self._in_chain} AND {live}",
+            [*self._chain, *live_params])
+
+    def count_events(self) -> int:
+        return self.db.scalar(
+            f"SELECT count(*) FROM event WHERE {self._in_chain}", self._chain)
+
+    def span(self) -> dict[str, int | None]:
+        """The first and last day this timeline mentions anywhere."""
+        marks = self._in_chain
+        bounds = self.db.one(
+            f"""SELECT min(d) AS lo, max(d) AS hi FROM (
+                   SELECT min(exists_from) AS d FROM entity WHERE {marks}
+                   UNION ALL SELECT max(exists_to)  FROM entity WHERE {marks}
+                   UNION ALL SELECT min(valid_from) FROM fact   WHERE {marks}
+                   UNION ALL SELECT max(valid_to)   FROM fact   WHERE {marks}
+                   UNION ALL SELECT min(start_day)  FROM event  WHERE {marks}
+                   UNION ALL SELECT max(end_day)    FROM event  WHERE {marks}
+                   UNION ALL SELECT max(start_day)  FROM event  WHERE {marks}
+               )""",
+            [*self._chain] * 7,
+        )
+        return {"lo": bounds["lo"] if bounds else None,
+                "hi": bounds["hi"] if bounds else None}
+
+    def on_branch(self, name: str) -> World:
+        """A view of this same file on another timeline — shares the connection."""
+        row = self.db.one(
+            "SELECT id FROM branch WHERE project_id = ? AND name = ?",
+            (self.project_id, name))
+        if row is None:
+            raise WorldError(f"no timeline named {name!r}")
+        return World(self.db, self.project_id, row["id"])
+
+    def _live_fact(self, alias: str) -> tuple[str, list[str]]:
+        """SQL for a fact row's visibility under this branch's overlays.
+
+        Hidden when it is a tombstone, or when a row in the chain supersedes it. On
+        canon (chain of one) no overlay can apply, so this collapses to a constant —
+        the hot paths pay nothing until a branch actually exists.
+        """
+        if len(self._chain) == 1:
+            return "1 = 1", []
+        # Rank branches by distance: nearer overrides beat farther ones, so when an
+        # ancestor and a descendant both supersede the same fact, only the nearest
+        # row speaks — never both, never the farther one.
+        rank = "CASE {col} " + " ".join(
+            f"WHEN ? THEN {i}" for i in range(len(self._chain))) + " END"
+        my_rank = rank.format(col=f"{alias}.branch_id")
+        their_rank = rank.format(col="__s.branch_id")
+        condition = (
+            f"json_extract({alias}.props, '$.branch_tombstone') IS NULL "
+            f"AND NOT EXISTS (SELECT 1 FROM fact __o "
+            f"WHERE __o.supersedes_id = {alias}.id AND __o.{self._in_chain}) "
+            f"AND ({alias}.supersedes_id IS NULL OR NOT EXISTS ("
+            f"SELECT 1 FROM fact __s "
+            f"WHERE __s.supersedes_id = {alias}.supersedes_id "
+            f"AND __s.{self._in_chain} AND ({their_rank}) < ({my_rank})))"
+        )
+        chain = list(self._chain)
+        return condition, chain + chain + chain + chain
+
+    def _override_map(self) -> dict[str, dict]:
+        """entity_id -> merged field patch for this chain, farthest branch first, so
+        a child branch's edit of one field never discards its parent's edit of
+        another."""
+        if len(self._chain) == 1:
+            return {}
+        by_branch: dict[str, list] = {}
+        for r in self.db.query(
+            f"SELECT branch_id, entity_id, changes FROM entity_override "
+            f"WHERE {self._in_chain}", list(self._chain),
+        ):
+            by_branch.setdefault(r["branch_id"], []).append(r)
+        merged: dict[str, dict] = {}
+        for branch in reversed(self._chain):            # canon-side first
+            for r in by_branch.get(branch, ()):
+                merged.setdefault(r["entity_id"], {}).update(
+                    decode_json(r["changes"], {}))
+        return merged
+
+    def _patched(self, entity: Entity, changes: dict | None) -> Entity:
+        if not changes:
+            return entity
+        fields = {k: v for k, v in changes.items() if k in _ENTITY_EDITABLE}
+        if "tags" in fields:
+            fields["tags"] = tuple(fields["tags"] or [])
+        return dataclasses.replace(entity, **fields)
+
+    def _entity_override_for(self, entity_id: str) -> dict | None:
+        if len(self._chain) == 1:
+            return None
+        merged: dict = {}
+        for branch in reversed(self._chain):            # canon-side first
+            row = self.db.one(
+                "SELECT changes FROM entity_override "
+                "WHERE branch_id = ? AND entity_id = ?", (branch, entity_id))
+            if row is not None:
+                merged.update(decode_json(row["changes"], {}))
+        return merged or None
+
+    def _override_entity(self, entity_id: str, payload: dict) -> None:
+        """Record branch-local field values over an inherited entity."""
+        with self.db.transaction():
+            key = f"{self.branch_id}/{entity_id}"
+            existing = self.db.one(
+                "SELECT changes FROM entity_override "
+                "WHERE branch_id = ? AND entity_id = ?",
+                (self.branch_id, entity_id))
+            if existing is None:
+                self.db.insert("entity_override", {
+                    "branch_id": self.branch_id, "entity_id": entity_id,
+                    "changes": payload,
+                })
+                self._log_revision("entity_override", key, "insert", None,
+                                   {"changes": payload})
+            else:
+                before = decode_json(existing["changes"], {})
+                merged = {**before, **payload}
+                self.db.execute(
+                    "UPDATE entity_override SET changes = ? "
+                    "WHERE branch_id = ? AND entity_id = ?",
+                    (json.dumps(merged), self.branch_id, entity_id))
+                self._log_revision("entity_override", key, "update",
+                                   {"changes": before}, {"changes": merged})
+
+    def _branch_override_row(self, fact_id: str):
+        """This branch's own superseding row for an inherited fact, if any."""
+        return self.db.one(
+            "SELECT * FROM fact WHERE supersedes_id = ? AND branch_id = ?",
+            (fact_id, self.branch_id))
+
+    def _override_fact(self, orig, changes: dict) -> str:
+        """Write branch-local changes over an inherited fact; returns the row id that
+        now speaks for it in this branch."""
+        with self.db.transaction():
+            existing = self._branch_override_row(orig["id"])
+            if existing is not None:
+                before = {k: _snapshot(existing).get(k) for k in changes}
+                self.db.update("fact", existing["id"],
+                               {**changes, "updated_at": now_iso()})
+                self._log_revision("fact", existing["id"], "update", before, changes)
+                return existing["id"]
+            copy = _snapshot(orig)
+            copy.update(changes)
+            copy["id"] = new_id()
+            copy["branch_id"] = self.branch_id
+            copy["supersedes_id"] = orig["id"]
+            copy["created_at"] = copy["updated_at"] = now_iso()
+            self.db.insert("fact", copy)
+            self._log_revision("fact", copy["id"], "insert", None, {
+                "subject_id": copy.get("subject_id"),
+                "predicate_key": copy.get("predicate_key"),
+                "object_id": copy.get("object_id"), "value": copy.get("value"),
+                "supersedes": orig["id"],
+            })
+            return copy["id"]
+
     # ---- revisions (§59) --------------------------------------------------
 
     def _log_revision(self, table: str, row_id: str, action: str,
@@ -332,13 +600,38 @@ class World:
         readable diff — and because it is written inside the same transaction as the
         change, a rollback takes its log entry with it. `note` marks records that belong
         to a delete's cascade batch, so restore can find them by name rather than by
-        guessing from timestamps.
+        guessing from timestamps. `action_id` groups everything one transaction wrote
+        into one *user action* — the unit undo works on — and any genuinely new action
+        forfeits whatever was waiting to be redone, as undo systems must.
         """
+        action_id = self._current_action_id()
+        if action_id not in self._inversions and self._redo:
+            self._redo.clear()
         self.db.insert("revision", {
             "project_id": self.project_id, "table_name": table, "row_id": row_id,
             "action": action, "before": before, "after": after, "at": now_iso(),
-            "note": note,
+            "note": note, "action_id": action_id,
         })
+
+    def _current_action_id(self) -> str:
+        """The id of the user action being written: branch, session, transaction.
+
+        The branch prefix is what keeps undo timeline-scoped: an action made on a
+        what-if is never the target of Ctrl+Z on canon, and vice versa — the shared
+        log stays one history, read through the timeline that wrote each entry.
+        """
+        return f"{self.branch_id}:{self._session_token}:{self.db.transaction_serial}"
+
+    def _action_is_ours(self, action_id: str) -> bool:
+        """Whether an action belongs to this timeline.
+
+        Two-part ids predate branch-prefixed ids and are attributed to canon — the
+        only build that wrote branch actions without a prefix was never released, so
+        in practice every unprefixed action really was canon's."""
+        head, _, rest = action_id.partition(":")
+        if ":" not in rest:                     # legacy two-part id -> canon's
+            return len(self._chain) == 1
+        return head == self.branch_id
 
     def revisions_for(self, row_id: str, *, limit: int = 50) -> list[dict]:
         """The change history of one row, newest first."""
@@ -363,7 +656,8 @@ class World:
         """
         rows = self.db.query(
             "SELECT table_name, row_id, before, at FROM revision "
-            "WHERE project_id = ? ORDER BY id DESC LIMIT ?",
+            "WHERE project_id = ? AND table_name IN ('entity', 'fact') "
+            "ORDER BY id DESC LIMIT ?",
             (self.project_id, limit * 8),
         )
         out: list[tuple[Entity, str]] = []
@@ -469,13 +763,7 @@ class World:
                 raise WorldError(f"{snapshot.get('name', row_id)} already exists")
             if not {"id", "type_key", "name"} <= set(snapshot):
                 raise WorldError("this delete record is too incomplete to restore")
-            self.db.insert("entity", snapshot)
-            self._index_entity(row_id, snapshot["type_key"], snapshot["name"],
-                               snapshot.get("summary", ""), snapshot.get("tags") or [])
-            self._log_revision("entity", row_id, "insert", None, {
-                "name": snapshot["name"], "type_key": snapshot["type_key"],
-                "restored_from": rev["id"],
-            })
+            self._insert_entity_snapshot(snapshot, rev["id"])
             facts, others = self._restore_cascade(rev)
             name = snapshot.get("name", row_id)
             parts = []
@@ -496,6 +784,16 @@ class World:
             return (f"Restored the {label} connection and {extra} dependent "
                     f"record{'s' if extra != 1 else ''}.")
         return f"Restored the {label} connection."
+
+    def _insert_entity_snapshot(self, snapshot: dict, source_revision: int) -> None:
+        """Re-insert one entity row from its (column-filtered) delete snapshot."""
+        self.db.insert("entity", snapshot)
+        self._index_entity(snapshot["id"], snapshot["type_key"], snapshot["name"],
+                           snapshot.get("summary", ""), snapshot.get("tags") or [])
+        self._log_revision("entity", snapshot["id"], "insert", None, {
+            "name": snapshot["name"], "type_key": snapshot["type_key"],
+            "restored_from": source_revision,
+        })
 
     def _restore_cascade(self, rev: dict) -> tuple[int, int]:
         """Bring back the rows logged in the same delete batch as `rev`.
@@ -521,20 +819,32 @@ class World:
             batch.append(prior)
             cursor -= 1
 
-        deletes: dict[str, list[dict]] = {}
-        relinks: list[dict] = []
-        for prior in batch:
-            if prior["action"] == "delete":
-                deletes.setdefault(prior["table_name"], []).append(prior)
-            elif prior["action"] == "update":
-                relinks.append(prior)
+        deletes = [prior for prior in batch if prior["action"] == "delete"]
+        relinks = [prior for prior in batch if prior["action"] == "update"]
+
+        facts, others = self._replay_deletes(deletes)
+        for prior in relinks:
+            others += self._apply_relink(prior)
+        return facts, others
+
+    def _replay_deletes(self, deletes: list[dict]) -> tuple[int, int]:
+        """Re-insert delete records in dependency order, whatever order they arrive in.
+
+        Entities first, then facts — which can be *about* other facts (reification), so
+        they insert in passes until a pass makes no progress, a claim always preceding
+        the facts about it; what remains is about a fact that never came back, and
+        stays gone exactly as the FK would insist. Then everything else parents-first.
+        Both restore and undo replay through here, so neither can drop a cascade child
+        by replaying it before its parent exists.
+        """
+        by_table: dict[str, list[dict]] = {}
+        for prior in deletes:
+            by_table.setdefault(prior["table_name"], []).append(prior)
 
         facts = others = 0
-        # Facts can be *about* other facts in the same batch (reification). Insert in
-        # passes until a pass makes no progress, so a claim precedes the facts about it;
-        # what is left is about a fact that never came back, and stays gone exactly as
-        # the FK would insist.
-        pending = deletes.pop("fact", [])
+        for prior in by_table.pop("entity", []):
+            others += self._undelete_entity(prior)
+        pending = by_table.pop("fact", [])
         while pending:
             waiting: list[dict] = []
             for prior in pending:
@@ -550,13 +860,21 @@ class World:
                 break
             pending = waiting
         for table in _RESTORE_ORDER:
-            for prior in deletes.get(table, []):
+            for prior in by_table.get(table, []):
                 if self._restore_row(table, prior["before"] or {}, prior["id"],
                                      strict=False):
                     others += 1
-        for prior in relinks:
-            others += self._apply_relink(prior)
         return facts, others
+
+    def _undelete_entity(self, rev: dict) -> int:
+        """Re-insert one entity from its delete record, if it can come back."""
+        snapshot = {k: v for k, v in (rev["before"] or {}).items()
+                    if k in self._table_columns("entity")}
+        if not {"id", "type_key", "name"} <= set(snapshot) or self.db.one(
+                "SELECT 1 FROM entity WHERE id = ?", (snapshot.get("id"),)):
+            return 0
+        self._insert_entity_snapshot(snapshot, rev["id"])
+        return 1
 
     def _restore_row(self, table: str, snapshot: dict, source_revision: int,
                      *, strict: bool) -> bool:
@@ -698,6 +1016,361 @@ class World:
         self._log_revision("fact", row_id, "update", current, before)
         return "Restored the earlier values."
 
+    # ---- undo / redo (§59) ------------------------------------------------
+    #
+    # Undo works on whole user actions: everything one transaction logged, grouped by
+    # action_id. Inverting an action writes ordinary revisions (the log stays
+    # append-only) under a new action id, announced by a marker record — so redo is
+    # just inverting the inversion, and which actions currently stand undone can be
+    # reconstructed from the file after a restart. Only what the revision log covers
+    # (entities and facts, with everything their deletes cascade through) is undoable;
+    # anything older than the action_id column simply sits beyond undo's reach.
+
+    def undo(self) -> str:
+        """Take back the most recent action. Raises when there is nothing to."""
+        with self.db.transaction():
+            self._load_undo_state()      # the log is the truth, other handles included
+            target = self._newest_action()
+            if target is None:
+                raise WorldError("nothing to undo")
+            inversion = self._current_action_id()
+            self._inversions[inversion] = target
+            self._log_revision("undo", target, "undo", None, {"kind": "undo"})
+            self._invert_action(target)
+            self._undone.add(target)
+            self._redo.append((target, inversion))
+        return f"Undid {self._describe_action(target)}."
+
+    def redo(self) -> str:
+        """Reinstate the most recently undone action."""
+        # Read and pop inside the transaction: it holds the connection lock, so two
+        # concurrent requests cannot both grab (and doubly apply) the same entry.
+        with self.db.transaction():
+            self._load_undo_state()      # the log is the truth, other handles included
+            if not self._redo:
+                raise WorldError("nothing to redo")
+            target, inversion = self._redo[-1]
+            fresh = self._current_action_id()
+            self._inversions[fresh] = inversion
+            self._log_revision("undo", inversion, "undo", None, {"kind": "redo"})
+            self._invert_action(inversion)
+            self._undone.discard(target)
+            self._redo.pop()
+        return f"Redid {self._describe_action(target)}."
+
+    def undo_state(self) -> dict:
+        """What the toolbar needs: whether each button would do anything, and to what."""
+        self._load_undo_state()
+        target = self._newest_action()
+        return {
+            "can_undo": target is not None,
+            "undo": self._describe_action(target) if target else None,
+            "can_redo": bool(self._redo),
+            "redo": (self._describe_action(self._redo[-1][0])
+                     if self._redo else None),
+        }
+
+    def _revisions_newest_first(self) -> Iterable[tuple[int, str]]:
+        """(id, action_id) for every grouped revision, newest first, in pages.
+
+        The one spelling of the walk that both undo-target selection and redo
+        forfeiture use — two copies would eventually disagree about what counts.
+        """
+        last_id: int | None = None
+        while True:
+            sql = ("SELECT id, action_id FROM revision "
+                   "WHERE project_id = ? AND action_id != ''")
+            params: list[Any] = [self.project_id]
+            if last_id is not None:
+                sql += " AND id < ?"
+                params.append(last_id)
+            sql += " ORDER BY id DESC LIMIT 500"
+            rows = self.db.query(sql, params)
+            if not rows:
+                return
+            for row in rows:
+                last_id = row["id"]
+                yield row["id"], row["action_id"]
+
+    def _load_undo_state(self) -> None:
+        """(Re)build undo state from the log's inversion markers.
+
+        Called at open and again before every undo, redo and state read — the log is
+        the shared truth, so a second handle on the same file (a CLI beside the
+        server, say) forfeits this handle's redo exactly as an edit here would, and
+        this handle never mistakes the other's inversions for real actions.
+        """
+        self._undone.clear()
+        self._inversions.clear()
+        self._redo = []
+        pending: dict[str, tuple[int, str]] = {}    # target -> (marker id, inversion)
+        for marker in self.db.query(
+            "SELECT id, row_id, action_id FROM revision "
+            "WHERE project_id = ? AND table_name = 'undo' ORDER BY id",
+            (self.project_id,),
+        ):
+            target = marker["row_id"]
+            if not self._action_is_ours(marker["action_id"]):
+                # another timeline's undo history; register the inversion so it is
+                # never mistaken for a real action, but track nothing else from it
+                self._inversions[marker["action_id"]] = target
+                continue
+            # A marker whose target is itself a known inversion is a redo: the
+            # original action that inversion had taken back stands again.
+            original = self._inversions.get(target)
+            self._inversions[marker["action_id"]] = target
+            if original is not None:
+                self._undone.discard(original)
+                pending.pop(original, None)
+            else:
+                self._undone.add(target)
+                pending[target] = (marker["id"], marker["action_id"])
+        # A real action recorded *after* an undo forfeits that undo's redo — a stale
+        # redo would clobber the newer edit it lost to.
+        newest_real = 0
+        for rev_id, action_id in self._revisions_newest_first():
+            if action_id not in self._inversions and self._action_is_ours(action_id):
+                newest_real = rev_id
+                break
+        self._redo = [(t, inv) for t, (marker_id, inv) in
+                      sorted(pending.items(), key=lambda kv: kv[1][0])
+                      if marker_id > newest_real]
+
+    def _newest_action(self) -> str | None:
+        """The most recent real user action that is not already undone.
+
+        Walks the log newest-first with early termination — never an aggregate over the
+        whole history, and never a fixed window that heavy undo traffic could exhaust.
+        """
+        seen: set[str] = set()
+        for _, aid in self._revisions_newest_first():
+            if aid in seen:
+                continue
+            seen.add(aid)
+            if (self._action_is_ours(aid)
+                    and aid not in self._inversions and aid not in self._undone):
+                return aid
+        return None
+
+    def _invert_action(self, action_id: str) -> int:
+        """Apply the inverse of every record in one action.
+
+        Deletes are inverted first — replayed in dependency order by the same machinery
+        restore uses, so a cascade's children all find their parents — then updates
+        (their targets exist again by now), then inserts (newest-first, children
+        removed before parents). The mixed shapes — a delete with its relink updates,
+        a restore with its re-inserts, a transfer's end-and-assert pair — all come out
+        right under that one ordering.
+        """
+        revs = [
+            {**dict(r), "before": decode_json(r["before"], None),
+             "after": decode_json(r["after"], None)}
+            for r in self.db.query(
+                "SELECT * FROM revision WHERE action_id = ? AND table_name != 'undo' "
+                "ORDER BY id DESC",
+                (action_id,),
+            )
+        ]
+        facts, others = self._replay_deletes(
+            [rev for rev in revs if rev["action"] == "delete"])
+        changed = facts + others
+        for rev in revs:
+            if rev["action"] == "update":
+                changed += self._unupdate(rev)
+        for rev in revs:
+            if rev["action"] == "insert":
+                changed += self._uninsert(rev)
+        return changed
+
+    def _unupdate(self, rev: dict) -> int:
+        """Inverse of an update record: apply its `before` values again."""
+        table, row_id = rev["table_name"], rev["row_id"]
+        before = rev["before"] or {}
+        if not before:
+            return 0
+        if table == "entity":
+            if self.get_entity(row_id) is None:
+                return 0
+            payload = {k: v for k, v in before.items() if k in _ENTITY_EDITABLE}
+            if not payload:
+                return 0
+            self.update_entity(row_id, **payload)    # logs its own inverse record
+            return 1
+        if table == "fact":
+            row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
+            if row is None:
+                return 0
+            data = dict(row)
+            payload = {k: v for k, v in before.items() if k in data}
+            if not payload:
+                return 0
+            current = {k: data[k] for k in payload}
+            self.db.update("fact", row_id, {**payload, "updated_at": now_iso()})
+            self._log_revision("fact", row_id, "update", current, payload)
+            return 1
+        if table == "entity_override":
+            parts = row_id.split("/")
+            if len(parts) != 2:
+                return 0
+            row = self.db.one(
+                "SELECT changes FROM entity_override "
+                "WHERE branch_id = ? AND entity_id = ?", parts)
+            if row is None:
+                return 0
+            payload = before.get("changes")
+            if not isinstance(payload, dict):
+                return 0
+            current = decode_json(row["changes"], {})
+            self.db.execute(
+                "UPDATE entity_override SET changes = ? "
+                "WHERE branch_id = ? AND entity_id = ?",
+                (json.dumps(payload), *parts))
+            self._log_revision("entity_override", row_id, "update",
+                               {"changes": current}, {"changes": payload})
+            return 1
+        # a SET NULL relink written during a delete or restore
+        allowed = _RELINK_COLUMNS.get(table)
+        if not allowed:
+            return 0
+        row = self.db.one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+        if row is None:
+            return 0
+        changes: dict[str, Any] = {}
+        for column, value in before.items():
+            target = allowed.get(column)
+            if target is None:
+                continue
+            if value is not None and not self.db.one(
+                    f"SELECT 1 FROM {target} WHERE id = ?", (value,)):
+                continue
+            changes[column] = value
+        if not changes:
+            return 0
+        current = {column: row[column] for column in changes}
+        self.db.update(table, row_id, changes)
+        self._log_revision(table, row_id, "update", current, changes)
+        return 1
+
+    def _uninsert(self, rev: dict) -> int:
+        """Inverse of an insert record: remove the row it created."""
+        table, row_id = rev["table_name"], rev["row_id"]
+        if table == "entity":
+            if self.get_entity(row_id) is None:
+                return 0
+            self.delete_entity(row_id)               # logs its own full cascade
+            return 1
+        if table == "fact":
+            fact_row = self.db.one("SELECT * FROM fact WHERE id = ?", (row_id,))
+            if fact_row is None:
+                return 0
+            # Physical, not routed: undoing an insert removes exactly that row. The
+            # tombstone-preserving routing would otherwise turn undo of a branch
+            # override into yet another override.
+            self._delete_fact_row(fact_row)
+            return 1
+        spec = _RESTORE_SPEC.get(table)
+        if spec is None:
+            return 0
+        key: tuple[str, ...] = spec.get("key", ("id",))
+        parts = row_id.split("/")
+        if len(parts) != len(key):
+            return 0     # a composite key whose value contained the separator
+        condition = " AND ".join(f"{column} = ?" for column in key)
+        row = self.db.one(f"SELECT * FROM {table} WHERE {condition}", parts)
+        if row is None:
+            return 0
+        if table == "geometry":
+            self.db.execute(
+                "DELETE FROM geometry_bbox WHERE id IN ("
+                " SELECT rtree_id FROM geometry_rtree_map WHERE geometry_id = ?)",
+                (row["id"],))
+        # The DELETE below cascades: children attached since this row was created
+        # (a holding granted after a restore, say) must be snapshotted first, under
+        # the batch marker, or they would be gone beyond any log's help.
+        if "id" in row.keys() and table in _CHILD_TABLES:  # noqa: SIM118 — Row, not dict
+            marker = f"cascade:{row['id']}"
+            logged: set[str] = set()
+            for child_table, column in _CHILD_TABLES[table]:
+                for child in self.db.query(
+                    f"SELECT * FROM {child_table} WHERE {column} = ?", (row["id"],)
+                ):
+                    child_key = f"{child_table}:{_row_key(child_table, child)}"
+                    if child_key in logged:
+                        continue
+                    logged.add(child_key)
+                    self._log_revision(child_table, _row_key(child_table, child),
+                                       "delete", _snapshot(child), None, note=marker)
+        self._log_revision(table, row_id, "delete", _snapshot(row), None)
+        self.db.execute(f"DELETE FROM {table} WHERE {condition}", parts)
+        return 1
+
+    def _describe_action(self, action_id: str | None) -> str:
+        """A human phrase for an action, from its most significant record.
+
+        Significance, not recency: creating an event logs the event and then its
+        participants, and the phrase should name the event, not the last participant.
+        """
+        if action_id is None:
+            return "nothing"
+        # Fetch the best record by precedence directly — a windowed scan would let a
+        # big cascade push the entity that names the action out of view.
+        precedence = ("entity", "fact", "event", "scene", "title", "secret")
+        row = None
+        for want in precedence:
+            row = self.db.one(
+                "SELECT * FROM revision WHERE action_id = ? AND table_name = ? "
+                "ORDER BY id DESC LIMIT 1",
+                (action_id, want),
+            )
+            if row is not None:
+                break
+        if row is None:
+            row = self.db.one(
+                "SELECT * FROM revision WHERE action_id = ? "
+                "AND table_name != 'undo' ORDER BY id DESC LIMIT 1",
+                (action_id,),
+            )
+        if row is None:
+            return "an empty action"
+        before = decode_json(row["before"], None) or {}
+        after = decode_json(row["after"], None) or {}
+        table, act = row["table_name"], row["action"]
+        if table == "entity":
+            name = after.get("name") or before.get("name")
+            if name is None:
+                entity = self.get_entity(row["row_id"])
+                name = entity.name if entity else "an entity"
+            if act == "insert":
+                return f"creating {name}"
+            if act == "delete":
+                return f"deleting {name}"
+            return f"an edit to {name}"
+        if table == "fact":
+            predicate = (after.get("predicate_key") or before.get("predicate_key")
+                         or "connection")
+            predicate = str(predicate).replace("_", " ")
+            if act == "insert" and after.get("supersedes"):
+                return f"a timeline change to a {predicate} connection"
+            if act == "insert":
+                return f"recording a {predicate} connection"
+            if act == "delete":
+                return f"removing a {predicate} connection"
+            return f"an edit to a {predicate} connection"
+        noun = _ACTION_NOUNS.get(table)
+        if noun:
+            name = (after.get("name") or after.get("title")
+                    or before.get("name") or before.get("title"))
+            phrase = f"{noun} “{name}”" if name else noun
+            if act == "insert":
+                return f"creating {phrase}"
+            if act == "delete":
+                return f"deleting {phrase}"
+            return f"an edit to {phrase}"
+        count = self.db.scalar(
+            "SELECT count(*) FROM revision WHERE action_id = ? "
+            "AND table_name != 'undo'", (action_id,))
+        return f"{count} recorded change{'s' if count != 1 else ''}"
+
     # ---- entities ---------------------------------------------------------
 
     def add_entity(
@@ -783,9 +1456,16 @@ class World:
         payload = {k: v for k, v in changes.items() if k in _ENTITY_EDITABLE}
         if not payload:
             return
-        payload["updated_at"] = now_iso()
         with self.db.transaction():
             row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
+            if row is not None and row["branch_id"] != self.branch_id:
+                # An inherited entity: the change lives in this branch as a field
+                # patch — the ancestor's row is never written from here.
+                if row["branch_id"] not in self._chain:
+                    raise WorldError("that entity is not part of this timeline")
+                self._override_entity(entity_id, payload)
+                return
+            payload["updated_at"] = now_iso()
             data = dict(row) if row else {}
             # Decode JSON columns so `before` and `after` share one shape — a diff
             # renderer must not see '["a"]' against ['a', 'b'] on every tags edit.
@@ -805,6 +1485,17 @@ class World:
     def delete_entity(self, entity_id: str) -> None:
         with self.db.transaction():
             row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
+            if row is not None and row["branch_id"] != self.branch_id:
+                if row["branch_id"] not in self._chain:
+                    raise WorldError("that entity is not part of this timeline")
+                # In an alternate timeline the inherited world is not erasable — a
+                # person dies, a city falls, but neither un-happens. Ending its
+                # existence is the branch's way; deleting belongs to the timeline
+                # that actually owns the row.
+                raise WorldError(
+                    f"{row['name']} belongs to the main timeline — in a branch, end "
+                    "its existence instead of deleting it"
+                )
             if row is not None:
                 # The FK cascade is about to take every row that hangs off this entity —
                 # facts, but also its events, titles, secrets, geometry, participations,
@@ -883,6 +1574,8 @@ class World:
             key=lambda r: (r["event_id"], r["entity_id"], r["role"]))]
         doomed += [("scene_participant", r) for r in q(
             "SELECT * FROM scene_participant WHERE entity_id = ?", (entity_id,))]
+        doomed += [("entity_override", r) for r in q(
+            "SELECT * FROM entity_override WHERE entity_id = ?", (entity_id,))]
         doomed += [("interpretation", r) for r in merged(
             q("SELECT * FROM interpretation WHERE holder_id = ?", (entity_id,)),
             rows_in("interpretation", "event_id", events))]
@@ -946,36 +1639,42 @@ class World:
 
     def get_entity(self, entity_id: str) -> Entity | None:
         row = self.db.one("SELECT * FROM entity WHERE id = ?", (entity_id,))
-        return _entity(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return self._patched(_entity(row), self._entity_override_for(entity_id))
 
     def entity_named(self, name: str, type_key: str | None = None) -> Entity | None:
-        sql = "SELECT * FROM entity WHERE branch_id = ? AND name = ?"
-        params: list[Any] = [self.branch_id, name]
+        sql = f"SELECT * FROM entity WHERE {self._in_chain} AND name = ?"
+        params: list[Any] = [*self._chain, name]
         if type_key:
             sql += " AND type_key = ?"
             params.append(type_key)
         row = self.db.one(sql, params)
-        return _entity(row) if row else None
+        if row is None:
+            return None
+        return self._patched(_entity(row), self._entity_override_for(row["id"]))
 
     def entities(self, type_key: str | None = None, *, limit: int | None = None) -> list[Entity]:
-        sql = "SELECT * FROM entity WHERE branch_id = ?"
-        params: list[Any] = [self.branch_id]
+        sql = f"SELECT * FROM entity WHERE {self._in_chain}"
+        params: list[Any] = [*self._chain]
         if type_key:
             sql += " AND type_key = ?"
             params.append(type_key)
         sql += " ORDER BY name"
         if limit:
             sql += f" LIMIT {int(limit)}"
-        return [_entity(r) for r in self.db.query(sql, params)]
+        overrides = self._override_map()
+        return [self._patched(_entity(r), overrides.get(r["id"]))
+                for r in self.db.query(sql, params)]
 
     def count_entities(self, type_key: str | None = None) -> int:
         if type_key:
             return self.db.scalar(
-                "SELECT count(*) FROM entity WHERE branch_id = ? AND type_key = ?",
-                (self.branch_id, type_key),
+                f"SELECT count(*) FROM entity WHERE {self._in_chain} AND type_key = ?",
+                (*self._chain, type_key),
             )
         return self.db.scalar(
-            "SELECT count(*) FROM entity WHERE branch_id = ?", (self.branch_id,)
+            f"SELECT count(*) FROM entity WHERE {self._in_chain}", self._chain
         )
 
     # ---- facts ------------------------------------------------------------
@@ -1065,8 +1764,7 @@ class World:
         takes Greyhaven, House Marr's control *ended* — it did not become untrue.
         """
         with self.db.transaction():
-            row = self.db.one(
-                "SELECT valid_from, valid_to FROM fact WHERE id = ?", (fact_id,))
+            row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
             if row is None:
                 # Logging an update for a row that never existed would pollute the
                 # append-only log with a phantom.
@@ -1077,6 +1775,12 @@ class World:
                     "true on no day at all, which silently erases the fact from every "
                     "view while appearing to keep it"
                 )
+            if row["branch_id"] != self.branch_id:
+                if row["branch_id"] not in self._chain:
+                    raise WorldError("that fact is not part of this timeline")
+                # ending an inherited fact happens in this branch alone
+                self._override_fact(row, {"valid_to": on_day})
+                return
             self.db.update("fact", fact_id, {"valid_to": on_day, "updated_at": now_iso()})
             self._log_revision("fact", fact_id, "update",
                                {"valid_to": row["valid_to"]}, {"valid_to": on_day})
@@ -1092,6 +1796,61 @@ class World:
             row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
             if row is None:
                 return
+            if row["branch_id"] != self.branch_id:
+                if row["branch_id"] not in self._chain:
+                    raise WorldError("that fact is not part of this timeline")
+                # Deleting an inherited fact is a branch-local tombstone: the row
+                # stands in every other timeline, hidden in this one. Facts *about*
+                # it die with it in canon, so they must be hidden here too — an
+                # inherited one gets its own tombstone, a branch-local one is simply
+                # deleted.
+                closure = [row, *self._reified_dependants([fact_id]).values()]
+                closure_ids = {doomed["id"] for doomed in closure}
+                for doomed in closure:
+                    if doomed["branch_id"] == self.branch_id:
+                        if (doomed["supersedes_id"] is not None
+                                and doomed["supersedes_id"] in closure_ids):
+                            # the branch's own edit of an inherited row also in this
+                            # closure: its tombstone is written when that row is
+                            # processed — deleting it here would destroy the tombstone
+                            continue
+                        if self.db.one("SELECT 1 FROM fact WHERE id = ?",
+                                       (doomed["id"],)):
+                            self.delete_fact(doomed["id"])   # own row: the real path
+                        continue
+                    if doomed["branch_id"] not in self._chain:
+                        continue        # another timeline's row; not ours to hide
+                    effective = self._branch_override_row(doomed["id"]) or doomed
+                    props = decode_json(effective["props"], {}) or {}
+                    if props.get("branch_tombstone"):
+                        continue
+                    props["branch_tombstone"] = True
+                    self._override_fact(doomed, {"props": props})
+                return
+            if row["supersedes_id"] is not None:
+                target = self.db.one("SELECT * FROM fact WHERE id = ?",
+                                     (row["supersedes_id"],))
+                if (target is not None and target["branch_id"] != self.branch_id
+                        and target["branch_id"] in self._chain):
+                    # This row is the branch's own edit of an inherited fact, and the
+                    # writer is deleting the fact they see. Hard-deleting the override
+                    # would resurrect the inherited original here — the intent is
+                    # "gone in this timeline", so the override becomes a tombstone.
+                    props = decode_json(row["props"], {}) or {}
+                    props["branch_tombstone"] = True
+                    self._override_fact(target, {"props": props})
+                    return
+            self._delete_fact_row(row)
+
+    def _delete_fact_row(self, row) -> None:
+        """Physically remove one fact row, with its full cascade logged.
+
+        The raw operation behind delete_fact's routing — and the one undo must use
+        directly, because inverting an "insert" means removing exactly that row, never
+        re-routing through intent-preserving tombstone logic.
+        """
+        fact_id = row["id"]
+        with self.db.transaction():
             marker = f"cascade:{fact_id}"
             dependants = self._reified_dependants([fact_id])
             dependants.pop(fact_id, None)      # its own record closes the batch below
@@ -1120,14 +1879,34 @@ class World:
         being wrong.
         """
         object_id = obj.id if isinstance(obj, Entity) else obj
-        for existing in self.facts_where(predicate_key, object_id=object_id, at=on_day):
-            self.end_fact(existing.id, on_day)
-        return self.assert_fact(new_subject, predicate_key, object_id,
-                                valid_from=on_day, **kw)
+        # One transaction: the closing of the incumbent's interval and the opening of
+        # the successor's are one event in the world — atomic on disk, and one action
+        # to undo, never a half-transfer.
+        with self.db.transaction():
+            for existing in self.facts_where(predicate_key, object_id=object_id,
+                                             at=on_day):
+                self.end_fact(existing.id, on_day)
+            return self.assert_fact(new_subject, predicate_key, object_id,
+                                    valid_from=on_day, **kw)
 
     def get_fact(self, fact_id: str) -> Fact | None:
         row = self.db.one("SELECT * FROM fact WHERE id = ?", (fact_id,))
-        return _fact(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        # Follow this timeline's overrides to the row that actually speaks for the
+        # fact here — possibly through several branches, ending at a tombstone. When
+        # more than one chain branch overrides the same row, the nearest one speaks.
+        rank = {b: i for i, b in enumerate(self._chain)}
+        while len(self._chain) > 1:
+            overrides = self.db.query(
+                f"SELECT * FROM fact WHERE supersedes_id = ? AND {self._in_chain}",
+                (row["id"], *self._chain))
+            if not overrides:
+                break
+            row = min(overrides, key=lambda r: rank[r["branch_id"]])
+        if (decode_json(row["props"], {}) or {}).get("branch_tombstone"):
+            return None
+        return _fact(row)
 
     def facts_where(
         self,
@@ -1138,8 +1917,9 @@ class World:
         at: int | None = None,
         include_secret: bool = True,
     ) -> list[Fact]:
-        sql = ["SELECT * FROM fact WHERE branch_id = ?"]
-        params: list[Any] = [self.branch_id]
+        live, live_params = self._live_fact("fact")
+        sql = [f"SELECT * FROM fact WHERE {self._in_chain} AND {live}"]
+        params: list[Any] = [*self._chain, *live_params]
         if predicate_key:
             sql.append("AND predicate_key = ?")
             params.append(predicate_key)
@@ -1193,20 +1973,33 @@ class World:
         The equivalent in a design where dates were bolted onto individual subsystems would
         be one bespoke query per subsystem, and they would drift.
         """
-        entity_rows = self.db.query(
-            """SELECT * FROM entity
-               WHERE branch_id = ?
-                 AND (exists_from IS NULL OR exists_from <= ?)
-                 AND (exists_to   IS NULL OR exists_to   >= ?)""",
-            (self.branch_id, day, day),
-        )
-        entities = {r["id"]: _entity(r) for r in entity_rows}
+        if len(self._chain) == 1:
+            entity_rows = self.db.query(
+                """SELECT * FROM entity
+                   WHERE branch_id = ?
+                     AND (exists_from IS NULL OR exists_from <= ?)
+                     AND (exists_to   IS NULL OR exists_to   >= ?)""",
+                (self.branch_id, day, day),
+            )
+            entities = {r["id"]: _entity(r) for r in entity_rows}
+        else:
+            # Branch overrides can move an entity's existence either way, so the
+            # interval test must run on the *patched* values, not in SQL.
+            overrides = self._override_map()
+            entities = {}
+            for r in self.db.query(
+                f"SELECT * FROM entity WHERE {self._in_chain}", self._chain,
+            ):
+                e = self._patched(_entity(r), overrides.get(r["id"]))
+                if e.exists_on(day):
+                    entities[e.id] = e
 
-        sql = """SELECT * FROM fact
-                 WHERE branch_id = ?
+        live, live_params = self._live_fact("fact")
+        sql = f"""SELECT * FROM fact
+                 WHERE {self._in_chain} AND {live}
                    AND (valid_from IS NULL OR valid_from <= ?)
                    AND (valid_to   IS NULL OR valid_to   >= ?)"""
-        params: list[Any] = [self.branch_id, day, day]
+        params: list[Any] = [*self._chain, *live_params, day, day]
         if not include_secret:
             sql += " AND secrecy NOT IN ('secret','deep_secret')"
         facts = [_fact(r) for r in self.db.query(sql, params)]
@@ -1219,13 +2012,15 @@ class World:
 
         holders = {}
         for row in self.db.query(
-            """SELECT t.id AS title_id, h.holder_id
+            f"""SELECT t.id AS title_id, h.holder_id
                FROM title t LEFT JOIN title_holding h
                  ON h.title_id = t.id
+                AND (h.{self._in_chain} OR h.branch_id IS NULL)
                 AND (h.from_day IS NULL OR h.from_day <= ?)
                 AND (h.to_day   IS NULL OR h.to_day   >= ?)
-               WHERE t.branch_id = ?""",
-            (day, day, self.branch_id),
+               WHERE t.{self._in_chain}
+               ORDER BY h.from_day ASC NULLS FIRST""",
+            (*self._chain, day, day, *self._chain),
         ):
             holders[row["title_id"]] = row["holder_id"]
 
@@ -1268,13 +2063,15 @@ class World:
         else:
             raise WorldError("direction must be 'out' or 'in'")
 
+        scope = self._in_chain
+        live, live_params = self._live_fact("f")
         sql = f"""
             WITH RECURSIVE walk(id, depth, path) AS (
                 SELECT ?, 0, ',' || ? || ','
                 UNION ALL
                 SELECT {next_id}, w.depth + 1, w.path || {next_id} || ','
                 FROM fact f JOIN walk w ON {join}
-                WHERE f.branch_id = ? AND f.predicate_key = ?
+                WHERE f.{scope} AND {live} AND f.predicate_key = ?
                   AND f.object_id IS NOT NULL
                   AND w.depth < ?
                   AND instr(w.path, ',' || {next_id} || ',') = 0
@@ -1284,8 +2081,10 @@ class World:
             GROUP BY id ORDER BY depth, id
         """
         # Placeholder order follows the SQL above: start id twice (value and path seed),
-        # branch, predicate, depth guard, then the two temporal bounds if a date was given.
-        params: list[Any] = [start_id, start_id, self.branch_id, predicate_key, max_depth]
+        # the branch chain, the visibility chain, predicate, depth guard, then the two
+        # temporal bounds if a date was given.
+        params: list[Any] = [start_id, start_id, *self._chain, *live_params,
+                             predicate_key, max_depth]
         if at is not None:
             params.extend([at, at])
         return [(r["id"], r["depth"]) for r in self.db.query(sql, params)]
@@ -1313,10 +2112,13 @@ class World:
                         "AND (valid_to   IS NULL OR valid_to   >= ?)")
             extra = [at, at]
 
-        out_sql = (f"SELECT object_id AS other FROM fact WHERE branch_id = ? "
+        live, live_params = self._live_fact("fact")
+        out_sql = (f"SELECT object_id AS other FROM fact WHERE {self._in_chain} "
+                   f"AND {live} "
                    f"AND subject_id = ? AND predicate_key IN ({placeholders}) "
                    f"AND object_id IS NOT NULL {temporal}")
-        in_sql = (f"SELECT subject_id AS other FROM fact WHERE branch_id = ? "
+        in_sql = (f"SELECT subject_id AS other FROM fact WHERE {self._in_chain} "
+                  f"AND {live} "
                   f"AND object_id = ? AND predicate_key IN ({placeholders}) {temporal}")
 
         seen: dict[str, int] = {start_id: 0}
@@ -1324,7 +2126,7 @@ class World:
         for depth in range(1, hops + 1):
             nxt: list[str] = []
             for node in frontier:
-                params = [self.branch_id, node, *predicate_keys, *extra]
+                params = [*self._chain, *live_params, node, *predicate_keys, *extra]
                 for sql in (out_sql, in_sql):
                     for row in self.db.query(sql, params):
                         other = row["other"]
@@ -1353,34 +2155,56 @@ class World:
         ids: list[str] = []
         seen: set[str] = set()
 
-        try:
-            # Weighted ranking: a hit in the NAME outranks a hit in the summary or
-            # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
-            # "Northmarch", because Northwatch's summary mentions the region — precisely
-            # the wrong entity picked with full confidence.
-            for row in self.db.query(
+        def in_scope(entity_id: str) -> bool:
+            return self.db.one(
+                f"SELECT 1 FROM entity WHERE id = ? AND {self._in_chain}",
+                (entity_id, *self._chain)) is not None
+
+        def collect(sql: str, params: tuple) -> None:
+            """Page through ranked candidates until `limit` in-scope ids are found.
+
+            The indexes are not branch-aware, so any other timeline's rows can crowd
+            the top of the ranking without bound — a fixed pool merely raises the
+            bar. Filtering to this timeline *while* paging is the only exact answer.
+            """
+            offset = 0
+            page = max(limit, 25)
+            while len(ids) < limit:
+                rows = self.db.query(f"{sql} LIMIT ? OFFSET ?",
+                                     (*params, page, offset))
+                if not rows:
+                    return
+                offset += page
+                for row in rows:
+                    eid = row["entity_id"]
+                    if eid in seen:
+                        continue
+                    seen.add(eid)
+                    if in_scope(eid):
+                        ids.append(eid)
+                        if len(ids) >= limit:
+                            return
+
+        # Weighted ranking: a hit in the NAME outranks a hit in the summary or
+        # tags. Unweighted bm25 put Northwatch above The Northmarch for the query
+        # "Northmarch", because Northwatch's summary mentions the region — precisely
+        # the wrong entity picked with full confidence. A query the FTS parser
+        # rejects degrades to the fuzzy pass rather than raising at the user.
+        with contextlib.suppress(Exception):
+            collect(
                 "SELECT entity_id FROM entity_fts WHERE entity_fts MATCH ? "
-                "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0) LIMIT ?",
-                (_fts_query(text), limit),
-            ):
-                if row["entity_id"] not in seen:
-                    seen.add(row["entity_id"])
-                    ids.append(row["entity_id"])
-        except Exception:
-            # A query the FTS parser rejects should degrade to fuzzy, not raise at the user.
-            pass
+                "ORDER BY bm25(entity_fts, 10.0, 2.0, 1.0)",
+                (_fts_query(text),),
+            )
 
         if len(ids) < limit:
-            for row in self.db.query(
-                "SELECT entity_id FROM entity_trigram WHERE name LIKE ? LIMIT ?",
-                (f"%{text}%", limit - len(ids)),
-            ):
-                if row["entity_id"] not in seen:
-                    seen.add(row["entity_id"])
-                    ids.append(row["entity_id"])
+            collect(
+                "SELECT entity_id FROM entity_trigram WHERE name LIKE ?",
+                (f"%{text}%",),
+            )
 
-        found = [self.get_entity(i) for i in ids]
-        result = [e for e in found if e is not None and e.branch_id == self.branch_id]
+        found = [self.get_entity(i) for i in ids]     # patches branch overrides
+        result = [e for e in found if e is not None]
         if type_key:
             result = [e for e in result if e.type_key == type_key]
         return result[:limit]
@@ -1415,17 +2239,26 @@ class World:
                 "confidence": confidence, "secrecy": secrecy, "props": props or {},
                 "created_at": stamp, "updated_at": stamp,
             })
+            self._log_revision("event", eid, "insert", None, {"name": name})
             for entity_id, role in participants:
                 self.db.insert("event_participant", {
                     "event_id": eid, "entity_id": entity_id, "role": role,
                 })
+                self._log_revision("event_participant", f"{eid}/{entity_id}/{role}",
+                                   "insert", None, {"role": role})
         return Event(id=eid, name=name, type_key=type_key, summary=summary,
                      start_day=start_day, end_day=end_day, location_id=location_id,
                      confidence=confidence, secrecy=secrecy, props=props or {})
 
+    def get_event(self, event_id: str) -> Event | None:
+        row = self.db.one("SELECT * FROM event WHERE id = ?", (event_id,))
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _event(row)
+
     def events(self, *, first: int | None = None, last: int | None = None) -> list[Event]:
-        sql = "SELECT * FROM event WHERE branch_id = ?"
-        params: list[Any] = [self.branch_id]
+        sql = f"SELECT * FROM event WHERE {self._in_chain}"
+        params: list[Any] = [*self._chain]
         if first is not None:
             sql += " AND (end_day IS NULL AND start_day >= ? OR end_day >= ?)"
             params.extend([first, first])
@@ -1441,13 +2274,15 @@ class World:
             "WHERE p.event_id = ?",
             (event_id,),
         )
-        return [(_entity(r), r["role"]) for r in rows]
+        overrides = self._override_map()
+        return [(self._patched(_entity(r), overrides.get(r["id"])), r["role"])
+                for r in rows]
 
     def events_involving(self, entity_id: str, *, first: int | None = None,
                          last: int | None = None) -> list[Event]:
-        sql = ("SELECT e.* FROM event e JOIN event_participant p ON p.event_id = e.id "
-               "WHERE e.branch_id = ? AND p.entity_id = ?")
-        params: list[Any] = [self.branch_id, entity_id]
+        sql = (f"SELECT e.* FROM event e JOIN event_participant p ON p.event_id = e.id "
+               f"WHERE e.{self._in_chain} AND p.entity_id = ?")
+        params: list[Any] = [*self._chain, entity_id]
         if first is not None:
             sql += " AND (e.start_day IS NULL OR e.start_day >= ?)"
             params.append(first)
@@ -1474,8 +2309,9 @@ class World:
         # UNIQUE constraint — or worse, commit A→B and B→A as a loop.
         with self.db.transaction():
             if self.db.one(
-                "SELECT 1 FROM causal_link WHERE cause_id = ? AND effect_id = ?",
-                (cause_id, effect_id),
+                f"SELECT 1 FROM causal_link WHERE cause_id = ? AND effect_id = ? "
+                f"AND ({self._in_chain} OR branch_id IS NULL)",
+                (cause_id, effect_id, *self._chain),
             ):
                 return False
             if self._causally_reaches(effect_id, cause_id):
@@ -1483,10 +2319,13 @@ class World:
                     "that would close a causal loop — the second event already leads "
                     "back to the first"
                 )
+            link_id = new_id()
             self.db.insert("causal_link", {
-                "id": new_id(), "project_id": self.project_id, "cause_id": cause_id,
+                "id": link_id, "project_id": self.project_id, "cause_id": cause_id,
                 "effect_id": effect_id, "kind": kind, "note": note,
+                "branch_id": self.branch_id,
             })
+            self._log_revision("causal_link", link_id, "insert", None, {"kind": kind})
         return True
 
     def _causally_reaches(self, origin_id: str, target_id: str) -> bool:
@@ -1498,14 +2337,15 @@ class World:
         loop.
         """
         return self.db.one(
-            """WITH RECURSIVE reach(id) AS (
+            f"""WITH RECURSIVE reach(id) AS (
                    SELECT ?
                    UNION
                    SELECT c.effect_id FROM causal_link c
                    JOIN reach ON c.cause_id = reach.id
+                   WHERE c.{self._in_chain} OR c.branch_id IS NULL
                )
                SELECT 1 FROM reach WHERE id = ?""",
-            (origin_id, target_id),
+            (origin_id, *self._chain, target_id),
         ) is not None
 
     def consequences_of(self, event_id: str, *, max_depth: int = 6) -> list[tuple[str, int]]:
@@ -1515,17 +2355,18 @@ class World:
         shortest distance — the UNION alone dedupes (id, depth) pairs, not ids.
         """
         rows = self.db.query(
-            """WITH RECURSIVE chain(id, depth) AS (
+            f"""WITH RECURSIVE chain(id, depth) AS (
                    SELECT ?, 0
                    UNION
                    SELECT c.effect_id, chain.depth + 1
                    FROM causal_link c JOIN chain ON c.cause_id = chain.id
                    WHERE chain.depth < ?
+                     AND (c.{self._in_chain} OR c.branch_id IS NULL)
                )
                SELECT id, min(depth) AS depth FROM chain
                WHERE depth > 0 AND id <> ?
                GROUP BY id ORDER BY depth, id""",
-            (event_id, max_depth, event_id),
+            (event_id, max_depth, *self._chain, event_id),
         )
         return [(r["id"], r["depth"]) for r in rows]
 
@@ -1536,87 +2377,104 @@ class World:
                   dynasty_root_id: str | None = None, created_on: int | None = None,
                   entity_id: str | None = None) -> Title:
         tid = new_id()
-        self.db.insert("title", {
-            "id": tid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "entity_id": entity_id, "name": name, "rank": rank,
-            "territory_id": territory_id, "succession_law": succession_law,
-            "dynasty_root_id": dynasty_root_id, "created_on": created_on,
-            "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("title", {
+                "id": tid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "entity_id": entity_id, "name": name, "rank": rank,
+                "territory_id": territory_id, "succession_law": succession_law,
+                "dynasty_root_id": dynasty_root_id, "created_on": created_on,
+                "created_at": now_iso(),
+            })
+            self._log_revision("title", tid, "insert", None, {"name": name})
         return Title(id=tid, name=name, rank=rank, territory_id=territory_id,
                      succession_law=succession_law, dynasty_root_id=dynasty_root_id,
                      created_on=created_on, entity_id=entity_id)
 
     def titles(self) -> list[Title]:
         return [_title(r) for r in self.db.query(
-            "SELECT * FROM title WHERE branch_id = ? ORDER BY rank DESC, name",
-            (self.branch_id,),
+            f"SELECT * FROM title WHERE {self._in_chain} ORDER BY rank DESC, name",
+            self._chain,
         )]
 
     def get_title(self, title_id: str) -> Title | None:
         row = self.db.one("SELECT * FROM title WHERE id = ?", (title_id,))
-        return _title(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _title(row)
 
     def title_named(self, name: str) -> Title | None:
-        row = self.db.one("SELECT * FROM title WHERE branch_id = ? AND name = ?",
-                          (self.branch_id, name))
+        row = self.db.one(f"SELECT * FROM title WHERE {self._in_chain} AND name = ?",
+                          (*self._chain, name))
         return _title(row) if row else None
 
     def grant_title(self, title_id: str, holder_id: str, *, from_day: int | None = None,
                     to_day: int | None = None, how: str = "inheritance",
                     disputed: bool = False, note: str = "") -> TitleHolding:
         hid = new_id()
-        self.db.insert("title_holding", {
-            "id": hid, "title_id": title_id, "holder_id": holder_id,
-            "from_day": from_day, "to_day": to_day, "how": how,
-            "disputed": int(disputed), "note": note,
-        })
+        with self.db.transaction():
+            self.db.insert("title_holding", {
+                "id": hid, "title_id": title_id, "holder_id": holder_id,
+                "from_day": from_day, "to_day": to_day, "how": how,
+                "disputed": int(disputed), "note": note,
+                "branch_id": self.branch_id,
+            })
+            self._log_revision("title_holding", hid, "insert", None, {"how": how})
         return TitleHolding(id=hid, title_id=title_id, holder_id=holder_id,
                             from_day=from_day, to_day=to_day, how=how,
                             disputed=disputed, note=note)
 
     def title_holdings(self, title_id: str) -> list[TitleHolding]:
         return [_holding(r) for r in self.db.query(
-            "SELECT * FROM title_holding WHERE title_id = ? ORDER BY from_day",
-            (title_id,),
+            f"SELECT * FROM title_holding WHERE title_id = ? "
+            f"AND ({self._in_chain} OR branch_id IS NULL) ORDER BY from_day",
+            (title_id, *self._chain),
         )]
 
     def title_holder_on(self, title_id: str, day: int) -> str | None:
         return self.db.scalar(
-            """SELECT holder_id FROM title_holding
+            f"""SELECT holder_id FROM title_holding
                WHERE title_id = ?
+                 AND ({self._in_chain} OR branch_id IS NULL)
                  AND (from_day IS NULL OR from_day <= ?)
                  AND (to_day   IS NULL OR to_day   >= ?)
                ORDER BY from_day DESC LIMIT 1""",
-            (title_id, day, day),
+            (title_id, *self._chain, day, day),
         )
 
     def titles_held_by(self, holder_id: str, *, at: int | None = None) -> list[Title]:
-        sql = ("SELECT t.* FROM title t JOIN title_holding h ON h.title_id = t.id "
-               "WHERE h.holder_id = ?")
-        params: list[Any] = [holder_id]
+        sql = (f"SELECT DISTINCT t.* FROM title t "
+               f"JOIN title_holding h ON h.title_id = t.id "
+               f"WHERE h.holder_id = ? AND (h.{self._in_chain} OR h.branch_id IS NULL)")
+        params: list[Any] = [holder_id, *self._chain]
         if at is not None:
             sql += (" AND (h.from_day IS NULL OR h.from_day <= ?)"
                     " AND (h.to_day   IS NULL OR h.to_day   >= ?)")
             params.extend([at, at])
-        return [_title(r) for r in self.db.query(sql, params)]
+        titles = [_title(r) for r in self.db.query(sql, params)]
+        if at is None:
+            return titles
+        # Agree with title_holder_on: on a day, you hold a title only if you are the
+        # one it resolves to — a later grant (a branch's coup, say) displaces you.
+        return [t for t in titles if self.title_holder_on(t.id, at) == holder_id]
 
     # ---- secrets and knowledge (§6) ---------------------------------------
 
     def add_secret(self, name: str, *, truth: str = "", about_id: str | None = None,
                    fact_id: str | None = None, severity: str = "major") -> Secret:
         sid = new_id()
-        self.db.insert("secret", {
-            "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "name": name, "truth": truth, "about_id": about_id, "fact_id": fact_id,
-            "severity": severity, "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("secret", {
+                "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "name": name, "truth": truth, "about_id": about_id, "fact_id": fact_id,
+                "severity": severity, "created_at": now_iso(),
+            })
+            self._log_revision("secret", sid, "insert", None, {"name": name})
         return Secret(id=sid, name=name, truth=truth, about_id=about_id,
                       fact_id=fact_id, severity=severity)
 
     def secrets(self) -> list[Secret]:
         return [_secret(r) for r in self.db.query(
-            "SELECT * FROM secret WHERE branch_id = ? ORDER BY name", (self.branch_id,)
+            f"SELECT * FROM secret WHERE {self._in_chain} ORDER BY name", self._chain
         )]
 
     def set_knowledge(self, observer_id: str, secret_id: str, stance: str, *,
@@ -1625,13 +2483,16 @@ class World:
                       acquired_from: str | None = None,
                       scene_id: str | None = None, note: str = "") -> Knowledge:
         kid = new_id()
-        self.db.insert("knowledge_state", {
-            "id": kid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "observer_id": observer_id, "secret_id": secret_id, "stance": stance,
-            "about_observer_id": about_observer_id, "acquired_on": acquired_on,
-            "acquired_from": acquired_from, "scene_id": scene_id, "note": note,
-            "created_at": now_iso(),
-        })
+        with self.db.transaction():
+            self.db.insert("knowledge_state", {
+                "id": kid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "observer_id": observer_id, "secret_id": secret_id, "stance": stance,
+                "about_observer_id": about_observer_id, "acquired_on": acquired_on,
+                "acquired_from": acquired_from, "scene_id": scene_id, "note": note,
+                "created_at": now_iso(),
+            })
+            self._log_revision("knowledge_state", kid, "insert", None,
+                               {"stance": stance})
         return Knowledge(id=kid, observer_id=observer_id, secret_id=secret_id,
                          stance=stance, about_observer_id=about_observer_id,
                          acquired_on=acquired_on, acquired_from=acquired_from,
@@ -1640,8 +2501,8 @@ class World:
     def knowledge_of(self, secret_id: str, *, stance: str | None = None,
                      at: int | None = None) -> list[Knowledge]:
         """§6: 'who knows X' and 'who believes X' must be separately answerable."""
-        sql = "SELECT * FROM knowledge_state WHERE branch_id = ? AND secret_id = ?"
-        params: list[Any] = [self.branch_id, secret_id]
+        sql = f"SELECT * FROM knowledge_state WHERE {self._in_chain} AND secret_id = ?"
+        params: list[Any] = [*self._chain, secret_id]
         if stance:
             sql += " AND stance = ?"
             params.append(stance)
@@ -1651,8 +2512,8 @@ class World:
         return [_knowledge(r) for r in self.db.query(sql, params)]
 
     def knowledge_held_by(self, observer_id: str, *, at: int | None = None) -> list[Knowledge]:
-        sql = "SELECT * FROM knowledge_state WHERE branch_id = ? AND observer_id = ?"
-        params: list[Any] = [self.branch_id, observer_id]
+        sql = f"SELECT * FROM knowledge_state WHERE {self._in_chain} AND observer_id = ?"
+        params: list[Any] = [*self._chain, observer_id]
         if at is not None:
             sql += " AND (acquired_on IS NULL OR acquired_on <= ?)"
             params.append(at)
@@ -1690,29 +2551,36 @@ class World:
                 "outcome": outcome, "notes": notes,
                 "created_at": stamp, "updated_at": stamp,
             })
+            self._log_revision("scene", sid, "insert", None, {"title": title})
             for entity_id in participants:
                 self.db.insert("scene_participant",
                                {"scene_id": sid, "entity_id": entity_id, "role": "present"})
+                self._log_revision("scene_participant", f"{sid}/{entity_id}",
+                                   "insert", None, None)
         return Scene(id=sid, title=title, chapter_id=chapter_id, position=position,
                      day=day, end_day=end_day, location_id=location_id, pov_id=pov_id,
                      objective=objective, conflict=conflict, outcome=outcome, notes=notes)
 
     def scenes(self) -> list[Scene]:
         return [_scene(r) for r in self.db.query(
-            "SELECT * FROM scene WHERE branch_id = ? ORDER BY position, day",
-            (self.branch_id,),
+            f"SELECT * FROM scene WHERE {self._in_chain} ORDER BY position, day",
+            self._chain,
         )]
 
     def get_scene(self, scene_id: str) -> Scene | None:
         row = self.db.one("SELECT * FROM scene WHERE id = ?", (scene_id,))
-        return _scene(row) if row else None
+        if row is None or row["branch_id"] not in self._chain:
+            return None
+        return _scene(row)
 
     def scene_participants(self, scene_id: str) -> list[Entity]:
-        return [_entity(r) for r in self.db.query(
-            "SELECT e.* FROM scene_participant p JOIN entity e ON e.id = p.entity_id "
-            "WHERE p.scene_id = ? ORDER BY e.name",
-            (scene_id,),
-        )]
+        overrides = self._override_map()
+        return [self._patched(_entity(r), overrides.get(r["id"]))
+                for r in self.db.query(
+                    "SELECT e.* FROM scene_participant p JOIN entity e ON e.id = p.entity_id "
+                    "WHERE p.scene_id = ? ORDER BY e.name",
+                    (scene_id,),
+                )]
 
     # ---- geography --------------------------------------------------------
 
@@ -1730,6 +2598,7 @@ class World:
                 "created_at": now_iso(),
             })
             self._index_geometry(gid, coordinates)
+            self._log_revision("geometry", gid, "insert", None, {"kind": kind})
         return Geometry(id=gid, entity_id=entity_id, kind=kind, coordinates=coordinates,
                         valid_from=valid_from, valid_to=valid_to, layer=layer,
                         style=style or {}, approximate=approximate)
@@ -1746,8 +2615,8 @@ class World:
                        {"rtree_id": cur.lastrowid, "geometry_id": geometry_id})
 
     def geometries(self, *, at: int | None = None, layer: str | None = None) -> list[Geometry]:
-        sql = "SELECT * FROM geometry WHERE branch_id = ?"
-        params: list[Any] = [self.branch_id]
+        sql = f"SELECT * FROM geometry WHERE {self._in_chain}"
+        params: list[Any] = [*self._chain]
         if layer:
             sql += " AND layer = ?"
             params.append(layer)
@@ -1783,14 +2652,16 @@ class World:
                           closed_seasons: Sequence[str] = (), danger: str = "low",
                           toll_holder_id: str | None = None) -> RouteSegment:
         sid = new_id()
-        self.db.insert("route_segment", {
-            "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "entity_id": entity_id, "from_entity_id": from_entity_id,
-            "to_entity_id": to_entity_id, "medium": medium, "length": length,
-            "quality": quality, "terrain": terrain, "built_on": built_on,
-            "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
-            "danger": danger, "toll_holder_id": toll_holder_id,
-        })
+        with self.db.transaction():
+            self.db.insert("route_segment", {
+                "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "entity_id": entity_id, "from_entity_id": from_entity_id,
+                "to_entity_id": to_entity_id, "medium": medium, "length": length,
+                "quality": quality, "terrain": terrain, "built_on": built_on,
+                "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
+                "danger": danger, "toll_holder_id": toll_holder_id,
+            })
+            self._log_revision("route_segment", sid, "insert", None, {"medium": medium})
         return RouteSegment(id=sid, from_entity_id=from_entity_id,
                             to_entity_id=to_entity_id, length=length, medium=medium,
                             quality=quality, terrain=terrain, entity_id=entity_id,
@@ -1800,7 +2671,7 @@ class World:
 
     def route_segments(self) -> list[RouteSegment]:
         return [_segment(r) for r in self.db.query(
-            "SELECT * FROM route_segment WHERE branch_id = ?", (self.branch_id,)
+            f"SELECT * FROM route_segment WHERE {self._in_chain}", self._chain
         )]
 
     # ---- snapshots (§80) --------------------------------------------------
@@ -1815,7 +2686,7 @@ class World:
 
     def snapshots(self) -> list[dict]:
         return [dict(r) for r in self.db.query(
-            "SELECT * FROM snapshot WHERE branch_id = ? ORDER BY day", (self.branch_id,)
+            f"SELECT * FROM snapshot WHERE {self._in_chain} ORDER BY day", self._chain
         )]
 
     # ---- suppressions (§46) -----------------------------------------------

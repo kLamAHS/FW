@@ -80,14 +80,11 @@ def cmd_info(args) -> None:
     print(f"  calendar: {world.calendar.name} — "
           f"{len(world.calendar.months)} months, "
           f"{world.calendar.common_year_days} days a year")
-    rows = world.db.query(
-        "SELECT type_key, count(*) AS n FROM entity WHERE branch_id = ? "
-        "GROUP BY type_key ORDER BY n DESC", (world.branch_id,))
     print(f"  {world.count_entities()} entities:")
-    for row in rows:
-        print(f"    {row['n']:4}  {row['type_key']}")
-    print(f"  {world.db.scalar('SELECT count(*) FROM fact')} facts, "
-          f"{len(world.events())} events, {len(world.secrets())} secrets, "
+    for type_key, n in world.counts_by_type().items():
+        print(f"    {n:4}  {type_key}")
+    print(f"  {world.count_facts()} facts, "
+          f"{world.count_events()} events, {len(world.secrets())} secrets, "
           f"{len(world.scenes())} scenes")
     world.close()
 
@@ -335,15 +332,50 @@ def cmd_restore(args) -> None:
         world.close()
 
 
+def _library_dir(args, world) -> Path:
+    """Where the Worlds screen looks for saves.
+
+    An explicitly chosen library always wins. Otherwise, serving a specific world file
+    makes that file's own directory the library — so the world being served appears in
+    the listing and switching away is never a one-way door — and the launcher with no
+    world at all uses ./worlds.
+    """
+    if args.library is not None:
+        return Path(args.library)
+    if world is not None:
+        return Path(str(world.db.path)).resolve().parent
+    return Path("worlds")
+
+
 def cmd_serve(args) -> None:
     import uvicorn
 
     from fw.api.app import create_app
+    from fw.core.library import Library
 
-    world = _open(args.path)
-    app = create_app(world)
-    print(f"“{world.name}” is at http://{args.host}:{args.port}")
+    # A named path is opened directly. With no path (and no world at the default
+    # name), the app starts on the launcher instead: the writer picks a save or makes
+    # a new world in the browser, rather than being forced into any template.
+    world = None
+    if args.path != DEFAULT_PATH or Path(args.path).exists():
+        world = _open(args.path)
+    library = Library(_library_dir(args, world))
+
+    app = create_app(world, library=library)
+    url = f"http://{args.host}:{args.port}"
+    if world is not None:
+        print(f"“{world.name}” is at {url}")
+    else:
+        print(f"FW is at {url} — create or open a world from there.")
+        print(f"  Saves live in {library.directory.resolve()}, one portable file each.")
     print("  Nothing leaves this machine; the server is bound to localhost.")
+
+    if args.open_browser:
+        import threading
+        import webbrowser
+
+        # uvicorn.run blocks; give it a moment to bind before the browser knocks.
+        threading.Timer(1.2, webbrowser.open, [url]).start()
     uvicorn.run(app, host=args.host, port=args.port, log_level=args.log_level)
 
 
@@ -437,6 +469,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--host", default="127.0.0.1")
     p.add_argument("--port", type=int, default=8000)
     p.add_argument("--log-level", default="warning")
+    p.add_argument("--library", default=None,
+                   help="directory the Worlds screen lists saves from "
+                        "(default: worlds/, or the served file's own directory)")
+    p.add_argument("--open", dest="open_browser", action="store_true",
+                   help="open the app in the default browser once the server is up")
 
     return parser
 
