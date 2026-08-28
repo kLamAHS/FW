@@ -714,3 +714,60 @@ class TestEraEndpoints:
         clash = client.post("/api/eras", json={"name": "Two", "abbreviation": "xx"})
         assert clash.status_code == 400
         assert "already has an era" in clash.json()["detail"]
+
+
+class TestMapProposal:
+    """§66: the writer sees the map before it exists, and answers it."""
+
+    def test_planning_returns_a_map_and_writes_nothing(self, client):
+        before = client.get("/api/map").json()
+        plan = client.post("/api/map/plan",
+                           json={"invent_settlements": True}).json()
+        assert plan["features"]
+        assert plan["plan_id"]
+        assert "proposes" in plan["summary"]
+        assert client.get("/api/map").json() == before
+
+    def test_every_proposal_says_why_it_is_there(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        assert all(f["why"] for f in plan["features"])
+
+    def test_inventing_a_place_arrives_switched_off(self, client):
+        plan = client.post("/api/map/plan",
+                           json={"invent_settlements": True}).json()
+        invented = [f for f in plan["features"]
+                    if f["subject"] and f["subject"]["mode"] == "new"
+                    and f["kind"] == "settlement"]
+        assert invented
+        assert all(not f["default_accept"] for f in invented)
+
+    def test_applying_writes_the_accepted_parts_as_one_action(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        report = client.post("/api/map/apply",
+                             json={"plan": plan, "decisions": []}).json()
+        assert report["action_id"]
+        assert report["counts"].get("created")
+        undone = client.post("/api/undo").json()
+        assert "message" in undone
+
+    def test_a_writer_can_turn_one_feature_down(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        victim = next(f for f in plan["features"] if f["kind"] == "river")
+        report = client.post("/api/map/apply", json={
+            "plan": plan,
+            "decisions": [{"feature_id": victim["id"], "accept": False}],
+        }).json()
+        rejected = [o for o in report["outcomes"] if o["op"] == "rejected"]
+        assert victim["id"] in {o["feature_id"] for o in rejected}
+
+    def test_a_plan_from_another_timeline_is_refused(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        plan["branch"] = "some other timeline"
+        response = client.post("/api/map/apply",
+                               json={"plan": plan, "decisions": []})
+        assert response.status_code == 409
+
+    def test_the_one_press_route_still_works(self, client):
+        response = client.post("/api/map/generate", json={})
+        assert response.status_code == 200
+        assert "The map" in response.json()["summary"]

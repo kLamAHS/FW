@@ -260,6 +260,31 @@ class GenerateMapIn(BaseModel):
     propose_settlements: bool = True
 
 
+class PlanMapIn(BaseModel):
+    """What the writer can turn before a map is worked out."""
+
+    seed: str | None = None
+    include: list[str] | None = None
+    invent_settlements: bool = False
+    north: str = "up"
+    prevailing_wind: str = ""
+
+
+class DecisionIn(BaseModel):
+    feature_id: str
+    accept: bool = True
+    name: str | None = None
+    pinned: bool = False
+
+
+class ApplyMapIn(BaseModel):
+    """A plan, answered. The plan comes back verbatim so the server writes exactly
+    what the writer looked at rather than something recomputed underneath them."""
+
+    plan: dict
+    decisions: list[DecisionIn] = []
+
+
 class SuppressIn(BaseModel):
     rule_key: str
     fingerprint: str

@@ -65,6 +65,17 @@ TRAVEL_COST = {"ocean": 9.0, "marsh": 3.4, "mountain": 4.2, "glacier": 5.0,
                "steppe": 1.2, "coast": 1.1, "plain": 1.0, "farmland": 1.0}
 
 
+def _is_generated(geometry) -> bool:
+    """Whether this shape came from a generator — either of them.
+
+    Imported late: the ledger knows about plans, and plans are built on top of this
+    module. Reaching for it here rather than duplicating the rule keeps one answer to
+    "is this mine?".
+    """
+    from fw.core.mapgen.ledger import is_generated
+    return is_generated(geometry)
+
+
 @dataclass
 class Placement:
     """One settlement put somewhere, and the case for it."""
@@ -183,8 +194,12 @@ class MapGenerator:
             for geometry in index.get(region_id, []):
                 if geometry.kind != "polygon":
                     continue
-                if (geometry.style or {}).get(GENERATED):
-                    continue                       # our own earlier work, not theirs
+                # Our own earlier work is not the writer's drawing. Missing this is
+                # what made regenerating build a different world every time: the first
+                # run's region outlines came back as authored borders on the second,
+                # so the land was reshaped around them and every feature moved.
+                if _is_generated(geometry):
+                    continue
                 rings = geometry.coordinates
                 if rings and rings[0]:
                     out[region_id] = [[float(p[0]), float(p[1])] for p in rings[0]]
@@ -751,29 +766,8 @@ class MapGenerator:
         # Which pairs to join is decided on a cheap estimate — distance weighted by the
         # ground either end sits on. Only the roads actually chosen are then routed
         # properly, so the expensive part runs n-1 times rather than n²/2.
-        edges = []
-        for a in range(len(known)):
-            for b in range(a + 1, len(known)):
-                p, q = known[a], known[b]
-                terrain = max(TRAVEL_COST.get(self.profiles[p.region_id].dominant, 1.4),
-                              TRAVEL_COST.get(self.profiles[q.region_id].dominant, 1.4))
-                edges.append((math.dist((p.x, p.y), (q.x, q.y)) * terrain, a, b))
-        edges.sort()
-
-        parent = list(range(len(known)))
-
-        def find(n: int) -> int:
-            while parent[n] != n:
-                parent[n] = parent[parent[n]]
-                n = parent[n]
-            return n
-
         laid = 0
-        for _cost, a, b in edges:
-            ra, rb = find(a), find(b)
-            if ra == rb:
-                continue
-            parent[ra] = rb
+        for a, b in self._road_edges(known):
             p, q = known[a], known[b]
             path = self._route(self._cell_of(p.x, p.y), self._cell_of(q.x, q.y))
             points = [[p.x, p.y]] + [[round(x, 1), round(y, 1)]
@@ -791,6 +785,43 @@ class MapGenerator:
                 terrain=self._road_terrain(path))
             laid += 1
         self.report.roads = laid
+
+    def _road_edges(self, known: list[Placement]) -> list[tuple[int, int]]:
+        """Which pairs of places to join: a minimum spanning tree on a cheap estimate.
+
+        Distance weighted by the ground either end sits on. Only the roads actually
+        chosen are then routed properly, so the expensive part runs n-1 times rather
+        than n squared over two — which is the difference between 160ms and a second.
+        """
+        edges = []
+        for a in range(len(known)):
+            for b in range(a + 1, len(known)):
+                p, q = known[a], known[b]
+                terrain = max(TRAVEL_COST.get(self.profiles[p.region_id].dominant, 1.4),
+                              TRAVEL_COST.get(self.profiles[q.region_id].dominant, 1.4))
+                edges.append((math.dist((p.x, p.y), (q.x, q.y)) * terrain, a, b))
+        edges.sort()
+
+        parent = list(range(len(known)))
+
+        def find(n: int) -> int:
+            while parent[n] != n:
+                parent[n] = parent[parent[n]]
+                n = parent[n]
+            return n
+
+        chosen: list[tuple[int, int]] = []
+        for _cost, a, b in edges:
+            ra, rb = find(a), find(b)
+            if ra == rb:
+                continue
+            parent[ra] = rb
+            chosen.append((a, b))
+        return chosen
+
+    def land_cells(self) -> int:
+        """How many lattice cells are dry land — the denominator for a region's share."""
+        return sum(1 for row in self.sea for wet in row if not wet)
 
     def _road_terrain(self, path: list[tuple[int, int]]) -> str:
         """What ground this road crosses, said in the travel engine's words.

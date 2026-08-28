@@ -30,6 +30,7 @@ from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.library import Library, LibraryError
+from fw.core.mapgen import plan as MG
 from fw.core.mapgen.generate import generate_map
 from fw.core.model.vocabulary import PREDICATES_BY_KEY
 from fw.core.store.db import StoreError
@@ -497,6 +498,44 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         layers = sorted({f["layer"] for f in features})
         return S.MapOut(day=at, layers=layers, features=features)
 
+    @app.post("/api/map/plan")
+    def plan_the_map(payload: S.PlanMapIn) -> dict[str, Any]:
+        """Work out a map and return it without writing a thing (§66).
+
+        The writer sees the whole proposal — every coastline, river, town and road,
+        each with the case for it — before any of it exists. Nothing here touches the
+        world, so looking costs nothing and a map they dislike is closed rather than
+        undone.
+        """
+        from fw.core.mapgen.pipeline import plan_map
+
+        brief = MG.MapBrief(
+            seed=payload.seed or "",
+            at=app.state.present_day,
+            include=tuple(payload.include) if payload.include else MG.MapBrief().include,
+            invent_settlements=payload.invent_settlements,
+            north=payload.north,
+            prevailing_wind=payload.prevailing_wind,
+        )
+        return plan_map(holder.get(), brief).to_dict()
+
+    @app.post("/api/map/apply")
+    def apply_the_map(payload: S.ApplyMapIn) -> dict[str, Any]:
+        """Write the parts of a plan the writer accepted, as one undoable action."""
+        from fw.core.mapgen.apply import PlanStale, apply_plan
+        from fw.core.mapgen.decide import Decision, DecisionSet
+
+        plan = MG.MapPlan.from_dict(payload.plan)
+        answers = DecisionSet(plan_id=plan.plan_id, decisions=tuple(
+            Decision(feature_id=d.feature_id, accept=d.accept, name=d.name,
+                     pinned=d.pinned)
+            for d in payload.decisions))
+        try:
+            report = apply_plan(holder.get(), plan, answers)
+        except PlanStale as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return report.as_dict()
+
     @app.post("/api/map/generate")
     def generate_the_map(payload: S.GenerateMapIn) -> dict[str, Any]:
         """§34: grow a map from what the regions say about themselves.
@@ -509,6 +548,8 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             holder.get(), seed=payload.seed or None,
             at=app.state.present_day,
             propose_settlements=payload.propose_settlements)
+        # Kept as it was: one press, one map, one undo. The two-step route above is
+        # for writers who would rather look before it lands.
         return {
             "summary": report.summary(),
             "regions_drawn": report.regions_drawn,

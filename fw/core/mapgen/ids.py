@@ -86,3 +86,16 @@ def shape_signature(coordinates) -> str:
     walk(coordinates)
     payload = ",".join(flat)
     return hashlib.blake2b(payload.encode("utf-8"), digest_size=8).hexdigest()
+
+
+_KIND_OF = {prefix: kind for kind, prefix in _PREFIX.items()}
+
+
+def kind_of(feature_id: str) -> str | None:
+    """Which kind of feature an id belongs to, without needing the plan it came from.
+
+    Used to scope a retirement: a brief asking only for settlements must not sweep away
+    the rivers it never looked at.
+    """
+    prefix, _, _ = feature_id.partition("_")
+    return _KIND_OF.get(prefix)
