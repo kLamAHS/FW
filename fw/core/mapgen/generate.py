@@ -27,24 +27,26 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import guards, noise
+from fw.core.mapgen import coast, guards, noise, territory
 from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
     RegionProfile,
     profile_region,
 )
+from fw.core.mapgen.grid import Grid
+from fw.core.mapgen.layout import Site, arrange
 from fw.core.world import World, WorldError
 
 # The canvas. Fictional worlds have no coordinate system (§34), so these are the same
 # arbitrary units the example world was drawn in, and the same rough magnitudes.
 SPAN = 900.0
 MARGIN = 60.0
-GRID = 88                      # lattice cells per side; ~10 units each
+GRID = 144                     # lattice cells per side
 CELL = SPAN / GRID
 
 SEA_LEVEL = 0.10
-RIVER_THRESHOLD = 0.055        # share of total rainfall a channel must carry
+RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
 
@@ -147,6 +149,10 @@ class MapGenerator:
         self.from_sea: list[list[int]] = []
         self.inland_max: int = 1
         self.authored_cells: dict[str, set[tuple[int, int]]] = {}
+        self.landform: coast.Landform | None = None
+        self.partition: territory.Partition | None = None
+        self._anchors: dict[str, tuple[int, int]] = {}
+        self._weights: dict[str, float] = {}
         self.cost: list[list[float]] = []
         self._roads_entity: str | None = None
         self.report = GenerationReport()
@@ -207,58 +213,82 @@ class MapGenerator:
         return out
 
     def _build_landmass(self, authored: dict[str, list[list[float]]]) -> None:
-        """Shape the continent before deciding who owns what.
+        """Shape one continent, and find its coastline.
 
-        Sea has to exist before regions are placed, or an inland region grows out to
-        the rim and acquires a coastline it was never meant to have — the first draft
-        gave a river vale three harbours. Land here is one fractal mass shelving into
-        water at the canvas edge; only afterwards is it divided.
+        The land is a single scalar field whose sea-level contour *is* the shore, grown
+        around the skeleton the writer's borders describe. See `coast.py` for why it is
+        built that way rather than as a polygon per region.
         """
-        self.sea = [[True] * GRID for _ in range(GRID)]
-        # Rasterise each drawn ring once. Ray-casting 44 vertices against 7,744 cells is
-        # the dominant cost of a run, and it was being paid three times over.
         self.authored_cells = {
             region_id: {(i, j) for j in range(GRID) for i in range(GRID)
                         if _inside(ring, *self._centre(i, j))}
             for region_id, ring in authored.items()
         }
-        if authored:
-            # The writer has drawn land. The continent is what they drew, plus a
-            # hinterland margin — inventing an unrelated fractal coastline here is how
-            # the first draft put a harbour in the middle of an inland vale.
-            drawn = [[False] * GRID for _ in range(GRID)]
-            for cells in self.authored_cells.values():
-                for i, j in cells:
-                    drawn[j][i] = True
-            # The hinterland grows from inland regions only. A region the writer called
-            # coastal must keep its drawn edge as its shoreline — pad it and the port
-            # it was named for ends up six cells from the water.
-            spread = 6
-            frontier = [
-                (i, j)
-                for region_id, cells in self.authored_cells.items()
-                if not self.profiles[region_id].coastal
-                for i, j in sorted(cells)
-            ]
-            for _ in range(spread):
-                nxt = []
-                for i, j in frontier:
-                    for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                        ni, nj = i + di, j + dj
-                        if 0 <= ni < GRID and 0 <= nj < GRID and not drawn[nj][ni]:
-                            drawn[nj][ni] = True
-                            nxt.append((ni, nj))
-                frontier = nxt
-            for j in range(GRID):
-                for i in range(GRID):
-                    self.sea[j][i] = not drawn[j][i]
-        else:
-            for j in range(GRID):
-                for i in range(GRID):
-                    shape = noise.fbm(f"{self.seed}~land", i / 17.0, j / 17.0, octaves=4)
-                    self.sea[j][i] = shape * self._edge_falloff(i, j) < 0.34
+        grid = self._grid()
+        anchors, weights, roughness = self._skeleton(authored)
+        self.landform = coast.build(
+            grid, anchors=anchors, weights=weights, roughness=roughness,
+            borders=self._border_pairs(), seed=self.seed)
+        self.sea = self.landform.sea
+        # Already settled onto dry ground: a heart the coastline drowned would claim
+        # nothing, and the region would vanish from the map without a word.
+        self._anchors = self.landform.anchors
+        self._weights = weights
+        self._measure_from_sea()
 
-        # Distance inland, in cells — what tells a coast from an interior.
+    def _grid(self) -> Grid:
+        return Grid(size=GRID, span=SPAN - 2 * MARGIN,
+                    origin_x=MARGIN, origin_y=MARGIN)
+
+    def _skeleton(self, authored: dict[str, list[list[float]]]):
+        """Where each region sits, from what the writer said borders what.
+
+        Keyed on region *names*, never ids: ids are ULIDs, random per world, so two
+        copies of the same world would lay out differently and neither the plan digest
+        nor a golden file would mean anything.
+        """
+        grid = self._grid()
+        by_name = {self.profiles[rid].name: rid for rid in sorted(self.profiles)}
+        sites = []
+        for name in sorted(by_name):
+            region_id = by_name[name]
+            profile = self.profiles[region_id]
+            fixed = None
+            cells = self.authored_cells.get(region_id)
+            if cells:
+                # The writer drew it. Their centre is the anchor; it does not move.
+                mid_x = sum(c[0] for c in cells) / len(cells)
+                mid_y = sum(c[1] for c in cells) / len(cells)
+                fixed = grid.centre(int(mid_x), int(mid_y))
+            sites.append(Site(key=name, coastal=profile.coastal, fixed=fixed,
+                              weight=0.7 + 0.6 * min(
+                                  1.0, self._population_of(region_id) / 150_000)))
+        # A generous margin. Land is deliberately suppressed towards the canvas edge so
+        # no coastline reads as a cut-off, so a region laid out in that band gets its
+        # ground drowned — and with no borders stated to pull them together, regions
+        # spread to the corners and the continent came apart there.
+        placed = arrange(sites, self._border_pairs(), seed=self.seed,
+                         span=SPAN - 2 * MARGIN, margin=(SPAN - 2 * MARGIN) * 0.16)
+        anchors = {name: grid.cell_of(x + MARGIN, y + MARGIN)
+                   for name, (x, y) in placed.items()}
+        weights = {site.key: site.weight for site in sites}
+        roughness = {name: self.profiles[by_name[name]].roughness for name in by_name}
+        self._region_of_name = by_name
+        return anchors, weights, roughness
+
+    def _border_pairs(self) -> set[tuple[str, str]]:
+        """The writer's `borders` facts, as pairs of region names."""
+        name_of = {rid: self.profiles[rid].name for rid in self.profiles}
+        pairs: set[tuple[str, str]] = set()
+        for region_id in sorted(self.profiles):
+            for other in self._borders_of(region_id):
+                if other in name_of:
+                    a, b = name_of[region_id], name_of[other]
+                    pairs.add((min(a, b), max(a, b)))
+        return pairs
+
+    def _measure_from_sea(self) -> None:
+        """Distance inland, in cells — what tells a coast from an interior."""
         self.from_sea = [[0 if self.sea[j][i] else -1 for i in range(GRID)]
                          for j in range(GRID)]
         frontier = [(i, j) for j in range(GRID) for i in range(GRID) if self.sea[j][i]]
@@ -277,75 +307,29 @@ class MapGenerator:
             (self.from_sea[j][i] for j in range(GRID) for i in range(GRID)), default=1)
 
     def _assign_cells(self, regions, authored: dict[str, list[list[float]]]) -> None:
-        """Decide which region owns each land cell.
+        """Give every acre of the continent to somebody.
 
-        Authored outlines are rasterised as given. Everything else grows outward from a
-        seed point by a fair race, so neighbours meet along a shared front rather than
-        overlapping — which is what `borders` means on the ground. Only land is claimed:
-        a region never owns open water.
+        A partition rather than a race between growing blobs: unclaimed land renders as
+        grout between the regions on a political fill, and a writer reads that as ground
+        nobody has thought about rather than as an artefact of how it was drawn.
         """
+        name_of = {rid: self.profiles[rid].name for rid in self.profiles}
+        claimed = {name_of[rid]: {(i, j) for i, j in cells if not self.sea[j][i]}
+                   for rid, cells in self.authored_cells.items()}
+        for region_id, cells in list(self.authored_cells.items()):
+            self.authored_cells[region_id] = {
+                (i, j) for i, j in cells if not self.sea[j][i]}
+
+        self.partition = territory.grow(
+            self._grid(), self.sea, anchors=self._anchors, weights=self._weights,
+            claimed=claimed)
+        id_of = {name: rid for rid, name in name_of.items()}
         self.owner = [[None] * GRID for _ in range(GRID)]
-
-        for region_id, cells in self.authored_cells.items():
-            dry = {(i, j) for i, j in cells if not self.sea[j][i]}
-            self.authored_cells[region_id] = dry
-            for i, j in sorted(dry):
-                if self.owner[j][i] is None:
-                    self.owner[j][i] = region_id
-
-        # Every cell gets an owner. Leaving the rest of the canvas unclaimed would make
-        # each region an island — which is why the first draft gave an inland vale a
-        # harbour. Land is continuous; the sea is decided by height, further down.
-        ungrown = [r for r in regions if r.id not in authored]
-        seeds = self._seed_points(ungrown, authored)
-        # Multi-source breadth-first growth. Each region takes a turn per round, so a
-        # small region does not get swallowed before it starts.
-        frontiers: dict[str, list[tuple[int, int]]] = {}
-        for region_id, (ci, cj) in seeds.items():
-            if self.owner[cj][ci] is None:
-                self.owner[cj][ci] = region_id
-                frontiers[region_id] = [(ci, cj)]
-            else:
-                frontiers[region_id] = []
-        # An authored region also grows outward, so its hinterland belongs to it even
-        # though its drawn border stays exactly as drawn.
-        for region_id in authored:
-            frontiers.setdefault(region_id, [
-                (i, j) for j in range(GRID) for i in range(GRID)
-                if self.owner[j][i] == region_id])
-
-        # Bigger populations claim more ground, but never so much that a small region
-        # vanishes: the share is square-rooted and floored.
-        populations = {r.id: max(1, self.profiles[r.id].population) for r in regions}
-        biggest = max(populations.values())
-        appetite = {rid: 0.45 + 0.55 * math.sqrt(pop / biggest)
-                    for rid, pop in populations.items() if rid in frontiers}
-        credit = dict.fromkeys(frontiers, 0.0)
-
-        order = sorted(frontiers)
-        growing = True
-        while growing:
-            growing = False
-            for region_id in order:
-                credit[region_id] += appetite[region_id]
-                while credit[region_id] >= 1.0:
-                    credit[region_id] -= 1.0
-                    if self._grow_one(region_id, frontiers[region_id]):
-                        growing = True
-
-    def _grow_one(self, region_id: str, frontier: list[tuple[int, int]]) -> bool:
-        """Claim one more cell for a region. False when it can grow no further."""
-        while frontier:
-            i, j = frontier[0]
-            for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                ni, nj = i + di, j + dj
-                if (0 <= ni < GRID and 0 <= nj < GRID
-                        and self.owner[nj][ni] is None and not self.sea[nj][ni]):
-                    self.owner[nj][ni] = region_id
-                    frontier.append((ni, nj))
-                    return True
-            frontier.pop(0)
-        return False
+        for j in range(GRID):
+            for i in range(GRID):
+                name = self.partition.region_at(i, j)
+                if name is not None:
+                    self.owner[j][i] = id_of.get(name)
 
     def _seed_points(self, regions, authored) -> dict[str, tuple[int, int]]:
         """Where each undrawn region starts growing.
@@ -550,8 +534,14 @@ class MapGenerator:
             if step is not None:
                 self.flow[step[1]][step[0]] += self.flow[j][i]
 
-        total = sum(self.moisture[j][i] for i, j in land) or 1.0
-        threshold = total * RIVER_THRESHOLD
+        # A quantile of the flow on land, not a share of total rainfall. A share does
+        # not survive a change of lattice: the total scales with the number of cells
+        # while a single river's catchment does not, so raising the resolution quietly
+        # dried the whole world up — four channel cells and one river on a continent.
+        # A quantile means the same density of rivers at any resolution.
+        ranked = sorted(self.flow[j][i] for i, j in land)
+        threshold = (ranked[max(0, int(len(ranked) * (1.0 - RIVER_SHARE)) - 1)]
+                     if ranked else 1.0)
 
         # A source is a channel-strength cell with no channel-strength cell above it.
         channel = {(i, j) for i, j in land if self.flow[j][i] >= threshold}
@@ -985,37 +975,14 @@ class MapGenerator:
             self.report.regions_drawn.append(profile.name)
 
     def _outline(self, region_id: str) -> list[list[float]] | None:
-        """Trace a region's cells into a closed ring.
+        """A region's shape, traced from the ground it holds.
 
-        Rays from the region's middle outward: whatever the cell set looks like, the
-        result is a simple closed polygon with a fixed vertex count — no self-crossings
-        to render wrong, and a bounded size the client's bounds maths can survive.
+        Contoured rather than cast as rays, so the shape is as concave as the territory
+        is and the edge it shares with a neighbour is the same edge on both maps.
         """
-        cells = [(i, j) for j in range(GRID) for i in range(GRID)
-                 if self.owner[j][i] == region_id and not self.sea[j][i]]
-        if len(cells) < 4:
-            return None
-        cx = sum(c[0] for c in cells) / len(cells)
-        cy = sum(c[1] for c in cells) / len(cells)
-        owned = set(cells)
-
-        ring: list[list[float]] = []
-        for step in range(OUTLINE_RAYS):
-            dx, dy = noise.around(step, OUTLINE_RAYS)
-            reach = 0.0
-            distance = 0.0
-            while distance < GRID:
-                distance += 0.5
-                probe = (int(round(cx + dx * distance)), int(round(cy + dy * distance)))
-                if probe in owned:
-                    reach = distance
-            wobble = 1.0 + noise.signed(
-                f"{self.seed}~edge:{self.profiles[region_id].name}", step) * 0.04
-            x, y = self._centre(cx + dx * reach * wobble, cy + dy * reach * wobble)
-            ring.append([round(max(2.0, min(SPAN - 2.0, x)), 1),
-                         round(max(2.0, min(SPAN - 2.0, y)), 1)])
-        ring.append(list(ring[0]))         # closed, as every seeded ring is
-        return ring
+        name = self.profiles[region_id].name
+        rings = territory.outline(self.partition, name)
+        return rings[0] if rings else None
 
     def _road_entity(self) -> str:
         """One entity owning every generated road.

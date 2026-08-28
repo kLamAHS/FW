@@ -22,6 +22,7 @@ from fw.core.mapgen.generate import (
     MapGenerator,
     generate_map,
 )
+from fw.core.mapgen.territory import MAX_RING_VERTICES
 from fw.core.seed.renn import PRESENT_YEAR
 from fw.core.world import World, WorldError
 
@@ -127,7 +128,10 @@ class TestGeneratedGeography:
             rings = geometry.coordinates
             assert isinstance(rings[0][0], list)      # polygon = array of RINGS
             assert rings[0][0] == rings[0][-1]        # closed, as every seeded ring is
-            assert len(rings[0]) < 80                 # bounded: the client spreads these
+            # Bounded, but no longer at the 45 vertices a ray-cast star polygon had:
+            # a region is traced from the ground it actually holds now, so its shape is
+            # as concave as its territory is and needs more of them to say so.
+            assert len(rings[0]) <= MAX_RING_VERTICES
 
     def test_terrain_actually_changes_the_outcome(self, blank: World):
         """A mountain region and a coast must not generate the same ground."""
