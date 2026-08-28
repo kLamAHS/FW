@@ -461,3 +461,34 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
   border: 0; background: none; padding: 0; font: inherit; color: var(--accent);
   cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
 }
+
+/* ---- a map that does not exist yet (§66) -------------------------------- */
+.proposal-head { display: flex; gap: 16px; align-items: flex-start;
+                 justify-content: space-between; flex-wrap: wrap; }
+.proposal-actions { display: flex; gap: 8px; }
+.proposal-group { border-top: 1px solid var(--rule); padding-top: 8px;
+                  margin-top: 8px; }
+.proposal-group h4 { display: flex; justify-content: space-between;
+                     align-items: baseline; margin: 0 0 4px; font-weight: 600; }
+.proposal-bulk { display: flex; gap: 10px; }
+.proposal-list { list-style: none; margin: 0; padding: 0;
+                 display: grid; gap: 10px; }
+.proposal-list li { display: grid; gap: 2px; padding-left: 2px;
+                    border-left: 2px solid transparent; }
+.proposal-list li.blocked { opacity: 0.45; border-left-color: var(--rule); }
+.proposal-row { display: flex; gap: 10px; align-items: center; }
+.proposal-row label { display: flex; gap: 8px; align-items: center; flex: 1; }
+.proposal-list label { display: flex; gap: 8px; align-items: center; }
+.proposal-name { flex: 1; max-width: 22em; padding: 2px 6px;
+                 font: inherit; background: var(--panel);
+                 border: 1px solid var(--rule); border-radius: 3px; }
+.proposal-list .tag { font-size: 11px; text-transform: uppercase;
+                      letter-spacing: 0.06em; color: var(--muted);
+                      border: 1px solid var(--rule); border-radius: 3px;
+                      padding: 0 4px; }
+.findings { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
+.findings li { font-size: 13px; padding-left: 8px;
+               border-left: 3px solid var(--rule); }
+.findings li.warning { border-left-color: var(--error); }
+/* The proposal is drawn dashed and translucent: it is not the map yet. */
+.proposal-overlay { pointer-events: none; }

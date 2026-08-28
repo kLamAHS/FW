@@ -474,6 +474,56 @@ export interface LibraryInfo {
   open: string | null
 }
 
+
+/** A map that does not exist yet (§66): every feature, with the case for it. */
+export interface PlannedFeature {
+  id: string
+  kind: string
+  name: string
+  subject: { mode: string; type_key: string; entity_id: string | null } | null
+  anchor_id: string | null
+  shapes: {
+    role: string
+    kind: 'point' | 'line' | 'polygon'
+    coordinates: any
+    layer: string
+    style: Record<string, string>
+    approximate: boolean
+  }[]
+  why: string[]
+  detail: Record<string, any>
+  depends_on: string[]
+  default_accept: boolean
+  renameable: boolean
+  status: string
+}
+
+export interface MapPlan {
+  plan_id: string
+  world_name: string
+  branch: string
+  summary: string
+  features: PlannedFeature[]
+  retiring: { feature_id: string; name: string; writer_touched: boolean; why: string }[]
+  findings: { code: string; severity: string; message: string; quotes: string[] }[]
+  stats: { features_by_kind: Record<string, number>; vertices: number; plan_ms: number }
+}
+
+export interface MapDecision {
+  feature_id: string
+  accept: boolean
+  name?: string | null
+  pinned?: boolean
+}
+
+export interface ApplyReport {
+  plan_id: string
+  action_id: string | null
+  summary: string
+  counts: Record<string, number>
+  outcomes: { feature_id: string; name: string; op: string; why: string }[]
+}
+
 export const api = {
   worlds: () => get<LibraryInfo>('/worlds'),
   createWorld: (name: string, example: boolean) =>
@@ -540,6 +590,13 @@ export const api = {
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),
+  planMap: (options: { seed?: string | null; invent_settlements?: boolean }) =>
+    send<MapPlan>('/map/plan', 'POST', {
+      seed: options.seed ?? null,
+      invent_settlements: options.invent_settlements ?? false,
+    }),
+  applyMap: (plan: MapPlan, decisions: MapDecision[]) =>
+    send<ApplyReport>('/map/apply', 'POST', { plan, decisions }),
   graph: (params?: { day?: number; categories?: string; centre?: string; hops?: number }) =>
     get<GraphData>('/graph', params),
   pedigree: (params?: { root_id?: string; lens?: string; living_only_on?: number; house_id?: string }) =>

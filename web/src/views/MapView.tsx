@@ -18,9 +18,10 @@
 
 import { useMemo, useState } from 'react'
 import { api } from '../api'
-import type { MapFeature, MapGenerationReport } from '../api'
+import type { ApplyReport, MapDecision, MapFeature, MapPlan } from '../api'
+import { ProposalOverlay, ProposalPanel } from './map/ProposalPanel'
 import {
-  Badge, ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
+  ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
 } from '../components/common'
 
 const CONTROL_MODES = [
@@ -47,17 +48,39 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   const [mode, setMode] = useState<ControlMode>('legally_owns')
   const [showLabels, setShowLabels] = useState(true)
   const [generating, setGenerating] = useState(false)
-  const [report, setReport] = useState<MapGenerationReport | null>(null)
+  const [plan, setPlan] = useState<MapPlan | null>(null)
+  const [accepted, setAccepted] = useState<Record<string, boolean>>({})
+  const [report, setReport] = useState<ApplyReport | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
   const [propose, setPropose] = useState(true)
   const pan = usePanZoom(1)
 
+  // Propose first (§66). The map is worked out and shown; nothing is written until
+  // the writer says which of it they want.
   const grow = async () => {
     if (generating) return
     setGenerating(true)
     setGenError(null)
+    setReport(null)
     try {
-      setReport(await api.generateMap(null, propose))
+      const proposal = await api.planMap({ invent_settlements: propose })
+      setPlan(proposal)
+      setAccepted(Object.fromEntries(
+        proposal.features.map((f) => [f.id, f.default_accept])))
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const keep = async (decisions: MapDecision[]) => {
+    if (!plan || generating) return
+    setGenerating(true)
+    setGenError(null)
+    try {
+      setReport(await api.applyMap(plan, decisions))
+      setPlan(null)
       onMutate()
     } catch (err) {
       setGenError(err instanceof Error ? err.message : String(err))
@@ -180,6 +203,7 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 </g>
               )
             })}
+            {plan && <ProposalOverlay plan={plan} accepted={accepted} />}
           </g>
         </svg>
 
@@ -211,8 +235,9 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
       {/* §34: grow the map from what the regions already say about themselves. */}
       <div className="toolbar" style={{ marginTop: 12 }}>
         <button className="active" disabled={generating} onClick={() => void grow()}
-                title="Draw land, rivers, cities and roads from your regions">
-          {generating ? 'Growing the map…' : '✦ Generate the map'}
+                title="Work out land, rivers, cities and roads from your regions —
+                       you see it before any of it is written">
+          {generating && !plan ? 'Working it out…' : '✦ Propose a map'}
         </button>
         <label className="small" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input type="checkbox" checked={propose}
@@ -221,37 +246,36 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
         </label>
         <span className="spacer" style={{ flex: 1 }} />
         <span className="small muted">
-          Nothing you drew is overwritten, and one Ctrl+Z undoes the whole map.
+          You see the map before it exists. Nothing you drew is overwritten, and one
+          Ctrl+Z undoes whatever you keep.
         </span>
       </div>
 
       {genError && <div className="error-box small">{genError}</div>}
 
+      {plan && (
+        <Panel title="A map, before it exists">
+          <ProposalPanel plan={plan} busy={generating}
+                         accepted={accepted} setAccepted={setAccepted}
+                         onApply={(decisions) => void keep(decisions)}
+                         onDiscard={() => setPlan(null)} />
+        </Panel>
+      )}
+
       {report && (
         <Panel title="What the map did">
           <p className="small">{report.summary}</p>
-          {report.notes.map((note, i) => (
-            <p key={i} className="muted small">{note}</p>
+          {report.outcomes.filter((o) => o.op === 'promoted').map((o) => (
+            <p key={o.feature_id} className="muted small">{o.why}</p>
           ))}
-          {report.regions_kept.length > 0 && (
-            <p className="muted small">
-              Left exactly as you drew them: {report.regions_kept.join(', ')}.
-            </p>
-          )}
-          {report.placements.length > 0 && (
-            <ul className="clean small">
-              {report.placements.map((p) => (
-                <li key={p.name}>
-                  <button className="link" disabled={!p.entity_id}
-                          onClick={() => p.entity_id && onSelect(p.entity_id)}>
-                    {p.name}
-                  </button>
-                  {p.proposed && <Badge>suggested</Badge>}
-                  <div className="muted">{p.why}</div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="clean small">
+            {report.outcomes.filter((o) => o.op === 'created').slice(0, 40).map((o) => (
+              <li key={o.feature_id}>
+                <strong>{o.name}</strong>
+                <div className="muted">{o.why}</div>
+              </li>
+            ))}
+          </ul>
         </Panel>
       )}
 
