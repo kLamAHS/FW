@@ -2745,6 +2745,58 @@ class World:
         self.db.insert("geometry_rtree_map",
                        {"rtree_id": cur.lastrowid, "geometry_id": geometry_id})
 
+    def replace_geometry(self, entity_id: str, kind: str, coordinates: Any, *,
+                         layer: str = "base", **kw: Any) -> Geometry:
+        """Give an entity a new shape on one layer, retiring the old one.
+
+        Regenerating a map has to be able to redraw; without this the only way to change
+        a shape was to delete the entity that owned it.
+        """
+        with self.db.transaction():
+            for existing in self.geometries_of(entity_id, layer=layer):
+                self.delete_geometry(existing.id)
+            return self.add_geometry(entity_id, kind, coordinates, layer=layer, **kw)
+
+    def delete_geometry(self, geometry_id: str) -> None:
+        """Remove one shape, its R*Tree box and its index row.
+
+        The R*Tree is a virtual table and knows nothing about foreign keys, so its box
+        outlives the row unless it is removed by hand — a leak that grows the file
+        forever. Both existing delete paths do this; so must this one.
+        """
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM geometry WHERE id = ?", (geometry_id,))
+            if row is None:
+                return
+            if row["branch_id"] != self.branch_id:
+                raise WorldError(
+                    "that shape belongs to another timeline — redraw it there")
+            self.db.execute(
+                "DELETE FROM geometry_bbox WHERE id IN ("
+                " SELECT rtree_id FROM geometry_rtree_map WHERE geometry_id = ?)",
+                (geometry_id,))
+            self._log_revision("geometry", geometry_id, "delete", _snapshot(row), None)
+            self.db.execute("DELETE FROM geometry WHERE id = ?", (geometry_id,))
+
+    def geometries_of(self, entity_id: str, *, layer: str | None = None,
+                      at: int | None = None) -> list[Geometry]:
+        """Every shape an entity has, optionally on one layer."""
+        return [g for g in self.geometries(at=at, layer=layer)
+                if g.entity_id == entity_id]
+
+    def geometry_index(self, *, at: int | None = None,
+                       layer: str | None = None) -> dict[str, list[Geometry]]:
+        """Every shape, grouped by entity, from ONE query.
+
+        `geometry_for` loads and decodes the whole table per call, so asking it about
+        three hundred settlements in a loop costs three hundred full scans. Anything
+        that walks many entities builds this once instead.
+        """
+        out: dict[str, list[Geometry]] = {}
+        for geometry in self.geometries(at=at, layer=layer):
+            out.setdefault(geometry.entity_id, []).append(geometry)
+        return out
+
     def geometries(self, *, at: int | None = None, layer: str | None = None) -> list[Geometry]:
         sql = f"SELECT * FROM geometry WHERE {self._in_chain}"
         params: list[Any] = [*self._chain]
@@ -2755,6 +2807,9 @@ class World:
             sql += (" AND (valid_from IS NULL OR valid_from <= ?)"
                     " AND (valid_to   IS NULL OR valid_to   >= ?)")
             params.extend([at, at])
+        # Explicit order: without it the planner decides, so paint order — and any test
+        # asserting over it — changes the day ANALYZE runs.
+        sql += " ORDER BY layer, entity_id, id"
         return [_geometry(r) for r in self.db.query(sql, params)]
 
     def geometry_for(self, entity_id: str, *, at: int | None = None) -> Geometry | None:

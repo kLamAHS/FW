@@ -30,6 +30,7 @@ from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.library import Library, LibraryError
+from fw.core.mapgen.generate import generate_map
 from fw.core.model.vocabulary import PREDICATES_BY_KEY
 from fw.core.store.db import StoreError
 from fw.core.succession.engine import SuccessionEngine
@@ -495,6 +496,32 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             })
         layers = sorted({f["layer"] for f in features})
         return S.MapOut(day=at, layers=layers, features=features)
+
+    @app.post("/api/map/generate")
+    def generate_the_map(payload: S.GenerateMapIn) -> dict[str, Any]:
+        """§34: grow a map from what the regions say about themselves.
+
+        Everything the run writes is marked as generated, so running it again replaces
+        its own work and never the writer's — and the whole thing is one undoable
+        action, so a map the writer dislikes is one Ctrl+Z away.
+        """
+        report = generate_map(
+            holder.get(), seed=payload.seed or None,
+            at=app.state.present_day,
+            propose_settlements=payload.propose_settlements)
+        return {
+            "summary": report.summary(),
+            "regions_drawn": report.regions_drawn,
+            "regions_kept": report.regions_kept,
+            "rivers": report.rivers,
+            "roads": report.roads,
+            "notes": report.notes,
+            "placements": [
+                {"entity_id": p.entity_id, "name": p.name, "x": p.x, "y": p.y,
+                 "rank": p.rank, "proposed": p.proposed, "why": p.because()}
+                for p in report.placements
+            ],
+        }
 
     # ---- search (§53) -----------------------------------------------------
 

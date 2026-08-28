@@ -255,6 +255,11 @@ class EraPatch(BaseModel):
     reckons_from: int | None = None
 
 
+class GenerateMapIn(BaseModel):
+    seed: str | None = None
+    propose_settlements: bool = True
+
+
 class SuppressIn(BaseModel):
     rule_key: str
     fingerprint: str

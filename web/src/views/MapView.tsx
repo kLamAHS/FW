@@ -18,8 +18,10 @@
 
 import { useMemo, useState } from 'react'
 import { api } from '../api'
-import type { MapFeature } from '../api'
-import { ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync } from '../components/common'
+import type { MapFeature, MapGenerationReport } from '../api'
+import {
+  Badge, ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
+} from '../components/common'
 
 const CONTROL_MODES = [
   { key: 'legally_owns', label: 'Legal owner' },
@@ -36,14 +38,33 @@ interface Props {
   onSelect: (id: string) => void
   selectedId: string | null
   version: number
+  onMutate: () => void
 }
 
-export function MapView({ day, onSelect, selectedId, version }: Props) {
+export function MapView({ day, onSelect, selectedId, version, onMutate }: Props) {
   const { data, error, loading } = useAsync(() => api.map(day), [day, version])
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [mode, setMode] = useState<ControlMode>('legally_owns')
   const [showLabels, setShowLabels] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [report, setReport] = useState<MapGenerationReport | null>(null)
+  const [genError, setGenError] = useState<string | null>(null)
+  const [propose, setPropose] = useState(true)
   const pan = usePanZoom(1)
+
+  const grow = async () => {
+    if (generating) return
+    setGenerating(true)
+    setGenError(null)
+    try {
+      setReport(await api.generateMap(null, propose))
+      onMutate()
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   // A stable colour per controlling house, so the same house reads the same on every
   // layer and at every date.
@@ -186,6 +207,53 @@ export function MapView({ day, onSelect, selectedId, version }: Props) {
           <button onClick={pan.reset} style={{ marginTop: 4 }}>Reset view</button>
         </div>
       </div>
+
+      {/* §34: grow the map from what the regions already say about themselves. */}
+      <div className="toolbar" style={{ marginTop: 12 }}>
+        <button className="active" disabled={generating} onClick={() => void grow()}
+                title="Draw land, rivers, cities and roads from your regions">
+          {generating ? 'Growing the map…' : '✦ Generate the map'}
+        </button>
+        <label className="small" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input type="checkbox" checked={propose}
+                 onChange={(e) => setPropose(e.target.checked)} />
+          suggest settlements I have not named
+        </label>
+        <span className="spacer" style={{ flex: 1 }} />
+        <span className="small muted">
+          Nothing you drew is overwritten, and one Ctrl+Z undoes the whole map.
+        </span>
+      </div>
+
+      {genError && <div className="error-box small">{genError}</div>}
+
+      {report && (
+        <Panel title="What the map did">
+          <p className="small">{report.summary}</p>
+          {report.notes.map((note, i) => (
+            <p key={i} className="muted small">{note}</p>
+          ))}
+          {report.regions_kept.length > 0 && (
+            <p className="muted small">
+              Left exactly as you drew them: {report.regions_kept.join(', ')}.
+            </p>
+          )}
+          {report.placements.length > 0 && (
+            <ul className="clean small">
+              {report.placements.map((p) => (
+                <li key={p.name}>
+                  <button className="link" disabled={!p.entity_id}
+                          onClick={() => p.entity_id && onSelect(p.entity_id)}>
+                    {p.name}
+                  </button>
+                  {p.proposed && <Badge>suggested</Badge>}
+                  <div className="muted">{p.why}</div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Panel>
+      )}
 
       <div className="toolbar" style={{ marginTop: 12 }}>
         <span className="small muted">Colour by</span>

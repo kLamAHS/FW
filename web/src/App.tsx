@@ -214,7 +214,7 @@ export function App() {
           )}
           {view === 'map' && (
             <MapView day={currentDay} onSelect={setSelected} selectedId={selected}
-                     version={version} />
+                     version={version} onMutate={bump} />
           )}
           {view === 'timeline' && (
             <EventsView day={currentDay} onSelect={setSelected} version={version}

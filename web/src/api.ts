@@ -304,6 +304,19 @@ export interface GroupDetail {
   group_types: string[]
 }
 
+export interface MapGenerationReport {
+  summary: string
+  regions_drawn: string[]
+  regions_kept: string[]
+  rivers: string[]
+  roads: number
+  notes: string[]
+  placements: {
+    entity_id: string | null; name: string; x: number; y: number
+    rank: string; proposed: boolean; why: string
+  }[]
+}
+
 export interface Finding {
   text: string
   weight: number
@@ -524,6 +537,9 @@ export const api = {
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
   map: (day?: number, layer?: string) => get<MapData>('/map', { day, layer }),
+  generateMap: (seed: string | null, proposeSettlements: boolean) =>
+    send<MapGenerationReport>('/map/generate', 'POST',
+      { seed, propose_settlements: proposeSettlements }),
   graph: (params?: { day?: number; categories?: string; centre?: string; hops?: number }) =>
     get<GraphData>('/graph', params),
   pedigree: (params?: { root_id?: string; lens?: string; living_only_on?: number; house_id?: string }) =>
