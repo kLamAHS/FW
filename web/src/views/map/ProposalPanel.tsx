@@ -186,6 +186,12 @@ export function ProposalPanel({ plan, busy, accepted, setAccepted, onApply,
   )
 }
 
+/** A shape's colour role, resolved through the stylesheet (C11). */
+function roleColour(style: Record<string, unknown>, fallback: string): string {
+  const role = (style.role as string | undefined) ?? fallback
+  return `var(--map-${role})`
+}
+
 /** The proposal drawn over the map, dashed and translucent: not yet real. */
 export function ProposalOverlay({ plan, accepted }: {
   plan: MapPlan
@@ -200,8 +206,9 @@ export function ProposalOverlay({ plan, accepted }: {
             return (shape.coordinates as number[][][]).map((ring, r) => (
               <polygon key={`${key}:${r}`}
                        points={ring.map((p) => `${p[0]},${p[1]}`).join(' ')}
-                       fill={shape.style.fill ?? '#b6bb92'} fillOpacity={0.35}
-                       stroke="#5c6b52" strokeWidth={1.4} strokeDasharray="7 5" />
+                       fill={roleColour(shape.style, 'land')} fillOpacity={0.35}
+                       stroke="var(--map-border)" strokeWidth={1.4}
+                       strokeDasharray="7 5" />
             ))
           }
           if (shape.kind === 'line') {
@@ -209,7 +216,7 @@ export function ProposalOverlay({ plan, accepted }: {
               <polyline key={key}
                         points={(shape.coordinates as number[][])
                           .map((p) => `${p[0]},${p[1]}`).join(' ')}
-                        fill="none" stroke={shape.style.stroke ?? '#4a7fa5'}
+                        fill="none" stroke={roleColour(shape.style, 'waterway')}
                         strokeWidth={2.4} strokeDasharray="6 4"
                         strokeLinecap="round" strokeLinejoin="round" />
             )
@@ -222,13 +229,13 @@ export function ProposalOverlay({ plan, accepted }: {
               {shape.layer === 'castles' ? (
                 <rect x={x - 4.7} y={y - 4.7} width={9.4} height={9.4}
                       transform={`rotate(45 ${x} ${y})`}
-                      fill="none" stroke="#7a2b2b"
+                      fill="none" stroke="var(--map-contested)"
                       strokeWidth={1.4} strokeDasharray="3 3" />
               ) : (
-                <circle cx={x} cy={y} r={6} fill="none" stroke="#7a2b2b"
+                <circle cx={x} cy={y} r={6} fill="none" stroke="var(--map-contested)"
                         strokeWidth={1.4} strokeDasharray="3 3" />
               )}
-              <circle cx={x} cy={y} r={2.5} fill="#7a2b2b" />
+              <circle cx={x} cy={y} r={2.5} fill="var(--map-contested)" />
             </g>
           )
         }))}

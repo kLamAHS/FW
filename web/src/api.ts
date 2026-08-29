@@ -121,10 +121,66 @@ export interface MapFeature {
   control: Record<string, { id: string; name: string }[]>
 }
 
+/**
+ * How to draw the map, worked out on the server (C11).
+ *
+ * Label placement is a layout problem — measure the text, fit it to the shape, drop
+ * what does not fit — and doing it here would mean the same map labels itself
+ * differently in two clients, and differently again in an export. It arrives solved.
+ */
+export interface MapLabel {
+  key: string
+  text: string
+  kind: string
+  tier: number
+  role: string
+  size: number
+  x: number
+  y: number
+  anchor: 'start' | 'middle' | 'end'
+  /** Set only when the name really bends; then the text runs along this path. */
+  path?: number[][]
+}
+
+export interface MapIcon {
+  key: string
+  entity_id: string
+  name: string
+  shape: 'star' | 'ring' | 'disc' | 'dot' | 'keep' | 'tower' | 'anchor'
+  rank: string
+  x: number
+  y: number
+  radius: number
+  role: string
+  holder_role: string
+  holder_name: string
+  contested: boolean
+}
+
+export interface MapLegendEntry {
+  key: string
+  label: string
+  role: string
+  swatch: string
+  note: string
+  entity_id: string
+}
+
+export interface DrawPlan {
+  bounds: { x: number; y: number; width: number; height: number }
+  mode: string
+  labels: MapLabel[]
+  icons: MapIcon[]
+  legend: MapLegendEntry[]
+  holders: Record<string, string>
+  unlabelled: string[]
+}
+
 export interface MapData {
   day: number
   layers: string[]
   features: MapFeature[]
+  draw: DrawPlan
 }
 
 export interface GraphData {
@@ -586,7 +642,8 @@ export const api = {
 
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
-  map: (day?: number, layer?: string) => get<MapData>('/map', { day, layer }),
+  map: (day?: number, layer?: string, mode?: string) =>
+    get<MapData>('/map', { day, layer, mode }),
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),

@@ -11,6 +11,7 @@ from __future__ import annotations
 import ast
 import math
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -315,3 +316,66 @@ class TestOnlyOneReadingOfTheWorld:
             assert len(plan.reading_fingerprint) == 32
         finally:
             world.close()
+
+
+# Where a colour may still be a number: the raster renderer paints pixels, and a pixel
+# has no stylesheet. Everything that emits a *style* emits a role instead.
+PAINTS_PIXELS = {"shade.py", "raster.py"}
+HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?\b")
+
+
+def _docstrings(tree: ast.AST):
+    """Every string constant that is a docstring rather than a value."""
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                             ast.AsyncFunctionDef)):
+            body = getattr(node, "body", [])
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                yield body[0].value
+
+
+class TestColourIsARole:
+    """C11: no hex leaves Python.
+
+    `#6d6a63` in the generator is a colour that cannot follow the reader's theme, cannot
+    be changed by a writer who finds the marshes muddy, and has to be repeated in the
+    client for the legend to match the map. A role — `terrain-mountain` — is one name
+    both ends agree on and one value in one stylesheet.
+    """
+
+    def test_no_stage_emits_a_colour(self):
+        """Over the syntax tree, not the text: a docstring may say `#6d6a63`."""
+        offences: list[str] = []
+        for path in modules():
+            if path.name in PAINTS_PIXELS:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            docstrings = {id(node) for node in _docstrings(tree)}
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Constant) and isinstance(node.value, str)
+                        and id(node) not in docstrings
+                        and HEX_COLOUR.search(node.value)):
+                    offences.append(f"{path.name}:{node.lineno} {node.value[:40]}")
+        assert not offences, "colour belongs in the stylesheet: " + "; ".join(offences)
+
+    def test_every_role_the_map_uses_has_a_value_in_the_stylesheet(self):
+        """A role with no `--map-…` behind it renders as nothing at all."""
+        from fw.core.mapgen import cartography
+
+        css = (pathlib.Path(__file__).resolve().parent.parent
+               / "web" / "src" / "styles.css").read_text()
+        missing = [role for role in cartography.ROLES
+                   if f"--map-{role}:" not in css]
+        assert not missing, f"no colour defined for {missing}"
+
+    def test_every_role_has_a_dark_value_too(self):
+        from fw.core.mapgen import cartography
+
+        css = (pathlib.Path(__file__).resolve().parent.parent
+               / "web" / "src" / "styles.css").read_text()
+        dark = css.split("prefers-color-scheme: dark", 1)[-1]
+        missing = [role for role in cartography.ROLES
+                   if f"--map-{role}:" not in dark]
+        assert not missing, f"no dark value for {missing}"

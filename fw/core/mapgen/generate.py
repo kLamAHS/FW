@@ -31,6 +31,7 @@ from fw.core.mapgen import (
     biome as biome_module,
 )
 from fw.core.mapgen import (
+    cartography,
     climate,
     coast,
     erode,
@@ -219,6 +220,7 @@ class MapGenerator:
         self.settlement: settle.Settlement | None = None
         self.holds: hold.Holds | None = None
         self.reading: source.WorldReading | None = None
+        self._keys: dict[str, str] = {}
         self._outlines: dict[str, list[list[list[float]]]] = {}
         self._outlines_for: int | None = None
         self.frontiers: list[territory.Frontier] = []
@@ -405,6 +407,10 @@ class MapGenerator:
         """
         self.reading = source.read_world(self.world, at=self.at)
         self.profiles = profiles_from(self.reading)
+        # Entity id to key, kept: everything downstream that has an id in hand and wants
+        # to know what the writer said about it goes through here, and rebuilding the
+        # map inside a sort key is how a stage goes quadratic without anyone noticing.
+        self._keys = dict(self.reading.by_entity())
 
     def build_the_world(self) -> tuple[dict[str, list[list[float]]],
                                        list[list[tuple[int, int]]]]:
@@ -1034,8 +1040,7 @@ class MapGenerator:
         y += noise.jitter(self.seed, f"py:{name}:{i}:{j}", CELL * 0.35)
         # What the writer said about how big a place is beats what the map worked out,
         # and where they said nothing the map's own reading stands.
-        stated = self._population_of(entity_id) if entity_id else 0
-        rank = self._rank_for_population(stated) if stated else site.rank
+        rank = self._rank_of(entity_id, site.rank)
         return Placement(
             entity_id=entity_id, name=name,
             x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
@@ -1113,7 +1118,7 @@ class MapGenerator:
             points = self._road_line(p, path, q)
             self.world.add_geometry(
                 self._road_entity(), "line", points, layer=LAYER_ROADS,
-                style={"stroke": "#8a7550", GENERATED: GENERATOR})
+                style={"role": "road", GENERATED: GENERATOR})
             length = sum(math.dist(points[n], points[n + 1])
                          for n in range(len(points) - 1))
             self.world.add_route_segment(
@@ -1248,7 +1253,8 @@ class MapGenerator:
                         entity_id=sid, name=entity.name,
                         x=float(geometry.coordinates[0]),
                         y=float(geometry.coordinates[1]),
-                        region_id=region_id, rank="town", score=0.0))
+                        region_id=region_id, rank=self._rank_of(sid, "town"),
+                        score=0.0))
                     break
         return out
 
@@ -1418,7 +1424,7 @@ class MapGenerator:
             self.world.add_geometry(
                 region_id, "polygon", [ring], layer=LAYER_REGIONS,
                 approximate=True,          # §92: a generated border is not a surveyed one
-                style={"fill": _terrain_colour(profile.dominant),
+                style={"role": _terrain_role(profile.dominant),
                        GENERATED: GENERATOR})
             self.report.regions_drawn.append(profile.name)
 
@@ -1470,7 +1476,7 @@ class MapGenerator:
                 summary="Traced by the map generator; rename it and it is yours.")
             self.world.add_geometry(
                 river.id, "line", points, layer=LAYER_WATER,
-                style={"stroke": "#4a7fa5", GENERATED: GENERATOR})
+                style={"role": "waterway", GENERATED: GENERATOR})
             self.report.rivers.append(name)
 
     def _read_the_frontiers(self) -> None:
@@ -1702,25 +1708,47 @@ class MapGenerator:
         j = int((y - MARGIN) / max(1e-6, (SPAN - 2 * MARGIN)) * GRID)
         return (max(0, min(GRID - 1, i)), max(0, min(GRID - 1, j)))
 
+    def _said_of(self, entity_id: str | None):
+        """What the writer wrote about this place, if it is one of theirs."""
+        if self.reading is None or not entity_id:
+            return None
+        key = self._keys.get(entity_id)
+        return self.reading.settlement(key) if key else None
+
     def _population_of(self, entity_id: str) -> int:
-        facts = guards.sorted_facts(
-            self.world.facts_where("population", subject_id=entity_id, at=self.at))
-        if not facts or not facts[-1].value:
+        """How many people, out of the one reading — regions and towns alike."""
+        if self.reading is None:
             return 0
-        digits = "".join(ch for ch in facts[-1].value if ch.isdigit())
-        return int(digits) if digits else 0
+        key = self._keys.get(entity_id)
+        if key is None:
+            return 0
+        row = self.reading.region(key) or self.reading.settlement(key)
+        return int(row.population.value) if row else 0
+
+    def _rank_of(self, entity_id: str | None, fallback: str) -> str:
+        """What kind of place this is, in the writer's own word where they gave one.
+
+        They wrote `settlement_type` on every town in the example world — capital, port,
+        fortress, market town — and the map read the population instead and called all
+        six of them towns. A capital drawn as a town is the settlement hierarchy the
+        last three phases worked out, thrown away at the last step (§66).
+        """
+        said = self._said_of(entity_id)
+        if said is None:
+            return fallback
+        if said.rank.stated and said.rank.value:
+            return said.rank.value.lower()
+        if said.population.value:
+            return self._rank_for_population(int(said.population.value))
+        return fallback
 
     def _is_capital(self, entity_id: str) -> bool:
-        return bool(guards.sorted_facts(
-            self.world.facts_where("capital_of", subject_id=entity_id, at=self.at)))
+        said = self._said_of(entity_id)
+        return bool(said and said.rank.value.lower() == "capital")
 
 
-def _terrain_colour(kind: str) -> str:
-    return {"mountain": "#6d6a63", "glacier": "#b9c6cc", "hills": "#7d7a55",
-            "highland": "#75725c", "forest": "#4f6b4a", "plain": "#6f7c4e",
-            "farmland": "#7d8a52", "steppe": "#8a8558", "desert": "#b3a075",
-            "marsh": "#5d6b62", "coast": "#7c7358", "ocean": "#41627a"}.get(
-        kind, "#6f7c4e")
+def _terrain_role(kind: str) -> str:
+    return cartography.terrain_role(kind)
 
 
 def _inside(ring: list[list[float]], x: float, y: float) -> bool:

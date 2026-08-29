@@ -16,8 +16,8 @@ from __future__ import annotations
 
 import time
 
+from fw.core.mapgen import cartography, shapes
 from fw.core.mapgen import ledger as ledger_module
-from fw.core.mapgen import shapes
 from fw.core.mapgen.drafts import (
     FactSpec,
     FeatureDraft,
@@ -216,12 +216,12 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
                                 summary_template="The land itself, as the map found it."),
             shapes=(
                 (ShapeSpec(role="outline", kind="polygon", coordinates=[points],
-                           layer="land", style={"fill": "#cfd3a4"}, approximate=True),)
+                           layer="land", style={"role": "land"}, approximate=True),)
                 # The inland waters belong to the mainland: they are holes in it, and
                 # drawing them anywhere else would leave lakes floating in the sea.
                 + (tuple(ShapeSpec(role="hole", kind="polygon",
                                    coordinates=[shapes.closed(grid.to_world(hole))],
-                                   layer="waters", style={"fill": "#3f5b6c"},
+                                   layer="waters", style={"role": "water"},
                                    approximate=True)
                          for hole in waters) if mainland else ())
             ),
@@ -239,7 +239,7 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
 
 
 def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
-    from fw.core.mapgen.generate import LAYER_REGIONS, _terrain_colour
+    from fw.core.mapgen.generate import LAYER_REGIONS, _terrain_role
 
     politics = generator.political()
     out: list[FeatureDraft] = []
@@ -262,7 +262,7 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               # country in a different colour, so the client switches
                               # mode rather than turning a second layer on over the
                               # first and getting the borders twice.
-                              style={"fill": _terrain_colour(profile.dominant),
+                              style={"role": _terrain_role(profile.dominant),
                                      **({"holder": held["holder_key"],
                                          "holder_name": held["holder"],
                                          "authority": held["authority"]}
@@ -362,7 +362,7 @@ def _range_drafts(generator) -> list[FeatureDraft]:
                                 tags=(GENERATED_TAG,),
                                 summary_template="The high ground of this country."),
             shapes=(ShapeSpec(role="spine", kind="line", coordinates=points,
-                              layer="relief", style={"stroke": "#6b6459"},
+                              layer="relief", style={"role": "ridge"},
                               approximate=True),),
             reasons=tuple(Reason(kind="authored", weight=1.0, template=text)
                           for text in mountain.because),
@@ -381,8 +381,7 @@ def _range_drafts(generator) -> list[FeatureDraft]:
 
 
 # What a reader calls each stretch of country, and the colour it is drawn in.
-_FEATURE_STYLE = {"forest": "#6f8656", "marsh": "#8d9a72", "downs": "#bfb98c",
-                  "moor": "#a9a184", "waste": "#ddcb9a", "ice": "#dde5e8"}
+
 
 
 def _feature_drafts(generator) -> list[FeatureDraft]:
@@ -411,7 +410,7 @@ def _feature_drafts(generator) -> list[FeatureDraft]:
             shapes=tuple(
                 ShapeSpec(role="fill", kind="polygon", coordinates=[ring],
                           layer="features",
-                          style={"fill": _FEATURE_STYLE.get(feature.kind, "#9aa583")},
+                          style={"role": cartography.cover_role(feature.kind)},
                           approximate=True)
                 for ring in feature.rings),
             facts=((FactSpec("feature_kind", value=feature.kind),)
@@ -486,7 +485,7 @@ def _river_drafts(generator, rivers) -> list[FeatureDraft]:
                     kind="line",
                     coordinates=generator._water_line(run),
                     layer=LAYER_WATER,
-                    style={"stroke": "#4a7fa5",
+                    style={"role": "waterway",
                            "stroke-width": RIVER_WIDTHS[bands[start]]},
                     approximate=True))
             start = n
@@ -790,7 +789,7 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                                                  "it knows."),
             shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
                               layer=LAYER_ROADS,
-                              style={"stroke": "#8a7550",
+                              style={"role": "road",
                                      "stroke-width": ROAD_WIDTHS.get(route.grade, 2.0)},
                               approximate=True),),
             segments=(SegmentSpec(

@@ -30,6 +30,7 @@ from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.library import Library, LibraryError
+from fw.core.mapgen import cartography, ledger
 from fw.core.mapgen import plan as MG
 from fw.core.mapgen.generate import generate_map
 from fw.core.model.vocabulary import PREDICATES_BY_KEY
@@ -462,7 +463,8 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         )
 
     @app.get("/api/map", response_model=S.MapOut)
-    def get_map(day: int | None = None, layer: str | None = None) -> S.MapOut:
+    def get_map(day: int | None = None, layer: str | None = None,
+                mode: str = "legally_owns", labels: bool = True) -> S.MapOut:
         """§34/§35/§36: geometry for a date, with the control facts attached.
 
         Each feature carries who owns, administers, occupies, taxes and claims it on that
@@ -478,10 +480,10 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             for fact in world.facts_where(object_id=entity.id, at=at):
                 if fact.predicate_key in ("legally_owns", "administers", "occupies",
                                           "taxes", "claims", "rules"):
-                    holder = world.get_entity(fact.subject_id)
-                    if holder:
+                    whose = world.get_entity(fact.subject_id)
+                    if whose:
                         control.setdefault(fact.predicate_key, []).append({
-                            "id": holder.id, "name": holder.name,
+                            "id": whose.id, "name": whose.name,
                         })
             features.append({
                 "id": geometry.id,
@@ -493,10 +495,20 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 "layer": geometry.layer,
                 "style": geometry.style,
                 "approximate": geometry.approximate,
+                # Whose shape this is. The map labels the writer's own things first,
+                # and the client draws a generated edge as the guess it is.
+                "generated": ledger.is_generated(geometry),
                 "control": control,
             })
         layers = sorted({f["layer"] for f in features})
-        return S.MapOut(day=at, layers=layers, features=features)
+        ground = holder.get().terrain()
+        extent = ([ground["origin_x"], ground["origin_y"],
+                   ground["origin_x"] + ground["span"],
+                   ground["origin_y"] + ground["span"]] if ground else None)
+        drawn = cartography.draw(features, mode=mode, ground=extent, label=labels,
+                                 world_name=world.name)
+        return S.MapOut(day=at, layers=layers, features=features,
+                        draw=drawn.as_dict())
 
     @app.post("/api/map/plan")
     def plan_the_map(payload: S.PlanMapIn) -> dict[str, Any]:
@@ -517,7 +529,13 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             north=payload.north,
             prevailing_wind=payload.prevailing_wind,
         )
-        return plan_map(holder.get(), brief).to_dict()
+        current = holder.get()
+        proposal = plan_map(current, brief)
+        # Labelled the same way the accepted map will be: a writer choosing between a
+        # proposal and what they have needs the two drawn alike (§66).
+        return {**proposal.to_dict(),
+                "draw": cartography.from_plan(
+                    proposal, world_name=current.name).as_dict()}
 
     @app.post("/api/map/apply")
     def apply_the_map(payload: S.ApplyMapIn) -> dict[str, Any]:

@@ -201,6 +201,9 @@ class MapOut(BaseModel):
     day: int
     layers: list[str]
     features: list[dict[str, Any]]
+    # How to draw it: the frame, the labels, the icons and the key, worked out on the
+    # server so the same map is labelled the same way whatever is looking at it.
+    draw: dict[str, Any] = {}
 
 
 class SceneIn(BaseModel):
