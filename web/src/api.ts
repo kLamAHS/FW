@@ -632,9 +632,13 @@ export const api = {
   snapshots: () => get<{ id: string; name: string; day: number; note: string; date: WorldDate }[]>(
     '/snapshots'),
 
-  entities: (params?: { type_key?: string; at?: number; limit?: number }) =>
-    get<Entity[]>('/entities', params),
+  entities: (params?: {
+    type_key?: string; at?: number; limit?: number; hide_generated?: boolean
+  }) => get<Entity[]>('/entities', params),
   entity: (id: string, at?: number) => get<EntityBundle>(`/entities/${id}`, { at }),
+  /** Everywhere a journey can start or end — islands as well as towns. */
+  travelPlaces: () =>
+    get<{ id: string; name: string; type_key: string }[]>('/travel/places'),
   search: (q: string, type_key?: string) => get<Entity[]>('/search', { q, type_key }),
 
   facts: (params?: { predicate_key?: string; subject_id?: string; object_id?: string; at?: number }) =>

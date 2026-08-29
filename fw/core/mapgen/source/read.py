@@ -52,8 +52,11 @@ from fw.core.mapgen.source.reading import (
     WorldReading,
     key_for,
 )
+from fw.core.model.records import GENERATED_TAG as _GENERATED_TAG
 
-GENERATED_TAG = "generated-map"
+# Defined on the entity itself: the lists and the continuity checks
+# have to recognise the map's own suggestions too.
+GENERATED_TAG = _GENERATED_TAG
 
 # The types the map has anything to say about. A person is not on a map.
 PLACE_TYPES = ("region", "settlement", "holding", "site", "terrain_feature")
@@ -281,6 +284,7 @@ def _regions(world, alive, by_id, keys, out_facts, in_facts, geometry, mentions,
             sea_facing=_sea_facing(entity, terrain, mentions),
             defensibility=_magnitude(entity, out_facts, "defensibility"),
             shape_role="core",
+            founded=entity.exists_from, ended=entity.exists_to,
             resource_keys=_resource_keys(entity, out_facts, keys),
             parent_key=_one_object(entity, out_facts, "located_in", keys),
             settlement_keys=tuple(sorted(

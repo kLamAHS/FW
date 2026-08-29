@@ -60,6 +60,7 @@ from fw.core.mapgen.attributes import (
 from fw.core.mapgen.grid import Field, Grid
 from fw.core.mapgen.layout import Site, arrange
 from fw.core.mapgen.source.reading import key_for
+from fw.core.model.records import GENERATED_TAG as _GENERATED_TAG
 from fw.core.world import World, WorldError
 
 # The canvas. Fictional worlds have no coordinate system (§34), so these are the same
@@ -93,7 +94,9 @@ MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cel
 # the writer's alone. The client passes unknown style keys through untouched.
 GENERATED = "generated_by"
 GENERATOR = "mapgen/1"
-GENERATED_TAG = "generated-map"
+# Defined on the entity itself: the lists and the continuity checks
+# have to recognise the map's own suggestions too.
+GENERATED_TAG = _GENERATED_TAG
 
 LAYER_REGIONS = "regions"
 LAYER_WATER = "waterways"
@@ -1020,7 +1023,54 @@ class MapGenerator:
                 "if it lives on trade or tribute or is there to hold a pass, that is "
                 "worth writing down somewhere",
                 subjects=(entity.name,)))
+        out.extend(self._harbours_the_sea_did_not_reach())
         return out
+
+    # How near the water a place has to be for a ship to put in, in lattice cells. The
+    # same reach the crossings use, and for the same reason: a cell is a few miles.
+    QUAY_REACH = 8
+
+    def _harbours_the_sea_did_not_reach(self) -> list:
+        """A town the writer called a port, with the coastline drawn somewhere else.
+
+        Their town does not move (§66) and the coast is grown from their own regions, so
+        this is a disagreement the map cannot resolve on its own — but it is one they
+        would certainly want to know about, because a port that is thirty leagues inland
+        is a port no ship reaches, and every crossing the map draws will land elsewhere.
+        """
+        from fw.core.mapgen.findings import note
+
+        if self.settlement is None:
+            return []
+        out = []
+        for site in self.settlement.sites:
+            if not site.entity_id:
+                continue
+            entity = self.world.get_entity(site.entity_id)
+            if entity is None:
+                continue
+            if self._rank_of(site.entity_id, site.rank) not in ("port", "harbour",
+                                                                "harbor"):
+                continue
+            if self._sea_within(site.cell, self.QUAY_REACH):
+                continue
+            leagues = round(self.from_sea[site.cell[1]][site.cell[0]] * CELL)
+            out.append(note(
+                "contradiction",
+                f"You have {entity.name} as a port, and the coastline came out about "
+                f"{leagues} away from it. It has not been moved — but no ship reaches "
+                "it, so any crossing the map draws will land somewhere else",
+                subjects=(entity.name,)))
+        return out
+
+    def _sea_within(self, cell: tuple[int, int], reach: int) -> bool:
+        i, j = cell
+        for dj in range(-reach, reach + 1):
+            for di in range(-reach, reach + 1):
+                ni, nj = i + di, j + dj
+                if 0 <= ni < GRID and 0 <= nj < GRID and self.sea[nj][ni]:
+                    return True
+        return False
 
     def _best_site_in(self, region_id: str, spare, used: set):
         """The best unclaimed site inside a region, or None if it has run out."""

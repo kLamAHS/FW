@@ -32,9 +32,12 @@ from fw.core.mapgen import guards
 from fw.core.mapgen.drafts import FactSpec, SegmentSpec, ShapeSpec, SubjectSpec
 from fw.core.mapgen.findings import Finding
 from fw.core.mapgen.ids import ALGORITHM
+from fw.core.model.records import GENERATED_TAG as _GENERATED_TAG
 
 PLAN_FORMAT = 1
-GENERATED_TAG = "generated-map"
+# Defined on the entity itself: the lists and the continuity checks
+# have to recognise the map's own suggestions too.
+GENERATED_TAG = _GENERATED_TAG
 PROVENANCE_KEY = "mapgen"
 
 # Ceilings, so a pathological world cannot ship a map the browser cannot draw.
@@ -44,7 +47,7 @@ MAX_PLAN_VERTICES = 40_000
 # Drawing and reading order: land first, roads last, so the plan lists features the way
 # a reader meets them rather than the way the pipeline happened to compute them.
 KIND_ORDER = ("coast", "island", "region", "range", "hills", "sea", "water", "lake",
-              "river", "natural", "settlement", "castle", "ruin", "road")
+              "river", "natural", "settlement", "castle", "ruin", "road", "lane")
 
 # What each kind must say about itself. A plan whose details do not match is a bug in
 # the stage that emitted it, and `violations()` is how it gets caught in a test rather
@@ -64,6 +67,7 @@ DETAIL_KEYS: dict[str, tuple[str, ...]] = {
     "castle": ("rank",),
     "ruin": ("rank",),
     "road": ("tier", "span"),
+    "lane": ("tier", "span", "lands_at"),
 }
 
 
@@ -462,7 +466,8 @@ def _subject_dict(subject: SubjectSpec | None, *, redact: bool = False) -> dict 
     return {"mode": subject.mode, "type_key": subject.type_key,
             "entity_id": None if redact else subject.entity_id,
             "summary_template": subject.summary_template,
-            "tags": list(subject.tags), "confidence": subject.confidence}
+            "tags": list(subject.tags), "confidence": subject.confidence,
+            "exists_from": subject.exists_from}
 
 
 def _subject_of(raw) -> SubjectSpec | None:
@@ -472,7 +477,8 @@ def _subject_of(raw) -> SubjectSpec | None:
                        entity_id=raw.get("entity_id"),
                        summary_template=str(raw.get("summary_template") or ""),
                        tags=tuple(raw.get("tags") or ()),
-                       confidence=str(raw.get("confidence") or "speculative"))
+                       confidence=str(raw.get("confidence") or "speculative"),
+                       exists_from=raw.get("exists_from"))
 
 
 def _shape_dict(shape: ShapeSpec) -> dict:

@@ -58,6 +58,8 @@ class RegionReading:
     sea_facing: Reading[float]           # 0..1, NOT a bool: a coast is a matter of degree
     defensibility: Reading[float]
     shape_role: str                      # core | neck | cape | island
+    founded: int | None = None           # `exists_from`: when the march came to be
+    ended: int | None = None
     resource_keys: tuple[Key, ...] = ()
     parent_key: Key | None = None
     settlement_keys: tuple[Key, ...] = ()

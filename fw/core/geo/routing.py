@@ -208,12 +208,28 @@ class Router:
         return route.days if route else None
 
     def reachable_within(self, origin_id: str, days: float, **kw) -> dict[str, float]:
-        """Everywhere reachable inside a time budget — the 'who could be here' question."""
+        """Everywhere reachable inside a time budget — the 'who could be here' question.
+
+        Everywhere the routes reach, not every settlement. An island is a place a ship
+        can put in at and never a settlement, so a list built from settlements alone
+        answered "nowhere" for the one journey a reader most wants timed.
+        """
         out: dict[str, float] = {}
-        for entity in self.world.entities("settlement"):
-            if entity.id == origin_id:
+        for entity_id in self.places():
+            if entity_id == origin_id:
                 continue
-            time = self.travel_time(origin_id, entity.id, **kw)
+            time = self.travel_time(origin_id, entity_id, **kw)
             if time is not None and time <= days:
-                out[entity.id] = time
+                out[entity_id] = time
         return out
+
+    def places(self) -> tuple[str, ...]:
+        """Every entity a route can start or end at, in a stated order."""
+        ends = {segment.from_entity_id for segment in self.segments}
+        ends |= {segment.to_entity_id for segment in self.segments}
+        ends |= {entity.id for entity in self.world.entities("settlement")}
+        named = [(self.world.get_entity(eid), eid) for eid in ends]
+        return tuple(eid for entity, eid in
+                     sorted(named, key=lambda pair: (
+                         pair[0].name if pair[0] else "", pair[1]))
+                     if entity is not None)

@@ -316,10 +316,20 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         type_key: str | None = None,
         at: int | None = None,
         limit: int = Query(500, le=5000),
+        hide_generated: bool = False,
     ) -> list[S.EntityOut]:
+        """Everything in the world, or everything the writer put there (§66).
+
+        A map proposes towns and castles by the dozen, and the writer's own list of
+        settlements is where they look for the ones they wrote. `hide_generated` leaves
+        out what the map suggested and they have not accepted — never what they accepted,
+        which is theirs now and keeps its tag only so the next run knows it again.
+        """
         entities = world.entities(type_key, limit=limit)
         if at is not None:
             entities = [e for e in entities if e.exists_on(at)]
+        if hide_generated:
+            entities = [e for e in entities if not e.is_a_map_proposal]
         return [_entity_out(e) for e in entities]
 
     @app.post("/api/entities", response_model=S.EntityOut, status_code=201)
@@ -1093,6 +1103,23 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         world.suppress(payload.rule_key, payload.fingerprint, payload.reason)
 
     # ---- travel (§22) -----------------------------------------------------
+
+    @app.get("/api/travel/places")
+    def travel_places() -> list[dict[str, Any]]:
+        """Everywhere a journey can start or end.
+
+        Not just settlements: the map draws a crossing to every island it makes, and an
+        island is a place a ship puts in at rather than a town. A picker built from
+        settlements alone could not offer the one journey the crossing exists for.
+        """
+        out: list[dict[str, Any]] = []
+        for entity_id in Router(world).places():
+            entity = world.get_entity(entity_id)
+            if entity is None:
+                continue
+            out.append({"id": entity.id, "name": entity.name,
+                        "type_key": entity.type_key})
+        return out
 
     @app.get("/api/route", response_model=S.RouteOut)
     def get_route(

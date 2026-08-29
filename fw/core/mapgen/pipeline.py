@@ -14,6 +14,7 @@ The stages themselves are replaced one at a time after this, each behind the sam
 
 from __future__ import annotations
 
+import math
 import time
 
 from fw.core.mapgen import cartography, shapes
@@ -42,7 +43,7 @@ from fw.core.mapgen.plan import (
     digest_of,
     order_features,
 )
-from fw.core.mapgen.source.reading import WorldReading
+from fw.core.mapgen.source.reading import WorldReading, key_for
 from fw.core.world import World, WorldError
 
 
@@ -157,6 +158,8 @@ def _compute(world: World, brief: MapBrief
         drafts.extend(_road_drafts(generator, placements))
     if brief.wants("castle"):
         drafts.extend(_castle_drafts(generator, placements))
+    if brief.wants("road") and brief.wants("coast"):
+        drafts.extend(_sea_lane_drafts(generator, placements))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
     return drafts, timings, findings, _terrain_of(generator), generator.reading
 
@@ -336,6 +339,214 @@ def _cells_of(generator, region_id: str) -> list[tuple[int, int]]:
     from fw.core.mapgen.generate import GRID
     return [(i, j) for j in range(GRID) for i in range(GRID)
             if generator.owner[j][i] == region_id and not generator.sea[j][i]]
+
+
+# What a ship does compared with a cart on a made road: faster over distance, and less
+# reliable, which the router models through quality and danger.
+#
+# Deliberately *not* closed for a season. Nobody sails in winter, and the map would like
+# to say so — but it does not know which of a writer's seasons winter is. Naming one
+# ("Darkening" is the example world's) closes the crossing on no day at all of any other
+# world's calendar, and the store rightly refuses it. Closing a route is a fact about
+# their world, and theirs to write (§66).
+LANE_QUALITY = 0.9
+LANE_DANGER = "moderate"
+# How far inland a place may stand and still count as having a quay, in lattice cells.
+# Eight is about fifty world units on a nine-hundred-unit map — the width of a coastal
+# strip, not of a country. At three, the whole example continent had two quays on it and
+# every crossing landed at the same village.
+QUAY_REACH = 8
+# What a cell of cart road costs against a cell of open water, when choosing where a
+# crossing lands. Sailing is the easy part.
+INLAND_COST = 6
+
+
+def _sea_lane_drafts(generator, placements) -> list[FeatureDraft]:
+    """A shipping lane from each island to the nearest port, over water.
+
+    Islands are travel orphans. `coast.SMALLEST_ISLAND` guarantees a map has some, the
+    router works over segments, and nothing had ever drawn one to an island — so a
+    writer who asks how long it takes to reach Renncape is told there is no way at all,
+    of a place their own map put in the sea.
+
+    "Nearest" is nearest *by sea*, found by walking the water outward from the island's
+    own shore. A straight line to the nearest port as the gull flies is not a crossing:
+    measured on the example world, every one of them ran overland, one of them for 56 of
+    its 62 cells — a sea route across the middle of a continent, with a length nobody
+    could sail and a line drawn over the mountains.
+    """
+    from fw.core.mapgen.generate import CELL, LAYER_ROADS
+
+    form = generator.landform
+    if form is None:
+        return []
+    shores = list(form.coastlines())
+    if len(shores) < 2:
+        return []
+    seen = {p.entity_id for p in placements if p.entity_id}
+    known = list(placements) + [p for p in generator._already_placed(placements)
+                                if p.entity_id not in seen]
+    if not known:
+        return []
+
+    grid = generator._grid()
+    out: list[FeatureDraft] = []
+    for ordinal, ring in enumerate(shores):
+        if ordinal == 0:
+            continue                                # the mainland needs no ferry
+        edge = {grid.cell_of(x, y) for x, y in grid.to_world(ring)}
+        came, far = _sail_from(generator, edge)
+        if not came:
+            continue
+        harbour, landing = _nearest_by_sea(generator, known, far)
+        if harbour is None or landing is None:
+            continue
+        path = _wake(generator, came, landing)
+        if len(path) < 2:
+            continue
+        points = shapes.simplify(shapes.eased(path, rounds=2), CELL * 0.4)
+        points = [[round(x, 1), round(y, 1)] for x, y in points]
+        points[-1] = [round(harbour.x, 1), round(harbour.y, 1)]
+        span = sum(math.dist(points[n], points[n + 1])
+                   for n in range(len(points) - 1))
+        needs = ((_settlement_key(generator, harbour),)
+                 if harbour.entity_id is None else ())
+        out.append(FeatureDraft(
+            kind="lane",
+            key_parts=("lane", ordinal, _endpoint_id(generator, harbour)),
+            anchor_key=("landmass", ordinal),
+            shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
+                              layer=LAYER_ROADS,
+                              style={"role": "waterway", "dash": True,
+                                     "stroke-width": 1.8},
+                              approximate=True),),
+            segments=(SegmentSpec(
+                from_ref="@" + feature_id("island", "landmass", ordinal),
+                to_ref=_ref_for(generator, harbour),
+                length=round(span, 1), medium="sea", quality=LANE_QUALITY,
+                # The ground a ship crosses is water. The router's water profiles score
+                # terrain against `routing.WATER`, so a sea segment laid over "plain"
+                # scores zero and is silently dropped — a crossing drawn on the map and
+                # absent from every answer about travelling it.
+                terrain="water", danger=LANE_DANGER),),
+            depends_on_keys=(("landmass", ordinal), *needs),
+            reasons=(Reason(kind="harbour", weight=1.0,
+                            template=f"the shortest crossing to {harbour.name}",
+                            evidence=f"{round(span)} of open water"),),
+            # Named for where it lands, which is how a crossing is named. Not left to
+            # the namer: a shipping lane is not a place, and inventing a word for it
+            # would put a noun in the world that nobody wrote.
+            name_template="The {0} crossing",
+            name_refs=(feature_id("island", "landmass", ordinal),),
+            name_request=None,
+            default_accept=False,
+            detail={"tier": "sea", "span": round(span, 1),
+                    "lands_at": harbour.name},
+        ))
+    return out
+
+
+def _sail_from(generator, edge: set) -> tuple[dict, dict]:
+    """Walk the water outward from one island's shore.
+
+    Eight-connected breadth-first over sea cells only, which is what makes "nearest"
+    mean nearest by sea. Diagonal steps cost the same as orthogonal ones — the answer
+    wanted is which port, not how many leagues, and the length is measured from the
+    drawn line afterwards.
+    """
+    frontier = [step for cell in sorted(edge)
+                for step in _sea_neighbours(generator, cell)]
+    came: dict = {}
+    far: dict = {}
+    for cell in frontier:
+        far.setdefault(cell, 0)
+    frontier = sorted(far)
+    steps = 0
+    while frontier:
+        steps += 1
+        nxt: list = []
+        for here in frontier:
+            for step in _sea_neighbours(generator, here):
+                if step not in far:
+                    far[step] = steps
+                    came[step] = here
+                    nxt.append(step)
+        frontier = sorted(nxt)
+    return came, far
+
+
+def _sea_neighbours(generator, cell) -> list:
+    from fw.core.mapgen.generate import GRID
+
+    i, j = cell
+    out = []
+    for dj in (-1, 0, 1):
+        for di in (-1, 0, 1):
+            if di == dj == 0:
+                continue
+            ni, nj = i + di, j + dj
+            if 0 <= ni < GRID and 0 <= nj < GRID and generator.sea[nj][ni]:
+                out.append((ni, nj))
+    return out
+
+
+def _nearest_by_sea(generator, known, far: dict):
+    """The port the water reaches soonest, and the sea cell it is reached from.
+
+    Ports first and then anywhere: a ship puts in where there is a quay, and a lane
+    that lands at an inland market town is a lane nobody could sail.
+    """
+    best = None
+    for place in known:
+        cell = generator._cell_of(place.x, place.y)
+        touching = [(far[step] + inland * INLAND_COST, far[step], step)
+                    for step, inland in _quayside(generator, cell) if step in far]
+        if not touching:
+            continue
+        # A town a few cells from the water pays for the cart ride: a crossing that
+        # lands eight cells inland is drawn as a sea lane running over the fields, and
+        # counting the walk keeps a genuinely coastal town ahead of one that is merely
+        # near.
+        cost, _distance, landing = min(touching)
+        rank = 0 if place.rank.lower() in ("port", "harbour", "harbor") else 1
+        score = (rank, cost, place.name)
+        if best is None or score < best[0]:
+            best = (score, place, landing)
+    return (best[1], best[2]) if best else (None, None)
+
+
+def _quayside(generator, cell, reach: int = QUAY_REACH) -> list:
+    """The water within reach of a place, with how far inland the place is from each.
+
+    Not only the eight cells touching it. A port stands *at* the water and a lattice
+    cell is a few miles across, so a harbour whose own cell happens to sit one square
+    inland has no adjacent sea at all — and looking only at neighbours found exactly one
+    quay on the whole example continent, so every crossing landed at the same village.
+    """
+    from fw.core.mapgen.generate import GRID
+
+    i, j = cell
+    out = []
+    for dj in range(-reach, reach + 1):
+        for di in range(-reach, reach + 1):
+            ni, nj = i + di, j + dj
+            if 0 <= ni < GRID and 0 <= nj < GRID and generator.sea[nj][ni]:
+                out.append(((ni, nj), max(abs(di), abs(dj))))
+    return out
+
+
+def _wake(generator, came: dict, landing) -> list[tuple[float, float]]:
+    """The path the walk came by, from the island's shore to the landing, in world units."""
+    cells = [landing]
+    while cells[-1] in came:
+        cells.append(came[cells[-1]])
+    cells.reverse()
+    return [generator._centre(i, j) for i, j in cells]
+
+
+def _closest(points, to) -> tuple[float, float]:
+    best = min(points, key=lambda p: math.dist((p[0], p[1]), to))
+    return (float(best[0]), float(best[1]))
 
 
 def _range_drafts(generator) -> list[FeatureDraft]:
@@ -586,6 +797,23 @@ def _event_reasons(generator, entity_id: str | None) -> tuple[Reason, ...]:
     return tuple(out[:2])
 
 
+def _no_older_than(generator, placement) -> int | None:
+    """The earliest a proposed town can honestly be said to have stood.
+
+    A map cannot work out when a town was founded — nothing in the ground says so. What
+    it *can* say is that a town does not predate the country it stands in, and where the
+    writer dated that country, that bound is a real answer and a better one than a null
+    date on a map drawn for the year 240 (§66). Where they dated nothing it stays null,
+    which the world reads as "it is just there" rather than as a claim.
+    """
+    reading = getattr(generator, "reading", None)
+    if reading is None:
+        return None
+    profile = generator.profiles.get(placement.region_id)
+    region = reading.region(key_for("region", profile.name)) if profile else None
+    return region.founded if region else None
+
+
 def _founding(generator, entity_id: str | None) -> dict:
     """When the writer said the town began, in their own calendar.
 
@@ -640,6 +868,7 @@ def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
             known_id=_known_id(generator.world, placement),
             subject=(SubjectSpec(mode="new", type_key="settlement",
                                  tags=(GENERATED_TAG,),
+                                 exists_from=_no_older_than(generator, placement),
                                  summary_template="Proposed by the map.")
                      if invented else
                      SubjectSpec(mode="existing", type_key="settlement",
@@ -755,8 +984,6 @@ ROAD_QUALITY = {"highway": 0.95, "road": 0.8, "track": 0.6}
 
 
 def _road_drafts(generator, placements) -> list[FeatureDraft]:
-    import math
-
     from fw.core.mapgen.generate import LAYER_ROADS
 
     # Every place the map knows, proposed ones included. Waiting for a town to exist
@@ -840,6 +1067,16 @@ def _assemble(world: World, brief: MapBrief, drafts: list[FeatureDraft],
         else:
             names[fid] = "Unnamed"
 
+    # A second pass for the names made out of other names. One pass cannot do it: a
+    # crossing is called after the town it lands at, and that town may be one this same
+    # run is inventing, so its name does not exist until the first pass has finished.
+    for draft in drafts:
+        if not draft.name_template:
+            continue
+        fid = ids_by_key[draft.key_parts]
+        names[fid] = draft.name_template.format(
+            *(_in_a_phrase(names.get(ref, ref)) for ref in draft.name_refs))
+
     features: list[PlannedFeature] = []
     for draft in drafts:
         fid = ids_by_key[draft.key_parts]
@@ -859,6 +1096,16 @@ def _assemble(world: World, brief: MapBrief, drafts: list[FeatureDraft],
             causal=draft.causal,
         ))
     return order_features(features)
+
+
+def _in_a_phrase(name: str) -> str:
+    """A name used inside a longer name loses its article.
+
+    "The Salt Coast" plus "The {0} crossing" is "The The Salt Coast crossing", and
+    English has a rule for this: the article belongs to the phrase, not to the name
+    inside it.
+    """
+    return name[4:] if name[:4].lower() == "the " else name
 
 
 def _retirements(world: World, brief: MapBrief,

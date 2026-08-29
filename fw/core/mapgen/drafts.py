@@ -101,7 +101,10 @@ class SegmentSpec:
     length: float
     medium: str = "road"               # road | river | sea
     quality: float = 0.8
-    terrain: str = "plain"             # MUST be a key of routing.LAND
+    # MUST be a key of the terrain table the medium's profiles use: `routing.LAND` for
+    # a road, `routing.WATER` for a river or a sea lane. A mismatch does not raise —
+    # the segment simply scores zero and vanishes from every route.
+    terrain: str = "plain"
     closed_seasons: tuple[str, ...] = ()
     danger: str = "low"
 
@@ -116,6 +119,11 @@ class SubjectSpec:
     summary_template: str = ""
     tags: tuple[str, ...] = ()
     confidence: str = "speculative"
+    # When the map can say honestly how old a thing is. A proposed town cannot predate
+    # the country it stands in, which is a real bound and better than nothing; where
+    # even that is unknown it is left null, which the world reads as "it is just there"
+    # rather than as a claim.
+    exists_from: int | None = None
 
 
 @dataclass(frozen=True)
@@ -138,6 +146,11 @@ class FeatureDraft:
     # A name that is already decided and not the namer's to invent — the mainland is
     # called after the world, not after a syllable model.
     fixed_name: str = ""
+    # A name made out of another feature's, once that one has been named. A crossing is
+    # called after where it lands, and where it lands may be a town this same run is
+    # inventing — so the template is filled in after every name is chosen, not before.
+    name_template: str = ""
+    name_refs: tuple[str, ...] = ()
     detail: dict[str, Any] = field(default_factory=dict)
     depends_on_keys: tuple[tuple[str | int, ...], ...] = ()
     # §66 in one field: siting a place the writer already made is accepted by default;

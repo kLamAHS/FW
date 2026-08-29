@@ -671,10 +671,18 @@ class ContinuityEngine:
         )
         suppressed = self.world.suppressions()
         report = Report(checked_rules=tuple(r.key for r in self.rules))
+        # A town the map has suggested and the writer has not accepted is not part of
+        # their world yet, and checking it against their world produces a page of
+        # complaints about things they never wrote. An accepted one *is* theirs, keeps
+        # its tag so the next run recognises its own work, and is checked like anything
+        # else (§66).
+        proposals = {e.id for e in self.world.entities() if e.is_a_map_proposal}
 
         for rule in self.rules:
             for violation in rule.check(ctx):
                 if violation.severity.rank < minimum.rank:
+                    continue
+                if proposals.intersection(violation.entity_ids):
                     continue
                 if (not include_suppressed
                         and (violation.rule_key, violation.fingerprint) in suppressed):

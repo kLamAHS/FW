@@ -25,9 +25,16 @@ export function EntitiesView(
 ) {
   const [type, setType] = useState<string>('')
   const [atDate, setAtDate] = useState(true)
+  // On by default (§66). A map proposes towns and castles by the dozen, and this list
+  // is where a writer looks for the ones *they* wrote; what they have accepted is
+  // theirs and stays, tag or no tag.
+  const [hideProposed, setHideProposed] = useState(true)
   const { data, error, loading } = useAsync(
-    () => api.entities({ type_key: type || undefined, at: atDate ? day : undefined }),
-    [type, atDate, day, version],
+    () => api.entities({
+      type_key: type || undefined, at: atDate ? day : undefined,
+      hide_generated: hideProposed || undefined,
+    }),
+    [type, atDate, day, version, hideProposed],
   )
 
   const types = (vocabulary?.entity_types ?? [])
@@ -50,6 +57,11 @@ export function EntitiesView(
         <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input type="checkbox" checked={atDate} onChange={() => setAtDate((v) => !v)} />
           <span className="small">only what exists on this date</span>
+        </label>
+        <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input type="checkbox" checked={hideProposed}
+                 onChange={() => setHideProposed((v) => !v)} />
+          <span className="small">hide what the map has only suggested</span>
         </label>
       </div>
 

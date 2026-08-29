@@ -21,7 +21,11 @@ interface Props {
 }
 
 export function TravelView({ day, dateText }: Props) {
-  const places = useAsync(() => api.entities({ type_key: 'settlement', at: day }), [day])
+  // Everywhere the routes reach, not every settlement: the map draws a crossing to
+  // each island it makes, and an island is a place a ship puts in at rather than a
+  // town — so a picker built from settlements could not offer the one journey the
+  // crossing exists for.
+  const places = useAsync(() => api.travelPlaces(), [day])
   const vocabulary = useAsync(() => api.vocabulary(), [])
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')

@@ -237,6 +237,7 @@ class _Writer:
             subject.type_key, name,
             summary=subject.summary_template.format(name=name)
             if subject.summary_template else "",
+            exists_from=subject.exists_from,
             tags=list(subject.tags) + list(ledger_module.entity_tags(feature.id)),
         )
         self.wrote = True
