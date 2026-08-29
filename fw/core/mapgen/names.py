@@ -37,6 +37,18 @@ MAX_LENGTH = 14
 BOUNDARY = "^"
 END = "$"
 
+# The endings a name falls back on when the world's own vocabulary is exhausted. Plain,
+# common, and letters rather than digits — see `_last_resort`.
+_LAST_DITCH = ("stead", "ford", "holt", "wick", "combe", "thorpe", "mere", "hollow",
+               "reach", "gate", "hill", "vale", "moor", "bank", "field", "close")
+
+# And how a real place name is told from its neighbour once every stem and ending in the
+# world has been spent. Not by counting — Greyhaven2 is not a place, it is a variable —
+# but the way English toponymy has always done it, which is why there is a Great Missenden
+# and a Little Missenden rather than a Missenden 1 and a Missenden 2.
+_QUALIFIERS = ("Upper", "Lower", "Little", "Great", "Old", "New",
+               "North", "South", "East", "West", "Nether", "Over")
+
 # Toponymic endings and the ground each one claims. This is the register most English
 # language worlds are written in, so it is a reasonable prior for *reading* the writer's
 # names. It is never imposed: an ending the writer's own world does not use is only
@@ -419,15 +431,36 @@ class Namer:
         return self._dress(model, self._last_resort(model, key, hint), key)
 
     def _last_resort(self, model: KindModel, key: str, hint: str) -> str:
-        """When the world is too small to have a voice — two entities, or none."""
-        stem = (model.prefixes or model.names or ("march",))[0][:6]
-        ending = self._ending_for(model, hint, key) or "stead"
-        for suffix in range(1, 200):
-            candidate = _join(stem, ending) + ("" if suffix == 1 else str(suffix))
-            if candidate not in self.taken:
-                self.taken.add(candidate)
-                return candidate
-        return _join(stem, ending) + key
+        """When the world is too small to have a voice — two entities, or none.
+
+        Never with a number on the end. Greyhaven2 is not a place, it is a variable, and
+        one of them on a map tells the writer the generator gave up. So the pool is
+        widened instead of counted through: every stem the world offered against every
+        ending it offered, in a stable order, and only then the key's own letters — which
+        at least read as a word.
+        """
+        stems = list(model.prefixes or model.names or ("march",))
+        endings = list(model.endings or ()) or [self._ending_for(model, hint, key)
+                                                or "stead"]
+        made: list[str] = []
+        for stem in stems:
+            for ending in tuple(endings) + _LAST_DITCH:
+                candidate = _join(stem[:6], ending)
+                made.append(candidate)
+                if candidate not in self.taken:
+                    self.taken.add(candidate)
+                    return candidate
+
+        # Every stem against every ending is spent. A world only reaches this by being
+        # asked for far more places than it has words for, and the answer is the one the
+        # language itself uses: say which of the two you mean.
+        for qualifier in _QUALIFIERS:
+            for base in made:
+                candidate = f"{qualifier} {base}"
+                if candidate not in self.taken:
+                    self.taken.add(candidate)
+                    return candidate
+        return made[0] if made else "March"
 
     def _dress(self, model: KindModel, name: str, key: str) -> str:
         """Title case, and the article if this world's names of that kind wear one."""

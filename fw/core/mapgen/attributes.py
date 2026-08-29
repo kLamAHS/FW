@@ -301,11 +301,18 @@ def profile_region(world: World, entity_id: str, *, at: int | None = None) -> Re
     if profile.coastal:
         profile.traces["coastal"] = Trace(True, "its description reaches the sea")
 
+    # A town founded in 150 is not on a map of the year 100. The `at` filter on the
+    # fact is not enough on its own: the writer's `located_in` facts are usually undated,
+    # so what dates a settlement is the settlement, through `exists_from`. Without this
+    # a map of the Kingdom of Renn at year 100 pinned all six of its towns when only
+    # Rennford had been founded — and since a region's borders are now grown from its
+    # towns, it drew the borders around five places that did not exist.
     profile.settlements = tuple(
         f.subject_id for f in guards.sorted_facts(
             world.facts_where("located_in", object_id=entity_id, at=at))
         if (e := world.get_entity(f.subject_id)) is not None
         and e.type_key in ("settlement", "holding", "site")
+        and (at is None or e.exists_on(at))
     )
     return profile
 

@@ -81,6 +81,8 @@ SHORE_CELLS = 4.0              # over how many cells inland the land takes over 
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
 ROAD_TOLERANCE = 0.6           # how far a drawn road may cut a corner, in leagues
+WATER_TOLERANCE = 0.4          # and a river, which wanders more and is watched closer
+SHORE_FLOOR = 0.002            # how far above the waterline the driest land must sit
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
                                # (kept by settle.TIERS, which spaces every rank wider)
 
@@ -113,6 +115,9 @@ RESOURCE_WORDS = {
     "iron": "ore", "ore": "ore", "silver": "ore", "gold": "ore", "copper": "ore",
     "tin": "ore", "lead": "ore", "mines": "ore", "mining": "ore",
     "fish": "fish", "fishing": "fish", "fisheries": "fish", "whaling": "fish",
+    # Salt is got from a pan or a mine, and the Salt Reach is named for it — a region
+    # whose defining resource claims nothing is the map failing to hear its own writer.
+    "salt": "stone", "salterns": "stone", "saltpans": "stone",
 }
 
 
@@ -211,6 +216,8 @@ class MapGenerator:
         self.resources: resources.Resources | None = None
         self.settlement: settle.Settlement | None = None
         self.holds: hold.Holds | None = None
+        self._outlines: dict[str, list[list[list[float]]]] = {}
+        self._outlines_for: int | None = None
         self.frontiers: list[territory.Frontier] = []
         self._network: roads.Roads | None = None
         self._network_for: tuple | None = None
@@ -572,6 +579,7 @@ class MapGenerator:
         self.erosion = erode.erode(
             grid, elevation=self.uplift, sea=self.sea, seed=self.seed)
         self.elevation = self.erosion.elevation
+        self._keep_the_shore()
 
         self.climate = climate.plan_climate(
             grid, elevation=self.elevation, sea=self.sea, from_sea=self.from_sea,
@@ -756,6 +764,33 @@ class MapGenerator:
             if asked:
                 wanted[profile.name] = asked
         return wanted
+
+    def _keep_the_shore(self) -> None:
+        """Land is above the water. It has to be said, because two stages disagree.
+
+        The mask is the writer's answer: it holds the ground they drew, above the
+        waterline, whatever the noise wanted. The elevation field is the map's answer,
+        and by the time erosion has cut a mouth down to base level and the shelf has
+        faded the first cells inland toward it, four hundred of them sit a hundredth
+        below zero — land to every stage that asks the mask, sea to every stage that
+        reads the field.
+
+        Nothing is subtle about the consequence. The relief shades them as water, the
+        coastline is contoured around them, and the region borders — which are traced
+        from ownership — run out across what looks like open sea to enclose them.
+
+        So the field is brought up to the mask rather than the mask down to the field.
+        That way round because the mask is where author sovereignty lives: a cell the
+        writer drew inside their own province may not be quietly drowned by an erosion
+        pass. The lift is small — a hundredth of the world's relief at the median — and
+        it lands on ground that is already the shore.
+        """
+        floor = SEA_LEVEL + SHORE_FLOOR
+        for j in range(GRID):
+            row, wet = self.elevation[j], self.sea[j]
+            for i in range(GRID):
+                if not wet[i] and row[i] < floor:
+                    row[i] = floor
 
     def _with_bathymetry(self, land: Field) -> Field:
         """One continuous surface, sea floor included — not a height plus a mask.
@@ -1074,6 +1109,20 @@ class MapGenerator:
             laid += 1
         self.report.roads = laid
 
+    def _water_line(self, path: list[tuple[int, int]]) -> list[list[float]]:
+        """A river's cells, as a line somebody could have drawn.
+
+        The same argument the roads make, and the roads were doing it alone: a channel
+        found by walking a lattice arrives as a staircase, and no river on any map has
+        ever run four cells due south and then three due east. Both ends are pinned —
+        a reach has to still meet the reach above and below it.
+        """
+        points = [self._centre(i, j) for i, j in path]
+        if len(points) < 3:
+            return [[round(x, 1), round(y, 1)] for x, y in points]
+        drawn = shapes.simplify(shapes.eased(points), WATER_TOLERANCE)
+        return [[round(x, 1), round(y, 1)] for x, y in drawn]
+
     def _road_line(self, start: Placement, path: list[tuple[int, int]],
                    end: Placement) -> list[list[float]]:
         """A route's cells, as a line somebody could have drawn.
@@ -1335,14 +1384,27 @@ class MapGenerator:
             self.report.regions_drawn.append(profile.name)
 
     def _outline(self, region_id: str) -> list[list[float]] | None:
-        """A region's shape, traced from the ground it holds.
+        """A region's shape, assembled from the borders it shares with its neighbours.
 
-        Contoured rather than cast as rays, so the shape is as concave as the territory
-        is and the edge it shares with a neighbour is the same edge on both maps.
+        Every border on the map is traced once and both its regions draw the same line,
+        so the edge between two marches is one edge rather than two that agree to within
+        a lattice cell — which is what it used to be, measured, all the way along.
         """
         name = self.profiles[region_id].name
-        rings = territory.outline(self.partition, name)
+        rings = self._all_outlines().get(name) or []
         return rings[0] if rings else None
+
+    def _all_outlines(self) -> dict[str, list[list[list[float]]]]:
+        """Every region's rings, from one walk of the ownership field, kept.
+
+        The walk is shared by construction, so doing it per region would both cost n
+        times as much and throw away the sharing it exists for.
+        """
+        key = id(self.partition)
+        if self._outlines_for != key:
+            self._outlines = territory.outlines(self.partition, self.sea)
+            self._outlines_for = key
+        return self._outlines
 
     def _road_entity(self) -> str:
         """One entity owning every generated road.
@@ -1362,8 +1424,7 @@ class MapGenerator:
 
     def _write_rivers(self, rivers: list[list[tuple[int, int]]]) -> None:
         for n, path in enumerate(rivers):
-            points = [[round(x, 1), round(y, 1)]
-                      for x, y in (self._centre(i, j) for i, j in path)]
+            points = self._water_line(path)
             name = f"Unnamed river {n + 1}"
             river = self.world.add_entity(
                 "waterway", name, confidence="speculative", tags=[GENERATED_TAG],

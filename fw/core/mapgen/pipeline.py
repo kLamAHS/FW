@@ -128,7 +128,6 @@ def _compute(world: World, brief: MapBrief
     findings.extend(generator.frontier_findings())
 
     mark = time.perf_counter()
-    namer = Namer.from_world(world, seed=generator.seed)
     drafts: list[FeatureDraft] = []
     if brief.wants("coast"):
         drafts.extend(_coast_drafts(generator))
@@ -139,9 +138,9 @@ def _compute(world: World, brief: MapBrief
     if brief.wants("natural"):
         drafts.extend(_feature_drafts(generator))
     if brief.wants("river"):
-        drafts.extend(_river_drafts(generator, rivers, namer))
+        drafts.extend(_river_drafts(generator, rivers))
     if brief.wants("settlement"):
-        drafts.extend(_settlement_drafts(generator, placements, namer))
+        drafts.extend(_settlement_drafts(generator, placements))
     if brief.wants("road"):
         drafts.extend(_road_drafts(generator, placements))
     if brief.wants("castle"):
@@ -388,7 +387,7 @@ RIVER_WIDTHS = (1.2, 1.9, 2.8, 4.0, 5.6)
 RIVER_STEPS = (0.0, 0.06, 0.16, 0.36, 0.66)
 
 
-def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
+def _river_drafts(generator, rivers) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_WATER
 
     # Measured against the biggest river on the map, not against each river's own mouth.
@@ -435,8 +434,7 @@ def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
                     # than given a scheme of their own.
                     role="spine" if start == 0 else "segment",
                     kind="line",
-                    coordinates=[[round(x, 1), round(y, 1)]
-                                 for x, y in (generator._centre(i, j) for i, j in run)],
+                    coordinates=generator._water_line(run),
                     layer=LAYER_WATER,
                     style={"stroke": "#4a7fa5",
                            "stroke-width": RIVER_WIDTHS[bands[start]]},
@@ -497,7 +495,7 @@ def _settlement_key(generator, placement) -> tuple[str | int, ...]:
     return ("e", placement.name)
 
 
-def _settlement_drafts(generator, placements, namer: Namer) -> list[FeatureDraft]:
+def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
     """Every settlement the map knows about — including the ones it did not move.
 
     A town this run does not mention is a town the apply retires. So a place the
