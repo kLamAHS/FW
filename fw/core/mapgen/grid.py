@@ -156,6 +156,48 @@ class Grid:
                     heapq.heappush(heap, (cost + step, index, ni, nj))
         return owner
 
+    def eased_across(self, field: Field, owner: list[list[int]],
+                     sea: list[list[bool]], *, reach: float = 9.0,
+                     rounds: int = 6) -> Field:
+        """Smooth a per-region field at its borders without flattening its interior.
+
+        Anything derived per region — how high the ground is, how wet it is — steps at
+        every border, and the eye finds a straight edge in a landscape instantly. It is
+        the surest giveaway of a generated map.
+
+        Blurring it away is not the answer: enough blur to hide the seam also halves
+        the difference between a mountain march and a river plain, which is the one
+        thing the field was supposed to say. So the blur is applied only near the
+        borders and each region keeps its own character further in — a smooth crossing,
+        and nothing flattened behind it.
+        """
+        smoothed = self.blurred(field, rounds=rounds)
+        inland = self.distance_from(self._frontier(owner, sea))
+        out = [row[:] for row in field]
+        for j in range(self.size):
+            for i in range(self.size):
+                if sea[j][i]:
+                    continue
+                t = min(1.0, inland[j][i] / reach) if reach > 0 else 1.0
+                eased = t * t * (3.0 - 2.0 * t)
+                out[j][i] = smoothed[j][i] + eased * (field[j][i] - smoothed[j][i])
+        return self.blurred(out, rounds=1)
+
+    def _frontier(self, owner: list[list[int]],
+                  sea: list[list[bool]]) -> list[Cell]:
+        """Land cells that look across at a different region."""
+        out: list[Cell] = []
+        for j in range(self.size):
+            for i in range(self.size):
+                if sea[j][i]:
+                    continue
+                mine = owner[j][i]
+                for ni, nj in self.neighbours(i, j, diagonal=False):
+                    if not sea[nj][ni] and owner[nj][ni] != mine:
+                        out.append((i, j))
+                        break
+        return out
+
     def blurred(self, field: Field, rounds: int = 1) -> Field:
         """A light box pass.
 

@@ -53,7 +53,7 @@ DETAIL_KEYS: dict[str, tuple[str, ...]] = {
     "coast": ("landmass", "area"),
     "island": ("landmass", "area"),
     "region": ("share", "dominant"),
-    "range": ("strike_deg", "crest"),
+    "range": ("strike", "crest"),
     "hills": ("crest",),
     "sea": ("water_kind",),
     "water": ("water_kind",),

@@ -27,7 +27,7 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import coast, guards, noise, territory
+from fw.core.mapgen import climate, coast, guards, noise, relief, territory
 from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
@@ -150,6 +150,9 @@ class MapGenerator:
         self.inland_max: int = 1
         self.authored_cells: dict[str, set[tuple[int, int]]] = {}
         self.landform: coast.Landform | None = None
+        self.relief: relief.Relief | None = None
+        self.climate: climate.Climate | None = None
+        self.temperature: list[list[float]] = []
         self.partition: territory.Partition | None = None
         self._anchors: dict[str, tuple[int, int]] = {}
         self._weights: dict[str, float] = {}
@@ -412,38 +415,46 @@ class MapGenerator:
     # ---- the land ---------------------------------------------------------
 
     def _build_fields(self) -> None:
-        """Elevation, moisture, sea and flow over the whole lattice.
+        """Elevation, temperature and moisture over the whole lattice.
 
-        A cell's height is its region's character plus fractal detail scaled by how
-        broken that terrain is: a plain stays a plain, a mountain range gets peaks and
-        valleys. The land shelves toward the rim of the canvas, so the continent has an
-        outer coast, and anything below sea level is water — which is how a region
-        described as coast and marsh acquires a real shoreline while an inland vale
-        does not.
+        The height comes from `relief`, which lays mountain ranges as oriented ridges
+        rather than raising a region wholesale, and the weather from `climate`, which
+        carries rain in off the sea so the lee of a range is dry. Both are given the
+        region characters the writer's prose yielded, and both defer to that prose
+        where it exists.
         """
-        self.elevation = [[0.0] * GRID for _ in range(GRID)]
-        self.moisture = [[0.0] * GRID for _ in range(GRID)]
+        grid = self._grid()
+        keys = self.partition.keys
+        index_of = {key: n for n, key in enumerate(keys)}
+        owner = [[index_of.get(self.profiles[rid].name, -1) if rid else -1
+                  for rid in row] for row in self.owner]
+        by_name = {self.profiles[rid].name: self.profiles[rid]
+                   for rid in sorted(self.profiles)}
+
+        self.relief = relief.plan_relief(
+            grid, sea=self.sea, from_sea=self.from_sea, owner=owner, keys=keys,
+            terrain_mix={k: p.terrain_mix for k, p in by_name.items()},
+            base_height={k: p.base_elevation for k, p in by_name.items()},
+            roughness={k: p.roughness for k, p in by_name.items()},
+            seed=self.seed, sea_level=SEA_LEVEL)
+        self.elevation = self.relief.elevation
+
+        self.climate = climate.plan_climate(
+            grid, elevation=self.elevation, sea=self.sea, from_sea=self.from_sea,
+            owner=owner, keys=keys,
+            temperature_of={k: p.temperature for k, p in by_name.items()},
+            moisture_of={k: p.moisture for k, p in by_name.items()},
+            stated={k: "moisture" in p.traces and "no rainfall" not in p.why("moisture")
+                    for k, p in by_name.items()},
+            seed=self.seed, sea_level=SEA_LEVEL)
+        self.moisture = self.climate.moisture
+        self.temperature = self.climate.temperature
 
         for j in range(GRID):
             for i in range(GRID):
                 if self.sea[j][i]:
                     self.elevation[j][i] = 0.0
                     self.moisture[j][i] = 1.0
-                    continue
-                region_id = self.owner[j][i]
-                profile = self.profiles.get(region_id) if region_id else None
-                base = profile.base_elevation if profile else 0.30
-                rough = profile.roughness if profile else 0.06
-                detail = noise.fbm(self.seed, i / 11.0, j / 11.0, octaves=4)
-                height = base + (detail - 0.5) * 2.0 * rough
-                # Rise away from the water, so the shore shelves rather than cliffs.
-                shelf = min(1.0, self.from_sea[j][i] / 4.0)
-                height = SEA_LEVEL + (height - SEA_LEVEL) * (0.35 + 0.65 * shelf)
-                self.elevation[j][i] = max(SEA_LEVEL, min(1.0, height))
-                wet = noise.fbm(f"{self.seed}~wet", i / 15.0, j / 15.0, octaves=3)
-                moisture = (profile.moisture if profile else 0.5)
-                self.moisture[j][i] = max(
-                    0.0, min(1.0, moisture * 0.75 + wet * 0.25))
 
     def _edge_falloff(self, i: int, j: int) -> float:
         """1 in the interior, shelving to 0 at the rim, so the continent has a coast."""

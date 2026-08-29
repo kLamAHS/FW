@@ -122,6 +122,8 @@ def _compute(world: World, brief: MapBrief
     drafts: list[FeatureDraft] = []
     if brief.wants("region"):
         drafts.extend(_region_drafts(generator, authored))
+    if brief.wants("range"):
+        drafts.extend(_range_drafts(generator))
     if brief.wants("river"):
         drafts.extend(_river_drafts(generator, rivers, namer))
     if brief.wants("settlement"):
@@ -171,6 +173,48 @@ def _cells_of(generator, region_id: str) -> list[tuple[int, int]]:
     from fw.core.mapgen.generate import GRID
     return [(i, j) for j in range(GRID) for i in range(GRID)
             if generator.owner[j][i] == region_id and not generator.sea[j][i]]
+
+
+def _range_drafts(generator) -> list[FeatureDraft]:
+    """Each mountain range as the line it runs along.
+
+    A spine rather than a filled shape: what the reader wants to know is where the
+    range goes and which way, and the client draws its own ridge glyphs along the line.
+    Filling it in would also mean the range and the region it is in fight over the same
+    ground on a political map.
+    """
+    out: list[FeatureDraft] = []
+    if generator.relief is None:
+        return out
+    for mountain in generator.relief.ranges:
+        points = [[round(x, 1), round(y, 1)]
+                  for x, y in (generator._centre(i, j) for i, j in mountain.spine)]
+        if len(points) < 2:
+            continue
+        crest = mountain.spine[len(mountain.spine) // 2]
+        out.append(FeatureDraft(
+            kind="range",
+            key_parts=(mountain.key, int(crest[0]), int(crest[1])),
+            subject=SubjectSpec(mode="new", type_key="terrain_feature",
+                                tags=(GENERATED_TAG,),
+                                summary_template="The high ground of this country."),
+            shapes=(ShapeSpec(role="spine", kind="line", coordinates=points,
+                              layer="relief", style={"stroke": "#6b6459"},
+                              approximate=True),),
+            reasons=tuple(Reason(kind="authored", weight=1.0, template=text)
+                          for text in mountain.because),
+            name_request=NameRequest(
+                key=name_key("range", (mountain.key,)), kind="region", hint="upland"),
+            # The strike as a vector, not an angle. Turning it into degrees needs
+            # atan2, which is a libm call and so is banned from anything that reaches
+            # the plan's digest — and the client rotates a glyph just as easily from
+            # two numbers as from one.
+            detail={"strike": [round(mountain.strike.vector[0], 4),
+                               round(mountain.strike.vector[1], 4)],
+                    "crest": round(mountain.crest, 3),
+                    "elongation": round(mountain.elongation, 2)},
+        ))
+    return out
 
 
 def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
