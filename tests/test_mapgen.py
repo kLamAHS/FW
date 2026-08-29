@@ -321,8 +321,9 @@ class TestRegenerationIsClean:
             owned = {(i, j) for j in range(GRID) for i in range(GRID)
                      if generator.owner[j][i] == region_id}
             assert owned & drawn, "a region owns no part of what the writer drew"
-            # and its territory is one piece, reachable from the drawn ground — the bug
-            # gave a region a disconnected island forty cells from anything it owned
+            # Its mainland territory is one piece, reachable from the drawn ground. The
+            # bug this pins gave a region a block of the continent forty cells away with
+            # somebody else's country in between.
             reached = set(owned & drawn)
             frontier = list(reached)
             while frontier:
@@ -332,7 +333,33 @@ class TestRegenerationIsClean:
                     if step in owned and step not in reached:
                         reached.add(step)
                         frontier.append(step)
-            assert reached == owned, "a region owns ground detached from what was drawn"
+
+            # What is left over is allowed, but only if it is genuinely an island. Now
+            # that the continent is shaped before anybody is placed on it, it comes with
+            # offshore land, and every acre of that is given to somebody — so a region
+            # holding a nearby island is the map working, not the map failing. A piece
+            # reachable *over land* from the region's main body is a different matter:
+            # that is the region's own country, cut in two by a neighbour.
+            for cell in sorted(owned - reached):
+                walked = {cell}
+                stack = [cell]
+                joined = False
+                while stack and not joined:
+                    i, j = stack.pop()
+                    for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        step = (i + di, j + dj)
+                        if not (0 <= step[0] < GRID and 0 <= step[1] < GRID):
+                            continue
+                        if generator.sea[step[1]][step[0]] or step in walked:
+                            continue
+                        if step in reached:
+                            joined = True
+                            break
+                        walked.add(step)
+                        stack.append(step)
+                assert not joined, (
+                    f"{cell} is joined to its region by land but owned across a gap, "
+                    "so the region has been cut in two by a neighbour")
 
 
 class TestProseIsReadAsWritten:

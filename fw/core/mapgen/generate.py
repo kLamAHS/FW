@@ -33,10 +33,12 @@ from fw.core.mapgen import (
 from fw.core.mapgen import (
     climate,
     coast,
+    erode,
     guards,
     noise,
     relief,
     territory,
+    vegetation,
 )
 from fw.core.mapgen import (
     features as features_module,
@@ -47,7 +49,7 @@ from fw.core.mapgen.attributes import (
     RegionProfile,
     profile_region,
 )
-from fw.core.mapgen.grid import Grid
+from fw.core.mapgen.grid import Field, Grid
 from fw.core.mapgen.layout import Site, arrange
 from fw.core.world import World, WorldError
 
@@ -58,7 +60,17 @@ MARGIN = 60.0
 GRID = 144                     # lattice cells per side
 CELL = SPAN / GRID
 
-SEA_LEVEL = 0.10
+# Where the water stands in the elevation field. Zero, and not by coincidence: the
+# continent's own field is rebased at the shore, so "above sea level" and "positive" are
+# the same statement and every stage can be handed one continuous surface instead of a
+# height plus a threshold that has to travel beside it. It was 0.10 while land elevations
+# began around there, and leaving it at 0.10 after the rebase made the climate treat
+# every coastal plain as open ocean — the air arrived dry over the whole continent and
+# the rain shadow vanished, which is the kind of failure that shows up as "the map looks
+# a bit flat" rather than as an error.
+SEA_LEVEL = 0.0
+SHELF_CELLS = 14.0             # how far offshore the sea floor keeps falling
+SHELF_DEPTH = 0.22             # how deep it gets, in the same units as the land
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
@@ -164,6 +176,9 @@ class MapGenerator:
         self.authored_cells: dict[str, set[tuple[int, int]]] = {}
         self.landform: coast.Landform | None = None
         self.relief: relief.Relief | None = None
+        self.erosion: erode.Erosion | None = None
+        self.vegetation: vegetation.Vegetation | None = None
+        self.uplift: Field = []
         self.climate: climate.Climate | None = None
         self.biome: biome_module.BiomeField | None = None
         self.features: features_module.FeatureSet | None = None
@@ -257,7 +272,10 @@ class MapGenerator:
         anchors, weights, roughness = self._skeleton(authored)
         self.landform = coast.build(
             grid, anchors=anchors, weights=weights, roughness=roughness,
-            borders=self._border_pairs(), seed=self.seed)
+            borders=self._border_pairs(), seed=self.seed,
+            must_hold=[sorted(cells)
+                       for _, cells in sorted(self.authored_cells.items())
+                       if cells])
         self.sea = self.landform.sea
         # Already settled onto dry ground: a heart the coastline drowned would claim
         # nothing, and the region would vanish from the map without a word.
@@ -441,13 +459,19 @@ class MapGenerator:
     # ---- the land ---------------------------------------------------------
 
     def _build_fields(self) -> None:
-        """Elevation, temperature and moisture over the whole lattice.
+        """Elevation, then erosion, then weather — in that order, because it is causal.
 
         The height comes from `relief`, which lays mountain ranges as oriented ridges
-        rather than raising a region wholesale, and the weather from `climate`, which
-        carries rain in off the sea so the lee of a range is dry. Both are given the
-        region characters the writer's prose yielded, and both defer to that prose
-        where it exists.
+        rather than raising a region wholesale. Then water is run over it for as long as
+        it takes to wear a drainage network into it, which is what turns a raised surface
+        into terrain: valleys that branch, foothills that fall away, and channels that
+        already know where they are before anyone asks for a river.
+
+        Only then does the weather run. A rain shadow is cast by a range's finished
+        profile, not its first draft — put the climate first and the lee of a mountain is
+        computed against a mountain that erosion has yet to shape. The same argument
+        orders everything after this: soils follow the water, vegetation follows the
+        soils, and nothing is allowed to be a cause of what came before it.
         """
         grid = self._grid()
         keys = self.partition.keys
@@ -463,7 +487,12 @@ class MapGenerator:
             base_height={k: p.base_elevation for k, p in by_name.items()},
             roughness={k: p.roughness for k, p in by_name.items()},
             seed=self.seed, sea_level=SEA_LEVEL)
-        self.elevation = self.relief.elevation
+
+        self.uplift = self._with_bathymetry(self.relief.elevation)
+
+        self.erosion = erode.erode(
+            grid, elevation=self.uplift, sea=self.sea, seed=self.seed)
+        self.elevation = self.erosion.elevation
 
         self.climate = climate.plan_climate(
             grid, elevation=self.elevation, sea=self.sea, from_sea=self.from_sea,
@@ -479,8 +508,53 @@ class MapGenerator:
         for j in range(GRID):
             for i in range(GRID):
                 if self.sea[j][i]:
-                    self.elevation[j][i] = 0.0
                     self.moisture[j][i] = 1.0
+
+        # Cover comes last of the physical stages, because it is a consequence of every
+        # one of them: the rain that reaches a place, the warmth it has, the slope it
+        # stands on, and how well the ground under it drains. A wood is not a thing the
+        # map decides to put somewhere.
+        self.vegetation = vegetation.plan_vegetation(
+            grid, elevation=self.elevation, slope=self.erosion.slope,
+            flow=self.erosion.flow, downstream=self.erosion.downstream,
+            moisture=self.moisture,
+            temperature=self.temperature, sea=self.sea, owner=owner, keys=keys,
+            wooded={k: p.terrain_mix.get("forest", 0.0) for k, p in by_name.items()
+                    if "forest" in p.terrain_mix},
+            seed=self.seed, sea_level=SEA_LEVEL)
+
+    def _with_bathymetry(self, land: Field) -> Field:
+        """One continuous surface, sea floor included — not a height plus a mask.
+
+        The renderer draws the shore as a contour of this field, so where the field stops
+        being continuous the shore stops being a coastline and becomes a staircase of
+        lattice cells. That was exactly what the first drafts looked like.
+
+        The sea floor is not invented here: it is the continent's own field, which
+        already runs smoothly down through the waterline because the coast was contoured
+        out of it rather than masked. All that is added is depth — the field falls away
+        slowly near the shore and faster further out, so there is a shelf. That costs one
+        distance sweep and buys a shore that can be enlarged without falling apart, water
+        that reads as shallow where a river arrives, and — because erosion sees a real
+        outlet rather than a wall — river mouths that reach the coast instead of stopping
+        a cell short of it.
+        """
+        assert self.landform is not None
+        grid = self._grid()
+        offshore = grid.distance_from(
+            [(i, j) for j in range(GRID) for i in range(GRID) if not self.sea[j][i]])
+        shore = self.landform.height
+        out = [row[:] for row in land]
+        for j in range(GRID):
+            for i in range(GRID):
+                if not self.sea[j][i]:
+                    continue
+                reach = min(1.0, offshore[j][i] / SHELF_CELLS)
+                # The continent's own field near the shore, deepening away from it. The
+                # two are blended rather than switched between, or the seam is visible
+                # as a ring of flat water a cell wide round the whole coast.
+                out[j][i] = shore[j][i] - SHELF_DEPTH * reach * reach
+        return out
 
     def _edge_falloff(self, i: int, j: int) -> float:
         """1 in the interior, shelving to 0 at the rim, so the continent has a coast."""
@@ -492,109 +566,56 @@ class MapGenerator:
         t = max(0.0, nearest / shore)
         return math.sqrt(math.sqrt(t * t * t))
 
-    def _fill_depressions(self) -> None:
-        """Raise every pit to its lowest outlet, so all land drains to the sea.
-
-        Fractal detail riddles a surface with tiny hollows, and water entering one has
-        nowhere to go — which is why the first draft traced no rivers at all. Flooding
-        inward from the coast and never letting a cell sit below the pass it was reached
-        through leaves a surface where every land cell has a downhill path to the water.
-        The nudge added at each step keeps that path strictly descending, so a river can
-        never run uphill: the invariant is established here rather than checked later.
-        """
-        step = 1e-4
-        filled = [[math.inf] * GRID for _ in range(GRID)]
-        heap: list[tuple[float, int, int]] = []
-        for j in range(GRID):
-            for i in range(GRID):
-                edge = i in (0, GRID - 1) or j in (0, GRID - 1)
-                if self.sea[j][i] or edge:
-                    filled[j][i] = self.elevation[j][i]
-                    heapq.heappush(heap, (filled[j][i], i, j))
-        while heap:
-            height, i, j = heapq.heappop(heap)
-            if height > filled[j][i]:
-                continue
-            for dj in (-1, 0, 1):
-                for di in (-1, 0, 1):
-                    ni, nj = i + di, j + dj
-                    if not (di or dj) or not (0 <= ni < GRID and 0 <= nj < GRID):
-                        continue
-                    if filled[nj][ni] < math.inf:
-                        continue
-                    raised = max(self.elevation[nj][ni], height + step)
-                    filled[nj][ni] = raised
-                    heapq.heappush(heap, (raised, ni, nj))
-        for j in range(GRID):
-            for i in range(GRID):
-                if filled[j][i] < math.inf:
-                    self.elevation[j][i] = filled[j][i]
-
     def _downhill(self, i: int, j: int) -> tuple[int, int] | None:
-        """The steepest lower neighbour, or None at a sink."""
-        here = self.elevation[j][i]
-        best = None
-        drop = 0.0
-        for dj in (-1, 0, 1):
-            for di in (-1, 0, 1):
-                if di == 0 and dj == 0:
-                    continue
-                ni, nj = i + di, j + dj
-                if not (0 <= ni < GRID and 0 <= nj < GRID):
-                    continue
-                fall = here - self.elevation[nj][ni]
-                # Diagonals travel further, so compare gradient rather than raw drop.
-                gradient = fall / (1.4142 if di and dj else 1.0)
-                if gradient > drop:
-                    drop, best = gradient, (ni, nj)
-        return best
+        """The neighbour the water goes to, as erosion decided.
+
+        Asked of the erosion's own receiver array rather than recomputed from the
+        heights, so a river follows the valley that was cut for it. Recomputing would
+        usually agree and occasionally not, and the occasions are exactly the flat ground
+        where a disagreement puts a river across a floodplain instead of down it.
+        """
+        if self.erosion is not None:
+            target = self.erosion.downstream[j][i]
+            if target < 0:
+                return None
+            return (target % GRID, target // GRID)
+        return None
 
     def _trace_rivers(self) -> list[list[tuple[int, int]]]:
         """Where water collects and runs to the sea.
 
-        Rain falls on every land cell in proportion to its moisture, then drains along
-        the steepest descent. Processing cells from high to low means every cell's own
-        catchment is already counted before its water moves on, so tributaries merge
-        into trunks exactly as they do on the ground — and a channel can never run
-        uphill, because it only ever moves to a strictly lower neighbour.
+        The drainage network is not computed here any more — erosion already worked it
+        out, and had to, because a channel's discharge is what told it how deeply to cut.
+        Recomputing it afterwards would be asking the same question twice and risking two
+        answers: a river drawn along a valley the erosion did not carve is the kind of
+        detail a reader notices without being able to say why the map feels wrong.
+
+        What is left is choosing which of those channels are rivers. A quantile of the
+        flow on land, not a share of total rainfall: a share does not survive a change of
+        lattice, because the total scales with the number of cells while a single river's
+        catchment does not. That quietly dried the whole world up when the resolution was
+        raised — four channel cells and one river on a continent.
         """
-        self._fill_depressions()
-        self.flow = [[0.0] * GRID for _ in range(GRID)]
+        assert self.erosion is not None
+        self.flow = self.erosion.flow
         land = [(i, j) for j in range(GRID) for i in range(GRID)
                 if not self.sea[j][i]]
-        for i, j in land:
-            self.flow[j][i] += self.moisture[j][i]
 
-        # Descending height; ties broken by position so the order is fixed.
-        for i, j in sorted(land, key=lambda c: (-self.elevation[c[1]][c[0]], c[1], c[0])):
-            step = self._downhill(i, j)
-            if step is not None:
-                self.flow[step[1]][step[0]] += self.flow[j][i]
-
-        # A quantile of the flow on land, not a share of total rainfall. A share does
-        # not survive a change of lattice: the total scales with the number of cells
-        # while a single river's catchment does not, so raising the resolution quietly
-        # dried the whole world up — four channel cells and one river on a continent.
-        # A quantile means the same density of rivers at any resolution.
         ranked = sorted(self.flow[j][i] for i, j in land)
         threshold = (ranked[max(0, int(len(ranked) * (1.0 - RIVER_SHARE)) - 1)]
                      if ranked else 1.0)
 
-        # A source is a channel-strength cell with no channel-strength cell above it.
         channel = {(i, j) for i, j in land if self.flow[j][i] >= threshold}
         self.channel = channel
         self.river_threshold = threshold
-        sources = []
+
+        # A source is a channel cell with no channel cell draining into it.
+        feeds_into: dict[tuple[int, int], list[tuple[int, int]]] = {}
         for i, j in sorted(channel):
-            feeders = [
-                (i + di, j + dj)
-                for dj in (-1, 0, 1) for di in (-1, 0, 1)
-                if (di or dj) and 0 <= i + di < GRID and 0 <= j + dj < GRID
-                and (i + di, j + dj) in channel
-                and self._downhill(i + di, j + dj) == (i, j)
-            ]
-            if not feeders:
-                sources.append((i, j))
+            step = self._downhill(i, j)
+            if step is not None:
+                feeds_into.setdefault(step, []).append((i, j))
+        sources = [cell for cell in sorted(channel) if not feeds_into.get(cell)]
 
         rivers: list[list[tuple[int, int]]] = []
         for source in sources:

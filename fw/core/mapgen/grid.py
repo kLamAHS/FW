@@ -126,6 +126,58 @@ class Grid:
                 row[i] = best
         return grid
 
+    def nearest_from(self, sources: Iterable[tuple[Cell, float]]) -> tuple[Field, Field]:
+        """Distance to the nearest source, and what that source was carrying.
+
+        The same two chamfer sweeps as `distance_from`, but each cell also inherits a
+        value from whichever source turned out to be nearest. That is what lets a whole
+        mountain system — a dozen ridges, each with its own height varying along its
+        length — be turned into a height field in one pass rather than one pass per
+        ridge. Ask "how far to the nearest ridge, and how high was it there", and the
+        answer to both arrives together.
+        """
+        size = self.size
+        far = [[INFINITY] * size for _ in range(size)]
+        carried = [[0.0] * size for _ in range(size)]
+        for (i, j), value in sources:
+            if self.holds(i, j) and value > carried[j][i]:
+                far[j][i] = 0.0
+                carried[j][i] = value
+
+        for j in range(size):
+            row, hold = far[j], carried[j]
+            above, held = (far[j - 1], carried[j - 1]) if j else (None, None)
+            for i in range(size):
+                best, value = row[i], hold[i]
+                if i and row[i - 1] + 1.0 < best:
+                    best, value = row[i - 1] + 1.0, hold[i - 1]
+                if above is not None:
+                    if above[i] + 1.0 < best:
+                        best, value = above[i] + 1.0, held[i]
+                    if i and above[i - 1] + _DIAGONAL < best:
+                        best, value = above[i - 1] + _DIAGONAL, held[i - 1]
+                    if i + 1 < size and above[i + 1] + _DIAGONAL < best:
+                        best, value = above[i + 1] + _DIAGONAL, held[i + 1]
+                row[i], hold[i] = best, value
+
+        for j in range(size - 1, -1, -1):
+            row, hold = far[j], carried[j]
+            below, held = ((far[j + 1], carried[j + 1]) if j + 1 < size
+                           else (None, None))
+            for i in range(size - 1, -1, -1):
+                best, value = row[i], hold[i]
+                if i + 1 < size and row[i + 1] + 1.0 < best:
+                    best, value = row[i + 1] + 1.0, hold[i + 1]
+                if below is not None:
+                    if below[i] + 1.0 < best:
+                        best, value = below[i] + 1.0, held[i]
+                    if i + 1 < size and below[i + 1] + _DIAGONAL < best:
+                        best, value = below[i + 1] + _DIAGONAL, held[i + 1]
+                    if i and below[i - 1] + _DIAGONAL < best:
+                        best, value = below[i - 1] + _DIAGONAL, held[i - 1]
+                row[i], hold[i] = best, value
+        return far, carried
+
     def claimed_by(self, seeds: Iterable[tuple[Cell, float]], *,
                    passable=None) -> list[list[int]]:
         """Which seed reaches each cell first — a partition, by one flood.
@@ -198,6 +250,75 @@ class Grid:
                         break
         return out
 
+    def spread(self, field: Field, *, stride: int = 6, rounds: int = 8) -> Field:
+        """Smooth a field over tens of cells, cheaply, leaving no edge anywhere.
+
+        `eased_across` exists to hide a border while keeping a region's interior; this is
+        the opposite instruction, and the two are needed for different things. When the
+        writer says one region is high ground and its neighbour is a plain, the ground
+        itself does not step at the line between them — it swells across it over a
+        distance far larger than any border. Getting that with `blurred` would take
+        dozens of passes over the whole lattice, which is seconds.
+
+        So the field is averaged down to a coarse grid, smoothed there, and interpolated
+        back. A field whose only remaining content is broad is exactly what a coarse grid
+        can hold, so nothing is lost, and the cost falls by the square of the stride.
+        """
+        size = self.size
+        span = (size + stride - 1) // stride
+        coarse = [[0.0] * span for _ in range(span)]
+        counts = [[0] * span for _ in range(span)]
+        for j in range(size):
+            cj = j // stride
+            row, tally = coarse[cj], counts[cj]
+            source = field[j]
+            for i in range(size):
+                ci = i // stride
+                row[ci] += source[i]
+                tally[ci] += 1
+        for cj in range(span):
+            for ci in range(span):
+                if counts[cj][ci]:
+                    coarse[cj][ci] /= counts[cj][ci]
+
+        for _ in range(rounds):
+            out = [row[:] for row in coarse]
+            for cj in range(span):
+                for ci in range(span):
+                    total, weight = 0.0, 0.0
+                    for dj in (-1, 0, 1):
+                        nj = cj + dj
+                        if not 0 <= nj < span:
+                            continue
+                        for di in (-1, 0, 1):
+                            ni = ci + di
+                            if 0 <= ni < span:
+                                w = 4.0 if not (di or dj) else (1.0 if not (di and dj)
+                                                                else 0.5)
+                                total += coarse[nj][ni] * w
+                                weight += w
+                    out[cj][ci] = total / weight
+            coarse = out
+
+        out = self.filled()
+        limit = span - 1.001
+        for j in range(size):
+            y = (j + 0.5) / stride - 0.5
+            y = 0.0 if y < 0.0 else (limit if y > limit else y)
+            cj = int(y)
+            fy = y - cj
+            near, far = coarse[cj], coarse[cj + 1]
+            row = out[j]
+            for i in range(size):
+                x = (i + 0.5) / stride - 0.5
+                x = 0.0 if x < 0.0 else (limit if x > limit else x)
+                ci = int(x)
+                fx = x - ci
+                top = near[ci] + (near[ci + 1] - near[ci]) * fx
+                low = far[ci] + (far[ci + 1] - far[ci]) * fx
+                row[i] = top + (low - top) * fy
+        return out
+
     def blurred(self, field: Field, rounds: int = 1) -> Field:
         """A light box pass.
 
@@ -218,6 +339,30 @@ class Grid:
                     ) / 12.0
             field = out
         return field
+
+
+def sample(field: Field, x: float, y: float) -> float:
+    """Read a lattice field at a continuous position, bilinearly.
+
+    Fields that are computed coarsely and read at warped positions need this, and there
+    is exactly one right way to write it, so it lives here rather than three times.
+    """
+    size = len(field)
+    limit = size - 1.001
+    if x < 0.0:
+        x = 0.0
+    elif x > limit:
+        x = limit
+    if y < 0.0:
+        y = 0.0
+    elif y > limit:
+        y = limit
+    i, j = int(x), int(y)
+    fx, fy = x - i, y - j
+    near, far = field[j], field[j + 1]
+    top = near[i] + (near[i + 1] - near[i]) * fx
+    low = far[i] + (far[i + 1] - far[i]) * fx
+    return top + (low - top) * fy
 
 
 def disc(centre: tuple[float, float], radius: float) -> Iterator[Cell]:

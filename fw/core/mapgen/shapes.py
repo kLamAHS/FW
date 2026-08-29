@@ -184,15 +184,22 @@ def closed(ring: Sequence[Point]) -> list[list[float]]:
 
 
 def bounded(ring: Sequence[Point], most: int) -> Ring:
-    """A ring reduced to at most `most` points, by raising the simplify tolerance.
+    """A ring that will still be at most `most` points once it is closed.
 
-    Something has to stop a pathological coastline shipping ten thousand vertices to
-    the browser. Raising the tolerance loses the smallest wiggles first, which is the
-    right thing to lose.
+    Something has to stop a pathological coastline shipping ten thousand vertices to the
+    browser. Raising the tolerance loses the smallest wiggles first, which is the right
+    thing to lose.
+
+    The budget counts the closing point. Every ring that reaches the client has its first
+    point repeated at the end, so bounding the open ring to `most` ships `most + 1` — a
+    cap that is wrong by one exactly when it binds, which is the only time anybody looks
+    at it. Leaving room for the repeat here means the number means what its name says at
+    the place it matters, which is the payload.
     """
+    ceiling = most - 1 if most > 1 else most
     points = list(ring)
     tolerance = 0.25
-    while len(points) > most and tolerance < 64.0:
+    while len(points) > ceiling and tolerance < 64.0:
         points = simplify(points, tolerance)
         tolerance *= 1.6
     return points
