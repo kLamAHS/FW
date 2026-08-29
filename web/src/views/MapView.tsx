@@ -146,6 +146,15 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   )
   const viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`
   const holderOf = (f: MapFeature) => f.control[mode]?.[0] ?? null
+  // A map on which a hamlet, a city and a castle are the same dot is a map that has
+  // thrown away most of what the generator worked out. The rank rides on the shape's
+  // own style, so the client does not have to know why a place is the size it is.
+  const RANK_SIZE: Record<string, number> = {
+    city: 8, town: 6.5, village: 5, hamlet: 4,
+    castle: 7, keep: 5.5, tower: 4.5,
+  }
+  const sizeOf = (f: MapFeature, selected: boolean) =>
+    (RANK_SIZE[(f.style.rank as string) ?? ''] ?? 6) + (selected ? 2 : 0)
   const fillFor = (f: MapFeature) => {
     const holder = holderOf(f)
     if (holder) return holderColours.get(holder.id) ?? '#7c8590'
@@ -250,20 +259,34 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
               const [x, y] = f.coordinates as number[]
               const holder = holderOf(f)
               const selected = selectedId === f.entity_id
+              const r = sizeOf(f, selected)
               return (
                 <g key={f.id} style={{ cursor: 'pointer' }} onClick={() => onSelect(f.entity_id)}>
-                  <circle
-                    cx={x} cy={y} r={selected ? 8 : 6}
-                    fill={holder ? holderColours.get(holder.id) : '#555'}
-                    stroke="var(--panel)" strokeWidth={2}
-                  />
+                  {/* A castle is not a small town, and drawing it as one loses the whole
+                      point of putting it at a pass. A square on its corner reads as a
+                      keep at any size, and costs one element. */}
+                  {f.layer === 'castles' ? (
+                    <rect
+                      x={x - r * 0.78} y={y - r * 0.78}
+                      width={r * 1.56} height={r * 1.56}
+                      transform={`rotate(45 ${x} ${y})`}
+                      fill={holder ? holderColours.get(holder.id) : '#8a6113'}
+                      stroke="var(--panel)" strokeWidth={2}
+                    />
+                  ) : (
+                    <circle
+                      cx={x} cy={y} r={r}
+                      fill={holder ? holderColours.get(holder.id) : '#555'}
+                      stroke="var(--panel)" strokeWidth={2}
+                    />
+                  )}
                   {/* A contested place gets a ring as well as a colour — §69. */}
                   {(f.control.claims?.length ?? 0) > 0 && (
-                    <circle cx={x} cy={y} r={11} fill="none" stroke="var(--error)"
+                    <circle cx={x} cy={y} r={r + 5} fill="none" stroke="var(--error)"
                             strokeWidth={1.5} strokeDasharray="3 3" />
                   )}
                   {showLabels && (
-                    <text className="map-label" x={x + 11} y={y + 4}>{f.name}</text>
+                    <text className="map-label" x={x + r + 5} y={y + 4}>{f.name}</text>
                   )}
                   <title>{describeControl(f)}</title>
                 </g>

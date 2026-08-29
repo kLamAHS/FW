@@ -78,7 +78,7 @@ class MapBrief:
     seed: str = ""                      # "" -> the world's own name
     at: int | None = None
     include: tuple[str, ...] = ("coast", "region", "range", "water", "river",
-                                "natural", "settlement", "road")
+                                "natural", "settlement", "road", "castle")
     invent_settlements: bool = False    # §66: inventing a noun is opt-in
     north: str = "up"
     prevailing_wind: str = ""           # "" -> read from the writer's prose

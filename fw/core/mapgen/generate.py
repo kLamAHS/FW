@@ -35,6 +35,7 @@ from fw.core.mapgen import (
     coast,
     erode,
     guards,
+    hold,
     movement,
     noise,
     relief,
@@ -93,6 +94,7 @@ LAYER_REGIONS = "regions"
 LAYER_WATER = "waterways"
 LAYER_SETTLEMENTS = "settlements"
 LAYER_ROADS = "roads"
+LAYER_CASTLES = "castles"
 
 # How many sites the map offers beyond the settlements the writer has already named.
 PROPOSAL_HEADROOM = 8
@@ -141,6 +143,12 @@ class Placement:
 
     def because(self) -> str:
         if not self.reasons:
+            if self.entity_id and not self.proposed:
+                # The writer's own. The ground having nothing to say about it is not a
+                # criticism — a town can be somewhere for a reason no map holds — but it
+                # is worth not pretending otherwise.
+                return (f"{self.name} is where you put it; the ground makes no "
+                        "particular case either way.")
             return f"{self.name} sits here for want of anywhere better."
         return f"{self.name} sits here — " + "; ".join(self.reasons) + "."
 
@@ -202,6 +210,8 @@ class MapGenerator:
         self.movement: movement.Movement | None = None
         self.resources: resources.Resources | None = None
         self.settlement: settle.Settlement | None = None
+        self.holds: hold.Holds | None = None
+        self.frontiers: list[territory.Frontier] = []
         self._network: roads.Roads | None = None
         self._network_for: tuple | None = None
         self.uplift: Field = []
@@ -229,15 +239,9 @@ class MapGenerator:
 
         self.profiles = {r.id: profile_region(self.world, r.id, at=self.at)
                          for r in regions}
-        authored = self._authored_outlines()
-        self._build_landmass(authored)
-        self._assign_cells(regions, authored)
-        self._build_fields()
-        rivers = self._trace_rivers()
-        self._classify_ground()
-        self._build_civilisation()
-        self._build_costs()
+        authored, rivers = self.build_the_world()
         placements = self._site_settlements(propose=propose_settlements)
+        holds = self._site_castles(placements)
 
         # Everything in one transaction: without it a generated map is hundreds of
         # separate undoable actions, and the writer's first Ctrl+Z gets one polygon back.
@@ -247,6 +251,7 @@ class MapGenerator:
             self._write_rivers(rivers)
             self._write_settlements(placements)
             self._write_roads(placements)
+            self._write_holds(holds)
         return self.report
 
     # ---- regions ----------------------------------------------------------
@@ -380,12 +385,52 @@ class MapGenerator:
         self.inland_max = max(
             (self.from_sea[j][i] for j in range(GRID) for i in range(GRID)), default=1)
 
-    def _assign_cells(self, regions, authored: dict[str, list[list[float]]]) -> None:
+    def build_the_world(self) -> tuple[dict[str, list[list[float]]],
+                                       list[list[tuple[int, int]]]]:
+        """Everything the map knows, before a word of it is written down.
+
+        One sequence, in the order the causes run in, and in one place: it used to be
+        spelled out twice, once for generating a map and once for proposing one, and two
+        copies of an order that keeps growing is a way to find out much later that a plan
+        and a generate of the same world disagree about what is on it.
+
+        The order is the argument, and the two passes over the partition are the part of
+        it worth explaining. The land has to be divided once before the fields exist,
+        because the fields need to know which country the writer called mountainous —
+        but all that pass can do is divide the plane between made-up seed points, so what
+        it draws is a weighted Voronoi diagram and not a political map.
+
+        Then the ground is built, and the cost of crossing it, and then the towns, which
+        are sited from that ground. And *then* the land is divided again — from the towns
+        this time, over the cost of reaching them. That is the pass whose borders mean
+        something: a march holds the country its halls can reach, so a valley behind a
+        range that every one of its towns would have to climb belongs to whoever is on
+        the near side of it, which is how it would have gone.
+        """
+        authored = self._authored_outlines()
+        self._build_landmass(authored)
+        self._assign_cells()
+        self._build_fields()
+        rivers = self._trace_rivers()
+        self._build_movement()
+        self._build_civilisation()
+        self._assign_cells(cost=self.movement.cost, from_the_towns=True)
+        self._read_the_frontiers()
+        self._classify_ground()
+        self._build_costs()
+        return authored, rivers
+
+    def _assign_cells(self, *, cost: Field | None = None,
+                      from_the_towns: bool = False) -> None:
         """Give every acre of the continent to somebody.
 
         A partition rather than a race between growing blobs: unclaimed land renders as
         grout between the regions on a political fill, and a writer reads that as ground
         nobody has thought about rather than as an artefact of how it was drawn.
+
+        Run twice — see `build_the_world`. The first pass divides the plane from the
+        region seeds, which is all that can be done before there is any ground. The
+        second divides the country between the towns, once there are towns.
         """
         name_of = {rid: self.profiles[rid].name for rid in self.profiles}
         claimed = {name_of[rid]: {(i, j) for i, j in cells if not self.sea[j][i]}
@@ -394,9 +439,16 @@ class MapGenerator:
             self.authored_cells[region_id] = {
                 (i, j) for i, j in cells if not self.sea[j][i]}
 
+        seats = None
+        if from_the_towns and self.settlement is not None:
+            seats = {}
+            for site in self.settlement.sites:
+                region_id = self.owner[site.cell[1]][site.cell[0]]
+                if region_id:
+                    seats.setdefault(name_of[region_id], []).append(site.cell)
         self.partition = territory.grow(
             self._grid(), self.sea, anchors=self._anchors, weights=self._weights,
-            claimed=claimed)
+            claimed=claimed, cost=cost, seats=seats)
         id_of = {name: rid for rid, name in name_of.items()}
         self.owner = [[None] * GRID for _ in range(GRID)]
         for j in range(GRID):
@@ -550,8 +602,28 @@ class MapGenerator:
                     if "forest" in p.terrain_mix},
             seed=self.seed, sea_level=SEA_LEVEL)
 
+    def _build_movement(self) -> None:
+        """What it costs to cross every acre, and what that opens up.
+
+        Before the resources and before the people, because everything after it is
+        downstream of the answer: where a border settles, what a hinterland reaches,
+        which crossings are worth a town, where a road can go at all.
+
+        Travel cost used to be looked up from the dominant terrain of whichever region
+        owned a cell, which is the elevation field's mistake in another costume — a marsh
+        cost what its province cost on average, so a road would cross one rather than
+        take the dry hillside beside it, and every acre of a march called mountainous was
+        equally steep including its river valleys.
+        """
+        assert self.erosion is not None and self.vegetation is not None
+        self.movement = movement.plan_movement(
+            self._grid(), elevation=self.elevation, slope=self.erosion.slope,
+            flow=self.erosion.flow, canopy=self.vegetation.canopy,
+            marsh=self.vegetation.marsh, downstream=self.erosion.downstream,
+            sea=self.sea, sea_level=SEA_LEVEL)
+
     def _build_civilisation(self) -> None:
-        """What the ground offers, how hard it is to cross, and where that puts people.
+        """What the ground offers, and where that puts people.
 
         In that order, and the order is the point. A town is not where the ground is
         nicest — it is where a river has to be crossed and can be here, or where the
@@ -559,25 +631,19 @@ class MapGenerator:
         crossings have to exist before anybody is placed at one, and the resources
         before anybody is fed by them.
 
-        None of this used to be true. Travel cost was looked up from the terrain of
-        whichever region owned a cell, so a road would cross a marsh sooner than a dry
-        hillside next to it; resources were a list on a region page, so every acre of a
-        march was equally irony and nothing could be sited *near* the iron because there
-        was no near; and settlements were scored per region against a quota, so a march
-        with a great harbour and one with none got the same number of ports.
+        None of this used to be true. Resources were a list on a region page, so every
+        acre of a march was equally iron and nothing could be sited *near* the iron
+        because there was no near; and settlements were scored per region against a
+        quota, so a march with a great harbour and one with none got the same number of
+        ports.
         """
         assert self.erosion is not None and self.vegetation is not None
+        assert self.movement is not None
         grid = self._grid()
         keys = self.partition.keys
         index_of = {key: n for n, key in enumerate(keys)}
         owner = [[index_of.get(self.profiles[rid].name, -1) if rid else -1
                   for rid in row] for row in self.owner]
-
-        self.movement = movement.plan_movement(
-            grid, elevation=self.elevation, slope=self.erosion.slope,
-            flow=self.erosion.flow, canopy=self.vegetation.canopy,
-            marsh=self.vegetation.marsh, downstream=self.erosion.downstream,
-            sea=self.sea, sea_level=SEA_LEVEL)
 
         self.resources = resources.plan_resources(
             grid, elevation=self.elevation, slope=self.erosion.slope,
@@ -926,8 +992,25 @@ class MapGenerator:
             x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
             y=round(max(MARGIN, min(SPAN - MARGIN, y)), 1),
             region_id=region_id, rank=rank, score=round(site.score, 3),
-            reasons=list(site.reasons), proposed=proposed,
+            reasons=self._reasons_the_region_allows(site, region_id),
+            proposed=proposed,
         )
+
+    def _reasons_the_region_allows(self, site, region_id: str) -> list[str]:
+        """A site's case, answering to the country it finally stands in.
+
+        Sites are chosen before the land is divided for the last time — they have to be,
+        because the last division is grown from them — so a place can be scored as part
+        of one march and end up inside another. Mostly that changes nothing. The harbour
+        is the exception, because a port is the one reason that the writer has an
+        explicit veto over: a march they described as a river plain does not acquire a
+        seaport because the coastline came near it (§66), and it must not acquire one by
+        the back door either, by inheriting the case made for a neighbour that does reach
+        the sea.
+        """
+        if self.profiles[region_id].coastal:
+            return list(site.reasons)
+        return [why for why in site.reasons if "harbour" not in why]
 
     @staticmethod
     def _rank_for_population(people: int) -> str:
@@ -1289,6 +1372,119 @@ class MapGenerator:
                 river.id, "line", points, layer=LAYER_WATER,
                 style={"stroke": "#4a7fa5", GENERATED: GENERATOR})
             self.report.rivers.append(name)
+
+    def _read_the_frontiers(self) -> None:
+        """Go and look at what the borders turned out to run along.
+
+        Not what they were made to follow — they were not made to follow anything, and
+        `Grid.claimed_from` explains at length why they could not have been. Whether the
+        line between two marches climbs a ridge or crosses forty miles of wheat is the
+        most consequential fact on a political map and the one a coloured fill hides
+        completely, so it is measured after the fact and told to the writer.
+        """
+        assert self.partition is not None and self.erosion is not None
+        biggest = max((self.erosion.flow[j][i] for j in range(GRID)
+                       for i in range(GRID) if not self.sea[j][i]), default=1.0) or 1.0
+        self.frontiers = territory.frontiers(
+            self.partition, elevation=self.elevation, flow=self.erosion.flow,
+            marsh=self.vegetation.marsh, sea=self.sea, biggest_flow=biggest)
+
+    def frontier_findings(self) -> list:
+        """The borders nothing defends, which is where the writer's wars will be.
+
+        A note rather than a warning: an open frontier is not a mistake, it is a fact,
+        and usually a more interesting one than a tidy border along a range. What it is
+        not is visible, which is the whole reason for saying it.
+        """
+        from fw.core.mapgen.findings import note
+
+        out = []
+        for frontier in self.frontiers:
+            if frontier.open_country < territory.MOSTLY_OPEN:
+                continue
+            a, b = frontier.between
+            out.append(note(
+                "adjacency",
+                f"Nothing much stands between {a} and {b}: "
+                f"{frontier.open_country:.0%} of the border between them is open "
+                f"country, and the rest is not a great deal harder. Two neighbours who "
+                f"can walk into each other is a fact worth knowing about, in either "
+                f"direction",
+                subjects=(a, b)))
+        return out
+
+    def _site_castles(self, placements: list[Placement]) -> list:
+        """Where the map would put a castle, once it knows what there is to hold.
+
+        Last of the stages, and it has to be: a castle is placed against the crossings,
+        the roads and the borders, and none of those exist until the towns do. It is also
+        the stage that most obviously reads as a consequence rather than a decoration —
+        the highest-scoring cell on the example continent is the pass the highway climbs
+        on the march between two regions, which is three separate earlier answers
+        agreeing without being asked to.
+        """
+        assert self.movement is not None and self.settlement is not None
+        known = list(placements) + self._already_placed(placements)
+        frontier = {cell for f in self.frontiers for cell in f.cells}
+        network = (self.road_network(known) if len(known) >= 2 else None)
+        traffic = network.traffic if network else self._grid().filled(0.0)
+        self.holds = hold.plan_holds(
+            self._grid(), movement=self.movement, traffic=traffic,
+            frontier_cells=frontier,
+            seats=[self._cell_of(p.x, p.y) for p in known],
+            elevation=self.elevation, slope=self.erosion.slope,
+            marsh=self.vegetation.marsh, sea=self.sea, seed=self.seed,
+            wanted=min(hold.CEILING, max(2, len(self.profiles) * hold.PER_REGION)),
+            fixed=self._castles_the_writer_drew(),
+            room={rid: hold.PER_REGION for rid in sorted(self.profiles)},
+            region_of=self.owner)
+        return list(self.holds.sites)
+
+    def _castles_the_writer_drew(self) -> dict[tuple[int, int], str]:
+        """Cells holding a castle the writer placed themselves, which do not move."""
+        index = self.world.geometry_index(at=self.at, layer=LAYER_CASTLES)
+        out: dict[tuple[int, int], str] = {}
+        for entity in self.world.entities("holding"):
+            if GENERATED_TAG in entity.tags:
+                continue
+            if self.at is not None and not entity.exists_on(self.at):
+                continue
+            for geometry in index.get(entity.id, []):
+                if (geometry.style or {}).get(GENERATED) or geometry.kind != "point":
+                    continue
+                cell = self._cell_of(float(geometry.coordinates[0]),
+                                     float(geometry.coordinates[1]))
+                if not self.sea[cell[1]][cell[0]]:
+                    out[cell] = entity.id
+        return out
+
+    def _write_holds(self, holds: list) -> None:
+        for place in holds:
+            entity_id = place.entity_id
+            x, y = self._centre(*place.cell)
+            x += noise.jitter(self.seed, f"hx:{place.cell}", CELL * 0.3)
+            y += noise.jitter(self.seed, f"hy:{place.cell}", CELL * 0.3)
+            if entity_id is None:
+                where = self.owner[place.cell[1]][place.cell[0]]
+                proposal = self.world.add_entity(
+                    "holding", self._propose_hold_name(place, where),
+                    confidence="speculative",
+                    summary="; ".join(place.reasons) or "a place worth holding",
+                    tags=["proposed"])
+                entity_id = proposal.id
+                if where:
+                    self.world.assert_fact(entity_id, "located_in", where)
+            self.world.add_geometry(
+                entity_id, "point",
+                [round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
+                 round(max(MARGIN, min(SPAN - MARGIN, y)), 1)],
+                layer=LAYER_CASTLES,
+                style={GENERATED: GENERATOR, "rank": place.rank})
+
+    def _propose_hold_name(self, place, region_id: str | None) -> str:
+        """A placeholder that says what it is and what it watches — never an invention."""
+        where = self.profiles[region_id].name if region_id else "the march"
+        return f"Unnamed {place.rank} at the {place.watches} ({where})"
 
     def _write_settlements(self, placements: list[Placement]) -> None:
         for placement in placements:

@@ -339,3 +339,34 @@ def _thinned(places: list[Crossing], spacing: int) -> list[Crossing]:
                    abs(place.cell[1] - other.cell[1])) >= spacing for other in kept):
             kept.append(place)
     return kept
+
+
+def nearest_crossing(grid: Grid, crossings: tuple[Crossing, ...]
+                     ) -> tuple[Field, list[list[str]], Field]:
+    """Distance to the nearest crossing, what kind it was, and how good a one.
+
+    One sweep carries the crossing's index out across the whole lattice, and the index is
+    then read back for the other two. Carrying the index rather than the values means a
+    cell cannot end up with one crossing's kind and another's strength.
+
+    Lives here rather than with whoever asks, because both the stage that puts towns near
+    crossings and the stage that puts castles on them need exactly this and there is no
+    version of it that is about towns or about castles.
+    """
+    size = grid.size
+    found = sorted({c.cell: c for c in crossings}.items())
+    if not found:
+        return (grid.filled(math.inf), [[""] * size for _ in range(size)],
+                grid.filled(0.0))
+    order = {cell: n for n, (cell, _) in enumerate(found)}
+    reach, carried = grid.nearest_from(
+        [(cell, float(order[cell] + 1)) for cell, _ in found])
+    labels = [[""] * size for _ in range(size)]
+    strength = grid.filled(0.0)
+    for j in range(size):
+        for i in range(size):
+            index = int(carried[j][i]) - 1
+            if 0 <= index < len(found):
+                labels[j][i] = found[index][1].kind
+                strength[j][i] = found[index][1].strength
+    return reach, labels, strength

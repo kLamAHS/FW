@@ -112,14 +112,7 @@ def _compute(world: World, brief: MapBrief
     mark = time.perf_counter()
     generator.profiles = {
         r.id: _profile(world, r.id, brief.at) for r in regions}
-    authored = generator._authored_outlines()
-    generator._build_landmass(authored)
-    generator._assign_cells(regions, authored)
-    generator._build_fields()
-    rivers = generator._trace_rivers()
-    generator._classify_ground()
-    generator._build_civilisation()
-    generator._build_costs()
+    authored, rivers = generator.build_the_world()
     placements = generator._site_settlements(propose=brief.invent_settlements)
     timings["geography"] = int((time.perf_counter() - mark) * 1000)
 
@@ -132,6 +125,7 @@ def _compute(world: World, brief: MapBrief
     if generator.vegetation is not None:
         findings.extend(generator.vegetation.notes)
     findings.extend(generator.settlement_findings())
+    findings.extend(generator.frontier_findings())
 
     mark = time.perf_counter()
     namer = Namer.from_world(world, seed=generator.seed)
@@ -150,6 +144,8 @@ def _compute(world: World, brief: MapBrief
         drafts.extend(_settlement_drafts(generator, placements, namer))
     if brief.wants("road"):
         drafts.extend(_road_drafts(generator, placements))
+    if brief.wants("castle"):
+        drafts.extend(_castle_drafts(generator, placements))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
     return drafts, timings, findings, _terrain_of(generator)
 
@@ -258,12 +254,33 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               approximate=True),),
             reasons=(Reason(kind="authored", weight=1.0,
                             template="drawn where its neighbours leave room",
-                            evidence=profile.why("terrain")),),
+                            evidence=profile.why("terrain")),
+                     *_frontier_reasons(generator, profile.name)),
             detail={"share": round(len(_cells_of(generator, region_id))
                                    / max(1, generator.land_cells()), 3),
                     "dominant": profile.dominant},
         ))
     return out
+
+
+def _frontier_reasons(generator, name: str) -> tuple[Reason, ...]:
+    """What lies between this country and each of its neighbours.
+
+    The single most useful derived fact about a border and the one a coloured fill hides
+    completely: whether the march with the next country climbs a ridge, follows a river,
+    or crosses forty miles of wheat. The writer gets it on the region itself, where they
+    will be reading about the place, rather than only as a warning when it is open.
+    """
+    out: list[Reason] = []
+    for frontier in generator.frontiers:
+        if name not in frontier.between:
+            continue
+        other = frontier.between[1] if frontier.between[0] == name else frontier.between[0]
+        out.append(Reason(
+            kind="crossing", weight=0.6,
+            template=f"its border with {other} runs along {frontier.runs_along}",
+            evidence=f"{frontier.length} cells of it"))
+    return tuple(out[:3])
 
 
 def _cells_of(generator, region_id: str) -> list[tuple[int, int]]:
@@ -534,6 +551,54 @@ def _settlement_drafts(generator, placements, namer: Namer) -> list[FeatureDraft
             # inventing a town is a suggestion they have to accept.
             default_accept=not invented,
             detail={"rank": placement.rank, "region": region_name},
+        ))
+    return out
+
+
+def _castle_drafts(generator, placements) -> list[FeatureDraft]:
+    """The places worth holding, and what each of them holds.
+
+    Proposed rather than drawn: a castle is a noun, and inventing a noun is the writer's
+    to accept (§66). The reasons are the whole value of the proposal — a keep offered
+    with no account of itself is just a pin — so what it watches goes in the sentence.
+    """
+    from fw.core.mapgen.generate import LAYER_CASTLES
+
+    holds = generator._site_castles(placements)
+    out: list[FeatureDraft] = []
+    for place in holds:
+        invented = place.entity_id is None
+        where = generator.owner[place.cell[1]][place.cell[0]]
+        region_name = generator.profiles[where].name if where else ""
+        x, y = generator._centre(*place.cell)
+        reasons = tuple(Reason(kind="crossing", weight=1.0, template=text)
+                        for text in place.reasons[:3])
+        if not reasons:
+            reasons = (Reason(kind="authored", weight=1.0,
+                              template="stands where you placed it"),)
+        out.append(FeatureDraft(
+            kind="castle",
+            key_parts=("h", region_name, place.cell[0], place.cell[1]),
+            subject=(SubjectSpec(mode="new", type_key="holding",
+                                 tags=(GENERATED_TAG,),
+                                 summary_template="Proposed by the map.")
+                     if invented else
+                     SubjectSpec(mode="existing", type_key="holding",
+                                 entity_id=place.entity_id)),
+            shapes=(ShapeSpec(role="point", kind="point",
+                              coordinates=[round(x, 1), round(y, 1)],
+                              layer=LAYER_CASTLES,
+                              style={"rank": place.rank}, approximate=True),),
+            facts=((FactSpec("located_in", object_ref=where),) if invented and where
+                   else ()),
+            reasons=reasons,
+            name_request=(NameRequest(
+                key=name_key("castle", (region_name,),
+                             place.cell[0] * 1000 + place.cell[1]),
+                kind="castle", hint=place.watches)
+                if invented else None),
+            default_accept=not invented,
+            detail={"rank": place.rank},
         ))
     return out
 

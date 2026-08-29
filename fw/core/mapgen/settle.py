@@ -27,8 +27,8 @@ import math
 from dataclasses import dataclass
 
 from fw.core.mapgen import noise
-from fw.core.mapgen.grid import Field, Grid
-from fw.core.mapgen.movement import Crossing, Movement
+from fw.core.mapgen.grid import Field, Grid, stands_above
+from fw.core.mapgen.movement import Crossing, Movement, nearest_crossing
 from fw.core.mapgen.resources import KINDS as RESOURCE_KINDS
 from fw.core.mapgen.resources import Resources
 
@@ -62,6 +62,9 @@ WEIGHT_WATER = 1.4            # fresh water at hand
 # on the coast, which for a realm with thirty sheltered anchorages is absurd.
 WEIGHT_CROSSING = {"harbour": 3.1, "ford": 1.9, "pass": 1.7}
 WEIGHT_DEFENCE = 0.9          # ground that stands above what surrounds it
+# And how high a place has to stand before that is worth saying out loud, as a quantile
+# of the world's own ground. See `_score`.
+COMMANDING_QUANTILE = 0.80
 WEIGHT_REACH = 1.1            # and country that is cheap to get about in
 WEIGHT_RESOURCE = 0.7         # and something worth carrying away
 
@@ -175,8 +178,18 @@ def plan_settlement(grid: Grid, *, resources: Resources, movement: Movement,
     sites = _needs_a_hinterland(sites)
     # Biggest first, so a reader of the list meets the cities before the hamlets.
     order = {name: n for n, (name, _, _, _) in enumerate(TIERS)}
-    sites.sort(key=lambda s: (order.get(s.rank, 99), -s.support, s.cell))
-    return Settlement(sites=tuple(sites), provision=provision, market=market)
+    ordered = sorted(range(len(sites)),
+                     key=lambda n: (order.get(sites[n].rank, 99), -sites[n].support,
+                                    sites[n].cell))
+    # The market field says it indexes `sites`, so it has to still do so after they are
+    # put in order. It did not, and nothing had noticed because the only reader so far
+    # was the support sum, which runs before the sort — which is exactly the shape of
+    # bug that waits quietly for the second reader.
+    moved = {old: new for new, old in enumerate(ordered)}
+    market = [[moved.get(index, -1) if index >= 0 else -1 for index in row]
+              for row in market]
+    return Settlement(sites=tuple(sites[n] for n in ordered), provision=provision,
+                      market=market)
 
 
 def _workings(grid: Grid, within_claimed: dict[str, Field],
@@ -328,7 +341,13 @@ def _score(grid: Grid, *, provision: Field, movement: Movement,
 
     # Where the nearest crossing is, so a town can be *near* a ford without standing in
     # the river. One sweep answers it for every cell.
-    reach, kind_at, strength_at = _nearest_crossing(grid, at_crossing, sea)
+    reach, kind_at, strength_at = nearest_crossing(grid, movement.crossings())
+
+    # What counts as commanding ground *here*. Taken from this world rather than from a
+    # constant, for the same reason sea level is: a figure that suits one continent
+    # describes every acre of the next one.
+    rises = sorted(stands_above(grid, elevation, sea, i, j) for i, j in land)
+    commanding = rises[min(len(rises) - 1, int(len(rises) * COMMANDING_QUANTILE))]
 
     score = grid.filled(0.0)
     why: dict[tuple[int, int], list[str]] = {}
@@ -373,10 +392,15 @@ def _score(grid: Grid, *, provision: Field, movement: Movement,
                 because.append(
                     _CROSSING_WHY.get(kind, "where the ground lets people through"))
 
-        standing = _stands_above(grid, elevation, i, j, sea)
-        if standing > 0.02:
+        standing = stands_above(grid, elevation, sea, i, j)
+        if standing > 0.0:
             value += WEIGHT_DEFENCE * min(1.0, standing / 0.10)
-            because.append("standing above the ground around it")
+            # Scoring it is one thing; saying it out loud is another. At the figure this
+            # used to fire at, nine acres in ten of a continent qualified, so nearly
+            # every town on the map was described as standing above the ground around
+            # it — which tells the writer nothing, and buries the reasons that do.
+            if standing >= commanding:
+                because.append("standing above the ground around it")
 
         value += WEIGHT_REACH * min(1.0, cheapest / movement.cost[j][i])
 
@@ -506,46 +530,6 @@ def _best_nearby(within: dict[str, Field], within_claimed: dict[str, Field],
         if value > spoken_most:
             spoken, spoken_most = kind, value
     return (spoken, spoken_most) if spoken else (best, most)
-
-
-def _nearest_crossing(grid: Grid, at_crossing: dict[tuple[int, int], Crossing],
-                      sea: list[list[bool]]
-                      ) -> tuple[Field, list[list[str]], Field]:
-    """Distance to the nearest crossing, what kind it was, and how good a one.
-
-    One sweep carries the crossing's index out across the whole lattice, and the index
-    is then read back for the other two. Carrying the index rather than the values means
-    a cell cannot end up with one crossing's kind and another's strength.
-    """
-    size = grid.size
-    kinds = sorted(at_crossing.items())
-    if not kinds:
-        return grid.filled(math.inf), [[""] * size for _ in range(size)], grid.filled(0.0)
-    order = {cell: n for n, (cell, _) in enumerate(kinds)}
-    reach, carried = grid.nearest_from(
-        [(cell, float(order[cell] + 1)) for cell, _ in kinds])
-    labels = [[""] * size for _ in range(size)]
-    strength = grid.filled(0.0)
-    for j in range(size):
-        for i in range(size):
-            index = int(carried[j][i]) - 1
-            if 0 <= index < len(kinds):
-                labels[j][i] = kinds[index][1].kind
-                strength[j][i] = kinds[index][1].strength
-    return reach, labels, strength
-
-
-def _stands_above(grid: Grid, elevation: Field, i: int, j: int,
-                  sea: list[list[bool]]) -> float:
-    """How far a cell rises over the ground within a short walk of it."""
-    size = grid.size
-    here = elevation[j][i]
-    lowest = here
-    for b in range(max(0, j - 3), min(size, j + 4)):
-        for a in range(max(0, i - 3), min(size, i + 4)):
-            if not sea[b][a] and elevation[b][a] < lowest:
-                lowest = elevation[b][a]
-    return here - lowest
 
 
 # ---- choosing, and then sizing ----------------------------------------------

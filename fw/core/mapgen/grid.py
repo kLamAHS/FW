@@ -179,33 +179,62 @@ class Grid:
         return far, carried
 
     def claimed_by(self, seeds: Iterable[tuple[Cell, float]], *,
-                   passable=None) -> list[list[int]]:
-        """Which seed reaches each cell first — a partition, by one flood.
+                   passable=None, cost: Field | None = None) -> list[list[int]]:
+        """One seed per claimant. See `claimed_from` for several."""
+        return self.claimed_from((((cell,), rate) for cell, rate in seeds),
+                                 passable=passable, cost=cost)
 
-        Seeds are ((i, j), rate): a bigger rate spreads faster, so a region the writer
-        gave a large population claims more ground than a small one, without anyone
-        having to compute a weighted Voronoi diagram.
+    def claimed_from(self, groups: Iterable[tuple[Iterable[Cell], float]], *,
+                     passable=None, cost: Field | None = None) -> list[list[int]]:
+        """Which claimant reaches each cell first — a partition, by one flood.
 
-        Ties break on the seed's index, so the same seeds always produce the same
+        Each claimant is (cells, rate): it spreads outward from all of its cells at once,
+        and a bigger rate spreads faster, so a region the writer gave a large population
+        claims more ground than a small one without anyone having to compute a weighted
+        Voronoi diagram.
+
+        With a `cost` field the flood spreads over the *ground* rather than over the
+        plane, so reach means what it means to somebody riding it: the land a claimant
+        can actually get to. Where a road up a valley is worth ten miles of fen, the
+        territory runs up the valley.
+
+        What that does *not* do, though it is the first thing one expects of it, is put
+        the border on the range. A barrier between two claimants adds the same crossing
+        cost to both of them everywhere beyond it, so it slides the line where their
+        costs are equal rather than catching it: measured on the example continent, cost
+        weighting moved one per cent of the land and left the border sitting on ground
+        marginally *easier* than its surroundings. Making a thin barrier expensive along
+        every drainage divide did not help either, because at this lattice a divide is
+        not a regional feature — every region spans a dozen catchments, so a border must
+        cross divides wherever it runs. Where a border does follow the country, it is
+        because of what it is grown *from*, not what it is grown *over*.
+
+        Ties break on the claimant's index, so the same seeds always produce the same
         partition — a flood that broke ties on heap order would redraw every border
         whenever an unrelated region was added.
         """
         owner = [[-1] * self.size for _ in range(self.size)]
         heap: list[tuple[float, int, int, int]] = []
         rates: list[float] = []
-        for index, ((i, j), rate) in enumerate(seeds):
+        for index, (cells, rate) in enumerate(groups):
             rates.append(max(rate, 1e-6))
-            if self.holds(i, j):
-                heapq.heappush(heap, (0.0, index, i, j))
+            for i, j in cells:
+                if self.holds(i, j):
+                    heapq.heappush(heap, (0.0, index, i, j))
         while heap:
-            cost, index, i, j = heapq.heappop(heap)
+            paid, index, i, j = heapq.heappop(heap)
             if owner[j][i] != -1:
                 continue
             owner[j][i] = index
-            step = 1.0 / rates[index]
+            rate = rates[index]
             for ni, nj in self.neighbours(i, j, diagonal=False):
-                if owner[nj][ni] == -1 and (passable is None or passable(ni, nj)):
-                    heapq.heappush(heap, (cost + step, index, ni, nj))
+                if owner[nj][ni] != -1 or (passable is not None
+                                           and not passable(ni, nj)):
+                    continue
+                step = (cost[nj][ni] if cost is not None else 1.0) / rate
+                if step == math.inf:
+                    continue
+                heapq.heappush(heap, (paid + step, index, ni, nj))
         return owner
 
     def eased_across(self, field: Field, owner: list[list[int]],
@@ -387,3 +416,26 @@ def line(start: tuple[float, float], end: tuple[float, float]) -> Iterator[Cell]
         if cell != previous:
             yield cell
             previous = cell
+
+
+def stands_above(grid: Grid, field: Field, sea: list[list[bool]], i: int, j: int, *,
+                 reach: int = 3) -> float:
+    """How far a cell rises over the lowest land within `reach` of it.
+
+    Against the lowest rather than the mean, because every question this answers is about
+    somebody climbing — a garrison to be reached, a town to be stormed, a border to be
+    crossed — and they will come by the easiest way there is, not by the average one.
+
+    One definition, because there were three: settlement, castles and borders all want
+    this number and had each grown their own, with the arguments in a different order in
+    every copy. Two of them also compared it against the same absolute constant, which
+    turned out to be true of ninety per cent of a continent.
+    """
+    size = grid.size
+    here = field[j][i]
+    lowest = here
+    for b in range(max(0, j - reach), min(size, j + reach + 1)):
+        for a in range(max(0, i - reach), min(size, i + reach + 1)):
+            if not sea[b][a] and field[b][a] < lowest:
+                lowest = field[b][a]
+    return here - lowest

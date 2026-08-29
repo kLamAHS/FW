@@ -201,10 +201,19 @@ class TestWhatTheGroundIsGoodFor:
 
 
 class TestWhoLivesWhereAndWhy:
-    def test_every_settlement_argues_from_the_ground(self, built):
+    def test_every_settlement_the_map_invents_argues_from_the_ground(self, built):
+        """A place nobody asked for has to earn itself.
+
+        Only the invented ones. A town the writer put on the map stays whether or not the
+        ground has anything to say about it — that is what author sovereignty means — and
+        on this continent one of them stands on ground that is unremarkable in every way
+        the map can measure. Asserting a case for that one would be asserting that the
+        map may overrule them.
+        """
         assert built.settlement.sites
         for site in built.settlement.sites:
-            assert site.reasons, f"a settlement at {site.cell} with no case for it"
+            if site.invented:
+                assert site.reasons, f"a settlement at {site.cell} with no case for it"
 
     def test_the_hierarchy_is_a_hierarchy(self, built):
         """More small places than big ones, which is what a settlement pattern is.

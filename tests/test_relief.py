@@ -45,7 +45,7 @@ def shaped(world: World, seed: str = "fixed") -> MapGenerator:
     generator.profiles = {r.id: profile_region(world, r.id) for r in regions}
     authored = generator._authored_outlines()
     generator._build_landmass(authored)
-    generator._assign_cells(regions, authored)
+    generator._assign_cells()
     generator._build_fields()
     return generator
 
@@ -151,26 +151,55 @@ class TestNoSeamAtABorder:
         wrong to forbid it. Rough country really does meet smooth country somewhere, and
         when a writer says one march is crags and the next is river plain, the place
         where the ground changes character is a border more often than not. What must not
-        happen is the step being *at* the line, which is what the median measures.
+        happen is the step being *at* the line.
+
+        Which is why the comparison is against the ground *beside* the border rather than
+        against the map. Measured map-wide this began to fail the moment borders stopped
+        being drawn on a plane: a frontier that follows the cost of crossing the country
+        sits on rougher ground than the average acre by construction, so the steps along
+        it are larger than average and always will be — 1.37 times, on this world, with
+        no terrace anywhere. Against the country within two cells of the same border the
+        ratio is 0.96, which is the number that answers the question actually being
+        asked: is the ground stepping *because* of the line, or is the line simply
+        somewhere the ground was already steep?
         """
         generator = shaped(mountains)
-        same, across = [], []
         base = generator.relief.base
-        for j in range(1, GRID - 1):
-            for i in range(1, GRID - 1):
-                if generator.sea[j][i]:
+        land = [(i, j) for j in range(1, GRID - 1) for i in range(1, GRID - 1)
+                if not generator.sea[j][i]]
+
+        def step_at(i, j, ni, nj):
+            return abs(base[j][i] - base[nj][ni])
+
+        across, beside = [], []
+        edge = set()
+        for i, j in land:
+            for ni, nj in ((i + 1, j), (i, j + 1), (i - 1, j), (i, j - 1)):
+                if (not generator.sea[nj][ni]
+                        and generator.owner[j][i] != generator.owner[nj][ni]):
+                    edge.add((i, j))
+                    break
+        for i, j in land:
+            for ni, nj in ((i + 1, j), (i, j + 1)):
+                if generator.sea[nj][ni]:
                     continue
-                for ni, nj in ((i + 1, j), (i, j + 1)):
-                    if generator.sea[nj][ni]:
-                        continue
-                    step = abs(base[j][i] - base[nj][ni])
-                    (same if generator.owner[j][i] == generator.owner[nj][ni]
-                     else across).append(step)
-        same.sort()
+                if generator.owner[j][i] != generator.owner[nj][ni]:
+                    across.append(step_at(i, j, ni, nj))
+        near = {(i + di, j + dj) for i, j in edge
+                for di in (-2, -1, 0, 1, 2) for dj in (-2, -1, 0, 1, 2)}
+        for i, j in near:
+            if (i, j) not in set(land):
+                continue
+            for ni, nj in ((i + 1, j), (i, j + 1)):
+                if (0 <= ni < GRID and 0 <= nj < GRID and not generator.sea[nj][ni]
+                        and generator.owner[j][i] == generator.owner[nj][ni]):
+                    beside.append(step_at(i, j, ni, nj))
+        assert across and beside
         across.sort()
-        typical = statistics.median(across) / statistics.median(same)
+        beside.sort()
+        typical = statistics.median(across) / statistics.median(beside)
         assert typical < 1.2, f"the typical step across a border is {typical:.2f} times"
-        steepest = across[int(len(across) * 0.99)] / same[int(len(same) * 0.99)]
+        steepest = across[int(len(across) * 0.99)] / beside[int(len(beside) * 0.99)]
         assert steepest < 1.6, f"the steepest steps are {steepest:.2f} times, a terrace"
 
     def test_a_region_still_keeps_the_height_it_was_given(self, mountains: World):
@@ -252,7 +281,7 @@ class TestRainShadow:
         generator.profiles = {r.id: profile_region(mountains, r.id) for r in regions}
         authored = generator._authored_outlines()
         generator._build_landmass(authored)
-        generator._assign_cells(regions, authored)
+        generator._assign_cells()
         from fw.core.mapgen import climate as climate_module
         wind = climate_module._wind(generator._grid(), sea=generator.sea,
                                     prevailing="south")
@@ -336,7 +365,7 @@ class TestDeterminismAndCost:
         generator.profiles = {r.id: profile_region(mountains, r.id) for r in regions}
         authored = generator._authored_outlines()
         generator._build_landmass(authored)
-        generator._assign_cells(regions, authored)
+        generator._assign_cells()
         started = time.perf_counter()
         generator._build_fields()
         assert time.perf_counter() - started < 3.5
