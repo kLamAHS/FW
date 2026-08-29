@@ -27,7 +27,20 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import climate, coast, guards, noise, relief, territory
+from fw.core.mapgen import (
+    biome as biome_module,
+)
+from fw.core.mapgen import (
+    climate,
+    coast,
+    guards,
+    noise,
+    relief,
+    territory,
+)
+from fw.core.mapgen import (
+    features as features_module,
+)
 from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
@@ -152,6 +165,8 @@ class MapGenerator:
         self.landform: coast.Landform | None = None
         self.relief: relief.Relief | None = None
         self.climate: climate.Climate | None = None
+        self.biome: biome_module.BiomeField | None = None
+        self.features: features_module.FeatureSet | None = None
         self.temperature: list[list[float]] = []
         self.partition: territory.Partition | None = None
         self._anchors: dict[str, tuple[int, int]] = {}
@@ -164,8 +179,7 @@ class MapGenerator:
 
     def generate(self, *, propose_settlements: bool = True) -> GenerationReport:
         """Build the map and write it, as one undoable action."""
-        regions = [e for e in self.world.entities("region")
-                   if self.at is None or e.exists_on(self.at)]
+        regions = self.regions_of_the_world()
         if not regions:
             self.report.notes.append(
                 "There are no regions yet — a map is grown from regions, so name a "
@@ -179,6 +193,7 @@ class MapGenerator:
         self._assign_cells(regions, authored)
         self._build_fields()
         rivers = self._trace_rivers()
+        self._classify_ground()
         self._build_costs()
         placements = self._site_settlements(propose=propose_settlements)
 
@@ -193,6 +208,17 @@ class MapGenerator:
         return self.report
 
     # ---- regions ----------------------------------------------------------
+
+    def regions_of_the_world(self) -> list:
+        """The writer's regions — never the map's own.
+
+        Anything the generator made carries the generated tag, and reading it back as
+        source material is how a map ends up laid out around its own previous
+        coastline. The rule is one line and it belongs in one place.
+        """
+        return [e for e in self.world.entities("region")
+                if GENERATED_TAG not in e.tags
+                and (self.at is None or e.exists_on(self.at))]
 
     def _authored_outlines(self) -> dict[str, list[list[float]]]:
         """Region shapes the writer drew themselves. These are truth; we build around
@@ -873,6 +899,70 @@ class MapGenerator:
                         region_id=region_id, rank="town", score=0.0))
                     break
         return out
+
+    def _classify_ground(self) -> None:
+        """What grows where, and which stretches of it are places in their own right.
+
+        After the rivers, because a watercourse breaks a wood in two, and a forest that
+        spans both banks reads as a mistake even when it is technically true.
+        """
+        grid = self._grid()
+        keys = self.partition.keys
+        index_of = {key: n for n, key in enumerate(keys)}
+        owner = [[index_of.get(self.profiles[rid].name, -1) if rid else -1
+                  for rid in row] for row in self.owner]
+        by_name = {self.profiles[rid].name: self.profiles[rid]
+                   for rid in sorted(self.profiles)}
+
+        # Only regions whose terrain the writer actually described get a claim. The
+        # profile defaults an undescribed region to open country, and honouring that
+        # default as though it were their word made every unwritten region a plain
+        # regardless of its weather — the model's whole job in the gaps.
+        claims = {k: p.terrain_mix for k, p in by_name.items()
+                  if "nothing is recorded" not in p.why("terrain")}
+        self.biome = biome_module.classify(
+            grid, elevation=self.elevation, temperature=self.temperature,
+            moisture=self.moisture, sea=self.sea, owner=owner, keys=keys,
+            claims=claims, seed=self.seed, sea_level=SEA_LEVEL)
+        self.features = features_module.plan_features(
+            grid, biome=self.biome, sea=self.sea, channel=self.channel,
+            owner=owner, keys=keys)
+        notes = features_module.adopt(list(self.features.features),
+                                      self._authored_features())
+        self.features.notes.extend(notes)
+
+    def _authored_features(self) -> dict[str, tuple[str, str, tuple[int, int] | None]]:
+        """Stretches of country the writer has already named, so they are adopted."""
+        out: dict[str, tuple[str, str, tuple[int, int] | None]] = {}
+        index = self.world.geometry_index(at=self.at)
+        for entity in self.world.entities("terrain_feature"):
+            if GENERATED_TAG in entity.tags:
+                continue
+            kind = self._feature_kind_of(entity)
+            if kind is None:
+                continue
+            at = None
+            for geometry in index.get(entity.id, []):
+                if geometry.kind == "point":
+                    at = self._cell_of(float(geometry.coordinates[0]),
+                                       float(geometry.coordinates[1]))
+                    break
+            out[entity.name] = (entity.id, kind, at)
+        return out
+
+    def _feature_kind_of(self, entity) -> str | None:
+        """Which kind of country a named feature is, from its own words."""
+        from fw.core.mapgen.attributes import read_terrain
+        stated = guards.sorted_facts(
+            self.world.facts_where("feature_kind", subject_id=entity.id, at=self.at))
+        if stated and stated[-1].value in features_module.NAME_HINT:
+            return stated[-1].value
+        text = f"{entity.name} {entity.summary or ''}"
+        mix = read_terrain(text)
+        for biome_kind, feature_kind in sorted(features_module.NAMED_KINDS.items()):
+            if biome_kind in mix:
+                return feature_kind
+        return None
 
     def _build_costs(self) -> None:
         """The price of crossing every cell, worked out once.

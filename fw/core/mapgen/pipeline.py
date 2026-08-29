@@ -17,6 +17,7 @@ from __future__ import annotations
 import time
 
 from fw.core.mapgen import ledger as ledger_module
+from fw.core.mapgen import shapes
 from fw.core.mapgen.drafts import (
     FactSpec,
     FeatureDraft,
@@ -26,6 +27,7 @@ from fw.core.mapgen.drafts import (
     ShapeSpec,
     SubjectSpec,
 )
+from fw.core.mapgen.features import NAME_HINT as _FEATURE_HINT
 from fw.core.mapgen.findings import Finding, note, warn
 from fw.core.mapgen.ids import feature_id, kind_of, name_key
 from fw.core.mapgen.names import Namer
@@ -100,8 +102,7 @@ def _compute(world: World, brief: MapBrief
     timings: dict[str, int] = {}
     generator = MapGenerator(world, seed=brief.seed or None, at=brief.at)
 
-    regions = [e for e in world.entities("region")
-               if brief.at is None or e.exists_on(brief.at)]
+    regions = generator.regions_of_the_world()
     if not regions:
         return [], timings, findings
 
@@ -113,6 +114,7 @@ def _compute(world: World, brief: MapBrief
     generator._assign_cells(regions, authored)
     generator._build_fields()
     rivers = generator._trace_rivers()
+    generator._classify_ground()
     generator._build_costs()
     placements = generator._site_settlements(propose=brief.invent_settlements)
     timings["geography"] = int((time.perf_counter() - mark) * 1000)
@@ -120,10 +122,14 @@ def _compute(world: World, brief: MapBrief
     mark = time.perf_counter()
     namer = Namer.from_world(world, seed=generator.seed)
     drafts: list[FeatureDraft] = []
+    if brief.wants("coast"):
+        drafts.extend(_coast_drafts(generator))
     if brief.wants("region"):
         drafts.extend(_region_drafts(generator, authored))
     if brief.wants("range"):
         drafts.extend(_range_drafts(generator))
+    if brief.wants("natural"):
+        drafts.extend(_feature_drafts(generator))
     if brief.wants("river"):
         drafts.extend(_river_drafts(generator, rivers, namer))
     if brief.wants("settlement"):
@@ -137,6 +143,60 @@ def _compute(world: World, brief: MapBrief
 def _profile(world: World, region_id: str, at: int | None):
     from fw.core.mapgen.attributes import profile_region
     return profile_region(world, region_id, at=at)
+
+
+def _coast_drafts(generator) -> list[FeatureDraft]:
+    """The land itself, as a shape.
+
+    Without it the map is a set of region polygons and the sea shows through every gap
+    between them — and there is nothing for the biomes and relief to be painted on.
+    The mainland and each island are separate features so a writer can reject an island
+    they did not ask for without losing the continent.
+    """
+    out: list[FeatureDraft] = []
+    form = generator.landform
+    if form is None:
+        return out
+    shores = list(form.coastlines())
+    waters = list(form.inland_waters())
+    if not shores:
+        return out
+    grid = generator._grid()
+    for ordinal, ring in enumerate(shores):
+        points = shapes.closed(grid.to_world(ring))
+        area = shapes.area(ring)
+        mainland = ordinal == 0
+        out.append(FeatureDraft(
+            kind="coast" if mainland else "island",
+            key_parts=("landmass", ordinal),
+            # A terrain feature, not a region. Made a region, the landmass joins the
+            # world's regions on the next run and the whole map is laid out around its
+            # own coastline — the generator reading its own output back as source.
+            subject=SubjectSpec(mode="new", type_key="terrain_feature",
+                                tags=(GENERATED_TAG,),
+                                summary_template="The land itself, as the map found it."),
+            shapes=(
+                (ShapeSpec(role="outline", kind="polygon", coordinates=[points],
+                           layer="land", style={"fill": "#cfd3a4"}, approximate=True),)
+                # The inland waters belong to the mainland: they are holes in it, and
+                # drawing them anywhere else would leave lakes floating in the sea.
+                + (tuple(ShapeSpec(role="hole", kind="polygon",
+                                   coordinates=[shapes.closed(grid.to_world(hole))],
+                                   layer="waters", style={"fill": "#3f5b6c"},
+                                   approximate=True)
+                         for hole in waters) if mainland else ())
+            ),
+            reasons=(Reason(
+                kind="authored", weight=1.0,
+                template=("the shape your regions and their borders make"
+                          if mainland else "ground the sea cut off from the mainland")),),
+            fixed_name=generator.world.name if mainland else "",
+            name_request=None if mainland else NameRequest(
+                key=name_key("island", ("landmass",), ordinal),
+                kind="region", hint="coast"),
+            detail={"landmass": ordinal, "area": round(area, 1)},
+        ))
+    return out
 
 
 def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
@@ -213,6 +273,54 @@ def _range_drafts(generator) -> list[FeatureDraft]:
                                round(mountain.strike.vector[1], 4)],
                     "crest": round(mountain.crest, 3),
                     "elongation": round(mountain.elongation, 2)},
+        ))
+    return out
+
+
+# What a reader calls each stretch of country, and the colour it is drawn in.
+_FEATURE_STYLE = {"forest": "#6f8656", "marsh": "#8d9a72", "downs": "#bfb98c",
+                  "moor": "#a9a184", "waste": "#ddcb9a", "ice": "#dde5e8"}
+
+
+def _feature_drafts(generator) -> list[FeatureDraft]:
+    """The Wolfswood, the Neck, the Sheepshead Hills — as named polygons.
+
+    A wood the writer has already named keeps their name and their entity; the map's
+    job there is only to find the trees they were talking about and draw them.
+    """
+    out: list[FeatureDraft] = []
+    if generator.features is None:
+        return out
+    for feature in generator.features.features:
+        if not feature.rings:
+            continue
+        where = feature.region_keys[0] if feature.region_keys else "the map"
+        out.append(FeatureDraft(
+            kind="natural",
+            key_parts=(feature.kind, where, feature.centre[0], feature.centre[1]),
+            known_id=None,
+            subject=(SubjectSpec(mode="existing", type_key="terrain_feature",
+                                 entity_id=feature.entity_id)
+                     if feature.entity_id else
+                     SubjectSpec(mode="new", type_key="terrain_feature",
+                                 tags=(GENERATED_TAG,),
+                                 summary_template="Unbroken country, found by the map.")),
+            shapes=tuple(
+                ShapeSpec(role="fill", kind="polygon", coordinates=[ring],
+                          layer="features",
+                          style={"fill": _FEATURE_STYLE.get(feature.kind, "#9aa583")},
+                          approximate=True)
+                for ring in feature.rings),
+            facts=((FactSpec("feature_kind", value=feature.kind),)
+                   if not feature.entity_id else ()),
+            reasons=(Reason(kind="authored", weight=1.0, template=feature.because),),
+            name_request=(None if feature.entity_id else NameRequest(
+                key=name_key(feature.kind, (where,),
+                             feature.centre[0] * 1000 + feature.centre[1]),
+                kind="region",
+                hint=_FEATURE_HINT.get(feature.kind, ""))),
+            detail={"feature_kind": feature.kind, "area_cells": feature.area,
+                    "regions": list(feature.region_keys)},
         ))
     return out
 
@@ -424,7 +532,9 @@ def _assemble(world: World, brief: MapBrief,
     names: dict[str, str] = {}
     for draft in sorted(drafts, key=lambda d: (d.kind, str(d.key_parts))):
         fid = ids_by_key[draft.key_parts]
-        if draft.name_request is not None:
+        if draft.fixed_name:
+            names[fid] = draft.fixed_name
+        elif draft.name_request is not None:
             names[fid] = namer.name(draft.name_request.kind, draft.name_request.key,
                                     hint=draft.name_request.hint)
         elif draft.subject is not None and draft.subject.entity_id:

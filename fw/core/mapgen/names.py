@@ -59,6 +59,8 @@ MORPHEMES: dict[str, tuple[str, ...]] = {
     "delve": ("ore",), "forge": ("ore",), "mine": ("ore",),
     # regions and country
     "march": ("region", "frontier"), "reach": ("region",), "wold": ("region", "upland"),
+    "land": ("region",), "cape": ("coast", "region"), "coast": ("coast",),
+    "shire": ("region",), "mark": ("region", "frontier"),
     "weald": ("region", "forest"), "downs": ("region", "upland"),
     "fells": ("region", "upland"), "wilds": ("region",), "waste": ("region", "arid"),
     # water
@@ -120,10 +122,16 @@ def _split(name: str) -> tuple[str, str] | None:
     """Break a compound into (prefix, ending), longest ending first.
 
     "greyhaven" -> ("grey", "haven"); "red ford" -> ("red", "ford").
+
+    Plurals count. Half the names in this register are plural — Goldhills, Riverlands,
+    Barrowdowns — and a reader that only knows the singular finds no compound in them
+    at all, decides the world does not compound, and falls back to spelling names out a
+    letter at a time. That produced "The Ashwashwast".
     """
     for ending in sorted(MORPHEMES, key=len, reverse=True):
-        if name.endswith(ending) and len(name) - len(ending) >= 3:
-            return name[: -len(ending)].strip(), ending
+        for form in (ending, ending + "s"):
+            if name.endswith(form) and len(name) - len(form) >= 3:
+                return name[: -len(form)].strip(), ending
     return None
 
 

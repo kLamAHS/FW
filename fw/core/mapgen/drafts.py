@@ -135,6 +135,9 @@ class FeatureDraft:
     segments: tuple[SegmentSpec, ...] = ()
     reasons: tuple[Reason, ...] = ()
     name_request: NameRequest | None = None           # None -> keeps the subject's name
+    # A name that is already decided and not the namer's to invent — the mainland is
+    # called after the world, not after a syllable model.
+    fixed_name: str = ""
     detail: dict[str, Any] = field(default_factory=dict)
     depends_on_keys: tuple[tuple[str | int, ...], ...] = ()
     # §66 in one field: siting a place the writer already made is accepted by default;
