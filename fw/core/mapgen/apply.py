@@ -132,6 +132,7 @@ class _Writer:
             for feature in accepted:
                 self._write(feature)
             self._retire(accepted)
+            self._keep_the_ground()
             self._remember()
             if self.wrote:
                 action_id = self.world.current_action_id()
@@ -347,6 +348,23 @@ class _Writer:
             "self-check",
             f"“{name}” was generated, but you have since made it your own, so it has "
             f"been left alone rather than redrawn."))
+
+    def _keep_the_ground(self) -> None:
+        """Store the surface the accepted map was drawn from.
+
+        Written whenever anything of a plan is accepted, and not per feature: the ground
+        is not one of the things being accepted or rejected. A writer who turns off half
+        the rivers has not asked for a different continent, and a writer who accepts
+        nothing at all has not asked for one either — which is why this sits inside the
+        same transaction as the writes and behind the same "did anything happen" test.
+        """
+        terrain = self.plan.terrain
+        if terrain is None or not terrain.fields:
+            return
+        self.world.save_terrain(
+            seed=terrain.seed, size=terrain.size, span=terrain.span,
+            origin_x=terrain.origin_x, origin_y=terrain.origin_y,
+            sea_level=terrain.sea_level, fields=terrain.fields)
 
     def _remember(self) -> None:
         keep = {feature_id: answer for feature_id, answer in self.answers.items()

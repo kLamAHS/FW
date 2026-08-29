@@ -476,10 +476,18 @@ def _background(grid: Grid, *, sea: list[list[bool]], from_sea: list[list[int]],
             height = (upland
                       + ruggedness * ((HILL_RELIEF + 2.0 * rough) * hills
                                       + FINE_RELIEF * fine))
-            field[j][i] = max(
-                sea_level,
-                sea_level + (height - sea_level) * (SHORE_SHARE
-                                                    + (1.0 - SHORE_SHARE) * profile))
+            # Deliberately not clamped up to sea level. Clamping puts a plateau of
+            # ground at exactly the waterline all round the continent, and the shore is
+            # drawn as the contour at that height — so the contour runs across dead flat
+            # ground, has no gradient to follow, and snaps to whichever cells happen to
+            # round the right way. That is a coastline made of ten-pixel stairs, and it
+            # is a much more visible fault than the one the clamp was there to prevent.
+            #
+            # A cell of a region that comes out below the waterline is simply a cell of
+            # that region under water, which is a thing that happens to countries, and
+            # the shelf it stands on is continuous with the sea floor beside it.
+            field[j][i] = sea_level + (height - sea_level) * (
+                SHORE_SHARE + (1.0 - SHORE_SHARE) * profile)
     return field
 
 

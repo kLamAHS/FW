@@ -71,6 +71,7 @@ CELL = SPAN / GRID
 SEA_LEVEL = 0.0
 SHELF_CELLS = 14.0             # how far offshore the sea floor keeps falling
 SHELF_DEPTH = 0.22             # how deep it gets, in the same units as the land
+SHORE_CELLS = 4.0              # over how many cells inland the land takes over the shore
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
@@ -547,13 +548,24 @@ class MapGenerator:
         out = [row[:] for row in land]
         for j in range(GRID):
             for i in range(GRID):
-                if not self.sea[j][i]:
+                if self.sea[j][i]:
+                    reach = min(1.0, offshore[j][i] / SHELF_CELLS)
+                    out[j][i] = shore[j][i] - SHELF_DEPTH * reach * reach
                     continue
-                reach = min(1.0, offshore[j][i] / SHELF_CELLS)
-                # The continent's own field near the shore, deepening away from it. The
-                # two are blended rather than switched between, or the seam is visible
-                # as a ring of flat water a cell wide round the whole coast.
-                out[j][i] = shore[j][i] - SHELF_DEPTH * reach * reach
+                # And on the land side, the same field, faded out over the first few
+                # cells inland.
+                #
+                # Without this the two halves of the surface do not join. The relief
+                # field starts a coastal plain some way above the water — that is what a
+                # coastal plain is — so the first land cell stood a tenth of the world's
+                # whole relief above the sea cell beside it, and the shore was a cliff
+                # exactly one cell wide. A contour drawn through a one-cell cliff can
+                # only be positioned to the nearest cell, which is why the coastline came
+                # out as a staircase however finely it was rendered: the resolution was
+                # never the problem, the discontinuity was.
+                inland = min(1.0, self.from_sea[j][i] / SHORE_CELLS)
+                eased = inland * inland * (3.0 - 2.0 * inland)
+                out[j][i] = shore[j][i] + (out[j][i] - shore[j][i]) * eased
         return out
 
     def _edge_falloff(self, i: int, j: int) -> float:

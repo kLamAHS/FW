@@ -38,6 +38,7 @@ from fw.core.mapgen.plan import (
     PlannedFeature,
     PlanStats,
     Retirement,
+    Terrain,
     digest_of,
     order_features,
 )
@@ -59,7 +60,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
             "a map can only be drawn on the main timeline — this what-if inherits the "
             "map from canon, and cannot redraw it")])
 
-    drafts, stage_ms, stage_findings = _compute(world, brief)
+    drafts, stage_ms, stage_findings, terrain = _compute(world, brief)
     findings.extend(stage_findings)
     if not drafts:
         findings.append(note(
@@ -86,6 +87,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
         brief=brief,
         features=features,
         retiring=retiring,
+        terrain=terrain,
         stats=stats,
         findings=tuple(findings),
     )
@@ -94,7 +96,8 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
 # ---- the compute, still the first generator's ------------------------------
 
 def _compute(world: World, brief: MapBrief
-             ) -> tuple[list[FeatureDraft], dict[str, int], list[Finding]]:
+             ) -> tuple[list[FeatureDraft], dict[str, int], list[Finding],
+                        Terrain | None]:
     """Run the geography and collect drafts. No writes."""
     from fw.core.mapgen.generate import MapGenerator
 
@@ -104,7 +107,7 @@ def _compute(world: World, brief: MapBrief
 
     regions = generator.regions_of_the_world()
     if not regions:
-        return [], timings, findings
+        return [], timings, findings, None
 
     mark = time.perf_counter()
     generator.profiles = {
@@ -137,7 +140,30 @@ def _compute(world: World, brief: MapBrief
     if brief.wants("road"):
         drafts.extend(_road_drafts(generator, placements))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
-    return drafts, timings, findings
+    return drafts, timings, findings, _terrain_of(generator)
+
+
+def _terrain_of(generator) -> Terrain | None:
+    """The surface this plan was worked out on, to be kept if it is accepted.
+
+    Three fields and no more. Height is what the relief is lit from; cover and standing
+    water are what the ground is coloured by. Everything else the generator held — the
+    flow network, the temperature, the rock hardness — is either recoverable from these
+    or was scaffolding, and a world file is a thing a writer keeps for years.
+    """
+    from fw.core.mapgen.generate import GRID, SEA_LEVEL
+
+    if not generator.elevation or generator.vegetation is None:
+        return None
+    grid = generator._grid()
+    return Terrain(
+        seed=generator.seed, size=GRID, span=grid.span,
+        origin_x=grid.origin_x, origin_y=grid.origin_y, sea_level=SEA_LEVEL,
+        fields={
+            "elevation": generator.elevation,
+            "canopy": generator.vegetation.canopy,
+            "marsh": generator.vegetation.marsh,
+        })
 
 
 def _profile(world: World, region_id: str, at: int | None):
@@ -325,31 +351,98 @@ def _feature_drafts(generator) -> list[FeatureDraft]:
     return out
 
 
+# The widths a river is drawn at, thinnest first, and the share of its own catchment at
+# which it steps up to each. Five, because that is about as many as a reader can tell
+# apart on a printed map, and because a river that is one width for its whole length is
+# the single most obvious way a drawn map differs from a real one: the Trident is not the
+# same river at Riverrun and at the Bay.
+RIVER_WIDTHS = (1.2, 1.9, 2.8, 4.0, 5.6)
+RIVER_STEPS = (0.0, 0.06, 0.16, 0.36, 0.66)
+
+
 def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_WATER
 
+    # Measured against the biggest river on the map, not against each river's own mouth.
+    # Per-river, every river spans the same widths — a beck and a trunk are drawn
+    # identically, each thickening along its own length — which is a width that says
+    # "how far along this river are you" rather than "how much water is this". The point
+    # of drawing five widths is that a reader can tell the Trident from a tributary.
+    widest = max(
+        (max(generator.flow[j][i] for i, j in path) for path in rivers), default=1.0
+    ) or 1.0
+
     out: list[FeatureDraft] = []
     for path in rivers:
-        points = [[round(x, 1), round(y, 1)]
-                  for x, y in (generator._centre(i, j) for i, j in path)]
         mouth, source = path[-1], path[0]
+        # A running maximum, not the flow as read. The flow field shares each cell's
+        # water between all its downhill neighbours, which is what keeps the drainage
+        # from snapping to eight compass directions — but it means the figure at a cell
+        # on the traced course can be lower than the one just upstream of it, where the
+        # water took more than one way down. Read literally, a river then narrows and
+        # widens along its length like a string of sausages. Water does not leave a
+        # river, so the width does not go back down.
+        carried: list[float] = []
+        so_far = 0.0
+        for i, j in path:
+            so_far = max(so_far, generator.flow[j][i])
+            carried.append(so_far)
+        biggest = carried[-1] or 1.0
+        bands = [_band(value / widest) for value in carried]
+
+        # One shape per run of equal width, each overlapping the next by a point so the
+        # river is continuous where it steps. Emitting a shape per *segment* instead
+        # would be five times the vertices for the same picture.
+        shapes: list[ShapeSpec] = []
+        start = 0
+        for n in range(1, len(path) + 1):
+            if n < len(path) and bands[n] == bands[start]:
+                continue
+            run = path[start:min(n + 1, len(path))]
+            if len(run) >= 2:
+                shapes.append(ShapeSpec(
+                    role="spine" if start == 0 else f"reach{len(shapes)}",
+                    kind="line",
+                    coordinates=[[round(x, 1), round(y, 1)]
+                                 for x, y in (generator._centre(i, j) for i, j in run)],
+                    layer=LAYER_WATER,
+                    style={"stroke": "#4a7fa5",
+                           "stroke-width": RIVER_WIDTHS[bands[start]]},
+                    approximate=True))
+            start = n
+        if not shapes:
+            continue
+
         out.append(FeatureDraft(
             kind="river",
             key_parts=(mouth[0], mouth[1], source[0], source[1]),
             subject=SubjectSpec(
                 mode="new", type_key="waterway", tags=(GENERATED_TAG,),
                 summary_template="Traced by the map; rename it and it is yours."),
-            shapes=(ShapeSpec(role="spine", kind="line", coordinates=points,
-                              layer=LAYER_WATER, style={"stroke": "#4a7fa5"},
-                              approximate=True),),
+            shapes=tuple(shapes),
             reasons=(Reason(kind="mouth", weight=1.0,
                             template="runs from the high ground to the sea"),),
             name_request=NameRequest(
                 key=name_key("river", (str(mouth[0]), str(mouth[1]))),
                 kind="waterway", hint="river"),
-            detail={"mouth": list(mouth), "strahler": 1},
+            detail={"mouth": list(mouth), "strahler": bands[-1] + 1,
+                    "discharge": round(biggest, 1)},
         ))
     return out
+
+
+def _band(share: float) -> int:
+    """Which drawn width a stretch of river falls in, by the share of its own catchment.
+
+    Relative to the river rather than to the map, so a modest river still thickens along
+    its length instead of being drawn hairline everywhere because a bigger one exists
+    somewhere else. Discharge goes as catchment area, so the steps are spread wide at the
+    bottom: most of a river's length carries very little of its water.
+    """
+    for band in range(len(RIVER_STEPS) - 1, -1, -1):
+        if share >= RIVER_STEPS[band]:
+            return band
+    return 0
 
 
 def _known_id(world: World, placement) -> str | None:

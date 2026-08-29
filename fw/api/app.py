@@ -16,7 +16,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Response
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -535,6 +535,64 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         except PlanStale as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return report.as_dict()
+
+    @app.get("/api/map/relief.png")
+    def the_relief(scale: int = 6) -> Response:
+        """The ground itself, lit — the picture the vector map is drawn over.
+
+        Everything else this endpoint's neighbours return is geometry, and the client
+        draws geometry. Relief is not geometry: it is a height at every position, and
+        the difference between a map that reads as a physical place and one that reads
+        as a diagram is almost entirely in lighting that surface. So it comes back as an
+        image, and the client puts it underneath everything else.
+
+        Rendered from the fields the writer accepted rather than from a fresh run of the
+        generator, so the mountains do not move under the towns already standing on them
+        when a region is added. Cached on the fields' own timestamp: rendering is a
+        couple of seconds and the answer only changes when a new map is accepted.
+        """
+        world = holder.get()
+        ground = world.terrain()
+        if ground is None:
+            raise HTTPException(
+                status_code=404,
+                detail="no map has been accepted yet, so there is no ground to draw")
+
+        scale = max(2, min(14, scale))
+        stamp = (world.project_id, world.branch_id, ground["updated_at"], scale)
+        cached = getattr(app.state, "relief_cache", None)
+        if cached and cached[0] == stamp:
+            return Response(content=cached[1], media_type="image/png",
+                            headers={"Cache-Control": "no-cache"})
+
+        from fw.core.mapgen import raster, shade
+        from fw.core.mapgen.grid import Grid
+
+        fields = ground["fields"]
+        picture = shade.render(
+            Grid(size=ground["size"], span=ground["span"],
+                 origin_x=ground["origin_x"], origin_y=ground["origin_y"]),
+            elevation=fields["elevation"], seed=ground["seed"], scale=scale,
+            sea_level=ground["sea_level"], canopy=fields.get("canopy"),
+            marsh=fields.get("marsh"))
+        png = raster.encode(picture.width, picture.height, picture.pixels)
+        app.state.relief_cache = (stamp, png)
+        return Response(content=png, media_type="image/png",
+                        headers={"Cache-Control": "no-cache"})
+
+    @app.get("/api/map/relief")
+    def the_relief_bounds() -> dict[str, Any]:
+        """Where the relief image belongs on the map, and whether there is one."""
+        ground = holder.get().terrain()
+        if ground is None:
+            return {"available": False}
+        span = ground["span"]
+        return {
+            "available": True,
+            "x": ground["origin_x"], "y": ground["origin_y"],
+            "width": span, "height": span,
+            "updated_at": ground["updated_at"],
+        }
 
     @app.post("/api/map/generate")
     def generate_the_map(payload: S.GenerateMapIn) -> dict[str, Any]:

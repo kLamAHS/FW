@@ -47,6 +47,7 @@ from fw.core.model.vocabulary import (
     inverse_of,
 )
 from fw.core.store.db import Database, decode_json, encode_json, now_iso
+from fw.core.store.fields import pack_fields, unpack_fields
 
 
 class WorldError(RuntimeError):
@@ -2856,6 +2857,60 @@ class World:
         )
         wanted = {r["geometry_id"] for r in rows}
         return [g for g in self.geometries(at=at) if g.id in wanted]
+
+    # ---- the ground itself -------------------------------------------------
+
+    def save_terrain(self, *, seed: str, size: int, span: float, origin_x: float,
+                     origin_y: float, sea_level: float,
+                     fields: dict[str, list[list[float]]]) -> None:
+        """Keep the surface the accepted map was drawn from.
+
+        Everything else the map generator emits is geometry, and geometry is what the
+        browser draws. Relief is not geometry: it is a height at every position, and the
+        picture a reader recognises as a physical map is made by lighting that surface.
+        The outlines derived from it cannot be lit.
+
+        Kept rather than recomputed on demand, because the generator is a function of the
+        world and the world moves. A writer who adds a region after accepting a map would
+        otherwise find the mountains had shifted under the towns they had already placed.
+        These are the fields they accepted, and they stay until a new map is accepted.
+        """
+        blob = pack_fields(size, fields)
+        row = self.db.one(
+            "SELECT id FROM terrain WHERE project_id = ? AND branch_id = ?",
+            (self.project_id, self.branch_id))
+        columns = {
+            "seed": seed, "size": size, "span": span, "origin_x": origin_x,
+            "origin_y": origin_y, "sea_level": sea_level, "fields": blob,
+            "updated_at": now_iso(),
+        }
+        if row is None:
+            self.db.execute(
+                "INSERT INTO terrain (id, project_id, branch_id, seed, size, span, "
+                "origin_x, origin_y, sea_level, fields, updated_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (new_id(), self.project_id, self.branch_id, seed, size, span,
+                 origin_x, origin_y, sea_level, blob, columns["updated_at"]))
+        else:
+            self.db.execute(
+                "UPDATE terrain SET seed = ?, size = ?, span = ?, origin_x = ?, "
+                "origin_y = ?, sea_level = ?, fields = ?, updated_at = ? WHERE id = ?",
+                (seed, size, span, origin_x, origin_y, sea_level, blob,
+                 columns["updated_at"], row["id"]))
+
+    def terrain(self) -> dict | None:
+        """The stored surface, or None if no map has been accepted on this branch."""
+        row = self.db.one(
+            "SELECT * FROM terrain WHERE project_id = ? AND branch_id = ?",
+            (self.project_id, self.branch_id))
+        if row is None:
+            return None
+        return {
+            "seed": row["seed"], "size": row["size"], "span": row["span"],
+            "origin_x": row["origin_x"], "origin_y": row["origin_y"],
+            "sea_level": row["sea_level"], "updated_at": row["updated_at"],
+            "fields": unpack_fields(row["size"], row["fields"]),
+        }
 
     # ---- remembered decisions (§66) ---------------------------------------
 

@@ -229,6 +229,31 @@ class PlanStats:
 
 
 @dataclass(frozen=True)
+class Terrain:
+    """The surface a plan was worked out on, to be kept if the plan is accepted.
+
+    Not geometry, and so not a feature: it is a height — and a tree cover, and a
+    wetness — at every position on the lattice, and the relief a reader recognises as a
+    physical map is made by lighting that surface. The outlines derived from it cannot
+    be lit.
+
+    Outside the plan's digest, like the world-diff and for the same reason: it is a
+    consequence of the brief rather than part of the proposal, so two plans proposing
+    the same map are the same plan whatever surface each was computed on. Outside
+    `to_dict` as well — twenty thousand numbers a field is not something to send to a
+    browser that is about to ask for a picture of them instead.
+    """
+
+    seed: str
+    size: int
+    span: float
+    origin_x: float
+    origin_y: float
+    sea_level: float
+    fields: dict[str, list[list[float]]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class MapPlan:
     """A whole map, computed and not yet written."""
 
@@ -238,6 +263,7 @@ class MapPlan:
     brief: MapBrief
     features: tuple[PlannedFeature, ...] = ()
     retiring: tuple[Retirement, ...] = ()
+    terrain: Terrain | None = None
     stats: PlanStats = field(default_factory=PlanStats)
     findings: tuple[Finding, ...] = ()
     reading_fingerprint: str = ""

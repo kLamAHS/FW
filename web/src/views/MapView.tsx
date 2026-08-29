@@ -16,7 +16,7 @@
  * mapping library would spend most of its effort on machinery this world does not have.
  */
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
 import type { ApplyReport, MapDecision, MapFeature, MapPlan } from '../api'
 import { ProposalOverlay, ProposalPanel } from './map/ProposalPanel'
@@ -53,6 +53,30 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   const [report, setReport] = useState<ApplyReport | null>(null)
   const [genError, setGenError] = useState<string | null>(null)
   const [propose, setPropose] = useState(true)
+  // Where the lit ground goes, and whether there is any. The picture itself is fetched
+  // by the browser from the src below rather than through the client's data layer: it is
+  // an image, it is cached on the server, and asking for it as bytes we then have to
+  // turn into an object URL would be three extra steps to arrive at what an <image> tag
+  // does on its own.
+  const [relief, setRelief] = useState<ReliefBounds | null>(null)
+  const [showRelief, setShowRelief] = useState(true)
+
+  useEffect(() => {
+    let live = true
+    fetch('/api/map/relief')
+      .then((response) => (response.ok ? response.json() : { available: false }))
+      .then((bounds: ReliefBounds) => {
+        if (live) setRelief(bounds.available ? bounds : null)
+      })
+      .catch(() => {
+        // No ground yet is the ordinary case for a world whose map has never been
+        // accepted, not an error worth putting in front of the writer.
+        if (live) setRelief(null)
+      })
+    return () => {
+      live = false
+    }
+  }, [day, report])
   const pan = usePanZoom(1)
 
   // Propose first (§66). The map is worked out and shown; nothing is written until
@@ -114,12 +138,28 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // derived from the content rather than assumed. Without this the map floats small in a
   // mostly empty rectangle, which is precisely the "make the reader imagine it" failure
   // §70 is about.
-  const viewBox = boundsOf(visible)
+  const frame = boundsOf(
+    visible,
+    relief && showRelief
+      ? [relief.x, relief.y, relief.x + relief.width, relief.y + relief.height]
+      : null,
+  )
+  const viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`
   const holderOf = (f: MapFeature) => f.control[mode]?.[0] ?? null
   const fillFor = (f: MapFeature) => {
     const holder = holderOf(f)
     if (holder) return holderColours.get(holder.id) ?? '#7c8590'
     return (f.style.fill as string) ?? '#8a8a8a'
+  }
+  // With the ground shown, the flat fills are painted over a lit surface that already
+  // says everything they were standing in for. The land outline in particular *is* the
+  // relief's own coastline, drawn a second time as a sheet of one colour, so it goes
+  // entirely; regions keep a wash, because a border still has to be legible.
+  const groundShown = Boolean(relief && showRelief)
+  const fillOpacityFor = (f: MapFeature, selected: boolean) => {
+    if (!groundShown) return selected ? 0.55 : 0.3
+    if (f.layer === 'land') return 0
+    return selected ? 0.3 : 0.12
   }
 
   const legend = [...holderColours.entries()]
@@ -135,17 +175,35 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   return (
     <>
       <div className="map-wrap">
+        {/* Open water past the edge of the rendered ground, so the map reads as a piece
+            of a sea rather than as a photograph of a square. As the element's own
+            background rather than as a shape inside it: a rect big enough to cover the
+            pan range is a couple of thousand pixels across, and Chromium rasterises one
+            that size into a tile that lands *over* the relief however early it appears
+            in the document. A background cannot be painted over anything. */}
         <svg className="map-svg" viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
+             style={groundShown ? { background: OPEN_WATER } : undefined}
              {...pan.handlers} role="img"
              aria-label={`Map of the world on ${day}, coloured by ${mode.replace(/_/g, ' ')}`}>
           <g transform={pan.transform}>
+            {/* The ground first of all. Everything else is drawn over it, which is the
+                whole point: a coastline that is a stroke on a flat fill reads as a
+                diagram, and the same stroke over lit relief reads as a coast. */}
+            {relief && showRelief && (
+              <image
+                href={`/api/map/relief.png?scale=8&v=${encodeURIComponent(relief.updated_at)}`}
+                x={relief.x} y={relief.y} width={relief.width} height={relief.height}
+                preserveAspectRatio="none"
+                style={{ imageRendering: 'auto' }}
+              />
+            )}
             {/* polygons first, then lines, then points: painter's order */}
             {visible.filter((f) => f.kind === 'polygon').map((f) => (
               <g key={f.id}>
                 <path
                   d={polygonPath(f.coordinates as number[][][])}
                   fill={fillFor(f)}
-                  fillOpacity={selectedId === f.entity_id ? 0.55 : 0.3}
+                  fillOpacity={fillOpacityFor(f, selectedId === f.entity_id)}
                   stroke={fillFor(f)}
                   strokeWidth={selectedId === f.entity_id ? 3 : 1.5}
                   strokeDasharray={f.approximate ? '7 5' : undefined}
@@ -169,7 +227,13 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 d={linePath(f.coordinates as number[][])}
                 fill="none"
                 stroke={(f.style.stroke as string) ?? '#666'}
-                strokeWidth={f.layer === 'waterways' ? 3.5 : 2.5}
+                strokeWidth={
+                  // A river carries its own width: the generator works it out from how
+                  // much water passes, and a river drawn one width for its whole length
+                  // is one of the plainest ways a made map differs from a real one.
+                  (f.style['stroke-width'] as number | undefined)
+                  ?? (f.layer === 'waterways' ? 3.5 : 2.5)
+                }
                 strokeDasharray={f.style.dash ? '6 4' : undefined}
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -209,6 +273,16 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
 
         <div className="map-controls">
           <strong className="small">Layers</strong>
+          {relief && (
+            <label>
+              <input
+                type="checkbox"
+                checked={showRelief}
+                onChange={() => setShowRelief((on) => !on)}
+              />{' '}
+              the ground
+            </label>
+          )}
           {data.layers.map((layer) => (
             <label key={layer}>
               <input
@@ -314,10 +388,33 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   )
 }
 
+interface ReliefBounds {
+  available: boolean
+  x: number
+  y: number
+  width: number
+  height: number
+  updated_at: string
+}
+
 /** An SVG viewBox that contains every visible feature, with room for labels. */
-function boundsOf(features: MapFeature[]): string {
+/** The deep end of the relief renderer's own sea ramp, so the two meet without a seam. */
+const OPEN_WATER = '#4a6580'
+
+interface Frame {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+function boundsOf(features: MapFeature[], ground: number[] | null = null): Frame {
   const xs: number[] = []
   const ys: number[] = []
+  if (ground) {
+    xs.push(ground[0], ground[2])
+    ys.push(ground[1], ground[3])
+  }
   const walk = (node: unknown): void => {
     if (!Array.isArray(node)) return
     if (node.length === 2 && typeof node[0] === 'number' && typeof node[1] === 'number') {
@@ -328,14 +425,17 @@ function boundsOf(features: MapFeature[]): string {
     node.forEach(walk)
   }
   features.forEach((f) => walk(f.coordinates))
-  if (!xs.length) return '0 0 900 800'
+  if (!xs.length) return { x: 0, y: 0, width: 900, height: 800 }
 
   const margin = 70
-  const minX = Math.min(...xs) - margin
-  const minY = Math.min(...ys) - margin
-  const width = Math.max(...xs) - minX + margin
-  const height = Math.max(...ys) - minY + margin
-  return `${minX} ${minY} ${width} ${height}`
+  const x = Math.min(...xs) - margin
+  const y = Math.min(...ys) - margin
+  return {
+    x,
+    y,
+    width: Math.max(...xs) - x + margin,
+    height: Math.max(...ys) - y + margin,
+  }
 }
 
 function describeControl(f: MapFeature): string {
