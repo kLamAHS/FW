@@ -400,7 +400,7 @@ class TestRiversAreDrawnByTheWaterInThem:
         assert _band(1.0) == len(RIVER_WIDTHS) - 1
         assert _band(0.0) == 0
         assert _band(0.5) > _band(0.05), "a river ten times the size is drawn the same"
-        assert RIVER_WIDTHS == tuple(sorted(RIVER_WIDTHS))
+        assert list(RIVER_WIDTHS) == sorted(RIVER_WIDTHS)
 
 
 class TestProseIsReadAsWritten:

@@ -401,7 +401,11 @@ def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
             run = path[start:min(n + 1, len(path))]
             if len(run) >= 2:
                 shapes.append(ShapeSpec(
-                    role="spine" if start == 0 else f"reach{len(shapes)}",
+                    # The first reach is the river's spine and the rest are segments of
+                    # it. Roles are a closed vocabulary on purpose — the same argument as
+                    # the finding codes — so a river's reaches are named from it rather
+                    # than given a scheme of their own.
+                    role="spine" if start == 0 else "segment",
                     kind="line",
                     coordinates=[[round(x, 1), round(y, 1)]
                                  for x, y in (generator._centre(i, j) for i, j in run)],
