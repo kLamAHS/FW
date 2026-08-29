@@ -90,7 +90,9 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
     setGenError(null)
     setReport(null)
     try {
-      const proposal = await api.planMap({ invent_settlements: propose })
+      const proposal = await api.planMap({
+        invent_settlements: propose, at: day,
+      })
       setPlan(proposal)
       setAccepted(Object.fromEntries(
         proposal.features.map((f) => [f.id, f.default_accept])))

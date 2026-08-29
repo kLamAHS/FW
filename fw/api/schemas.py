@@ -335,6 +335,11 @@ class PlanMapIn(BaseModel):
     """What the writer can turn before a map is worked out."""
 
     seed: str | None = None
+    # Which year to draw. §36 makes the whole world temporal and the map is part of the
+    # world: a map of 1000 must not show a country founded in 1500. `MapBrief` has
+    # carried the date since the plan existed and this had no way to set one, so every
+    # proposal was of the present whatever the timeline said.
+    at: int | None = None
     include: list[str] | None = None
     invent_settlements: bool = False
     north: str = "up"

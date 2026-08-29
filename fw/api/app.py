@@ -539,7 +539,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
 
         brief = MG.MapBrief(
             seed=payload.seed or "",
-            at=app.state.present_day,
+            at=payload.at if payload.at is not None else app.state.present_day,
             include=tuple(payload.include) if payload.include else MG.MapBrief().include,
             invent_settlements=payload.invent_settlements,
             north=payload.north,

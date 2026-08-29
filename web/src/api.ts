@@ -803,11 +803,15 @@ export const api = {
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),
-  planMap: (options: { seed?: string | null; invent_settlements?: boolean }) =>
-    send<MapPlan>('/map/plan', 'POST', {
-      seed: options.seed ?? null,
-      invent_settlements: options.invent_settlements ?? false,
-    }),
+  planMap: (options: {
+    seed?: string | null; invent_settlements?: boolean; at?: number | null
+  }) => send<MapPlan>('/map/plan', 'POST', {
+    seed: options.seed ?? null,
+    invent_settlements: options.invent_settlements ?? false,
+    // §36: the map is part of the world and the world is temporal, so a proposal is of
+    // the year the writer is looking at rather than always of the present.
+    at: options.at ?? null,
+  }),
   applyMap: (plan: MapPlan, decisions: MapDecision[]) =>
     send<ApplyReport>('/map/apply', 'POST', { plan, decisions }),
   graph: (params?: { day?: number; categories?: string; centre?: string; hops?: number }) =>
