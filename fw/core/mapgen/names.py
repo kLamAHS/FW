@@ -285,21 +285,27 @@ class Namer:
     # ---- learning ---------------------------------------------------------
 
     @classmethod
-    def from_world(cls, world, *, seed: str = "names") -> Namer:
-        """Learn from every place name the writer has already chosen."""
+    def from_corpus(cls, corpus, *, seed: str = "names") -> Namer:
+        """Learn from every name the writer has already chosen.
+
+        `corpus` is `(type_key, name)` pairs — `WorldReading.corpus`. It used to be the
+        world itself, walked here: the last traversal in the pipeline that opened the
+        world for itself, and a stage that reads the world is a stage whose answer
+        depends on when it ran rather than only on what it was given.
+        """
         gathered: dict[str, list[str]] = {}
         articles: dict[str, int] = {}
         every: list[str] = []
         every_articles = 0
         taken: set[str] = set()
-        for entity in world.entities():
-            clean, had_article = _normalise(entity.name)
+        for type_key, name in corpus:
+            clean, had_article = _normalise(name)
             taken.add(clean)
             if len(clean) < 3:
                 continue
-            gathered.setdefault(entity.type_key, []).append(clean)
-            articles[entity.type_key] = articles.get(entity.type_key, 0) + had_article
-            if entity.type_key in PLACE_TYPES:
+            gathered.setdefault(type_key, []).append(clean)
+            articles[type_key] = articles.get(type_key, 0) + had_article
+            if type_key in PLACE_TYPES:
                 every.append(clean)
                 every_articles += had_article
         return cls(

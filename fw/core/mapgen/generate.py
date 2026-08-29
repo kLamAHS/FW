@@ -43,6 +43,7 @@ from fw.core.mapgen import (
     roads,
     settle,
     shapes,
+    source,
     territory,
     vegetation,
 )
@@ -53,10 +54,11 @@ from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
     RegionProfile,
-    profile_region,
+    profiles_from,
 )
 from fw.core.mapgen.grid import Field, Grid
 from fw.core.mapgen.layout import Site, arrange
+from fw.core.mapgen.source.reading import key_for
 from fw.core.world import World, WorldError
 
 # The canvas. Fictional worlds have no coordinate system (§34), so these are the same
@@ -216,6 +218,7 @@ class MapGenerator:
         self.resources: resources.Resources | None = None
         self.settlement: settle.Settlement | None = None
         self.holds: hold.Holds | None = None
+        self.reading: source.WorldReading | None = None
         self._outlines: dict[str, list[list[list[float]]]] = {}
         self._outlines_for: int | None = None
         self.frontiers: list[territory.Frontier] = []
@@ -244,8 +247,7 @@ class MapGenerator:
                 "few and say what they are like.")
             return self.report
 
-        self.profiles = {r.id: profile_region(self.world, r.id, at=self.at)
-                         for r in regions}
+        self.read_the_world()
         authored, rivers = self.build_the_world()
         placements = self._site_settlements(propose=propose_settlements)
         holds = self._site_castles(placements)
@@ -391,6 +393,18 @@ class MapGenerator:
             frontier = nxt
         self.inland_max = max(
             (self.from_sea[j][i] for j in range(GRID) for i in range(GRID)), default=1)
+
+    def read_the_world(self) -> None:
+        """One reading of the writer's world, before any of it is drawn.
+
+        Everything the map knows about their world comes from here now. It used to be
+        gathered six separate times — once per region for the profiles, and again in this
+        module for outlines, borders, settlements, holdings, features, populations and
+        capitals, and again in the namer, and again in the ledger — with the answer kept
+        nowhere and no two of them guaranteed to agree.
+        """
+        self.reading = source.read_world(self.world, at=self.at)
+        self.profiles = profiles_from(self.reading)
 
     def build_the_world(self) -> tuple[dict[str, list[list[float]]],
                                        list[list[tuple[int, int]]]]:
@@ -897,10 +911,10 @@ class MapGenerator:
         sources = [cell for cell in sorted(channel) if not feeds_into.get(cell)]
 
         rivers: list[list[tuple[int, int]]] = []
-        for source in sources:
-            path = [source]
-            seen = {source}
-            cursor = source
+        for head in sources:
+            path = [head]
+            seen = {head}
+            cursor = head
             for _ in range(GRID * 3):
                 step = self._downhill(*cursor)
                 if step is None or step in seen:
@@ -1140,6 +1154,30 @@ class MapGenerator:
         drawn = shapes.simplify(shapes.eased(points), ROAD_TOLERANCE)
         return [[round(x, 1), round(y, 1)] for x, y in drawn]
 
+    def _roads_the_writer_has(self, known: list[Placement]) -> list[tuple[int, int, str]]:
+        """The roads and trade routes already in the world, as pairs of places.
+
+        The Iron Road joins Greyhaven to Rennford; the Salt Run joins Blackmere to
+        Rennford. Both have been in the world as `connects` facts since it was written,
+        and the stage that lays roads has never read either — so the map drew its own
+        network beside the writer's rather than out of it.
+        """
+        if self.reading is None:
+            return []
+        where = {p.entity_id: n for n, p in enumerate(known) if p.entity_id}
+        by_key = {s.key: s.entity_id for s in self.reading.settlements if s.entity_id}
+        out: list[tuple[int, int, str]] = []
+        seen: set[tuple[int, int]] = set()
+        for route in self.reading.routes:
+            ends = [where[by_key[key]] for key in route.endpoint_keys
+                    if by_key.get(key) in where]
+            for a, b in zip(ends, ends[1:], strict=False):
+                pair = (min(a, b), max(a, b))
+                if a != b and pair not in seen:
+                    seen.add(pair)
+                    out.append((pair[0], pair[1], route.name))
+        return out
+
     def road_network(self, known: list[Placement]):
         """The bundled road network between the places handed in, worked out once.
 
@@ -1155,7 +1193,8 @@ class MapGenerator:
             self._grid(),
             places=[self._cell_of(p.x, p.y) for p in known],
             weights=[weight.get(p.rank, 1.0) for p in known],
-            cost=self.cost, sea=self.sea)
+            cost=self.cost, sea=self.sea,
+            demanded=self._roads_the_writer_has(known))
         self._network_for = key
         return self._network
 
@@ -1498,8 +1537,87 @@ class MapGenerator:
             wanted=min(hold.CEILING, max(2, len(self.profiles) * hold.PER_REGION)),
             fixed=self._castles_the_writer_drew(),
             room={rid: hold.PER_REGION for rid in sorted(self.profiles)},
-            region_of=self.owner)
+            region_of=self.owner, houses=self._halls())
         return list(self.holds.sites)
+
+    # Who can hold a castle. A guild has a hall and a company has a camp; neither holds
+    # a march. Getting this wrong put two keeps in the hands of the Ironmongers of Red
+    # Ford and left House Marr, which legally owns three of the writer's places, with
+    # none at all.
+    LANDED = ("house", "dynasty", "order", "clan", "tribe")
+
+    def political(self) -> dict[str, dict[str, object]]:
+        """Who holds each region, under each of §11's four authorities and by title.
+
+        Not from whose hall is nearest, which was the first attempt and is a different
+        question with a different answer: House Dray and House Marr are both seated at
+        Northwatch, and it is Marr that owns the Northmarch.
+
+        The four authorities are kept apart all the way to the fill. The map has to
+        choose one colour, and it chooses whoever is actually in charge — an army in the
+        streets over a steward, a steward over an absent charter — but it carries the
+        other three onto the shape, so a writer looking at a march coloured for the
+        house that runs it can still see who owns it and who is taxing it.
+        """
+        if self.reading is None:
+            return {}
+        landed = {h.key for h in self.reading.houses if h.type_key in self.LANDED}
+        named = {h.key: h.name for h in self.reading.houses}
+        out: dict[str, dict[str, object]] = {}
+        for region_id, profile in self.profiles.items():
+            region = self.reading.region(key_for("region", profile.name))
+            if region is None:
+                continue
+            held = self.reading.authority_over(region.key)
+            # A guild has a hall and a company has a camp; neither holds a march. A
+            # nearest-hall rule put two keeps in the hands of the Ironmongers of Red
+            # Ford and left House Marr, which owns three of the writer's places, none.
+            under = {word: key for word, key in
+                     (("legally_owns", held.owns), ("administers", held.administers),
+                      ("occupies", held.occupies), ("taxes", held.taxes))
+                     if key in landed}
+            chosen = (under.get("occupies") or under.get("administers")
+                      or under.get("legally_owns"))
+            title = self.reading.holder_of(region.key)
+            if chosen is None and title is None:
+                continue
+            out[region_id] = {
+                "region_key": region.key,
+                "holder_key": chosen,
+                "holder": named.get(chosen or "", ""),
+                # Which of the four this colour actually stands for, so the legend can
+                # say "as administered" rather than implying a single kind of holding.
+                "authority": next((word for word in ("occupies", "administers",
+                                                     "legally_owns")
+                                   if under.get(word) == chosen and chosen), ""),
+                "under": {word: named.get(key, "") for word, key in sorted(under.items())},
+                "claimed_by": tuple(named.get(k, k) for k in held.claims
+                                    if k not in held.held_by),
+                "title": title.name if title else "",
+                "title_holder": title.holder_name if title else "",
+                "title_holder_key": title.holder_key if title else None,
+            }
+        return out
+
+    def _landholders(self) -> dict[str, tuple[str, str]]:
+        """Whose house each region is, for the stages that only need the one answer."""
+        return {rid: (str(row["holder"]), str(row["holder_key"]))
+                for rid, row in self.political().items() if row.get("holder_key")}
+
+    def _halls(self) -> dict[tuple[int, int], tuple[str, str]]:
+        """Whose country each acre is, for the stage that puts castles on it."""
+        holders = self._landholders()
+        if not holders:
+            return {}
+        where: dict[tuple[int, int], tuple[str, str]] = {}
+        for j in range(GRID):
+            for i in range(GRID):
+                if self.sea[j][i]:
+                    continue
+                held = holders.get(self.owner[j][i] or "")
+                if held:
+                    where[(i, j)] = held
+        return where
 
     def _castles_the_writer_drew(self) -> dict[tuple[int, int], str]:
         """Cells holding a castle the writer placed themselves, which do not move."""
@@ -1543,7 +1661,13 @@ class MapGenerator:
                 style={GENERATED: GENERATOR, "rank": place.rank})
 
     def _propose_hold_name(self, place, region_id: str | None) -> str:
-        """A placeholder that says what it is and what it watches — never an invention."""
+        """A placeholder that says what it is and whose — never an invention.
+
+        With a house it can say so: an unnamed keep of House Marr is a far more useful
+        thing to be offered than an unnamed keep.
+        """
+        if getattr(place, "house", ""):
+            return f"Unnamed {place.rank} of {place.house} at the {place.watches}"
         where = self.profiles[region_id].name if region_id else "the march"
         return f"Unnamed {place.rank} at the {place.watches} ({where})"
 

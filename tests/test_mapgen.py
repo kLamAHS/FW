@@ -9,7 +9,7 @@ from fw.core.geo.routing import LAND, Router
 from fw.core.mapgen.attributes import (
     ROUTING_TERRAIN,
     TERRAIN_KINDS,
-    profile_region,
+    profiles_from,
     read_climate,
     read_terrain,
 )
@@ -25,6 +25,12 @@ from fw.core.mapgen.generate import (
 from fw.core.mapgen.territory import MAX_RING_VERTICES
 from fw.core.seed.renn import PRESENT_YEAR
 from fw.core.world import World, WorldError
+
+
+def _profiles(world: World):
+    """Every region's profile, the way the generator gets them: out of one reading."""
+    from fw.core.mapgen import source
+    return profiles_from(source.read_world(world))
 
 
 def build_world(name: str = "Ashmere") -> World:
@@ -72,7 +78,7 @@ class TestReadingWhatTheWriterWrote:
         assert read_climate("") == (None, None)
 
     def test_a_profile_says_where_every_number_came_from(self, renn: World):
-        profile = profile_region(renn, renn.entity_named("The Northmarch").id)
+        profile = _profiles(renn)[renn.entity_named("The Northmarch").id]
         assert profile.dominant == "mountain"
         assert profile.temperature < 0                      # "cold, heavy snow"
         assert "mountains and forest" in profile.why("terrain")
@@ -80,7 +86,7 @@ class TestReadingWhatTheWriterWrote:
 
     def test_an_undescribed_region_says_it_is_defaulting(self, blank: World):
         bare = blank.add_entity("region", "The Blank")
-        profile = profile_region(blank, bare.id)
+        profile = _profiles(blank)[bare.id]
         assert profile.dominant == "plain"
         assert "nothing is recorded" in profile.why("terrain")
 

@@ -183,7 +183,9 @@ class TestNothingGeneratedCarriesANumber:
 
         world = seed_renn()
         try:
-            namer = Namer.from_world(world, seed="renn")
+            namer = Namer.from_corpus(
+                sorted((e.type_key, e.name) for e in world.entities()),
+                seed="renn")
             # Far more names than the world has words for, which is what used to make
             # the counter fire.
             made = [namer.name("settlement", f"key-{n}") for n in range(120)]

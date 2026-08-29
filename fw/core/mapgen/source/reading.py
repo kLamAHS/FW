@@ -124,6 +124,14 @@ class RouteReading:
     authored_line: tuple[Point, ...] | None = None
 
 
+# §11's sharpest distinction, kept as four separate facts because they may name four
+# separate houses at once. Greyhaven, in the example world, is exactly that: House Marr
+# owns it in law, House Veyne runs it day to day, the Crown taxes it, and House Orren
+# claims it outright. A map that collapses those to one fill has thrown away the most
+# interesting thing anyone ever wrote about the town.
+AUTHORITIES = ("legally_owns", "administers", "occupies", "taxes")
+
+
 @dataclass(frozen=True)
 class HouseReading:
     key: Key
@@ -135,7 +143,56 @@ class HouseReading:
     active_region_keys: tuple[Key, ...] = ()
     liege_key: Key | None = None
     depth: int = 0                       # 0 = answers to nobody; seats placed in order
-    holds_keys: tuple[Key, ...] = ()     # legally_owns / administers
+    holds_keys: tuple[Key, ...] = ()     # legally_owns | administers, for the layout
+    owns_keys: tuple[Key, ...] = ()      # legally_owns
+    administers_keys: tuple[Key, ...] = ()
+    occupies_keys: tuple[Key, ...] = ()
+    taxes_keys: tuple[Key, ...] = ()
+    claims_keys: tuple[Key, ...] = ()    # not an authority — a dispute about one
+
+    def under(self, authority: str) -> tuple[Key, ...]:
+        return {"legally_owns": self.owns_keys,
+                "administers": self.administers_keys,
+                "occupies": self.occupies_keys,
+                "taxes": self.taxes_keys,
+                "claims": self.claims_keys}.get(authority, ())
+
+
+@dataclass(frozen=True)
+class Authority:
+    """Who holds one place, under each of the four authorities separately."""
+
+    place_key: Key
+    owns: Key | None = None
+    administers: Key | None = None
+    occupies: Key | None = None
+    taxes: Key | None = None
+    claims: tuple[Key, ...] = ()
+
+    @property
+    def effective(self) -> Key | None:
+        """Who is actually in charge, which is not always who owns it.
+
+        An army in the streets outranks a charter, and a steward who has run the place
+        for thirty years outranks an absent owner. This is the one the political fill
+        colours by; the other three are how it explains itself.
+        """
+        return self.occupies or self.administers or self.owns
+
+    @property
+    def held_by(self) -> tuple[Key, ...]:
+        return tuple(sorted({k for k in (self.owns, self.administers,
+                                         self.occupies, self.taxes) if k}))
+
+    @property
+    def layered(self) -> bool:
+        """More than one house has some authority here — the interesting case."""
+        return len(self.held_by) > 1
+
+    @property
+    def disputed(self) -> bool:
+        """Somebody claims it who does not hold it under any authority."""
+        return any(claim not in self.held_by for claim in self.claims)
 
 
 @dataclass(frozen=True)
@@ -145,6 +202,7 @@ class TitleReading:
     territory_key: Key | None
     holder_key: Key | None               # on the day asked for
     rank: int
+    holder_name: str = ""                # so a label does not have to unpick a key
 
 
 @dataclass(frozen=True)
@@ -184,6 +242,10 @@ class WorldReading:
     borders: BorderGraph | None = None
     findings: tuple[Finding, ...] = ()
     names: tuple[str, ...] = ()          # every name in the world, for the gazetteer
+    # (type_key, name) for everything the writer named, which is what the namer learns
+    # its syllables from. Kept here so the naming pass does not have to open the world
+    # again — the seventh traversal, and the last one.
+    corpus: tuple[tuple[str, str], ...] = ()
     seasons: tuple[str, ...] = ()
 
     def region(self, key: Key) -> RegionReading | None:
@@ -214,6 +276,34 @@ class WorldReading:
     def events_at(self, place: Key) -> tuple[EventReading, ...]:
         return tuple(e for e in self.events if e.place_key == place)
 
+    def authority_over(self, place: Key) -> Authority:
+        """Who holds this ground, kept as §11's four separate answers.
+
+        Iterated in the houses' own sorted order, so where two houses assert the same
+        authority over the same place the earlier name wins and does so identically on
+        every run — which is the difference between a stable map and one that changes
+        colour when a row is added.
+        """
+        found: dict[str, Key] = {}
+        claims: list[Key] = []
+        for house in self.houses:
+            for authority in AUTHORITIES:
+                if place in house.under(authority):
+                    found.setdefault(authority, house.key)
+            if place in house.claims_keys:
+                claims.append(house.key)
+        return Authority(place_key=place, owns=found.get("legally_owns"),
+                         administers=found.get("administers"),
+                         occupies=found.get("occupies"), taxes=found.get("taxes"),
+                         claims=tuple(sorted(set(claims))))
+
+    def authorities(self) -> Mapping[Key, Authority]:
+        """Every place anybody holds, so a fill can be built in one pass."""
+        places = {key for house in self.houses for authority in AUTHORITIES
+                  for key in house.under(authority)}
+        places |= {key for house in self.houses for key in house.claims_keys}
+        return {place: self.authority_over(place) for place in sorted(places)}
+
     @staticmethod
     def _first(rows, key):
         for row in rows:
@@ -241,7 +331,9 @@ class WorldReading:
         for route in self.routes:
             parts.append(f"T|{route.key}|{route.kind}|{route.endpoint_keys}")
         for house in self.houses:
-            parts.append(f"H|{house.key}|{house.seat_key}|{house.liege_key}")
+            parts.append(f"H|{house.key}|{house.seat_key}|{house.liege_key}|"
+                         f"{house.owns_keys}|{house.administers_keys}|"
+                         f"{house.occupies_keys}|{house.taxes_keys}")
         for title in self.titles:
             parts.append(f"L|{title.key}|{title.territory_key}|{title.holder_key}")
         for event in self.events:

@@ -42,6 +42,7 @@ from fw.core.mapgen.plan import (
     digest_of,
     order_features,
 )
+from fw.core.mapgen.source.reading import WorldReading
 from fw.core.world import World, WorldError
 
 
@@ -60,7 +61,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
             "a map can only be drawn on the main timeline — this what-if inherits the "
             "map from canon, and cannot redraw it")])
 
-    drafts, stage_ms, stage_findings, terrain = _compute(world, brief)
+    drafts, stage_ms, stage_findings, terrain, reading = _compute(world, brief)
     findings.extend(stage_findings)
     if not drafts:
         findings.append(note(
@@ -69,7 +70,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
             "say what they are like"))
         return _empty(world, brief, findings)
 
-    features = _assemble(world, brief, drafts)
+    features = _assemble(world, brief, drafts, reading)
     retiring = _retirements(world, brief, features)
     stats = PlanStats(
         features_by_kind=_counts(features),
@@ -82,6 +83,10 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
     )
     return MapPlan(
         plan_id=digest_of(brief, features),
+        # Declared since the plan existed and always empty until now. It is what lets a
+        # stored plan say "this is still the plan for this world" without comparing
+        # entity ids, which differ between two copies of the same world.
+        reading_fingerprint=reading.fingerprint() if reading else "",
         world_name=world.name,
         branch=world.branch_name,
         brief=brief,
@@ -97,7 +102,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
 
 def _compute(world: World, brief: MapBrief
              ) -> tuple[list[FeatureDraft], dict[str, int], list[Finding],
-                        Terrain | None]:
+                        Terrain | None, WorldReading | None]:
     """Run the geography and collect drafts. No writes."""
     from fw.core.mapgen.generate import MapGenerator
 
@@ -107,11 +112,14 @@ def _compute(world: World, brief: MapBrief
 
     regions = generator.regions_of_the_world()
     if not regions:
-        return [], timings, findings, None
+        return [], timings, findings, None, None
 
     mark = time.perf_counter()
-    generator.profiles = {
-        r.id: _profile(world, r.id, brief.at) for r in regions}
+    # One reading, and the profiles come out of it. Planning used to build its own
+    # profiles here with `profile_region` while `generate` built them from the reading,
+    # which is two answers to the same question — and the one thing a propose-then-accept
+    # split cannot survive is the proposal and the apply disagreeing about the world.
+    generator.read_the_world()
     authored, rivers = generator.build_the_world()
     placements = generator._site_settlements(propose=brief.invent_settlements)
     timings["geography"] = int((time.perf_counter() - mark) * 1000)
@@ -120,6 +128,10 @@ def _compute(world: World, brief: MapBrief
     # its fisheries with no coast, a city standing on ground that would feed a hamlet:
     # each of these is either something the writer knows and has a reason for, or
     # something they had not thought about, and both are worth one sentence.
+    # What the reading itself noticed in their prose — a port in a landlocked march, a
+    # town four houses hold at once, a battle at a place founded after it.
+    if generator.reading is not None:
+        findings.extend(generator.reading.findings)
     if generator.resources is not None:
         findings.extend(generator.resources.notes)
     if generator.vegetation is not None:
@@ -146,7 +158,7 @@ def _compute(world: World, brief: MapBrief
     if brief.wants("castle"):
         drafts.extend(_castle_drafts(generator, placements))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
-    return drafts, timings, findings, _terrain_of(generator)
+    return drafts, timings, findings, _terrain_of(generator), generator.reading
 
 
 def _terrain_of(generator) -> Terrain | None:
@@ -170,11 +182,6 @@ def _terrain_of(generator) -> Terrain | None:
             "canopy": generator.vegetation.canopy,
             "marsh": generator.vegetation.marsh,
         })
-
-
-def _profile(world: World, region_id: str, at: int | None):
-    from fw.core.mapgen.attributes import profile_region
-    return profile_region(world, region_id, at=at)
 
 
 def _coast_drafts(generator) -> list[FeatureDraft]:
@@ -234,6 +241,7 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
 def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_REGIONS, _terrain_colour
 
+    politics = generator.political()
     out: list[FeatureDraft] = []
     for region_id in sorted(generator.profiles):
         profile = generator.profiles[region_id]
@@ -242,6 +250,7 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
         ring = generator._outline(region_id)
         if ring is None:
             continue
+        held = politics.get(region_id, {})
         out.append(FeatureDraft(
             kind="region",
             key_parts=(profile.name,),
@@ -249,17 +258,58 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                                 entity_id=region_id),
             shapes=(ShapeSpec(role="outline", kind="polygon", coordinates=[ring],
                               layer=LAYER_REGIONS,
-                              style={"fill": _terrain_colour(profile.dominant)},
+                              # Two fills, not two shapes: a political map is the same
+                              # country in a different colour, so the client switches
+                              # mode rather than turning a second layer on over the
+                              # first and getting the borders twice.
+                              style={"fill": _terrain_colour(profile.dominant),
+                                     **({"holder": held["holder_key"],
+                                         "holder_name": held["holder"],
+                                         "authority": held["authority"]}
+                                        if held.get("holder_key") else {})},
                               approximate=True),),
             reasons=(Reason(kind="authored", weight=1.0,
                             template="drawn where its neighbours leave room",
                             evidence=profile.why("terrain")),
+                     *_holding_reasons(held),
                      *_frontier_reasons(generator, profile.name)),
             detail={"share": round(len(_cells_of(generator, region_id))
                                    / max(1, generator.land_cells()), 3),
-                    "dominant": profile.dominant},
+                    "dominant": profile.dominant,
+                    **({"politics": held} if held else {})},
         ))
     return out
+
+
+# How the map says who holds a place, one sentence per authority the writer named.
+# Four separate facts (§11) and four separate sentences: "held by X" over ground that X
+# owns in law but has not entered in thirty years is the map telling the writer
+# something they did not write.
+_AUTHORITY_WORDS = {
+    "legally_owns": "{who} owns it in law",
+    "administers": "{who} administers it",
+    "occupies": "{who} has soldiers in it",
+    "taxes": "{who} collects its taxes",
+}
+
+
+def _holding_reasons(held: dict) -> tuple[Reason, ...]:
+    if not held:
+        return ()
+    out = [Reason(kind="seat", weight=0.9,
+                  template=_AUTHORITY_WORDS[word].format(who=who))
+           for word, who in sorted(held.get("under", {}).items())
+           if who and word in _AUTHORITY_WORDS]
+    for claimant in held.get("claimed_by", ()):
+        out.append(Reason(kind="seat", weight=0.7,
+                          template=f"{claimant} claims it, and does not hold it"))
+    if held.get("title"):
+        holder = held.get("title_holder") or ""
+        out.append(Reason(
+            kind="seat", weight=0.8,
+            template=(f"the {held['title']} is {holder}" if holder
+                      else f"the {held['title']} is vacant")))
+    return tuple(out)
 
 
 def _frontier_reasons(generator, name: str) -> tuple[Reason, ...]:
@@ -495,6 +545,69 @@ def _settlement_key(generator, placement) -> tuple[str | int, ...]:
     return ("e", placement.name)
 
 
+# What a kind of event did to the ground it happened on. §67 asks every feature for a
+# sentence, and "the ford where the Red War was decided" is a better sentence than
+# anything the map can derive from slope and traffic — it is the writer's own.
+_EVENT_WORDS = {
+    "battle": "{name} was fought here",
+    "war": "{name} was decided here",
+    "siege": "{name} was laid here",
+    "treaty": "{name} was signed here",
+    "coronation": "{name} was held here",
+    "founding": "{name} — this is the place",
+}
+
+
+def _event_reasons(generator, entity_id: str | None) -> tuple[Reason, ...]:
+    """What the writer said happened here, as the reason the place is on the map.
+
+    `event.location_id` has been in the world since the first migration and no stage has
+    ever read it. Six events in the example world name a place, and every one of them is
+    a better account of why that place matters than a movement cost.
+    """
+    reading = getattr(generator, "reading", None)
+    if reading is None or not entity_id:
+        return ()
+    key = reading.by_entity().get(entity_id)
+    if key is None:
+        return ()
+    out: list[Reason] = []
+    for event in reading.events_at(key):
+        template = _EVENT_WORDS.get(event.kind, "{name} happened here")
+        said = template.format(name=event.name)
+        out.append(Reason(
+            kind="history",
+            # A battle here is the loudest thing that ever happened to a town, and a
+            # treaty is the second; both outrank the market that put it here.
+            weight=1.0 if event.destructive else 0.85,
+            template=f"{said}, in {event.year_text}" if event.year_text else said,
+            evidence=event.quote))
+    # Newest first — the last thing that happened to a place is what it is known for.
+    out.sort(key=lambda r: r.template, reverse=True)
+    return tuple(out[:2])
+
+
+def _founding(generator, entity_id: str | None) -> dict:
+    """When the writer said the town began, in their own calendar.
+
+    `exists_from` has been on every settlement since the seed was written and no map
+    has ever shown it. It is not a reason a place is where it is — a founding date
+    explains nothing about geography — so it goes on the feature as a fact about it,
+    which is what a reader hovering a town wants first.
+    """
+    reading = getattr(generator, "reading", None)
+    if reading is None or not entity_id:
+        return {}
+    key = reading.by_entity().get(entity_id)
+    place = reading.settlement(key) if key else None
+    if place is None or place.founded is None:
+        return {}
+    out = {"founded": place.founded}
+    if place.ended is not None:
+        out["ended"] = place.ended
+    return out
+
+
 def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
     """Every settlement the map knows about — including the ones it did not move.
 
@@ -514,8 +627,9 @@ def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
         region_name = generator.profiles[placement.region_id].name
         invented = placement.entity_id is None
         key = _settlement_key(generator, placement)
-        reasons = tuple(Reason(kind="market", weight=1.0, template=text)
-                        for text in placement.reasons[:3])
+        history = _event_reasons(generator, placement.entity_id)
+        reasons = history + tuple(Reason(kind="market", weight=1.0, template=text)
+                                  for text in placement.reasons[:3])
         if not reasons:
             # §67: every feature owes the writer a sentence, and "this is where you
             # put it" is a true and useful one.
@@ -548,7 +662,8 @@ def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
             # §66 in one flag: putting the writer's own town on the map is expected;
             # inventing a town is a suggestion they have to accept.
             default_accept=not invented,
-            detail={"rank": placement.rank, "region": region_name},
+            detail={"rank": placement.rank, "region": region_name,
+                    **_founding(generator, placement.entity_id)},
         ))
     return out
 
@@ -569,8 +684,9 @@ def _castle_drafts(generator, placements) -> list[FeatureDraft]:
         where = generator.owner[place.cell[1]][place.cell[0]]
         region_name = generator.profiles[where].name if where else ""
         x, y = generator._centre(*place.cell)
-        reasons = tuple(Reason(kind="crossing", weight=1.0, template=text)
-                        for text in place.reasons[:3])
+        reasons = (_event_reasons(generator, place.entity_id)
+                   + tuple(Reason(kind="crossing", weight=1.0, template=text)
+                           for text in place.reasons[:3]))
         if not reasons:
             reasons = (Reason(kind="authored", weight=1.0,
                               template="stands where you placed it"),)
@@ -700,10 +816,12 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
 
 # ---- drafts into a plan ----------------------------------------------------
 
-def _assemble(world: World, brief: MapBrief,
-              drafts: list[FeatureDraft]) -> tuple[PlannedFeature, ...]:
+def _assemble(world: World, brief: MapBrief, drafts: list[FeatureDraft],
+              reading=None) -> tuple[PlannedFeature, ...]:
     """Mint ids, choose names, render explanations."""
-    namer = Namer.from_world(world, seed=brief.seed or world.name)
+    namer = (Namer.from_corpus(reading.corpus, seed=brief.seed or world.name)
+             if reading is not None
+             else Namer.from_world(world, seed=brief.seed or world.name))
     ids_by_key: dict[tuple, str] = {}
     for draft in drafts:
         ids_by_key[draft.key_parts] = (

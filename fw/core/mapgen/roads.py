@@ -50,6 +50,7 @@ class Route:
     traffic: float                  # share of the kingdom's journeys using this stretch
     joins: tuple[int, int]          # indices into the settlements handed in
     because: str = ""
+    given: str = ""                 # the writer's own name for it, if it is theirs
 
     @property
     def length(self) -> int:
@@ -77,13 +78,21 @@ class Roads:
 
 
 def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float],
-               cost: Field, sea: list[list[bool]]) -> Roads:
+               cost: Field, sea: list[list[bool]],
+               demanded: list[tuple[int, int, str]] | None = None) -> Roads:
     """Join the settlements, letting each road make the next one cheaper.
 
     `weights` is how much traffic each place generates — a city sends more carts than a
     hamlet — and it decides the order roads are laid in as well as how busy they end up.
     Laying the busiest first matters: the trunk has to exist before anything can bundle
     onto it.
+
+    `demanded` are roads the writer has already told us about — their Iron Road, their
+    Salt Run, each with the name they gave it. Those are not proposals and are not
+    subject to the spanning tree; they are laid first, at the head of the queue, so that
+    everything the map works out for itself bundles onto the writer's own network rather
+    than beside it. The map has had these facts available since the world was written and
+    has never once read them.
     """
     size = grid.size
     if len(places) < 2:
@@ -91,7 +100,16 @@ def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float
 
     made = grid.filled(1.0)                    # what a cell costs, discounted as it is used
     traffic = grid.filled(0.0)
-    links = _links(places, weights, cost, grid, sea)
+    told = tuple(demanded or ())
+    named = {(min(a, b), max(a, b)): name for a, b, name in told}
+    # First in the queue, and at their own weight. Laying them first is the point — the
+    # trunk has to exist before anything can bundle onto it — but inflating the weight to
+    # achieve that also inflates the traffic they are graded on, which raised the busiest
+    # stretch on the map tenfold and left every road the generator worked out for itself
+    # below the threshold for a highway.
+    links = [(weights[a] + weights[b], a, b) for a, b, _name in told]
+    links.extend(link for link in _links(places, weights, cost, grid, sea)
+                 if (min(link[1], link[2]), max(link[1], link[2])) not in named)
 
     routes: list[Route] = []
     for weight, a, b in links:
@@ -105,7 +123,8 @@ def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float
             # carrying a single route.
             made[j][i] = MADE_ROAD
         routes.append(Route(cells=tuple(path), grade="track", traffic=weight,
-                            joins=(a, b)))
+                            joins=(a, b),
+                            given=named.get((min(a, b), max(a, b)), "")))
 
     busiest = max((max(traffic[j][i] for i in range(size)) for j in range(size)),
                   default=0.0) or 1.0
@@ -118,7 +137,9 @@ def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float
         quietest = min(traffic[j][i] for i, j in route.cells) / busiest
         joined.append(Route(cells=route.cells, grade=_grade(quietest),
                             traffic=round(quietest, 3), joins=route.joins,
-                            because=_because(quietest)))
+                            because=(f"you laid {route.given} here" if route.given
+                                     else _because(quietest)),
+                            given=route.given))
     joined.sort(key=lambda r: (-r.traffic, r.cells[0]))
     return Roads(routes=tuple(joined),
                  network=_stretches(routes, traffic, busiest), traffic=traffic)

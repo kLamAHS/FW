@@ -8,7 +8,7 @@ from fw.core.calendar.kernel import GREGORIAN
 from fw.core.geo.routing import LAND
 from fw.core.mapgen import biome as biome_module
 from fw.core.mapgen import features as features_module
-from fw.core.mapgen.attributes import ROUTING_TERRAIN, TERRAIN_KINDS, profile_region
+from fw.core.mapgen.attributes import ROUTING_TERRAIN, TERRAIN_KINDS
 from fw.core.mapgen.generate import GRID, MapGenerator
 from fw.core.mapgen.grid import Grid
 from fw.core.world import World
@@ -41,8 +41,7 @@ def world_of(regions, borders, name="Andalor") -> World:
 
 def grown(world: World, seed: str = "fixed") -> MapGenerator:
     generator = MapGenerator(world, seed=seed)
-    regions = list(world.entities("region"))
-    generator.profiles = {r.id: profile_region(world, r.id) for r in regions}
+    generator.read_the_world()
     authored = generator._authored_outlines()
     generator._build_landmass(authored)
     generator._assign_cells()

@@ -34,11 +34,12 @@ from fw.core.mapgen.attributes import (
     TERRAIN_WORDS,
     _find_word,
 )
-from fw.core.mapgen.findings import Finding, note
+from fw.core.mapgen.findings import Finding, note, ordered
 from fw.core.mapgen.source import graph as border_graph
 from fw.core.mapgen.source import scan
 from fw.core.mapgen.source.claims import Basis, Claims, Reading, known, unstated
 from fw.core.mapgen.source.reading import (
+    AUTHORITIES,
     EventReading,
     HouseReading,
     Key,
@@ -114,7 +115,7 @@ def read_world(world, *, at: int | None = None, north: str = "up") -> WorldReadi
     waters = _waters(alive, by_id, keys, out_facts, geometry)
     routes = _routes(alive, by_id, keys, out_facts, geometry)
     resources = _resources(alive, by_id, keys, out_facts, in_facts)
-    titles = _titles(world, keys, at)
+    titles = _titles(world, by_id, keys, at)
     events = _events(world, keys, at)
 
     stated = set()
@@ -136,15 +137,20 @@ def read_world(world, *, at: int | None = None, north: str = "up") -> WorldReadi
     regions = tuple(_with_shape_role(r, borders) for r in regions)
     findings.extend(_ports_without_a_coast(regions, settlements))
 
-    return WorldReading(
+    named = {r.key: r.name for r in (*regions, *settlements, *houses)}
+    reading = WorldReading(
         world_name=world.name, at=at, north=north,
         branch=getattr(world, "branch_name", "canon"),
         regions=regions, settlements=settlements, waters=waters, routes=routes,
         houses=houses, titles=titles, events=events, resources=resources,
-        borders=borders, findings=tuple(findings),
+        borders=borders,
         names=tuple(sorted(e.name for e in entities if e.name)),
-        seasons=_seasons(world),
-    )
+        corpus=tuple(sorted((e.type_key, e.name) for e in entities if e.name)),
+        seasons=_seasons(world))
+    findings.extend(_ground_two_houses_claim(reading, named))
+    findings.extend(_events_before_their_ground(settlements, events))
+
+    return WorldReading(**{**reading.__dict__, "findings": ordered(findings)})
 
 
 def _ports_without_a_coast(regions, settlements) -> list[Finding]:
@@ -171,6 +177,64 @@ def _ports_without_a_coast(regions, settlements) -> list[Finding]:
             "coast on its own, so if it has one, its terrain is the place to say so",
             subjects=(place.name, region.name),
             quotes=tuple(q for q in (place.rank.quote,) if q)))
+    return out
+
+
+def _ground_two_houses_claim(reading, named: dict) -> list[Finding]:
+    """Ground somebody claims that somebody else holds (§11).
+
+    Not an error and not corrected: a contested holding is the most interesting kind of
+    holding a writer can invent, and Greyhaven — owned by Marr in law, run by Veyne,
+    taxed by the Crown and claimed outright by Orren — is the example world's whole
+    point. What the map cannot do is paint four colours on one town, so it says which
+    one it chose and why, and shows the writer the other three.
+    """
+    out: list[Finding] = []
+    for place, authority in reading.authorities().items():
+        if not authority.disputed and not authority.layered:
+            continue
+        here = named.get(place, place)
+        holds = [f"{named.get(key, key)} {word}"
+                 for word, key in (("owns it in law", authority.owns),
+                                   ("administers it", authority.administers),
+                                   ("occupies it", authority.occupies),
+                                   ("taxes it", authority.taxes)) if key]
+        claims = [named.get(key, key) for key in authority.claims
+                  if key not in authority.held_by]
+        if claims:
+            holds.append(" and ".join(claims)
+                         + (" claims it" if len(claims) == 1 else " claim it"))
+        chosen = named.get(authority.effective or "", "nobody")
+        out.append(note(
+            "contradiction",
+            f"{here} is held four ways at once — " + "; ".join(holds)
+            + f". The map has coloured it for {chosen}, who is the one actually in "
+              "charge; the rest is on the place itself",
+            subjects=(here, *sorted(claims)),
+            quotes=tuple(holds)))
+    return out
+
+
+def _events_before_their_ground(settlements, events) -> list[Finding]:
+    """A battle at a town that had not been founded yet.
+
+    The map cannot draw the reason for a place out of a thing that had not happened, and
+    a writer moving a founding date by a century will not notice they have stranded six
+    events behind it. Both dates are quoted, because the fix is one of the two and only
+    they know which.
+    """
+    founded = {s.key: s for s in settlements if s.founded is not None}
+    out: list[Finding] = []
+    for event in events:
+        place = founded.get(event.place_key or "")
+        if place is None or event.day is None or event.day >= place.founded:
+            continue
+        out.append(note(
+            "contradiction",
+            f"{event.name} happened at {place.name}, and {place.name} was not founded "
+            f"until afterwards. The map has drawn the town and left the event off it",
+            subjects=(event.name, place.name),
+            quotes=tuple(q for q in (event.year_text,) if q)))
     return out
 
 
@@ -232,7 +296,7 @@ def _regions(world, alive, by_id, keys, out_facts, in_facts, geometry, mentions,
 def _terrain_of(entity, out_facts, mentions, findings) -> Reading:
     """What kind of country this is, from whatever the writer gave the map."""
     claims: Claims = Claims(fallback=((DEFAULT_TERRAIN, 1.0),),
-                            because="you did not say, so it is ordinary country")
+                            because="nothing is recorded about its terrain, so it is taken as open country")
     for fact in out_facts.get((entity.id, "terrain_kind"), ()):
         if fact.value in TERRAIN_KINDS:
             claims.add(((fact.value, 1.0),), Basis.TOKEN,
@@ -441,16 +505,26 @@ def _houses(alive, by_id, keys, out_facts) -> tuple[HouseReading, ...]:
                     if predicate == "based_in" and seat_region is None:
                         seat_region = keys[target.id]
                     active.append(keys[target.id])
-        holds = tuple(sorted({
-            keys[fact.object_id] for predicate in ("legally_owns", "administers")
+        held = {predicate: tuple(sorted({
+            keys[fact.object_id]
             for fact in out_facts.get((entity.id, predicate), ())
             if fact.object_id in keys}))
+            for predicate in (*AUTHORITIES, "claims")}
         rows.append(HouseReading(
             key=keys[entity.id], name=entity.name, entity_id=entity.id,
             type_key=entity.type_key, seat_key=seat, seat_region_key=seat_region,
             active_region_keys=tuple(sorted(set(active))),
             liege_key=_one_object(entity, out_facts, "vassal_of", keys),
-            holds_keys=holds))
+            # What the layout stages use — where a house has a legal or practical
+            # interest — kept as the union it always was, with the four authorities
+            # beside it for anything that needs to tell them apart.
+            holds_keys=tuple(sorted(set(held["legally_owns"])
+                                    | set(held["administers"]))),
+            owns_keys=held["legally_owns"],
+            administers_keys=held["administers"],
+            occupies_keys=held["occupies"],
+            taxes_keys=held["taxes"],
+            claims_keys=held["claims"]))
     return tuple(_with_depth(rows))
 
 
@@ -549,15 +623,17 @@ def _resources(alive, by_id, keys, out_facts, in_facts) -> tuple[ResourceReading
     return tuple(sorted(rows, key=lambda r: (r.kind, r.key)))
 
 
-def _titles(world, keys, at) -> tuple[TitleReading, ...]:
+def _titles(world, by_id, keys, at) -> tuple[TitleReading, ...]:
     """Who holds what, on the day asked for. The political map has never known."""
     rows: list[TitleReading] = []
     for title in world.titles():
         holder = world.title_holder_on(title.id, at) if at is not None else None
+        who = by_id.get(holder or "")
         rows.append(TitleReading(
             key=key_for("title", title.name), name=title.name,
             territory_key=keys.get(title.territory_id or ""),
-            holder_key=keys.get(holder or ""), rank=title.rank))
+            holder_key=keys.get(holder or ""), rank=title.rank,
+            holder_name=who.name if who else ""))
     return tuple(sorted(rows, key=lambda t: (-t.rank, t.key)))
 
 

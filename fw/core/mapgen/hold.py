@@ -97,6 +97,11 @@ class Hold:
     watches: str                          # pass | ford | harbour | road | march | seat
     reasons: tuple[str, ...] = ()
     entity_id: str | None = None          # if the writer already has one here
+    # Whose it is. The writer has said `House Marr is based_in Northwatch` since the
+    # world was written and no stage that placed a castle had ever read it, so every
+    # keep on every map belonged to nobody.
+    house: str = ""                       # the house's name, for the sentence
+    house_key: str = ""                   # its stable key, for the fact written back
 
     @property
     def invented(self) -> bool:
@@ -120,7 +125,8 @@ def plan_holds(grid: Grid, *, movement: Movement, traffic: Field,
                sea: list[list[bool]], seed: str, wanted: int,
                fixed: dict[tuple[int, int], str] | None = None,
                room: dict[str, int] | None = None,
-               region_of: list[list[str]] | None = None) -> Holds:
+               region_of: list[list[str]] | None = None,
+               houses: dict[tuple[int, int], tuple[str, str]] | None = None) -> Holds:
     """Find the places worth fortifying, and say what each one is for."""
     size = grid.size
     land = [(i, j) for j in range(size) for i in range(size) if not sea[j][i]]
@@ -136,16 +142,28 @@ def plan_holds(grid: Grid, *, movement: Movement, traffic: Field,
 
     scores = sorted(worth[j][i] for (i, j), _ in chosen)
     middling = scores[len(scores) // 2] if scores else 0.0
-    sites = [Hold(cell=cell,
-                  rank=_rank(watches.get(cell, "march"),
-                             worth[cell[1]][cell[0]], middling),
-                  score=round(worth[cell[1]][cell[0]], 3),
-                  watches=watches.get(cell, "march"),
-                  reasons=tuple(why.get(cell, ())), entity_id=entity_id)
-             for cell, entity_id in chosen]
+    seats = houses or {}
+    sites = []
+    for cell, entity_id in chosen:
+        held = seats.get(cell, ("", ""))
+        because = list(why.get(cell, ()))
+        if held[0]:
+            because.insert(0, f"in {_possessive(held[0])} country")
+        sites.append(Hold(
+            cell=cell, rank=_rank(watches.get(cell, "march"),
+                                  worth[cell[1]][cell[0]], middling),
+            score=round(worth[cell[1]][cell[0]], 3),
+            watches=watches.get(cell, "march"),
+            reasons=tuple(because), entity_id=entity_id,
+            house=held[0], house_key=held[1]))
     order = {name: n for n, name in enumerate(RANKS)}
     sites.sort(key=lambda h: (order.get(h.rank, 99), -h.score, h.cell))
     return Holds(sites=tuple(sites), worth=worth)
+
+
+def _possessive(name: str) -> str:
+    """House Marr's country, but the Grey Spears' country."""
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
 
 
 def _worth(grid: Grid, *, movement: Movement, traffic: Field,

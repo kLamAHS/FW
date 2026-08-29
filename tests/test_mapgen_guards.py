@@ -223,3 +223,95 @@ class TestRememberedDecisions:
         fork.remember("mapgen", "riv_abc", "the what-if says no")
         assert world.recall("mapgen", "riv_abc") == "canon says yes"
         assert fork.recall("mapgen", "riv_abc") == "the what-if says no"
+
+
+# Where the world is allowed to be touched: the reader that turns it into a
+# `WorldReading`, the two modules that write a map back, the orchestrator, the ledger
+# that reads provenance and the store of remembered decisions. Everything else is a
+# stage, and a stage that reads the world is a stage whose output depends on when it
+# ran and what else had been written by then — which is exactly what made the same
+# world generate a different map on the second press.
+MAY_TOUCH_THE_WORLD = {
+    "read.py",        # source/: the one reading, which is the point of the rule
+    "generate.py", "apply.py", "pipeline.py", "decide.py", "ledger.py",
+}
+
+
+class TestOnlyOneReadingOfTheWorld:
+    """C2's rule, enforced rather than meant.
+
+    The generator used to read the world six times per plan — once per region for the
+    profiles, again for authored outlines, again for the writer's own settlements,
+    again for holdings and features and capitals, again in the namer, again in the
+    ledger — and no two of those readings were guaranteed to agree with each other.
+    """
+
+    def test_no_stage_imports_the_world(self):
+        offences: list[str] = []
+        for path in modules():
+            if path.name in MAY_TOUCH_THE_WORLD:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module == "fw.core.world":
+                    offences.append(f"{path.name}:{node.lineno}")
+                elif isinstance(node, ast.Import):
+                    offences.extend(f"{path.name}:{node.lineno}" for a in node.names
+                                    if a.name.startswith("fw.core.world"))
+        assert not offences, ("a stage reads the world instead of the reading: "
+                             + ", ".join(offences))
+
+    def test_no_stage_calls_a_method_on_a_world(self):
+        """Catches the duck-typed route the import check cannot see."""
+        offences: list[str] = []
+        for path in modules():
+            if path.name in MAY_TOUCH_THE_WORLD:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute)
+                        and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "world"):
+                    offences.append(f"{path.name}:{node.lineno} "
+                                    f"world.{node.func.attr}()")
+        assert not offences, ", ".join(offences)
+
+    def test_a_plan_reads_the_world_once(self):
+        """Not "few times". Once — and the count is the assertion."""
+        from fw.core.mapgen import source
+        from fw.core.mapgen.pipeline import plan_map
+        from fw.core.seed.renn import seed_renn
+
+        world = seed_renn()
+        try:
+            calls: list[int] = []
+            real = source.read_world
+
+            def counted(*args, **kw):
+                calls.append(1)
+                return real(*args, **kw)
+
+            source.read_world = counted
+            try:
+                import fw.core.mapgen.generate as generate_module
+                generate_module.source.read_world = counted
+                plan_map(world)
+            finally:
+                source.read_world = real
+                generate_module.source.read_world = real
+            assert len(calls) == 1, f"the world was read {len(calls)} times"
+        finally:
+            world.close()
+
+    def test_the_plan_records_which_world_it_was_read_from(self):
+        """`reading_fingerprint` was declared when the plan was and always empty."""
+        from fw.core.mapgen.pipeline import plan_map
+        from fw.core.seed.renn import seed_renn
+
+        world = seed_renn()
+        try:
+            plan = plan_map(world)
+            assert len(plan.reading_fingerprint) == 32
+        finally:
+            world.close()
