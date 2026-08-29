@@ -35,8 +35,13 @@ from fw.core.mapgen import (
     coast,
     erode,
     guards,
+    movement,
     noise,
     relief,
+    resources,
+    roads,
+    settle,
+    shapes,
     territory,
     vegetation,
 )
@@ -74,7 +79,9 @@ SHELF_DEPTH = 0.22             # how deep it gets, in the same units as the land
 SHORE_CELLS = 4.0              # over how many cells inland the land takes over the shore
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
+ROAD_TOLERANCE = 0.6           # how far a drawn road may cut a corner, in leagues
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
+                               # (kept by settle.TIERS, which spaces every rank wider)
 
 # Marks every shape this module writes, so a regenerate can find its own work and leave
 # the writer's alone. The client passes unknown style keys through untouched.
@@ -87,10 +94,24 @@ LAYER_WATER = "waterways"
 LAYER_SETTLEMENTS = "settlements"
 LAYER_ROADS = "roads"
 
-# How much slower a league of each terrain is to cross, for road costing.
-TRAVEL_COST = {"ocean": 9.0, "marsh": 3.4, "mountain": 4.2, "glacier": 5.0,
-               "highland": 2.4, "hills": 1.8, "forest": 1.6, "desert": 2.0,
-               "steppe": 1.2, "coast": 1.1, "plain": 1.0, "farmland": 1.0}
+# How many sites the map offers beyond the settlements the writer has already named.
+PROPOSAL_HEADROOM = 8
+
+# The writer's own words for what a region has, mapped onto the fields the map keeps.
+# Deliberately narrow: a word not in here claims nothing, which is better than guessing
+# that "amber" means ore and putting a mine in a forest.
+RESOURCE_WORDS = {
+    "grain": "arable", "wheat": "arable", "corn": "arable", "barley": "arable",
+    "farmland": "arable", "farms": "arable", "crops": "arable", "orchards": "arable",
+    "cattle": "pasture", "sheep": "pasture", "wool": "pasture", "horses": "pasture",
+    "herds": "pasture", "pasture": "pasture", "grazing": "pasture",
+    "timber": "timber", "wood": "timber", "lumber": "timber", "forest": "timber",
+    "stone": "stone", "quarry": "stone", "quarries": "stone", "marble": "stone",
+    "slate": "stone", "granite": "stone",
+    "iron": "ore", "ore": "ore", "silver": "ore", "gold": "ore", "copper": "ore",
+    "tin": "ore", "lead": "ore", "mines": "ore", "mining": "ore",
+    "fish": "fish", "fishing": "fish", "fisheries": "fish", "whaling": "fish",
+}
 
 
 def _is_generated(geometry) -> bool:
@@ -171,7 +192,6 @@ class MapGenerator:
         self.sea: list[list[bool]] = []
         self.flow: list[list[float]] = []
         self.channel: set[tuple[int, int]] = set()
-        self.river_threshold: float = 0.0
         self.from_sea: list[list[int]] = []
         self.inland_max: int = 1
         self.authored_cells: dict[str, set[tuple[int, int]]] = {}
@@ -179,6 +199,11 @@ class MapGenerator:
         self.relief: relief.Relief | None = None
         self.erosion: erode.Erosion | None = None
         self.vegetation: vegetation.Vegetation | None = None
+        self.movement: movement.Movement | None = None
+        self.resources: resources.Resources | None = None
+        self.settlement: settle.Settlement | None = None
+        self._network: roads.Roads | None = None
+        self._network_for: tuple | None = None
         self.uplift: Field = []
         self.climate: climate.Climate | None = None
         self.biome: biome_module.BiomeField | None = None
@@ -210,6 +235,7 @@ class MapGenerator:
         self._build_fields()
         rivers = self._trace_rivers()
         self._classify_ground()
+        self._build_civilisation()
         self._build_costs()
         placements = self._site_settlements(propose=propose_settlements)
 
@@ -524,6 +550,147 @@ class MapGenerator:
                     if "forest" in p.terrain_mix},
             seed=self.seed, sea_level=SEA_LEVEL)
 
+    def _build_civilisation(self) -> None:
+        """What the ground offers, how hard it is to cross, and where that puts people.
+
+        In that order, and the order is the point. A town is not where the ground is
+        nicest — it is where a river has to be crossed and can be here, or where the
+        only pass over a range comes down, or where a bay will hold ships. So the
+        crossings have to exist before anybody is placed at one, and the resources
+        before anybody is fed by them.
+
+        None of this used to be true. Travel cost was looked up from the terrain of
+        whichever region owned a cell, so a road would cross a marsh sooner than a dry
+        hillside next to it; resources were a list on a region page, so every acre of a
+        march was equally irony and nothing could be sited *near* the iron because there
+        was no near; and settlements were scored per region against a quota, so a march
+        with a great harbour and one with none got the same number of ports.
+        """
+        assert self.erosion is not None and self.vegetation is not None
+        grid = self._grid()
+        keys = self.partition.keys
+        index_of = {key: n for n, key in enumerate(keys)}
+        owner = [[index_of.get(self.profiles[rid].name, -1) if rid else -1
+                  for rid in row] for row in self.owner]
+
+        self.movement = movement.plan_movement(
+            grid, elevation=self.elevation, slope=self.erosion.slope,
+            flow=self.erosion.flow, canopy=self.vegetation.canopy,
+            marsh=self.vegetation.marsh, downstream=self.erosion.downstream,
+            sea=self.sea, sea_level=SEA_LEVEL)
+
+        self.resources = resources.plan_resources(
+            grid, elevation=self.elevation, slope=self.erosion.slope,
+            soil=self.erosion.settled, water_table=self.vegetation.water_table,
+            moisture=self.moisture, temperature=self.temperature,
+            canopy=self.vegetation.canopy, marsh=self.vegetation.marsh,
+            sea=self.sea, owner=owner, keys=keys,
+            claimed=self._claimed_resources(), seed=self.seed, sea_level=SEA_LEVEL)
+
+        self.settlement = settle.plan_settlement(
+            grid, resources=self.resources, movement=self.movement,
+            elevation=self.elevation, slope=self.erosion.slope,
+            flow=self.erosion.flow, marsh=self.vegetation.marsh, sea=self.sea,
+            seed=self.seed, wanted=self._settlements_the_world_implies(),
+            fixed=self._settlements_the_writer_drew(),
+            room=self._room_per_region(),
+            region_of=self.owner, words=self._resource_words(),
+            seafaring={rid for rid in sorted(self.profiles)
+                       if self.profiles[rid].coastal},
+            sea_level=SEA_LEVEL)
+
+    def _settlements_the_world_implies(self) -> int:
+        """How many places there are to live, before anybody asks who lives in them.
+
+        The sum of what each region's people and land imply, with room on top: the map
+        offers more sites than the writer has named towns, and the surplus is what it
+        proposes. Capped, because a proposal the writer has to turn down forty times is
+        not a proposal, it is a chore.
+        """
+        wanted = sum(self._settlements_wanted(self.profiles[rid])
+                     for rid in sorted(self.profiles))
+        return max(6, min(48, wanted + PROPOSAL_HEADROOM))
+
+    def _room_per_region(self) -> dict[str, int]:
+        """The budget, shared out, so that every region's share adds up to the whole.
+
+        The two numbers have to agree, and for a while they did not. The tiers are cut
+        from the *total* — a tenth of it are cities, a quarter towns — while the choosing
+        may only put a settlement where its region still has room, and the rooms were the
+        regions' own base figures with none of the headroom in them. So a world wanting
+        eighteen places had ten to give: the city tier went looking for its one city with
+        the rooms already spent on the writer's own towns, found nowhere it was allowed to
+        put one, and the villages and hamlets never ran at all. Eleven towns and two
+        hamlets came out, which is not a hierarchy — it is a list.
+
+        Sharing the headroom out in proportion, largest first so the arithmetic is stable
+        and the remainder falls to the biggest country, makes the rooms sum to the budget
+        and lets every tier reach the ground.
+        """
+        base = {rid: self._settlements_wanted(self.profiles[rid])
+                for rid in sorted(self.profiles)}
+        if not base:
+            return {}
+        total = sum(base.values()) or 1
+        spare = max(0, self._settlements_the_world_implies() - sum(base.values()))
+        order = sorted(base, key=lambda rid: (-base[rid], rid))
+        out = dict(base)
+        given = 0
+        for rid in order[1:]:
+            share = spare * base[rid] // total
+            out[rid] += share
+            given += share
+        out[order[0]] += spare - given          # the remainder, to the largest region
+        return out
+
+    def _settlements_the_writer_drew(self) -> dict[tuple[int, int], str]:
+        """Cells holding a settlement the writer placed themselves, which do not move."""
+        index = self.world.geometry_index(at=self.at, layer=LAYER_SETTLEMENTS)
+        out: dict[tuple[int, int], str] = {}
+        for region_id in sorted(self.profiles):
+            for entity_id in self.profiles[region_id].settlements:
+                for geometry in index.get(entity_id, []):
+                    if (geometry.style or {}).get(GENERATED):
+                        continue
+                    place = geometry.coordinates
+                    cell = self._cell_of(float(place[0]), float(place[1]))
+                    if not self.sea[cell[1]][cell[0]]:
+                        out[cell] = entity_id
+        return out
+
+    def _resource_words(self) -> dict[str, dict[str, str]]:
+        """Each region's own word for what it has, keyed by the field it maps onto.
+
+        So an explanation can say "iron close at hand" to a writer who wrote iron,
+        rather than "ore in the hills nearby" — which is the same fact in a vocabulary
+        they did not choose.
+        """
+        out: dict[str, dict[str, str]] = {}
+        for region_id in sorted(self.profiles):
+            said: dict[str, str] = {}
+            for named in self.profiles[region_id].resources:
+                word = named.strip().lower()
+                kind = RESOURCE_WORDS.get(word)
+                if kind and kind not in said:
+                    said[kind] = word
+            if said:
+                out[region_id] = said
+        return out
+
+    def _claimed_resources(self) -> dict[str, dict[str, float]]:
+        """What the writer said each region has, in the vocabulary the fields use."""
+        wanted: dict[str, dict[str, float]] = {}
+        for region_id in sorted(self.profiles):
+            profile = self.profiles[region_id]
+            asked: dict[str, float] = {}
+            for named in profile.resources:
+                kind = RESOURCE_WORDS.get(named.strip().lower())
+                if kind:
+                    asked[kind] = max(asked.get(kind, 0.0), 0.55)
+            if asked:
+                wanted[profile.name] = asked
+        return wanted
+
     def _with_bathymetry(self, land: Field) -> Field:
         """One continuous surface, sea floor included — not a height plus a mask.
 
@@ -619,7 +786,6 @@ class MapGenerator:
 
         channel = {(i, j) for i, j in land if self.flow[j][i] >= threshold}
         self.channel = channel
-        self.river_threshold = threshold
 
         # A source is a channel cell with no channel cell draining into it.
         feeds_into: dict[tuple[int, int], list[tuple[int, int]]] = {}
@@ -652,17 +818,22 @@ class MapGenerator:
     # ---- settlements ------------------------------------------------------
 
     def _site_settlements(self, *, propose: bool) -> list[Placement]:
-        """Place the writer's settlements well, then suggest the ones a land implies."""
-        placements: list[Placement] = []
-        taken: list[tuple[float, float]] = []
+        """Place the writer's settlements well, then suggest the ones the land implies.
 
+        The sites themselves come from `settle`, which chose them for reasons the ground
+        supplies — a ford, a pass, an anchorage, country enough to feed a market. What is
+        left here is deciding who lives at each: the writer's own towns take the best of
+        them inside their own region, biggest first, which is how they came to be the
+        biggest; anything still standing empty is offered as a proposal.
+        """
+        assert self.settlement is not None
         index = self.world.geometry_index(at=self.at, layer=LAYER_SETTLEMENTS)
+        placements: list[Placement] = []
+        spare = [site for site in self.settlement.sites if site.entity_id is None]
+        used: set[tuple[int, int]] = set()
+
         for region_id in sorted(self.profiles):
             profile = self.profiles[region_id]
-            candidates = self._score_region(region_id)
-            if not candidates:
-                continue
-
             existing = [self.world.get_entity(sid) for sid in profile.settlements]
             existing = [e for e in existing if e is not None]
             # Biggest first: the capital and the cities get the best ground, which is
@@ -673,27 +844,98 @@ class MapGenerator:
                 authored = [g for g in index.get(entity.id, [])
                             if not (g.style or {}).get(GENERATED)]
                 if authored:
-                    place = authored[0].coordinates
-                    taken.append((float(place[0]), float(place[1])))
                     continue          # the writer put it there; leave it alone (§66)
-                spot = self._take_best(candidates, taken)
-                if spot is None:
+                site = self._best_site_in(region_id, spare, used)
+                if site is None:
                     break
-                placements.append(self._placement(
-                    entity.id, entity.name, spot, region_id, proposed=False))
-                taken.append((placements[-1].x, placements[-1].y))
+                used.add(site.cell)
+                placements.append(self._placement_at(
+                    site, entity.id, entity.name, region_id, proposed=False))
 
-            if propose:
-                wanted = self._settlements_wanted(profile) - len(existing)
-                for n in range(max(0, wanted)):
-                    spot = self._take_best(candidates, taken)
-                    if spot is None:
-                        break
-                    name = self._propose_name(profile, n)
-                    placements.append(self._placement(
-                        None, name, spot, region_id, proposed=True))
-                    taken.append((placements[-1].x, placements[-1].y))
+        if propose:
+            # The sites were already shared out per region when they were chosen — see
+            # the `room` argument to `plan_settlement` — so what is left here is simply
+            # offering the ones nobody named.
+            for site in spare:
+                if site.cell in used:
+                    continue
+                region_id = self.owner[site.cell[1]][site.cell[0]]
+                if not region_id:
+                    continue
+                used.add(site.cell)
+                placements.append(self._placement_at(
+                    site, None,
+                    self._propose_name(self.profiles[region_id], len(placements)),
+                    region_id, proposed=True))
         return placements
+
+    def settlement_findings(self) -> list:
+        """Where the writer's own towns and the ground under them disagree.
+
+        Not a correction — their town is where they put it and stays there. But a city
+        standing on ground the map reckons would feed a hamlet is worth one sentence,
+        because it is usually either a thing the writer knows (it lives on trade, or
+        tribute, or it is a fortress) or a thing they had not thought about.
+        """
+        from fw.core.mapgen.findings import note
+
+        assert self.settlement is not None
+        order = {name: n for n, (name, _, _, _) in enumerate(settle.TIERS)}
+        out = []
+        for site in self.settlement.sites:
+            if not site.entity_id:
+                continue
+            entity = self.world.get_entity(site.entity_id)
+            people = self._population_of(site.entity_id)
+            if entity is None or not people:
+                continue
+            said = self._rank_for_population(people)
+            if order.get(site.rank, 9) - order.get(said, 9) < 2:
+                continue
+            out.append(note(
+                "scale",
+                f"{entity.name} has {people:,} people, and the country within a day of "
+                f"it would feed something nearer a {site.rank}. Nothing has been moved — "
+                "if it lives on trade or tribute or is there to hold a pass, that is "
+                "worth writing down somewhere",
+                subjects=(entity.name,)))
+        return out
+
+    def _best_site_in(self, region_id: str, spare, used: set):
+        """The best unclaimed site inside a region, or None if it has run out."""
+        for site in spare:
+            if site.cell in used:
+                continue
+            if self.owner[site.cell[1]][site.cell[0]] == region_id:
+                return site
+        return None
+
+    def _placement_at(self, site, entity_id, name: str, region_id: str, *,
+                      proposed: bool) -> Placement:
+        i, j = site.cell
+        x, y = self._centre(i, j)
+        # Nudge off the exact cell centre, stably, so a map does not look like a grid.
+        x += noise.jitter(self.seed, f"px:{name}:{i}:{j}", CELL * 0.35)
+        y += noise.jitter(self.seed, f"py:{name}:{i}:{j}", CELL * 0.35)
+        # What the writer said about how big a place is beats what the map worked out,
+        # and where they said nothing the map's own reading stands.
+        stated = self._population_of(entity_id) if entity_id else 0
+        rank = self._rank_for_population(stated) if stated else site.rank
+        return Placement(
+            entity_id=entity_id, name=name,
+            x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
+            y=round(max(MARGIN, min(SPAN - MARGIN, y)), 1),
+            region_id=region_id, rank=rank, score=round(site.score, 3),
+            reasons=list(site.reasons), proposed=proposed,
+        )
+
+    @staticmethod
+    def _rank_for_population(people: int) -> str:
+        if people >= 20000:
+            return "city"
+        if people >= 4000:
+            return "town"
+        return "village"
 
     def _settlements_wanted(self, profile: RegionProfile) -> int:
         """How many settlements a region's people and land imply.
@@ -707,101 +949,6 @@ class MapGenerator:
         hardship = {"mountain": 0.5, "glacier": 0.3, "desert": 0.4, "marsh": 0.6,
                     "highland": 0.7, "hills": 0.85}.get(profile.dominant, 1.0)
         return max(1, min(8, round(base * hardship)))
-
-    def _score_region(self, region_id: str) -> list[tuple[float, int, int, list[str]]]:
-        """Every cell of a region, scored for how good a place it is to live."""
-        profile = self.profiles[region_id]
-        inside_only = self.authored_cells.get(region_id)
-        resource_note = (f"{profile.resources[0].lower()} close at hand"
-                         if profile.resources else None)
-        out = []
-        for j in range(GRID):
-            for i in range(GRID):
-                if self.owner[j][i] != region_id or self.sea[j][i]:
-                    continue
-                # A region grows a hinterland so the land is continuous, but a town
-                # belonging to it must stand inside the border the writer actually
-                # drew — otherwise the map labels a place for a region it is not in.
-                if inside_only is not None and (i, j) not in inside_only:
-                    continue
-                score = 0.0
-                why: list[str] = []
-
-                if (i, j) in self.channel:
-                    feeders = sum(
-                        1 for dj in (-1, 0, 1) for di in (-1, 0, 1)
-                        if (di or dj) and (i + di, j + dj) in self.channel
-                        and 0 <= i + di < GRID and 0 <= j + dj < GRID
-                        and self._downhill(i + di, j + dj) == (i, j))
-                    score += 3.0 if feeders >= 2 else 2.2
-                    why.append("where two rivers meet" if feeders >= 2
-                               else "on a river")
-                elif self.flow[j][i] >= self.river_threshold * 0.3:
-                    score += 1.0
-                    why.append("beside fresh water")
-
-                # Only where the writer's own description reaches the sea. Generated
-                # geography must not overrule authored intent (§66): a region called a
-                # river plain does not get a port because the lattice put water nearby.
-                if profile.coastal and self._touches_sea(i, j):
-                    score += 2.6
-                    why.append("with a harbour")
-
-                arable = self.moisture[j][i] * (1.0 - self.elevation[j][i])
-                score += arable * 2.2
-                if arable > 0.45:
-                    why.append("good ground for grain")
-
-                relief = self._relief(i, j)
-                if relief > 0.16:
-                    score += 1.3
-                    why.append("high enough to defend")
-                elif self.elevation[j][i] > 0.75:
-                    score -= 1.4          # liveable, but nobody builds a city on a peak
-
-                if resource_note and profile.resources:
-                    score += 0.8
-                    why.append(resource_note)
-
-                # A stable nudge so equally good ground does not tie forever, and so
-                # towns do not land on a lattice.
-                score += noise.unit(self.seed, i, j) * 0.35
-                out.append((score, i, j, why))
-        out.sort(key=lambda c: (-c[0], c[1], c[2]))
-        return out
-
-    def _take_best(self, candidates, taken) -> tuple[float, int, int, list[str]] | None:
-        """The best remaining cell that is not crowding somewhere already chosen."""
-        for entry in candidates:
-            _, i, j, _ = entry
-            x, y = self._centre(i, j)
-            if all(math.dist((x, y), spot) >= MIN_SPACING_CELLS * CELL
-                   for spot in taken):
-                candidates.remove(entry)
-                return entry
-        return None
-
-    def _placement(self, entity_id, name, spot, region_id, *, proposed) -> Placement:
-        score, i, j, why = spot
-        x, y = self._centre(i, j)
-        # Nudge off the exact cell centre, stably, so a map does not look like a grid.
-        x += noise.jitter(self.seed, f"px:{name}:{i}:{j}", CELL * 0.35)
-        y += noise.jitter(self.seed, f"py:{name}:{i}:{j}", CELL * 0.35)
-        return Placement(
-            entity_id=entity_id, name=name,
-            x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
-            y=round(max(MARGIN, min(SPAN - MARGIN, y)), 1),
-            region_id=region_id, rank=self._rank_for(score), score=round(score, 3),
-            reasons=why, proposed=proposed,
-        )
-
-    @staticmethod
-    def _rank_for(score: float) -> str:
-        if score >= 6.0:
-            return "city"
-        if score >= 4.0:
-            return "town"
-        return "village"
 
     def _propose_name(self, profile: RegionProfile, n: int) -> str:
         """A placeholder name that says what it is and where — never a fake invention.
@@ -827,13 +974,11 @@ class MapGenerator:
         # ground either end sits on. Only the roads actually chosen are then routed
         # properly, so the expensive part runs n-1 times rather than n²/2.
         laid = 0
-        for a, b in self._road_edges(known):
+        for route in self.road_network(known).routes:
+            a, b = route.joins
             p, q = known[a], known[b]
-            path = self._route(self._cell_of(p.x, p.y), self._cell_of(q.x, q.y))
-            points = [[p.x, p.y]] + [[round(x, 1), round(y, 1)]
-                                     for x, y in (self._centre(i, j)
-                                                  for i, j in path[1:-1])]
-            points.append([q.x, q.y])
+            path = list(route.cells)
+            points = self._road_line(p, path, q)
             self.world.add_geometry(
                 self._road_entity(), "line", points, layer=LAYER_ROADS,
                 style={"stroke": "#8a7550", GENERATED: GENERATOR})
@@ -846,38 +991,41 @@ class MapGenerator:
             laid += 1
         self.report.roads = laid
 
-    def _road_edges(self, known: list[Placement]) -> list[tuple[int, int]]:
-        """Which pairs of places to join: a minimum spanning tree on a cheap estimate.
+    def _road_line(self, start: Placement, path: list[tuple[int, int]],
+                   end: Placement) -> list[list[float]]:
+        """A route's cells, as a line somebody could have drawn.
 
-        Distance weighted by the ground either end sits on. Only the roads actually
-        chosen are then routed properly, so the expensive part runs n-1 times rather
-        than n squared over two — which is the difference between 160ms and a second.
+        The cells come from a search over a lattice of a hundred and forty-four squares,
+        so a road across level country arrives as fourteen steps due south and then
+        eleven due east. Cutting the corners takes the staircase off it, and simplifying
+        afterwards throws away the points that cutting added to the stretches that were
+        genuinely straight — so the smoothed road reaches the client with rather fewer
+        vertices than the raw one, not four times as many.
         """
-        edges = []
-        for a in range(len(known)):
-            for b in range(a + 1, len(known)):
-                p, q = known[a], known[b]
-                terrain = max(TRAVEL_COST.get(self.profiles[p.region_id].dominant, 1.4),
-                              TRAVEL_COST.get(self.profiles[q.region_id].dominant, 1.4))
-                edges.append((math.dist((p.x, p.y), (q.x, q.y)) * terrain, a, b))
-        edges.sort()
+        points: list[tuple[float, float]] = [(start.x, start.y)]
+        points.extend(self._centre(i, j) for i, j in path[1:-1])
+        points.append((end.x, end.y))
+        drawn = shapes.simplify(shapes.eased(points), ROAD_TOLERANCE)
+        return [[round(x, 1), round(y, 1)] for x, y in drawn]
 
-        parent = list(range(len(known)))
+    def road_network(self, known: list[Placement]):
+        """The bundled road network between the places handed in, worked out once.
 
-        def find(n: int) -> int:
-            while parent[n] != n:
-                parent[n] = parent[parent[n]]
-                n = parent[n]
-            return n
-
-        chosen: list[tuple[int, int]] = []
-        for _cost, a, b in edges:
-            ra, rb = find(a), find(b)
-            if ra == rb:
-                continue
-            parent[ra] = rb
-            chosen.append((a, b))
-        return chosen
+        Cached on the list it was asked about, because the plan path asks for it and
+        then asks again per draft, and laying the whole network twice is the most
+        expensive thing in the stage.
+        """
+        key = tuple((p.x, p.y, p.rank) for p in known)
+        if getattr(self, "_network_for", None) == key:
+            return self._network
+        weight = {"city": 5.0, "town": 3.0, "village": 1.6, "hamlet": 1.0}
+        self._network = roads.plan_roads(
+            self._grid(),
+            places=[self._cell_of(p.x, p.y) for p in known],
+            weights=[weight.get(p.rank, 1.0) for p in known],
+            cost=self.cost, sea=self.sea)
+        self._network_for = key
+        return self._network
 
     def land_cells(self) -> int:
         """How many lattice cells are dry land — the denominator for a region's share."""
@@ -998,21 +1146,16 @@ class MapGenerator:
         return None
 
     def _build_costs(self) -> None:
-        """The price of crossing every cell, worked out once.
+        """The price of crossing every cell, taken from the ground rather than the map.
 
-        Terrain plus steepness. Computing it inside the search instead would re-derive
-        each cell's relief every time a road considered stepping onto it.
+        It used to be looked up from the dominant terrain of whichever region owned the
+        cell, which is the elevation field's mistake in another costume: a marsh cost
+        what its province cost on average, so a road would cross one rather than take
+        the dry hillside beside it, and every acre of a march called mountainous was
+        equally steep including its river valleys.
         """
-        self.cost = [[1.0] * GRID for _ in range(GRID)]
-        for j in range(GRID):
-            for i in range(GRID):
-                if self.sea[j][i]:
-                    self.cost[j][i] = math.inf
-                    continue
-                region_id = self.owner[j][i]
-                terrain = self.profiles[region_id].dominant if region_id else "plain"
-                self.cost[j][i] = (TRAVEL_COST.get(terrain, 1.4)
-                                   * (1.0 + self._relief(i, j) * 6.0))
+        assert self.movement is not None
+        self.cost = self.movement.cost
 
     def _route(self, origin: tuple[int, int],
                target: tuple[int, int]) -> list[tuple[int, int]]:
@@ -1177,26 +1320,6 @@ class MapGenerator:
         i = int((x - MARGIN) / max(1e-6, (SPAN - 2 * MARGIN)) * GRID)
         j = int((y - MARGIN) / max(1e-6, (SPAN - 2 * MARGIN)) * GRID)
         return (max(0, min(GRID - 1, i)), max(0, min(GRID - 1, j)))
-
-    def _touches_sea(self, i: int, j: int) -> bool:
-        """Is there open water next door? A harbour needs one, an inland town has none."""
-        for dj in (-1, 0, 1):
-            for di in (-1, 0, 1):
-                ni, nj = i + di, j + dj
-                if 0 <= ni < GRID and 0 <= nj < GRID and self.sea[nj][ni]:
-                    return True
-        return False
-
-    def _relief(self, i: int, j: int) -> float:
-        """How much the ground rises around a cell — what makes a site defensible."""
-        here = self.elevation[j][i]
-        drops = []
-        for dj in (-1, 0, 1):
-            for di in (-1, 0, 1):
-                ni, nj = i + di, j + dj
-                if (di or dj) and 0 <= ni < GRID and 0 <= nj < GRID:
-                    drops.append(here - self.elevation[nj][ni])
-        return max(drops) if drops else 0.0
 
     def _population_of(self, entity_id: str) -> int:
         facts = guards.sorted_facts(

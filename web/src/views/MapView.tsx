@@ -228,9 +228,11 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 fill="none"
                 stroke={(f.style.stroke as string) ?? '#666'}
                 strokeWidth={
-                  // A river carries its own width: the generator works it out from how
-                  // much water passes, and a river drawn one width for its whole length
-                  // is one of the plainest ways a made map differs from a real one.
+                  // A river and a road both carry their own width: the generator works
+                  // one out from how much water passes and the other from how much
+                  // traffic does, and a river drawn one width for its whole length — or
+                  // a lane drawn as wide as the highway it joins — is one of the
+                  // plainest ways a made map differs from a real one.
                   (f.style['stroke-width'] as number | undefined)
                   ?? (f.layer === 'waterways' ? 3.5 : 2.5)
                 }

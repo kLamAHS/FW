@@ -118,9 +118,20 @@ def _compute(world: World, brief: MapBrief
     generator._build_fields()
     rivers = generator._trace_rivers()
     generator._classify_ground()
+    generator._build_civilisation()
     generator._build_costs()
     placements = generator._site_settlements(propose=brief.invent_settlements)
     timings["geography"] = int((time.perf_counter() - mark) * 1000)
+
+    # What the later stages noticed and could not quietly resolve. A march described for
+    # its fisheries with no coast, a city standing on ground that would feed a hamlet:
+    # each of these is either something the writer knows and has a reason for, or
+    # something they had not thought about, and both are worth one sentence.
+    if generator.resources is not None:
+        findings.extend(generator.resources.notes)
+    if generator.vegetation is not None:
+        findings.extend(generator.vegetation.notes)
+    findings.extend(generator.settlement_findings())
 
     mark = time.perf_counter()
     namer = Namer.from_world(world, seed=generator.seed)
@@ -560,6 +571,11 @@ def _ref_for(generator, placement) -> str:
     return "@" + _endpoint_id(generator, placement)
 
 
+# How a road of each grade is drawn, and how much quicker it is to travel.
+ROAD_WIDTHS = {"highway": 3.4, "road": 2.2, "track": 1.3}
+ROAD_QUALITY = {"highway": 0.95, "road": 0.8, "track": 0.6}
+
+
 def _road_drafts(generator, placements) -> list[FeatureDraft]:
     import math
 
@@ -573,16 +589,13 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                                 if p.entity_id not in seen]
     if len(known) < 2:
         return []
-    edges = generator._road_edges(known) if hasattr(generator, "_road_edges") else []
+    network = generator.road_network(known)
     out: list[FeatureDraft] = []
-    for order, (a, b) in enumerate(edges):
+    for order, route in enumerate(network.routes):
+        a, b = route.joins
         p, q = known[a], known[b]
-        path = generator._route(generator._cell_of(p.x, p.y),
-                                generator._cell_of(q.x, q.y))
-        points = [[p.x, p.y]] + [[round(x, 1), round(y, 1)]
-                                 for x, y in (generator._centre(i, j)
-                                              for i, j in path[1:-1])]
-        points.append([q.x, q.y])
+        path = list(route.cells)
+        points = generator._road_line(p, path, q)
         length = sum(math.dist(points[n], points[n + 1])
                      for n in range(len(points) - 1))
         # A road to a town the writer turned down is a road to nowhere, so it says
@@ -597,17 +610,24 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                                 summary_template="Laid by the map between the places "
                                                  "it knows."),
             shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
-                              layer=LAYER_ROADS, style={"stroke": "#8a7550"},
+                              layer=LAYER_ROADS,
+                              style={"stroke": "#8a7550",
+                                     "stroke-width": ROAD_WIDTHS.get(route.grade, 2.0)},
                               approximate=True),),
             segments=(SegmentSpec(
                 from_ref=_ref_for(generator, p),
                 to_ref=_ref_for(generator, q),
-                length=round(length, 1), medium="road", quality=0.8,
+                length=round(length, 1), medium="road",
+                # A highway is a made road and a track is a path through the heather,
+                # and a traveller on one arrives a good deal sooner than on the other.
+                quality=ROAD_QUALITY.get(route.grade, 0.7),
                 terrain=generator._road_terrain(path)),),
             depends_on_keys=needs,
             reasons=(Reason(kind="crossing", weight=1.0,
                             template="the easiest ground between {0} and {1}",
-                            refs=(p.name, q.name)),),
+                            refs=(p.name, q.name)),
+                     Reason(kind="crossing", weight=0.8,
+                            template=route.because),),
             name_request=NameRequest(key=name_key("road", ends, order),
                                      kind="road", hint=""),
             detail={"tier": "road", "span": round(length, 1)},

@@ -175,6 +175,34 @@ def smoothed(ring: Sequence[Point], rounds: int = 2) -> Ring:
     return points
 
 
+def eased(line: Sequence[Point], rounds: int = 2) -> Ring:
+    """The same corner cutting for an open line, with both of its ends pinned.
+
+    `smoothed` treats what it is given as a ring, which is right for a coast and wrong
+    for a road: a road has two ends and they are the doorsteps of two towns, so they may
+    not move. Everything between them was walked over the lattice a cell at a time and
+    arrives as a staircase — long runs of one direction meeting at right angles, which is
+    the one thing no road on any map has ever done.
+
+    Cutting the corners is the same argument the coastline makes, applied to the lines
+    drawn across it: the lattice is scaffolding, and what reaches the page should show
+    the shape it stood for rather than the scaffold.
+    """
+    points = list(line)
+    for _ in range(rounds):
+        if len(points) < 3:
+            return points
+        cut: Ring = [points[0]]
+        for k in range(len(points) - 1):
+            ax, ay = points[k]
+            bx, by = points[k + 1]
+            cut.append((ax * 0.75 + bx * 0.25, ay * 0.75 + by * 0.25))
+            cut.append((ax * 0.25 + bx * 0.75, ay * 0.25 + by * 0.75))
+        cut.append(points[-1])
+        points = cut
+    return points
+
+
 def closed(ring: Sequence[Point]) -> list[list[float]]:
     """A ring as the client wants it: a list of pairs, first point repeated last."""
     out = [[float(x), float(y)] for x, y in ring]
