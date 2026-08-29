@@ -110,6 +110,11 @@ def classify(grid: Grid, *, elevation: Field, temperature: Field, moisture: Fiel
         else:
             because[key] = "you did not say, so its weather decided"
 
+    # One field rather than a fractal sample per cell. It varies over half a dozen
+    # cells, which is what gives a region's ground its patchiness; asking for it twenty
+    # thousand times separately was one of the two largest costs in planning a map.
+    patches = noise.field(f"{seed}|biome", size, wavelength=6.5, octaves=3, stride=1)
+
     for j in range(size):
         for i in range(size):
             if sea[j][i]:
@@ -121,7 +126,7 @@ def classify(grid: Grid, *, elevation: Field, temperature: Field, moisture: Fiel
             key = keys[index] if 0 <= index < len(keys) else None
             claimed = claims.get(key) if key else None
             if claimed:
-                kind = _pull_toward(kind, claimed, i, j, seed)
+                kind = _pull_toward(kind, claimed, i, j, patches)
             # Permanent ice has to be asked for. It is the most dramatic thing a biome
             # can be, so it must never arrive as the model's idea of variety inside a
             # region the writer called forest — which is where a third of one came from.
@@ -149,7 +154,7 @@ def _from_weather(height: float, temperature: float, wetness: float,
 
 
 def _pull_toward(kind: str, claimed: dict[str, float], i: int, j: int,
-                 seed: str) -> str:
+                 patches: Field) -> str:
     """Bend a cell toward what the writer said the region is.
 
     Not a wholesale overwrite. A region described as "forest and low hills" should be
@@ -166,7 +171,7 @@ def _pull_toward(kind: str, claimed: dict[str, float], i: int, j: int,
     # region into salt and pepper: a forest with farmland speckled through it, cell by
     # cell. Sampling a smooth field instead gives patches a few cells across — a wood
     # with clearings in it, which is what the writer meant.
-    roll = noise.fbm(f"{seed}|biome", i / 6.5, j / 6.5, octaves=3)
+    roll = patches[j][i]
     running = 0.0
     for candidate, weight in sorted(claimed.items(), key=lambda p: (-p[1], p[0])):
         running += (weight / total) * CLAIM_PULL

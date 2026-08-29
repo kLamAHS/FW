@@ -324,6 +324,8 @@ def _hold(grid: Grid, height: Field, must_hold: list[list[tuple[int, int]]],
 
     half = (size - 1) / 2.0
     hold_scale = size * HOLD_GRAIN_SCALE
+    grain = noise.field(f"{seed}|held", size, wavelength=hold_scale, octaves=4,
+                        stride=max(1, int(hold_scale / 5)))
     for j in range(size):
         row, rise = height[j], swell[j]
         for i in range(size):
@@ -337,8 +339,7 @@ def _hold(grid: Grid, height: Field, must_hold: list[list[tuple[int, int]]],
             # whatever the writer drew, so a province sketched as a box gets two dead
             # straight coasts. The same grain the rest of the shore has, applied here,
             # breaks it up into something that reads as land meeting sea.
-            strength = rise[i] * gain * (HOLD_GRAIN_LOW + HOLD_GRAIN_HIGH * noise.fbm(
-                f"{seed}|held", i / hold_scale, j / hold_scale, octaves=4))
+            strength = rise[i] * gain * (HOLD_GRAIN_LOW + HOLD_GRAIN_HIGH * grain[j][i])
             if strength <= HOLD_LOW:
                 continue
             strength = min(1.0, (strength - HOLD_LOW) / (HOLD_HIGH - HOLD_LOW))
