@@ -44,7 +44,12 @@ RENNISH = Calendar(
     weekdays=("Kingsday", "Mareday", "Orrenday", "Veyneday", "Marrday",
               "Fordday", "Restday", "Hallow", "Emberday", "Lastday"),
     leap_every=4,
-    eras=(Era("Age of Founding", "AF", 1, 199), Era("Age of Kings", "AK", 200)),
+    # Three ages, two of which are the ordinary kind — a name appended to the year — and
+    # one that shows what §3's dividers are really for: the Long Dark counts *backwards*
+    # toward the founding, exactly as BC does, so 120 BD is older than 40 BD.
+    eras=(Era("The Long Dark", "BD", end_year=0, counts_backward=True),
+          Era("Age of Founding", "AF", 1, 199),
+          Era("Age of Kings", "AK", 200)),
     seasons=(Season("Deepwinter", 1), Season("Greening", 62), Season("Highsummer", 135),
              Season("Harvest", 215), Season("Fading", 288)),
 )
@@ -157,7 +162,10 @@ def seed_renn(path: str = ":memory:") -> World:
                         quality=1.0, terrain="plain", built_on=d(148))
     w.add_route_segment(greyhaven.id, northwatch.id, 95, entity_id=pass_road.id,
                         quality=0.5, terrain="mountain", built_on=d(202),
-                        closed_seasons=["Darkening", "Deepwinter"])
+                        # Closures are tested against the *season*, so the month the prose
+                        # names — Darkening — has to be written as the season it falls in.
+                        # "Darkening" here closed the pass on no day of any year.
+                        closed_seasons=["Fading", "Deepwinter"])
     w.add_route_segment(northwatch.id, rennford.id, 70, entity_id=pass_road.id,
                         quality=0.6, terrain="hill", built_on=d(202))
     w.add_route_segment(rennford.id, blackmere.id, 55, quality=0.9, terrain="plain")
@@ -223,6 +231,51 @@ def seed_renn(path: str = ":memory:") -> World:
     w.assert_fact(veyne, "vassal_of", crown_house, valid_from=d(150))
     w.assert_fact(marr, "vassal_of", veyne, valid_from=d(150))
     w.assert_fact(orren, "vassal_of", crown_house, valid_from=d(150))
+
+    # Where the great houses actually sit, so a region can answer "who is here".
+    w.assert_fact(marr, "based_in", northwatch, valid_from=d(150))
+    w.assert_fact(veyne, "based_in", rennford, valid_from=d(112))
+    w.assert_fact(orren, "based_in", blackmere, valid_from=d(133))
+
+    # ------------------------------------------------- minor houses and groups
+    # A world is not only its great houses. The lesser houses under a banner, the
+    # guilds working a town and the orders ranging across a march are the texture a
+    # writer reaches for, and each is reachable from its region and from its liege.
+    dray = w.add_entity("house", "House Dray",
+                        summary="Sworn to Marr, and quietly in debt to Veyne.",
+                        exists_from=d(171))
+    pell = w.add_entity("house", "House Pell",
+                        summary="A cadet branch of Veyne, seated at the Millbrook mills.",
+                        exists_from=d(186))
+    w.assert_fact(dray, "sworn_to", marr, valid_from=d(171))
+    w.assert_fact(dray, "subgroup_of", marr, valid_from=d(171))
+    w.assert_fact(dray, "based_in", northwatch, valid_from=d(171))
+    w.assert_fact(pell, "cadet_branch_of", veyne, valid_from=d(186))
+    w.assert_fact(pell, "subgroup_of", veyne, valid_from=d(186))
+    w.assert_fact(pell, "based_in", millbrook, valid_from=d(186))
+
+    ironmongers = w.add_entity("guild", "The Ironmongers of Red Ford",
+                               summary="They price the Northmarch's iron, and know it.",
+                               exists_from=d(198))
+    w.assert_fact(ironmongers, "based_in", redford, valid_from=d(198))
+    w.assert_fact(ironmongers, "active_in", northmarch, valid_from=d(198))
+
+    ford_order = w.add_entity("order", "The Order of the Ford",
+                              summary="Sworn to keep the crossings open in any war.",
+                              exists_from=d(160))
+    w.assert_fact(ford_order, "based_in", redford, valid_from=d(160))
+    w.assert_fact(ford_order, "active_in", vale, valid_from=d(160))
+
+    hillfolk = w.add_entity("tribe", "The Hillfolk",
+                            summary="Older than the kingdom, and unimpressed by it.",
+                            exists_from=d(1))
+    w.assert_fact(hillfolk, "active_in", northmarch, valid_from=d(1))
+
+    free_company = w.add_entity("company", "The Grey Spears",
+                                summary="A free company, currently unpaid.",
+                                exists_from=d(231))
+    w.assert_fact(free_company, "based_in", greyhaven, valid_from=d(238))
+    w.assert_fact(free_company, "sworn_to", orren, valid_from=d(238))
 
     # Greyhaven's tangled control, exactly as §11 describes it: House Marr owns it in law,
     # House Veyne runs it day to day, the Crown taxes it, and House Orren claims it.

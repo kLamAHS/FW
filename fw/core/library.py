@@ -64,7 +64,9 @@ class Library:
             try:
                 stat = path.stat()      # a dangling symlink fails here, not in glob
                 modified, size = stat.st_mtime, stat.st_size
-                world = World.open(path)
+                # Listing is a read: opening with a vocabulary top-up would rewrite
+                # every save in the library just to draw the launcher.
+                world = World.open(path, sync=False)
                 try:
                     out.append(WorldEntry(
                         file=path.name, name=world.name,

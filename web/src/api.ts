@@ -38,6 +38,7 @@ export interface Fact {
 export interface WorldDate {
   day: number
   text: string
+  /** The absolute year facts are stored against. */
   year: number
   month: number
   month_name: string
@@ -45,6 +46,24 @@ export interface WorldDate {
   weekday: string
   season: string | null
   era: string | null
+  era_name: string | null
+  /** What the world's own reckoning calls this year — counts the other way in a BC-style era. */
+  era_year: number | null
+}
+
+export interface EraInfo {
+  name: string
+  abbreviation: string
+  start_year: number | null
+  end_year: number | null
+  counts_backward: boolean
+  reckons_from: number | null
+}
+
+/** An era as stored, with its row id — what the editor lists. */
+export interface EraRow extends EraInfo {
+  id: string
+  calendar_id: string
 }
 
 export interface CalendarInfo {
@@ -52,7 +71,7 @@ export interface CalendarInfo {
   months: { name: string; days: number }[]
   weekdays: string[]
   days_in_year: number
-  eras: { name: string; abbreviation: string; start_year: number; end_year: number | null }[]
+  eras: EraInfo[]
   seasons: { name: string; start: number }[]
 }
 
@@ -237,6 +256,8 @@ export interface SecretInfo {
 
 export interface EntityBundle {
   entity: Entity
+  /** Containment chain upward — the region, then the realm. */
+  within: { id: string; name: string; type_key: string }[]
   facts: Fact[]
   events: { id: string; name: string; start_day: number | null; type_key: string; summary: string }[]
   titles: { id: string; name: string; rank: number; succession_law: string }[]
@@ -246,6 +267,54 @@ export interface EntityBundle {
   }[]
   geometry: { kind: string; coordinates: unknown; layer: string } | null
   scenes: { id: string; title: string; day: number | null }[]
+}
+
+export interface PlaceNode {
+  entity: Entity
+  depth: number
+  settlement_type: string | null
+  /** How many things sit at or below this node. */
+  inside: number
+  children: PlaceNode[]
+  groups: Entity[]
+  people: Entity[]
+  other: Entity[]
+}
+
+export interface PlaceContents {
+  tree: PlaceNode
+  /** The containment chain upward: region, then realm. */
+  within: Entity[]
+  groups: { entity: Entity; how: string }[]
+}
+
+export interface GroupSummary {
+  entity: Entity
+  members: number
+  branches: number
+  seats: { id: string; name: string; how: string }[]
+}
+
+export interface GroupDetail {
+  entity: Entity
+  members: { entity: Entity; relation: string; note: string }[]
+  branches: { entity: Entity; depth: number }[]
+  seats: { entity: Entity; how: string }[]
+  above: Entity[]
+  group_types: string[]
+}
+
+export interface MapGenerationReport {
+  summary: string
+  regions_drawn: string[]
+  regions_kept: string[]
+  rivers: string[]
+  roads: number
+  notes: string[]
+  placements: {
+    entity_id: string | null; name: string; x: number; y: number
+    rank: string; proposed: boolean; why: string
+  }[]
 }
 
 export interface Finding {
@@ -405,6 +474,56 @@ export interface LibraryInfo {
   open: string | null
 }
 
+
+/** A map that does not exist yet (§66): every feature, with the case for it. */
+export interface PlannedFeature {
+  id: string
+  kind: string
+  name: string
+  subject: { mode: string; type_key: string; entity_id: string | null } | null
+  anchor_id: string | null
+  shapes: {
+    role: string
+    kind: 'point' | 'line' | 'polygon'
+    coordinates: any
+    layer: string
+    style: Record<string, string>
+    approximate: boolean
+  }[]
+  why: string[]
+  detail: Record<string, any>
+  depends_on: string[]
+  default_accept: boolean
+  renameable: boolean
+  status: string
+}
+
+export interface MapPlan {
+  plan_id: string
+  world_name: string
+  branch: string
+  summary: string
+  features: PlannedFeature[]
+  retiring: { feature_id: string; name: string; writer_touched: boolean; why: string }[]
+  findings: { code: string; severity: string; message: string; quotes: string[] }[]
+  stats: { features_by_kind: Record<string, number>; vertices: number; plan_ms: number }
+}
+
+export interface MapDecision {
+  feature_id: string
+  accept: boolean
+  name?: string | null
+  pinned?: boolean
+}
+
+export interface ApplyReport {
+  plan_id: string
+  action_id: string | null
+  summary: string
+  counts: Record<string, number>
+  outcomes: { feature_id: string; name: string; op: string; why: string }[]
+}
+
 export const api = {
   worlds: () => get<LibraryInfo>('/worlds'),
   createWorld: (name: string, example: boolean) =>
@@ -420,8 +539,14 @@ export const api = {
     send<{ name: string }>('/branches/open', 'POST', { name }),
   vocabulary: () => get<Vocabulary>('/vocabulary'),
   date: (day: number) => get<WorldDate>(`/date/${day}`),
-  dayIndex: (year: number, month = 1, day = 1) =>
-    get<WorldDate>('/day', { year, month, day }),
+  dayIndex: (year: number, month = 1, day = 1, era?: string | null) =>
+    get<WorldDate>('/day', { year, month, day, era: era || undefined }),
+
+  eras: () => get<EraRow[]>('/eras'),
+  createEra: (era: EraInfo) => send<{ id: string }>('/eras', 'POST', era),
+  updateEra: (id: string, patch: Partial<EraInfo>) =>
+    send<void>(`/eras/${id}`, 'PATCH', patch),
+  deleteEra: (id: string) => send<void>(`/eras/${id}`, 'DELETE'),
   recent: (limit = 8) => get<{ entity: Entity; at: string }[]>('/recent', { limit }),
   history: (id: string) => get<RevisionEntry[]>(`/entities/${id}/history`),
 
@@ -462,6 +587,16 @@ export const api = {
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
   map: (day?: number, layer?: string) => get<MapData>('/map', { day, layer }),
+  generateMap: (seed: string | null, proposeSettlements: boolean) =>
+    send<MapGenerationReport>('/map/generate', 'POST',
+      { seed, propose_settlements: proposeSettlements }),
+  planMap: (options: { seed?: string | null; invent_settlements?: boolean }) =>
+    send<MapPlan>('/map/plan', 'POST', {
+      seed: options.seed ?? null,
+      invent_settlements: options.invent_settlements ?? false,
+    }),
+  applyMap: (plan: MapPlan, decisions: MapDecision[]) =>
+    send<ApplyReport>('/map/apply', 'POST', { plan, decisions }),
   graph: (params?: { day?: number; categories?: string; centre?: string; hops?: number }) =>
     get<GraphData>('/graph', params),
   pedigree: (params?: { root_id?: string; lens?: string; living_only_on?: number; house_id?: string }) =>
@@ -477,6 +612,11 @@ export const api = {
   consequences: (id: string) =>
     get<{ id: string; name: string; depth: number; start_day: number | null; summary: string }[]>(
       `/events/${id}/consequences`),
+
+  placeContents: (id: string, at?: number) =>
+    get<PlaceContents>(`/places/${id}/contents`, { at }),
+  groups: (at?: number) => get<GroupSummary[]>('/groups', { at }),
+  group: (id: string, at?: number) => get<GroupDetail>(`/groups/${id}`, { at }),
 
   secrets: (at?: number) => get<SecretInfo[]>('/secrets', { at }),
   scenes: () => get<SceneSummary[]>('/scenes'),

@@ -24,11 +24,14 @@ from fw.api import schemas as S
 from fw.core.calendar.kernel import CalendarError
 from fw.core.continuity.engine import ContinuityEngine, Severity
 from fw.core.derive.dependency import DependencyAnalyst
+from fw.core.derive.hierarchy import GROUP_TYPES, Hierarchy
 from fw.core.derive.scene_context import SceneContextEngine
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.library import Library, LibraryError
+from fw.core.mapgen import plan as MG
+from fw.core.mapgen.generate import generate_map
 from fw.core.model.vocabulary import PREDICATES_BY_KEY
 from fw.core.store.db import StoreError
 from fw.core.succession.engine import SuccessionEngine
@@ -223,17 +226,42 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         return _date_out(world, day)
 
     @app.get("/api/day", response_model=S.DateOut)
-    def get_day(year: int, month: int = 1, day: int = 1) -> S.DateOut:
+    def get_day(year: int, month: int = 1, day: int = 1,
+                era: str | None = None) -> S.DateOut:
         """Civil date → day index, for form inputs.
 
         The client could compute this itself from the calendar payload, but leap rules
         make client-side conversion a second implementation waiting to disagree with the
         first. One source of truth; the round trip is a few milliseconds on localhost.
+
+        Naming an era reads the year in that era's terms, so "100 BR" can be typed as
+        readily as it is displayed — a backward era means 100 BR is an earlier year than
+        50 BR, and the conversion is the calendar's business, not the form's.
         """
         try:
-            return _date_out(world, world.day(year, month, day))
+            return _date_out(world, world.calendar.date_in_era(year, month, day, era))
         except CalendarError as exc:
             raise HTTPException(400, str(exc)) from exc
+
+    @app.get("/api/eras")
+    def list_eras() -> list[dict[str, Any]]:
+        """§3: the world's own time dividers."""
+        return world.eras()
+
+    @app.post("/api/eras", status_code=201)
+    def create_era(payload: S.EraIn) -> dict[str, str]:
+        return {"id": world.add_era(
+            payload.name, payload.abbreviation, start_year=payload.start_year,
+            end_year=payload.end_year, counts_backward=payload.counts_backward,
+            reckons_from=payload.reckons_from)}
+
+    @app.patch("/api/eras/{era_id}", status_code=204)
+    def patch_era(era_id: str, payload: S.EraPatch) -> None:
+        world.update_era(era_id, **payload.model_dump(exclude_unset=True))
+
+    @app.delete("/api/eras/{era_id}", status_code=204)
+    def remove_era(era_id: str) -> None:
+        world.delete_era(era_id)
 
     @app.get("/api/recent")
     def get_recent(limit: int = Query(8, le=50)) -> list[dict[str, Any]]:
@@ -338,6 +366,12 @@ def create_app(world: World | None = None, *, library: Library | None = None,
 
         return {
             "entity": _entity_out(entity).model_dump(),
+            # Where this sits: a city inside its region inside its realm. One walk of at
+            # most a few hops, and it saves the writer holding the map in their head.
+            "within": [
+                {"id": e.id, "name": e.name, "type_key": e.type_key}
+                for e in Hierarchy(holder.get()).chain_above(entity_id, at=at)
+            ],
             "facts": [_fact_out(world, f).model_dump() for f in facts],
             "events": [
                 {"id": e.id, "name": e.name, "start_day": e.start_day,
@@ -463,6 +497,72 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             })
         layers = sorted({f["layer"] for f in features})
         return S.MapOut(day=at, layers=layers, features=features)
+
+    @app.post("/api/map/plan")
+    def plan_the_map(payload: S.PlanMapIn) -> dict[str, Any]:
+        """Work out a map and return it without writing a thing (§66).
+
+        The writer sees the whole proposal — every coastline, river, town and road,
+        each with the case for it — before any of it exists. Nothing here touches the
+        world, so looking costs nothing and a map they dislike is closed rather than
+        undone.
+        """
+        from fw.core.mapgen.pipeline import plan_map
+
+        brief = MG.MapBrief(
+            seed=payload.seed or "",
+            at=app.state.present_day,
+            include=tuple(payload.include) if payload.include else MG.MapBrief().include,
+            invent_settlements=payload.invent_settlements,
+            north=payload.north,
+            prevailing_wind=payload.prevailing_wind,
+        )
+        return plan_map(holder.get(), brief).to_dict()
+
+    @app.post("/api/map/apply")
+    def apply_the_map(payload: S.ApplyMapIn) -> dict[str, Any]:
+        """Write the parts of a plan the writer accepted, as one undoable action."""
+        from fw.core.mapgen.apply import PlanStale, apply_plan
+        from fw.core.mapgen.decide import Decision, DecisionSet
+
+        plan = MG.MapPlan.from_dict(payload.plan)
+        answers = DecisionSet(plan_id=plan.plan_id, decisions=tuple(
+            Decision(feature_id=d.feature_id, accept=d.accept, name=d.name,
+                     pinned=d.pinned)
+            for d in payload.decisions))
+        try:
+            report = apply_plan(holder.get(), plan, answers)
+        except PlanStale as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        return report.as_dict()
+
+    @app.post("/api/map/generate")
+    def generate_the_map(payload: S.GenerateMapIn) -> dict[str, Any]:
+        """§34: grow a map from what the regions say about themselves.
+
+        Everything the run writes is marked as generated, so running it again replaces
+        its own work and never the writer's — and the whole thing is one undoable
+        action, so a map the writer dislikes is one Ctrl+Z away.
+        """
+        report = generate_map(
+            holder.get(), seed=payload.seed or None,
+            at=app.state.present_day,
+            propose_settlements=payload.propose_settlements)
+        # Kept as it was: one press, one map, one undo. The two-step route above is
+        # for writers who would rather look before it lands.
+        return {
+            "summary": report.summary(),
+            "regions_drawn": report.regions_drawn,
+            "regions_kept": report.regions_kept,
+            "rivers": report.rivers,
+            "roads": report.roads,
+            "notes": report.notes,
+            "placements": [
+                {"entity_id": p.entity_id, "name": p.name, "x": p.x, "y": p.y,
+                 "rank": p.rank, "proposed": p.proposed, "why": p.because()}
+                for p in report.placements
+            ],
+        }
 
     # ---- search (§53) -----------------------------------------------------
 
@@ -719,6 +819,76 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                     "start_day": event.start_day, "summary": event.summary,
                 })
         return out
+
+    # ---- hierarchy: places and the groups inside them (§2, §12, §54) -------
+
+    def _place_node(node) -> dict[str, Any]:
+        return {
+            "entity": _entity_out(node.entity).model_dump(),
+            "depth": node.depth,
+            "settlement_type": node.settlement_type,
+            "inside": node.count(),
+            "children": [_place_node(c) for c in node.children],
+            "groups": [_entity_out(g).model_dump() for g in node.groups],
+            "people": [_entity_out(p).model_dump() for p in node.people],
+            "other": [_entity_out(o).model_dump() for o in node.other],
+        }
+
+    @app.get("/api/places/{place_id}/contents")
+    def get_contents(place_id: str, at: int | None = None,
+                     max_depth: int = Query(6, le=12)) -> dict[str, Any]:
+        """Everything and everyone inside a place, as a tree."""
+        day = at if at is not None else app.state.present_day
+        hierarchy = Hierarchy(holder.get())
+        tree = hierarchy.contents(place_id, at=day, max_depth=max_depth)
+        if tree is None:
+            raise HTTPException(404, f"no entity {place_id}")
+        return {
+            "tree": _place_node(tree),
+            "within": [_entity_out(e).model_dump()
+                       for e in hierarchy.chain_above(place_id, at=day)],
+            "groups": [
+                {"entity": _entity_out(g).model_dump(), "how": how}
+                for g, how in hierarchy.groups_in(place_id, at=day)
+            ],
+        }
+
+    @app.get("/api/groups")
+    def list_groups(at: int | None = None) -> list[dict[str, Any]]:
+        """§54: every group of people in the world, with its seat and its size."""
+        day = at if at is not None else app.state.present_day
+        return [
+            {**summary, "entity": _entity_out(summary["entity"]).model_dump()}
+            for summary in Hierarchy(holder.get()).summaries(at=day)
+        ]
+
+    @app.get("/api/groups/{group_id}")
+    def get_group(group_id: str, at: int | None = None) -> dict[str, Any]:
+        """One group: who belongs to it, what sits under it, and where it belongs."""
+        day = at if at is not None else app.state.present_day
+        current = holder.get()
+        if current.get_entity(group_id) is None:
+            raise HTTPException(404, f"no entity {group_id}")
+        hierarchy = Hierarchy(current)
+        return {
+            "entity": _entity_out(current.get_entity(group_id)).model_dump(),
+            "members": [
+                {"entity": _entity_out(m.entity).model_dump(),
+                 "relation": m.relation, "note": m.note}
+                for m in hierarchy.members_of(group_id, at=day)
+            ],
+            "branches": [
+                {"entity": _entity_out(e).model_dump(), "depth": depth}
+                for e, depth in hierarchy.branches_of(group_id, at=day)
+            ],
+            "seats": [
+                {"entity": _entity_out(p).model_dump(), "how": how}
+                for p, how in hierarchy.seats_of(group_id, at=day)
+            ],
+            "above": [_entity_out(e).model_dump()
+                      for e in hierarchy.chain_above(group_id, at=day)],
+            "group_types": list(GROUP_TYPES),
+        }
 
     # ---- secrets and knowledge (§6) ---------------------------------------
 
@@ -986,6 +1156,8 @@ def _date_out(world: World, day: int) -> S.DateOut:
         month_name=calendar.month_name(civil.month), day_of_month=civil.day,
         weekday=calendar.weekday(day), season=calendar.season(day),
         era=era.abbreviation if era else None,
+        era_name=era.name if era else None,
+        era_year=era.year_of(civil.year) if era else None,
     )
 
 
@@ -997,7 +1169,9 @@ def _calendar_out(world: World) -> S.CalendarOut:
         weekdays=list(calendar.weekdays),
         days_in_year=calendar.common_year_days,
         eras=[{"name": e.name, "abbreviation": e.abbreviation,
-               "start_year": e.start_year, "end_year": e.end_year}
+               "start_year": e.start_year, "end_year": e.end_year,
+               "counts_backward": e.counts_backward,
+               "reckons_from": e.reckons_from}
               for e in calendar.eras],
         seasons=[{"name": s.name, "start": s.start_day_of_year}
                  for s in calendar.seasons],

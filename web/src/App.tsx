@@ -20,6 +20,7 @@ import { api, ApiError } from './api'
 import { ErrorBox, Loading, useAsync, useDebounced } from './components/common'
 import { EntityForm, Modal } from './components/forms'
 import { BranchPicker } from './components/BranchPicker'
+import { EraEditor } from './components/EraEditor'
 import { Launcher, WorldPicker } from './components/WorldPicker'
 import { SidePanel } from './components/SidePanel'
 import { Timeline } from './components/Timeline'
@@ -31,6 +32,7 @@ import { SceneView } from './views/SceneView'
 import { SuccessionView } from './views/SuccessionView'
 import { TravelView } from './views/TravelView'
 import { ContinuityView, EntitiesView, EventsView } from './views/BrowseView'
+import { GroupsView } from './views/GroupsView'
 
 const VIEWS = [
   { key: 'dashboard', label: 'World' },
@@ -41,6 +43,7 @@ const VIEWS = [
   { key: 'succession', label: 'Succession' },
   { key: 'scenes', label: 'Scenes' },
   { key: 'travel', label: 'Travel' },
+  { key: 'groups', label: 'Groups' },
   { key: 'entities', label: 'Everything' },
   { key: 'continuity', label: 'Checks' },
 ] as const
@@ -65,6 +68,7 @@ export function App() {
   const [creating, setCreating] = useState(false)
   const [picking, setPicking] = useState(false)
   const [branching, setBranching] = useState(false)
+  const [editingEras, setEditingEras] = useState(false)
 
   const currentDay = day ?? world.data?.present_day ?? 0
   const date = useAsync(
@@ -198,6 +202,7 @@ export function App() {
         snapshots={(snapshots.data ?? []).map((s) => ({ name: s.name, day: s.day }))}
         dateText={dateText}
         season={date.data?.season ?? null}
+        onEditEras={() => setEditingEras(true)}
       />
 
       <div className="main">
@@ -209,7 +214,7 @@ export function App() {
           )}
           {view === 'map' && (
             <MapView day={currentDay} onSelect={setSelected} selectedId={selected}
-                     version={version} />
+                     version={version} onMutate={bump} />
           )}
           {view === 'timeline' && (
             <EventsView day={currentDay} onSelect={setSelected} version={version}
@@ -232,6 +237,9 @@ export function App() {
                        calendar={world.data.calendar} onMutate={bump} />
           )}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
+          {view === 'groups' && (
+            <GroupsView day={currentDay} onSelect={setSelected} version={version} />
+          )}
           {view === 'entities' && (
             <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}
                           version={version} vocabulary={vocabulary.data} />
@@ -267,6 +275,13 @@ export function App() {
       {branching && (
         <Modal title="Alternate timelines" onClose={() => setBranching(false)}>
           <BranchPicker day={currentDay} dateText={dateText} />
+        </Modal>
+      )}
+
+      {editingEras && (
+        <Modal title="The ages of this world" onClose={() => setEditingEras(false)}>
+          {/* Naming an age changes how every date reads, so the whole app refetches. */}
+          <EraEditor onChanged={bump} />
         </Modal>
       )}
 

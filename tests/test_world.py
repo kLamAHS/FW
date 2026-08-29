@@ -1018,6 +1018,8 @@ class TestSchemaMigration:
         conn.execute("DROP TABLE entity_override")
         conn.execute("DROP INDEX ix_holding_branch")
         conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
+        conn.execute("ALTER TABLE geometry DROP COLUMN props")
+        conn.execute("DROP TABLE app_state")
         conn.executescript("""
             CREATE TABLE causal_link_v1 (
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
@@ -1044,6 +1046,10 @@ class TestSchemaMigration:
                 "PRAGMA table_info(fact)")}
             assert upgraded.db.one("SELECT 1 FROM sqlite_master "
                                    "WHERE name = 'entity_override'") is not None
+            assert "props" in {r["name"] for r in upgraded.db.query(
+                "PRAGMA table_info(geometry)")}
+            assert upgraded.db.one("SELECT 1 FROM sqlite_master "
+                                   "WHERE name = 'app_state'") is not None
             # old rows carry '' (beyond undo); new actions are undoable again
             fresh = upgraded.add_entity("settlement", "Modern")
             assert "Modern" in upgraded.undo()
@@ -1530,3 +1536,180 @@ class TestBranches:
         # on canon, nothing happened
         assert [t.name for t in world.titles_held_by(king.id, at=day)] == ["The Crown"]
         assert world.state_at(day).titles[crown.id] == king.id
+
+
+class TestEras:
+    """§3: the writer's own time dividers, stored and reloaded."""
+
+    def test_an_era_added_to_a_finished_world_renames_nothing_stored(self):
+        """A world can grow a BC/AD long after its history is written."""
+        from fw.core.calendar.kernel import GREGORIAN
+        w = World.create(name="Unreckoned", calendar=GREGORIAN)   # no eras yet
+        try:
+            e = w.add_entity("person", "Ancient", exists_from=w.day(-99, 1, 1))
+            stored = w.get_entity(e.id).exists_from
+
+            w.add_era("Before the Reckoning", "BR", end_year=0, counts_backward=True)
+            w.add_era("After the Reckoning", "AR", start_year=1, reckons_from=1)
+
+            assert w.get_entity(e.id).exists_from == stored   # the day index is untouched
+            assert w.calendar.format(stored).endswith("100 BR")
+            assert w.calendar.format(w.day(241, 1, 1)).endswith("241 AR")
+        finally:
+            w.close()
+
+    def test_an_existing_era_keeps_precedence_over_a_wider_new_one(self, world: World):
+        """The seeded world already names its ages; a new open-ended era must not
+        silently rename years an authored era already claims."""
+        world.add_era("After the Reckoning", "AR", start_year=1, reckons_from=1)
+        # Age of Kings starts at 200 and is the later, more specific claim on 241.
+        assert world.calendar.era(241).abbreviation == "AK"
+        # but a year no authored era covers is the new era's to name
+        assert world.calendar.era(-5) is None or world.calendar.era(-5).abbreviation == "AR"
+
+    def test_eras_survive_a_reopen(self, tmp_path):
+        path = tmp_path / "reckoned.fwworld"
+        w = World.create(path, name="Reckoned")
+        w.add_era("Before the Reckoning", "BR", end_year=0, counts_backward=True)
+        w.close()
+
+        again = World.open(path)
+        try:
+            era = again.calendar.era_named("BR")
+            assert era is not None
+            assert era.counts_backward is True
+            assert era.year_of(-49) == 50
+        finally:
+            again.close()
+
+    def test_editing_and_deleting_an_era_refreshes_the_calendar(self, world: World):
+        era_id = world.add_era("Old Name", "ON", start_year=1)
+        assert world.calendar.era_named("ON") is not None
+
+        world.update_era(era_id, name="New Name", abbreviation="NN")
+        assert world.calendar.era_named("ON") is None
+        assert world.calendar.era_named("NN").name == "New Name"
+
+        world.delete_era(era_id)
+        assert world.calendar.era_named("NN") is None
+
+    def test_nonsense_eras_are_refused(self, world: World):
+        with pytest.raises(WorldError, match="name and a short form"):
+            world.add_era("  ", "  ")
+        with pytest.raises(WorldError, match="end before it begins"):
+            world.add_era("Backwards", "BW", start_year=200, end_year=100)
+        world.add_era("First", "F1", start_year=1)
+        with pytest.raises(WorldError, match="already has an era"):
+            world.add_era("Second", "f1", start_year=500)   # case-insensitive clash
+
+    def test_a_version_4_file_gains_era_reckoning(self, tmp_path):
+        """Migration 5 rebuilds the era table; existing eras stay exactly as they read."""
+        import sqlite3 as sql
+        path = tmp_path / "v4.fwworld"
+        w = World.create(path, name="Elder")
+        w.add_era("Age of Kings", "AK", start_year=200)
+        w.close()
+
+        conn = sql.connect(path)
+        conn.executescript("""
+            CREATE TABLE era_v4 (
+                id TEXT PRIMARY KEY, calendar_id TEXT NOT NULL,
+                name TEXT NOT NULL, abbreviation TEXT NOT NULL,
+                start_year INTEGER NOT NULL, end_year INTEGER) STRICT;
+            INSERT INTO era_v4 SELECT id, calendar_id, name, abbreviation,
+                ifnull(start_year, 1), end_year FROM era;
+            DROP TABLE era;
+            ALTER TABLE era_v4 RENAME TO era;
+            ALTER TABLE geometry DROP COLUMN props;
+            DROP TABLE app_state;
+        """)
+        conn.execute("PRAGMA user_version = 4")
+        conn.close()
+
+        upgraded = World.open(path)
+        try:
+            columns = {r["name"] for r in upgraded.db.query("PRAGMA table_info(era)")}
+            assert {"counts_backward", "reckons_from"} <= columns
+            old = upgraded.calendar.era_named("AK")
+            assert old.start_year == 200 and old.counts_backward is False
+            assert old.year_of(312) == 312            # still label-only, as it read before
+            # and the upgraded file can now express a backward era
+            upgraded.add_era("Before the Kings", "BK", end_year=199, counts_backward=True)
+            assert upgraded.calendar.era_named("BK").year_of(100) == 100
+        finally:
+            upgraded.close()
+
+    def test_declaring_and_deleting_an_era_is_undoable(self, world: World):
+        """Undo used to report success and change nothing, and a deleted age was gone
+        for good — the button lied."""
+        era_id = world.add_era("Age of Ash", "AA", start_year=400)
+        assert world.calendar.era_named("AA") is not None
+
+        world.undo()
+        assert world.calendar.era_named("AA") is None
+        world.redo()
+        assert world.calendar.era_named("AA") is not None
+
+        world.delete_era(era_id)
+        assert world.calendar.era_named("AA") is None
+        world.undo()
+        assert world.calendar.era_named("AA") is not None
+
+    def test_editing_an_era_obeys_the_rules_creating_one_does(self, world: World):
+        first = world.add_era("First", "F1", start_year=1)
+        second = world.add_era("Second", "S2", start_year=900)
+        with pytest.raises(WorldError, match="already has an era"):
+            world.update_era(second, abbreviation="f1")
+        with pytest.raises(WorldError, match="end before it begins"):
+            world.update_era(second, start_year=900, end_year=100)
+        world.update_era(first, name="Renamed")        # a legitimate edit still works
+        assert world.calendar.era_named("F1").name == "Renamed"
+
+
+class TestGeometryProvenance:
+    """`style` is what the client draws with; `props` is what the application knows.
+
+    Keeping them apart is what lets a regeneration find its own work without the
+    bookkeeping ending up painted on the map — the client passes every style key
+    straight through to the shape it renders.
+    """
+
+    def test_props_round_trip_and_stay_out_of_style(self, world: World):
+        place = world.add_entity("region", "The Weald")
+        world.add_geometry(place.id, "polygon", [[[0, 0], [1, 0], [1, 1], [0, 0]]],
+                           style={"fill": "#456"}, props={"by": "mapgen/2", "key": "r:1"})
+        [shape] = world.geometries()
+        assert shape.props == {"by": "mapgen/2", "key": "r:1"}
+        assert shape.style == {"fill": "#456"}          # untouched by the provenance
+
+    def test_a_shape_with_no_props_reads_as_empty(self, world: World):
+        place = world.add_entity("region", "The Bare")
+        world.add_geometry(place.id, "point", [4, 4])
+        assert world.geometries()[0].props == {}
+
+    def test_provenance_survives_an_undone_delete(self, world: World):
+        place = world.add_entity("region", "The Lost")
+        shape = world.add_geometry(place.id, "point", [2, 3], props={"key": "s:7"})
+        world.delete_geometry(shape.id)
+        assert world.geometries() == []
+        world.undo()
+        assert world.geometries()[0].props == {"key": "s:7"}
+
+    def test_route_segments_carry_provenance(self, world: World):
+        a = world.add_entity("settlement", "Aford")
+        b = world.add_entity("settlement", "Bmoor")
+        world.add_route_segment(a.id, b.id, 10, props={"rank": "trunk"})
+        assert world.route_segments()[0].props == {"rank": "trunk"}
+
+    def test_route_segments_read_back_in_a_stable_order(self, world: World):
+        """An unordered network cannot be diffed against the last one, which is what a
+        regeneration and a golden test both need."""
+        names = ["Aford", "Bmoor", "Cleeve", "Dray"]
+        ids = [world.add_entity("settlement", n).id for n in names]
+        for a in ids:
+            for b in ids:
+                if a != b:
+                    world.add_route_segment(a, b, 10)
+        segments = world.route_segments()
+        assert segments == sorted(
+            segments, key=lambda s: (s.from_entity_id, s.to_entity_id, s.id))

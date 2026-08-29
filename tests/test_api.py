@@ -34,7 +34,12 @@ class TestWorldEndpoints:
     def test_world_summary(self, client):
         body = client.get("/api/world").json()
         assert body["name"] == "The Kingdom of Renn"
-        assert body["counts"]["total"] == 35
+        # A count, not a pinned number: the example world is meant to grow, and a
+        # literal here only ever fails for the wrong reason.
+        assert body["counts"]["total"] == sum(
+            n for key, n in body["counts"].items()
+            if key not in ("total", "facts", "events", "scenes", "secrets"))
+        assert body["counts"]["total"] >= 35     # §115's floor
         assert body["calendar"]["name"] == "Rennish"
         assert body["calendar"]["days_in_year"] == 355
         assert len(body["calendar"]["months"]) == 5
@@ -66,7 +71,8 @@ class TestWorldEndpoints:
 
 class TestEntities:
     def test_list_and_filter(self, client):
-        assert len(client.get("/api/entities").json()) == 35
+        everything = client.get("/api/entities").json()
+        assert len(everything) == client.get("/api/world").json()["counts"]["total"]
         people = client.get("/api/entities", params={"type_key": "person"}).json()
         assert len(people) == 10
         assert all(e["type_key"] == "person" for e in people)
@@ -658,3 +664,110 @@ class TestBranchEndpoints:
     def test_duplicate_branch_name_is_a_400(self, client):
         client.post("/api/branches", json={"name": "twice"})
         assert client.post("/api/branches", json={"name": "twice"}).status_code == 400
+
+
+class TestEraEndpoints:
+    def test_declare_a_backward_era_and_read_dates_through_it(self, client):
+        made = client.post("/api/eras", json={
+            "name": "Before the Reckoning", "abbreviation": "BR",
+            "end_year": 0, "counts_backward": True,
+        })
+        assert made.status_code == 201
+
+        listed = client.get("/api/eras").json()
+        assert any(e["abbreviation"] == "BR" and e["counts_backward"] for e in listed)
+
+        # the calendar payload carries the reckoning so the client can render an editor
+        eras = client.get("/api/world").json()["calendar"]["eras"]
+        assert any(e["abbreviation"] == "BR" and e["counts_backward"] for e in eras)
+
+        # a date can now be TYPED in era terms, and reads back the same way
+        typed = client.get("/api/day", params={
+            "year": 100, "month": 1, "day": 1, "era": "BR"}).json()
+        assert typed["era"] == "BR"
+        assert typed["era_year"] == 100
+        assert typed["year"] == -99                 # the absolute year that gets stored
+        assert typed["text"].endswith("100 BR")
+
+        # and 100 BR is genuinely earlier than 50 BR
+        later = client.get("/api/day", params={
+            "year": 50, "month": 1, "day": 1, "era": "BR"}).json()
+        assert typed["day"] < later["day"]
+
+    def test_an_unknown_era_is_a_clean_400(self, client):
+        response = client.get("/api/day", params={
+            "year": 5, "month": 1, "day": 1, "era": "NOPE"})
+        assert response.status_code == 400
+        assert "no era called" in response.json()["detail"]
+
+    def test_eras_can_be_renamed_and_removed(self, client):
+        era_id = client.post("/api/eras", json={
+            "name": "Provisional", "abbreviation": "PV", "start_year": 900}).json()["id"]
+        assert client.patch(f"/api/eras/{era_id}",
+                            json={"name": "Settled"}).status_code == 204
+        assert any(e["name"] == "Settled" for e in client.get("/api/eras").json())
+        assert client.delete(f"/api/eras/{era_id}").status_code == 204
+        assert not any(e["id"] == era_id for e in client.get("/api/eras").json())
+
+    def test_a_duplicate_abbreviation_is_refused(self, client):
+        client.post("/api/eras", json={"name": "One", "abbreviation": "XX"})
+        clash = client.post("/api/eras", json={"name": "Two", "abbreviation": "xx"})
+        assert clash.status_code == 400
+        assert "already has an era" in clash.json()["detail"]
+
+
+class TestMapProposal:
+    """§66: the writer sees the map before it exists, and answers it."""
+
+    def test_planning_returns_a_map_and_writes_nothing(self, client):
+        before = client.get("/api/map").json()
+        plan = client.post("/api/map/plan",
+                           json={"invent_settlements": True}).json()
+        assert plan["features"]
+        assert plan["plan_id"]
+        assert "proposes" in plan["summary"]
+        assert client.get("/api/map").json() == before
+
+    def test_every_proposal_says_why_it_is_there(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        assert all(f["why"] for f in plan["features"])
+
+    def test_inventing_a_place_arrives_switched_off(self, client):
+        plan = client.post("/api/map/plan",
+                           json={"invent_settlements": True}).json()
+        invented = [f for f in plan["features"]
+                    if f["subject"] and f["subject"]["mode"] == "new"
+                    and f["kind"] == "settlement"]
+        assert invented
+        assert all(not f["default_accept"] for f in invented)
+
+    def test_applying_writes_the_accepted_parts_as_one_action(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        report = client.post("/api/map/apply",
+                             json={"plan": plan, "decisions": []}).json()
+        assert report["action_id"]
+        assert report["counts"].get("created")
+        undone = client.post("/api/undo").json()
+        assert "message" in undone
+
+    def test_a_writer_can_turn_one_feature_down(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        victim = next(f for f in plan["features"] if f["kind"] == "river")
+        report = client.post("/api/map/apply", json={
+            "plan": plan,
+            "decisions": [{"feature_id": victim["id"], "accept": False}],
+        }).json()
+        rejected = [o for o in report["outcomes"] if o["op"] == "rejected"]
+        assert victim["id"] in {o["feature_id"] for o in rejected}
+
+    def test_a_plan_from_another_timeline_is_refused(self, client):
+        plan = client.post("/api/map/plan", json={}).json()
+        plan["branch"] = "some other timeline"
+        response = client.post("/api/map/apply",
+                               json={"plan": plan, "decisions": []})
+        assert response.status_code == 409
+
+    def test_the_one_press_route_still_works(self, client):
+        response = client.post("/api/map/generate", json={})
+        assert response.status_code == 200
+        assert "The map" in response.json()["summary"]

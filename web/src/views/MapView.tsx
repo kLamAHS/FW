@@ -18,8 +18,11 @@
 
 import { useMemo, useState } from 'react'
 import { api } from '../api'
-import type { MapFeature } from '../api'
-import { ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync } from '../components/common'
+import type { ApplyReport, MapDecision, MapFeature, MapPlan } from '../api'
+import { ProposalOverlay, ProposalPanel } from './map/ProposalPanel'
+import {
+  ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
+} from '../components/common'
 
 const CONTROL_MODES = [
   { key: 'legally_owns', label: 'Legal owner' },
@@ -36,14 +39,55 @@ interface Props {
   onSelect: (id: string) => void
   selectedId: string | null
   version: number
+  onMutate: () => void
 }
 
-export function MapView({ day, onSelect, selectedId, version }: Props) {
+export function MapView({ day, onSelect, selectedId, version, onMutate }: Props) {
   const { data, error, loading } = useAsync(() => api.map(day), [day, version])
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [mode, setMode] = useState<ControlMode>('legally_owns')
   const [showLabels, setShowLabels] = useState(true)
+  const [generating, setGenerating] = useState(false)
+  const [plan, setPlan] = useState<MapPlan | null>(null)
+  const [accepted, setAccepted] = useState<Record<string, boolean>>({})
+  const [report, setReport] = useState<ApplyReport | null>(null)
+  const [genError, setGenError] = useState<string | null>(null)
+  const [propose, setPropose] = useState(true)
   const pan = usePanZoom(1)
+
+  // Propose first (§66). The map is worked out and shown; nothing is written until
+  // the writer says which of it they want.
+  const grow = async () => {
+    if (generating) return
+    setGenerating(true)
+    setGenError(null)
+    setReport(null)
+    try {
+      const proposal = await api.planMap({ invent_settlements: propose })
+      setPlan(proposal)
+      setAccepted(Object.fromEntries(
+        proposal.features.map((f) => [f.id, f.default_accept])))
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const keep = async (decisions: MapDecision[]) => {
+    if (!plan || generating) return
+    setGenerating(true)
+    setGenError(null)
+    try {
+      setReport(await api.applyMap(plan, decisions))
+      setPlan(null)
+      onMutate()
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   // A stable colour per controlling house, so the same house reads the same on every
   // layer and at every date.
@@ -159,6 +203,7 @@ export function MapView({ day, onSelect, selectedId, version }: Props) {
                 </g>
               )
             })}
+            {plan && <ProposalOverlay plan={plan} accepted={accepted} />}
           </g>
         </svg>
 
@@ -186,6 +231,53 @@ export function MapView({ day, onSelect, selectedId, version }: Props) {
           <button onClick={pan.reset} style={{ marginTop: 4 }}>Reset view</button>
         </div>
       </div>
+
+      {/* §34: grow the map from what the regions already say about themselves. */}
+      <div className="toolbar" style={{ marginTop: 12 }}>
+        <button className="active" disabled={generating} onClick={() => void grow()}
+                title="Work out land, rivers, cities and roads from your regions —
+                       you see it before any of it is written">
+          {generating && !plan ? 'Working it out…' : '✦ Propose a map'}
+        </button>
+        <label className="small" style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input type="checkbox" checked={propose}
+                 onChange={(e) => setPropose(e.target.checked)} />
+          suggest settlements I have not named
+        </label>
+        <span className="spacer" style={{ flex: 1 }} />
+        <span className="small muted">
+          You see the map before it exists. Nothing you drew is overwritten, and one
+          Ctrl+Z undoes whatever you keep.
+        </span>
+      </div>
+
+      {genError && <div className="error-box small">{genError}</div>}
+
+      {plan && (
+        <Panel title="A map, before it exists">
+          <ProposalPanel plan={plan} busy={generating}
+                         accepted={accepted} setAccepted={setAccepted}
+                         onApply={(decisions) => void keep(decisions)}
+                         onDiscard={() => setPlan(null)} />
+        </Panel>
+      )}
+
+      {report && (
+        <Panel title="What the map did">
+          <p className="small">{report.summary}</p>
+          {report.outcomes.filter((o) => o.op === 'promoted').map((o) => (
+            <p key={o.feature_id} className="muted small">{o.why}</p>
+          ))}
+          <ul className="clean small">
+            {report.outcomes.filter((o) => o.op === 'created').slice(0, 40).map((o) => (
+              <li key={o.feature_id}>
+                <strong>{o.name}</strong>
+                <div className="muted">{o.why}</div>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      )}
 
       <div className="toolbar" style={{ marginTop: 12 }}>
         <span className="small muted">Colour by</span>

@@ -46,7 +46,7 @@ from fw.core.model.vocabulary import (
     SCALES,
     inverse_of,
 )
-from fw.core.store.db import Database, decode_json, now_iso
+from fw.core.store.db import Database, decode_json, encode_json, now_iso
 
 
 class WorldError(RuntimeError):
@@ -82,6 +82,7 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                        "dynasty_root_id": ("entity", "null")}},
     "secret": {"refs": {"about_id": ("entity", "skip"), "fact_id": ("fact", "null")}},
     "geometry": {"refs": {"entity_id": ("entity", "skip")}},
+    "app_state": {"refs": {"branch_id": ("branch", "skip")}},
     "route_segment": {"refs": {"entity_id": ("entity", "skip"),
                                "from_entity_id": ("entity", "skip"),
                                "to_entity_id": ("entity", "skip"),
@@ -108,14 +109,19 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
     "entity_override": {"refs": {"branch_id": ("branch", "skip"),
                                  "entity_id": ("entity", "skip")},
                         "key": ("branch_id", "entity_id")},
+    "era": {"refs": {"calendar_id": ("calendar", "skip")}},
 }
+
+# Tables whose updates undo by writing the previous values straight back. Anything
+# here must be in _RESTORE_SPEC too, so its inserts and deletes invert as well.
+_PLAIN_UPDATABLE = ("era", "app_state")
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
 _RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
                   "interpretation", "knowledge_state", "causal_link",
-                  "entity_override")
+                  "entity_override", "era", "app_state")
 
 # How undo's toast names a change to each kind of row.
 _ACTION_NOUNS: dict[str, str] = {
@@ -126,6 +132,7 @@ _ACTION_NOUNS: dict[str, str] = {
     "event_participant": "an event participation",
     "scene_participant": "a scene participation",
     "interpretation": "an interpretation",
+    "app_state": "a map decision",
 }
 
 # What the FK cascade takes with a row of each table — the children a raw DELETE must
@@ -258,7 +265,8 @@ class World:
         return world
 
     @classmethod
-    def open(cls, path: str | Path, *, branch: str = "canon") -> World:
+    def open(cls, path: str | Path, *, branch: str = "canon",
+             sync: bool = True) -> World:
         db = Database(path, create=False)
         row = db.one("SELECT id FROM project ORDER BY created_at LIMIT 1")
         if row is None:
@@ -269,7 +277,13 @@ class World:
         )
         if branch_row is None:
             raise WorldError(f"no branch named {branch!r}")
-        return cls(db, project_id, branch_row["id"])
+        world = cls(db, project_id, branch_row["id"])
+        if sync:
+            # Off when a world is only being *looked at*: the launcher opens every save
+            # to list it, and a vocabulary top-up there would rewrite — and re-sort —
+            # the writer's whole library just by rendering the screen.
+            world.sync_vocabulary()
+        return world
 
     def close(self) -> None:
         self.db.close()
@@ -283,6 +297,53 @@ class World:
     @property
     def name(self) -> str:
         return self.db.scalar("SELECT name FROM project WHERE id = ?", (self.project_id,))
+
+    def sync_vocabulary(self) -> int:
+        """Add builtin types and predicates a world was created before.
+
+        The default vocabulary grows as the application does, and a world written last
+        year should not be locked out of a predicate this year's build knows about —
+        that would make "unknown predicate" the reward for having started early. Only
+        *missing* keys are inserted, so a writer's edits to a builtin row, and every
+        row they invented themselves, are left exactly alone.
+        """
+        added = 0
+        have_types = {r["key"] for r in self.db.query(
+            "SELECT key FROM entity_type WHERE project_id = ?", (self.project_id,))}
+        missing_types = [t for t in ENTITY_TYPES if t.key not in have_types]
+        if missing_types:
+            self.db.insert_many("entity_type", [{
+                "id": new_id(), "project_id": self.project_id, "key": t.key,
+                "label": t.label, "plural": t.plural, "category": t.category,
+                "icon": t.icon, "core_fields": list(t.core_fields), "is_builtin": 1,
+            } for t in missing_types])
+            added += len(missing_types)
+
+        have_scales = {r["key"] for r in self.db.query(
+            "SELECT key FROM scale WHERE project_id = ?", (self.project_id,))}
+        missing_scales = [s for s in SCALES if s.key not in have_scales]
+        if missing_scales:
+            self.db.insert_many("scale", [{
+                "id": new_id(), "project_id": self.project_id, "key": s.key,
+                "label": s.label, "steps": list(s.steps),
+            } for s in missing_scales])
+            added += len(missing_scales)
+
+        have_predicates = {r["key"] for r in self.db.query(
+            "SELECT key FROM predicate WHERE project_id = ?", (self.project_id,))}
+        missing_predicates = [p for p in PREDICATES if p.key not in have_predicates]
+        if missing_predicates:
+            self.db.insert_many("predicate", [{
+                "id": new_id(), "project_id": self.project_id, "key": p.key,
+                "label": p.label, "kind": p.kind, "inverse_key": p.inverse_key,
+                "symmetric": int(p.symmetric), "transitive": int(p.transitive),
+                "datatype": p.datatype, "scale_key": p.scale_key,
+                "domain_type_keys": list(p.domain_type_keys),
+                "range_type_keys": list(p.range_type_keys), "category": p.category,
+                "description": p.description, "is_builtin": 1,
+            } for p in missing_predicates])
+            added += len(missing_predicates)
+        return added
 
     def _install_vocabulary(self) -> None:
         """Seed the starting types, predicates and scales. All of them editable after."""
@@ -328,6 +389,8 @@ class World:
                 "id": new_id(), "calendar_id": cal_id, "name": e.name,
                 "abbreviation": e.abbreviation, "start_year": e.start_year,
                 "end_year": e.end_year,
+                "counts_backward": int(e.counts_backward),
+                "reckons_from": e.reckons_from,
             } for e in calendar.eras])
             self.db.update("project", self.project_id,
                            {"calendar_id": cal_id, "updated_at": now_iso()})
@@ -356,9 +419,14 @@ class World:
             )
         )
         eras = tuple(
-            Era(e["name"], e["abbreviation"], e["start_year"], e["end_year"])
+            Era(e["name"], e["abbreviation"], e["start_year"], e["end_year"],
+                counts_backward=bool(e["counts_backward"]),
+                reckons_from=e["reckons_from"])
             for e in self.db.query(
-                "SELECT * FROM era WHERE calendar_id = ? ORDER BY start_year", (cal_id,)
+                "SELECT * FROM era WHERE calendar_id = ? "
+                # NULLs sort first, which puts an era open at the start — a world's
+                # own BC — before everything it precedes.
+                "ORDER BY start_year, name", (cal_id,)
             )
         )
         seasons = tuple(
@@ -379,6 +447,96 @@ class World:
 
     def day(self, year: int, month: int = 1, day: int = 1) -> int:
         return self.calendar.date(year, month, day)
+
+    # ---- eras (§3): the writer's own time dividers ------------------------
+
+    def _calendar_id(self) -> str:
+        cal_id = self.db.scalar(
+            "SELECT calendar_id FROM project WHERE id = ?", (self.project_id,))
+        if not cal_id:
+            raise WorldError("this world has no calendar to add eras to")
+        return cal_id
+
+    def eras(self) -> list[dict]:
+        """Every era of this world's calendar, earliest first."""
+        return [dict(r) | {"counts_backward": bool(r["counts_backward"])}
+                for r in self.db.query(
+                    "SELECT * FROM era WHERE calendar_id = ? ORDER BY start_year, name",
+                    (self._calendar_id(),))]
+
+    def add_era(self, name: str, abbreviation: str, *, start_year: int | None = None,
+                end_year: int | None = None, counts_backward: bool = False,
+                reckons_from: int | None = None) -> str:
+        """Declare a time divider — a world's own AD, or its own BC.
+
+        Nothing about stored facts changes: eras rename years for reading and writing,
+        which is why one can be added to a finished world without touching its history.
+        """
+        name, abbreviation = name.strip(), abbreviation.strip()
+        if not name or not abbreviation:
+            raise WorldError("an era needs a name and a short form")
+        if (start_year is not None and end_year is not None
+                and end_year < start_year):
+            raise WorldError("an era cannot end before it begins")
+        cal_id = self._calendar_id()
+        if self.db.one(
+            "SELECT 1 FROM era WHERE calendar_id = ? AND lower(abbreviation) = lower(?)",
+            (cal_id, abbreviation),
+        ):
+            raise WorldError(f"this calendar already has an era called {abbreviation!r}")
+        eid = new_id()
+        with self.db.transaction():
+            self.db.insert("era", {
+                "id": eid, "calendar_id": cal_id, "name": name,
+                "abbreviation": abbreviation, "start_year": start_year,
+                "end_year": end_year, "counts_backward": int(counts_backward),
+                "reckons_from": reckons_from,
+            })
+            self._log_revision("era", eid, "insert", None,
+                               {"name": name, "abbreviation": abbreviation})
+        self._calendar = None            # the cached calendar is now stale
+        return eid
+
+    def update_era(self, era_id: str, **changes: Any) -> None:
+        allowed = {"name", "abbreviation", "start_year", "end_year",
+                   "counts_backward", "reckons_from"}
+        payload = {k: v for k, v in changes.items() if k in allowed}
+        if not payload:
+            return
+        if "counts_backward" in payload:
+            payload["counts_backward"] = int(bool(payload["counts_backward"]))
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM era WHERE id = ?", (era_id,))
+            if row is None:
+                raise WorldError("no such era")
+            # The same guards as add_era. Without them an edit could leave two ages
+            # sharing an abbreviation, and a date typed in one would silently parse
+            # against the other.
+            merged = {**dict(row), **payload}
+            if (merged["start_year"] is not None and merged["end_year"] is not None
+                    and merged["end_year"] < merged["start_year"]):
+                raise WorldError("an era cannot end before it begins")
+            if self.db.one(
+                "SELECT 1 FROM era WHERE calendar_id = ? AND id != ? "
+                "AND lower(abbreviation) = lower(?)",
+                (row["calendar_id"], era_id, merged["abbreviation"]),
+            ):
+                raise WorldError(
+                    f"this calendar already has an era called "
+                    f"{merged['abbreviation']!r}")
+            before = {k: row[k] for k in payload}
+            self.db.update("era", era_id, payload)
+            self._log_revision("era", era_id, "update", before, payload)
+        self._calendar = None
+
+    def delete_era(self, era_id: str) -> None:
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM era WHERE id = ?", (era_id,))
+            if row is None:
+                return
+            self._log_revision("era", era_id, "delete", dict(row), None)
+            self.db.execute("DELETE FROM era WHERE id = ?", (era_id,))
+        self._calendar = None
 
     # ---- branches (§105) --------------------------------------------------
     #
@@ -1039,6 +1197,7 @@ class World:
             self._invert_action(target)
             self._undone.add(target)
             self._redo.append((target, inversion))
+        self._calendar = None      # an undone era changes how every date reads
         return f"Undid {self._describe_action(target)}."
 
     def redo(self) -> str:
@@ -1056,6 +1215,7 @@ class World:
             self._invert_action(inversion)
             self._undone.discard(target)
             self._redo.pop()
+        self._calendar = None
         return f"Redid {self._describe_action(target)}."
 
     def undo_state(self) -> dict:
@@ -1207,6 +1367,18 @@ class World:
             current = {k: data[k] for k in payload}
             self.db.update("fact", row_id, {**payload, "updated_at": now_iso()})
             self._log_revision("fact", row_id, "update", current, payload)
+            return 1
+        if table in _PLAIN_UPDATABLE:
+            row = self.db.one(f"SELECT * FROM {table} WHERE id = ?", (row_id,))
+            if row is None:
+                return 0
+            data = dict(row)
+            payload = {k: v for k, v in before.items() if k in data}
+            if not payload:
+                return 0
+            current = {k: data[k] for k in payload}
+            self.db.update(table, row_id, payload)
+            self._log_revision(table, row_id, "update", current, payload)
             return 1
         if table == "entity_override":
             parts = row_id.split("/")
@@ -2587,21 +2759,24 @@ class World:
     def add_geometry(self, entity_id: str, kind: str, coordinates: Any, *,
                      valid_from: int | None = None, valid_to: int | None = None,
                      layer: str = "base", style: dict | None = None,
-                     approximate: bool = False) -> Geometry:
+                     approximate: bool = False,
+                     props: dict | None = None) -> Geometry:
+        """Draw a shape. `style` is what the client renders with; `props` is what the
+        application knows about the shape and never draws — provenance above all."""
         gid = new_id()
         with self.db.transaction():
             self.db.insert("geometry", {
                 "id": gid, "project_id": self.project_id, "branch_id": self.branch_id,
                 "entity_id": entity_id, "kind": kind, "coordinates": coordinates,
                 "valid_from": valid_from, "valid_to": valid_to, "layer": layer,
-                "style": style or {}, "approximate": int(approximate),
-                "created_at": now_iso(),
+                "style": style or {}, "props": props or {},
+                "approximate": int(approximate), "created_at": now_iso(),
             })
             self._index_geometry(gid, coordinates)
             self._log_revision("geometry", gid, "insert", None, {"kind": kind})
         return Geometry(id=gid, entity_id=entity_id, kind=kind, coordinates=coordinates,
                         valid_from=valid_from, valid_to=valid_to, layer=layer,
-                        style=style or {}, approximate=approximate)
+                        style=style or {}, approximate=approximate, props=props or {})
 
     def _index_geometry(self, geometry_id: str, coordinates: Any) -> None:
         xs, ys = _flatten_coords(coordinates)
@@ -2614,6 +2789,40 @@ class World:
         self.db.insert("geometry_rtree_map",
                        {"rtree_id": cur.lastrowid, "geometry_id": geometry_id})
 
+    def delete_geometry(self, geometry_id: str) -> None:
+        """Remove one shape, its R*Tree box and its index row.
+
+        The R*Tree is a virtual table and knows nothing about foreign keys, so its box
+        outlives the row unless it is removed by hand — a leak that grows the file
+        forever. Both existing delete paths do this; so must this one.
+        """
+        with self.db.transaction():
+            row = self.db.one("SELECT * FROM geometry WHERE id = ?", (geometry_id,))
+            if row is None:
+                return
+            if row["branch_id"] != self.branch_id:
+                raise WorldError(
+                    "that shape belongs to another timeline — redraw it there")
+            self.db.execute(
+                "DELETE FROM geometry_bbox WHERE id IN ("
+                " SELECT rtree_id FROM geometry_rtree_map WHERE geometry_id = ?)",
+                (geometry_id,))
+            self._log_revision("geometry", geometry_id, "delete", _snapshot(row), None)
+            self.db.execute("DELETE FROM geometry WHERE id = ?", (geometry_id,))
+
+    def geometry_index(self, *, at: int | None = None,
+                       layer: str | None = None) -> dict[str, list[Geometry]]:
+        """Every shape, grouped by entity, from ONE query.
+
+        `geometry_for` loads and decodes the whole table per call, so asking it about
+        three hundred settlements in a loop costs three hundred full scans. Anything
+        that walks many entities builds this once instead.
+        """
+        out: dict[str, list[Geometry]] = {}
+        for geometry in self.geometries(at=at, layer=layer):
+            out.setdefault(geometry.entity_id, []).append(geometry)
+        return out
+
     def geometries(self, *, at: int | None = None, layer: str | None = None) -> list[Geometry]:
         sql = f"SELECT * FROM geometry WHERE {self._in_chain}"
         params: list[Any] = [*self._chain]
@@ -2624,6 +2833,9 @@ class World:
             sql += (" AND (valid_from IS NULL OR valid_from <= ?)"
                     " AND (valid_to   IS NULL OR valid_to   >= ?)")
             params.extend([at, at])
+        # Explicit order: without it the planner decides, so paint order — and any test
+        # asserting over it — changes the day ANALYZE runs.
+        sql += " ORDER BY layer, entity_id, id"
         return [_geometry(r) for r in self.db.query(sql, params)]
 
     def geometry_for(self, entity_id: str, *, at: int | None = None) -> Geometry | None:
@@ -2645,12 +2857,89 @@ class World:
         wanted = {r["geometry_id"] for r in rows}
         return [g for g in self.geometries(at=at) if g.id in wanted]
 
+    # ---- remembered decisions (§66) ---------------------------------------
+
+    def remember(self, namespace: str, key: str, value: Any) -> None:
+        """Record a decision the writer made, so the next run honours it.
+
+        This is where "I rejected that river" and "I renamed that town" live. It is not
+        a fact about the world — the world does not contain a rejected river — and it
+        cannot live in the client, because a decision the writer loses by opening a new
+        browser is a decision they have to make again every time.
+
+        Branch-scoped, because a what-if may keep what canon rejected. Logged like any
+        other change, so it undoes with the action that made it.
+        """
+        row = self._state_row(namespace, key)
+        with self.db.transaction():
+            if row is None:
+                sid = new_id()
+                # Encoded here rather than left to the insert helper: that only
+                # JSON-encodes dicts and lists, so a bare string would be stored raw
+                # and read back as undecodable.
+                self.db.insert("app_state", {
+                    "id": sid, "project_id": self.project_id,
+                    "branch_id": self.branch_id, "namespace": namespace, "key": key,
+                    "value": encode_json(value), "updated_at": now_iso(),
+                })
+                self._log_revision("app_state", sid, "insert", None, {"value": value})
+            else:
+                before = decode_json(row["value"], None)
+                self.db.execute(
+                    "UPDATE app_state SET value = ?, updated_at = ? WHERE id = ?",
+                    (encode_json(value), now_iso(), row["id"]))
+                self._log_revision("app_state", row["id"], "update",
+                                   {"value": before}, {"value": value})
+
+    def _state_row(self, namespace: str, key: str):
+        return self.db.one(
+            "SELECT * FROM app_state WHERE project_id = ? AND branch_id = ? "
+            "AND namespace = ? AND key = ?",
+            (self.project_id, self.branch_id, namespace, key))
+
+    def recall(self, namespace: str, key: str) -> Any | None:
+        row = self._state_row(namespace, key)
+        return decode_json(row["value"], None) if row else None
+
+    def recall_all(self, namespace: str) -> dict[str, Any]:
+        """Every decision in a namespace, in key order."""
+        return {r["key"]: decode_json(r["value"], None) for r in self.db.query(
+            "SELECT key, value FROM app_state WHERE project_id = ? AND branch_id = ? "
+            "AND namespace = ? ORDER BY key",
+            (self.project_id, self.branch_id, namespace))}
+
+    def forget(self, namespace: str, key: str) -> None:
+        row = self._state_row(namespace, key)
+        if row is None:
+            return
+        with self.db.transaction():
+            self.db.execute("DELETE FROM app_state WHERE id = ?", (row["id"],))
+            self._log_revision("app_state", row["id"], "delete", _snapshot(row), None)
+
+    def current_action_id(self) -> str:
+        """The id of the action being written — what undo groups on."""
+        return self._current_action_id()
+
     def add_route_segment(self, from_entity_id: str, to_entity_id: str, length: float, *,
                           medium: str = "road", quality: float = 1.0,
                           terrain: str = "plain", entity_id: str | None = None,
                           built_on: int | None = None, ruined_on: int | None = None,
                           closed_seasons: Sequence[str] = (), danger: str = "low",
-                          toll_holder_id: str | None = None) -> RouteSegment:
+                          toll_holder_id: str | None = None,
+                          props: dict | None = None) -> RouteSegment:
+        # A closure is tested against the season the day falls in, so a name that is not
+        # one of this calendar's seasons closes the route on no day of any year — the road
+        # reads as impassable in the writer's notes and is wide open in every travel
+        # answer. The example world shipped with exactly that, closing a mountain pass in
+        # "Darkening", which is a month. Refusing here is the only place that can tell the
+        # difference, and it can say what the calendar does call its seasons.
+        known = {s.name for s in self.calendar.seasons}
+        unknown = [s for s in closed_seasons if s not in known]
+        if unknown:
+            names = ", ".join(sorted(known)) or "none — this calendar has no seasons"
+            raise WorldError(
+                f"{unknown[0]!r} is not a season of the {self.calendar.name} calendar "
+                f"(its seasons are: {names})")
         sid = new_id()
         with self.db.transaction():
             self.db.insert("route_segment", {
@@ -2660,6 +2949,7 @@ class World:
                 "quality": quality, "terrain": terrain, "built_on": built_on,
                 "ruined_on": ruined_on, "closed_seasons": list(closed_seasons),
                 "danger": danger, "toll_holder_id": toll_holder_id,
+                "props": props or {},
             })
             self._log_revision("route_segment", sid, "insert", None, {"medium": medium})
         return RouteSegment(id=sid, from_entity_id=from_entity_id,
@@ -2667,11 +2957,14 @@ class World:
                             quality=quality, terrain=terrain, entity_id=entity_id,
                             built_on=built_on, ruined_on=ruined_on,
                             closed_seasons=tuple(closed_seasons), danger=danger,
-                            toll_holder_id=toll_holder_id)
+                            toll_holder_id=toll_holder_id, props=props or {})
 
     def route_segments(self) -> list[RouteSegment]:
+        # Ordered, because an unordered read makes a generated network impossible to
+        # diff against the last one and a golden test impossible to write.
         return [_segment(r) for r in self.db.query(
-            f"SELECT * FROM route_segment WHERE {self._in_chain}", self._chain
+            f"SELECT * FROM route_segment WHERE {self._in_chain} "
+            "ORDER BY from_entity_id, to_entity_id, id", self._chain
         )]
 
     # ---- snapshots (§80) --------------------------------------------------
@@ -2800,6 +3093,7 @@ def _geometry(row) -> Geometry:
         coordinates=decode_json(row["coordinates"], []),
         valid_from=row["valid_from"], valid_to=row["valid_to"], layer=row["layer"],
         style=decode_json(row["style"], {}), approximate=bool(row["approximate"]),
+        props=decode_json(row["props"], {}),
     )
 
 
@@ -2811,6 +3105,7 @@ def _segment(row) -> RouteSegment:
         built_on=row["built_on"], ruined_on=row["ruined_on"],
         closed_seasons=tuple(decode_json(row["closed_seasons"], [])),
         danger=row["danger"], toll_holder_id=row["toll_holder_id"],
+        props=decode_json(row["props"], {}),
     )
 
 

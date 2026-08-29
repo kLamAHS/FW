@@ -74,7 +74,11 @@ class FactIn(BaseModel):
 
 
 class DateOut(BaseModel):
-    """A day index rendered every way the UI might want it."""
+    """A day index rendered every way the UI might want it.
+
+    `year` stays the absolute year facts are stored against; `era_year` is what the
+    world's own reckoning calls it, which for a backward era counts the other way.
+    """
 
     day: int
     text: str
@@ -85,6 +89,8 @@ class DateOut(BaseModel):
     weekday: str
     season: str | None = None
     era: str | None = None
+    era_name: str | None = None
+    era_year: int | None = None
 
 
 class CalendarOut(BaseModel):
@@ -229,6 +235,54 @@ class CausalLinkIn(BaseModel):
     cause_id: str
     effect_id: str
     note: str = ""
+
+
+class EraIn(BaseModel):
+    name: str
+    abbreviation: str
+    start_year: int | None = None
+    end_year: int | None = None
+    counts_backward: bool = False
+    reckons_from: int | None = None
+
+
+class EraPatch(BaseModel):
+    name: str | None = None
+    abbreviation: str | None = None
+    start_year: int | None = None
+    end_year: int | None = None
+    counts_backward: bool | None = None
+    reckons_from: int | None = None
+
+
+class GenerateMapIn(BaseModel):
+    seed: str | None = None
+    propose_settlements: bool = True
+
+
+class PlanMapIn(BaseModel):
+    """What the writer can turn before a map is worked out."""
+
+    seed: str | None = None
+    include: list[str] | None = None
+    invent_settlements: bool = False
+    north: str = "up"
+    prevailing_wind: str = ""
+
+
+class DecisionIn(BaseModel):
+    feature_id: str
+    accept: bool = True
+    name: str | None = None
+    pinned: bool = False
+
+
+class ApplyMapIn(BaseModel):
+    """A plan, answered. The plan comes back verbatim so the server writes exactly
+    what the writer looked at rather than something recomputed underneath them."""
+
+    plan: dict
+    decisions: list[DecisionIn] = []
 
 
 class SuppressIn(BaseModel):

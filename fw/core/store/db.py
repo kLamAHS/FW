@@ -254,6 +254,12 @@ def _encode(value: Any) -> Any:
 _UNSET = object()
 
 
+def encode_json(value: Any) -> str:
+    """A JSON column's bytes. Public because callers writing raw SQL need the same
+    encoding the insert helper uses, or two paths write the same value differently."""
+    return json.dumps(value, separators=(",", ":"))
+
+
 def decode_json(value: str | None, default: Any = _UNSET) -> Any:
     """Parse a JSON column, or return `default` (an explicit None is honoured).
 

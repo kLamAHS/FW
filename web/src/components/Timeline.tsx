@@ -19,9 +19,12 @@ interface Props {
   snapshots: { name: string; day: number }[]
   dateText: string
   season: string | null
+  onEditEras: () => void
 }
 
-export function Timeline({ world, day, onChange, snapshots, dateText, season }: Props) {
+export function Timeline(
+  { world, day, onChange, snapshots, dateText, season, onEditEras }: Props,
+) {
   const { first, last } = world.span
   const year = Math.floor((day - first) / world.calendar.days_in_year)
 
@@ -67,6 +70,11 @@ export function Timeline({ world, day, onChange, snapshots, dateText, season }: 
       <span className="muted small mono" title="Year within the world's recorded span">
         yr {year}
       </span>
+      {/* §3: how years are *named* belongs beside where the date is read. */}
+      <button className="small" onClick={onEditEras}
+              title="Name the ages of this world — its own BC and AD">
+        ages
+      </button>
 
       {snapshots.length > 0 && (
         <span className="snapshots">

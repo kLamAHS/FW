@@ -232,6 +232,9 @@ class Geometry:
     layer: str = "base"
     style: dict[str, Any] = field(default_factory=dict)
     approximate: bool = False
+    # Provenance the client never draws — which generation made this shape and which
+    # feature of it. `style` is for drawing; this is for knowing.
+    props: dict[str, Any] = field(default_factory=dict)
 
     def holds_on(self, day: int) -> bool:
         if self.valid_from is not None and day < self.valid_from:
@@ -256,6 +259,7 @@ class RouteSegment:
     closed_seasons: tuple[str, ...] = ()
     danger: str = "low"
     toll_holder_id: str | None = None
+    props: dict[str, Any] = field(default_factory=dict)
 
     def usable_on(self, day: int | None, season: str | None) -> bool:
         if day is not None:
