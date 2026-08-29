@@ -340,3 +340,6 @@ CONFIDENCE_LEVELS = ("canon", "draft", "tentative", "rumored", "disputed",
                      "speculative", "unknown", "deprecated")
 SECRECY_LEVELS = ("public", "known", "discreet", "secret", "deep_secret")
 KNOWLEDGE_STANCES = ("knows", "believes", "suspects", "misinformed", "unaware")
+# How much a secret costs when it comes out. Closed so the write surface can validate
+# and the client can enumerate, like every other list here.
+SECRET_SEVERITIES = ("trivial", "minor", "major", "catastrophic")

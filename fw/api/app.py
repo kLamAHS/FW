@@ -21,6 +21,7 @@ from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from fw.api import schemas as S
+from fw.core import query as QY
 from fw.core.calendar.kernel import CalendarError
 from fw.core.continuity.engine import ContinuityEngine, Severity
 from fw.core.derive.dependency import DependencyAnalyst
@@ -33,7 +34,12 @@ from fw.core.library import Library, LibraryError
 from fw.core.mapgen import cartography, ledger
 from fw.core.mapgen import plan as MG
 from fw.core.mapgen.generate import generate_map
-from fw.core.model.vocabulary import PREDICATES_BY_KEY
+from fw.core.model.vocabulary import (
+    CONFIDENCE_LEVELS,
+    KNOWLEDGE_STANCES,
+    PREDICATES_BY_KEY,
+    SECRET_SEVERITIES,
+)
 from fw.core.store.db import StoreError
 from fw.core.succession.engine import SuccessionEngine
 from fw.core.succession.laws import LAWS
@@ -787,6 +793,52 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             })
         return out
 
+    @app.post("/api/titles", status_code=201)
+    def create_title(payload: S.TitleIn) -> dict[str, Any]:
+        """§8. Make a title, so there is something for anyone to inherit.
+
+        `World.add_title` has existed since the world model did, revision-logged and
+        branch-scoped, with no route and no form — so succession worked on the seeded
+        example world and on nothing a writer built themselves.
+        """
+        if payload.succession_law not in LAWS:
+            raise HTTPException(
+                422, f"unknown succession law {payload.succession_law!r} "
+                     f"(the laws are: {', '.join(sorted(LAWS))})")
+        for field, value in (("territory_id", payload.territory_id),
+                             ("dynasty_root_id", payload.dynasty_root_id),
+                             ("entity_id", payload.entity_id)):
+            if value and world.get_entity(value) is None:
+                raise HTTPException(404, f"no entity {value} for {field}")
+        title = world.add_title(
+            payload.name, rank=payload.rank, territory_id=payload.territory_id,
+            succession_law=payload.succession_law,
+            dynasty_root_id=payload.dynasty_root_id, created_on=payload.created_on,
+            entity_id=payload.entity_id)
+        return {"id": title.id, "name": title.name, "rank": title.rank,
+                "succession_law": title.succession_law,
+                "territory_id": title.territory_id}
+
+    @app.post("/api/titles/{title_id}/grants", status_code=201)
+    def grant_a_title(title_id: str, payload: S.GrantIn) -> dict[str, Any]:
+        """Who holds it, and from when. §8's own example is a succession dispute, and
+        a dispute needs two grants that overlap — which `disputed` is for."""
+        if world.get_title(title_id) is None:
+            raise HTTPException(404, f"no title {title_id}")
+        if world.get_entity(payload.holder_id) is None:
+            raise HTTPException(404, f"no entity {payload.holder_id}")
+        if (payload.from_day is not None and payload.to_day is not None
+                and payload.to_day < payload.from_day):
+            raise HTTPException(422, "a holding cannot end before it begins")
+        holding = world.grant_title(
+            title_id, payload.holder_id, from_day=payload.from_day,
+            to_day=payload.to_day, how=payload.how, disputed=payload.disputed,
+            note=payload.note)
+        return {"id": holding.id, "title_id": title_id,
+                "holder_id": holding.holder_id, "from_day": holding.from_day,
+                "to_day": holding.to_day, "how": holding.how,
+                "disputed": holding.disputed}
+
     @app.get("/api/succession/{title_id}", response_model=S.SuccessionOut)
     def get_succession(
         title_id: str,
@@ -836,14 +888,23 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     @app.post("/api/scenes", status_code=201)
     def create_scene(payload: S.SceneIn) -> dict[str, Any]:
         _require_entities(payload.location_id, payload.pov_id, *payload.participants)
+        if payload.chapter_id and not any(
+                c["id"] == payload.chapter_id for c in world.chapters()):
+            raise HTTPException(404, f"no chapter {payload.chapter_id}")
         scene = world.add_scene(
-            payload.title, day=payload.day, end_day=payload.end_day,
+            payload.title, chapter_id=payload.chapter_id, position=payload.position,
+            day=payload.day, end_day=payload.end_day,
             location_id=payload.location_id, pov_id=payload.pov_id,
             objective=payload.objective, conflict=payload.conflict,
             outcome=payload.outcome, notes=payload.notes,
             participants=payload.participants,
         )
         return {"id": scene.id, "title": scene.title, "day": scene.day}
+
+    @app.get("/api/chapters")
+    def list_chapters() -> list[dict[str, Any]]:
+        """The book, so a scene can be put in it rather than only in the world."""
+        return world.chapters()
 
     @app.post("/api/events", status_code=201)
     def create_event(payload: S.EventIn) -> dict[str, Any]:
@@ -1003,6 +1064,101 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 "by_stance": by_stance,
             })
         return out
+
+    @app.post("/api/secrets", status_code=201)
+    def create_secret(payload: S.SecretIn) -> dict[str, Any]:
+        """§6. A secret is a thing that is true and that not everyone has been told.
+
+        The truth lives here once; who thinks what about it lives in the knowledge
+        states, which is the distinction the brief insists on — "who knows X" and "who
+        believes X" have to be separately answerable, and a boolean cannot do it.
+        """
+        if payload.severity not in SECRET_SEVERITIES:
+            raise HTTPException(
+                422, f"unknown severity {payload.severity!r} "
+                     f"(they are: {', '.join(SECRET_SEVERITIES)})")
+        if payload.about_id and world.get_entity(payload.about_id) is None:
+            raise HTTPException(404, f"no entity {payload.about_id}")
+        secret = world.add_secret(
+            payload.name, truth=payload.truth, about_id=payload.about_id,
+            fact_id=payload.fact_id, severity=payload.severity)
+        return {"id": secret.id, "name": secret.name, "truth": secret.truth,
+                "about_id": secret.about_id, "severity": secret.severity}
+
+    @app.post("/api/knowledge", status_code=201)
+    def record_knowledge(payload: S.KnowledgeIn) -> dict[str, Any]:
+        """Who thinks what about a secret, and since when.
+
+        `about_observer_id` is the second-order case the brief names: Edric does not
+        merely believe the wrong thing, he believes that *Mara* believes it, and a scene
+        turns on the difference.
+        """
+        if payload.stance not in KNOWLEDGE_STANCES:
+            raise HTTPException(
+                422, f"unknown stance {payload.stance!r} "
+                     f"(they are: {', '.join(KNOWLEDGE_STANCES)})")
+        if not any(s.id == payload.secret_id for s in world.secrets()):
+            raise HTTPException(404, f"no secret {payload.secret_id}")
+        for field, value in (("observer_id", payload.observer_id),
+                             ("about_observer_id", payload.about_observer_id),
+                             ("acquired_from", payload.acquired_from)):
+            if value and world.get_entity(value) is None:
+                raise HTTPException(404, f"no entity {value} for {field}")
+        state = world.set_knowledge(
+            payload.observer_id, payload.secret_id, payload.stance,
+            about_observer_id=payload.about_observer_id,
+            acquired_on=payload.acquired_on, acquired_from=payload.acquired_from,
+            scene_id=payload.scene_id, note=payload.note)
+        return {"id": state.id, "observer_id": state.observer_id,
+                "secret_id": state.secret_id, "stance": state.stance,
+                "about_observer_id": state.about_observer_id,
+                "acquired_on": state.acquired_on, "note": state.note}
+
+    # ---- asking the world questions (§49) ---------------------------------
+
+    @app.post("/api/query")
+    def ask(payload: S.QueryIn) -> dict[str, Any]:
+        """Put a question to the world and get the answer, with the working shown.
+
+        The brief calls this one of the application's most important features and the
+        module it lives in was zero bytes until now. A question is structured data
+        rather than text, so every question the engine can answer is one the form can
+        offer and there is no syntax to get wrong.
+        """
+        try:
+            return QY.run(world, QY.Query.from_dict(payload.query)).as_dict()
+        except QY.QueryError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+    @app.get("/api/query/vocabulary")
+    def query_vocabulary() -> dict[str, Any]:
+        """Everything a question can be built out of, for the form to enumerate."""
+        return {
+            "directions": list(QY.DIRECTIONS),
+            "tests": list(QY.TESTS),
+            "orders": list(QY.ORDERS),
+            "confidence": list(CONFIDENCE_LEVELS),
+            "tags": world.all_tags(),
+        }
+
+    @app.get("/api/queries")
+    def list_saved_queries() -> list[dict[str, Any]]:
+        return [row.as_dict() for row in QY.saved(world)]
+
+    @app.post("/api/queries", status_code=201)
+    def save_a_query(payload: S.SaveQueryIn) -> dict[str, Any]:
+        """Keep a question, so it can be asked again when the answer has changed."""
+        try:
+            row = QY.save(world, payload.name, QY.Query.from_dict(payload.query),
+                          note=payload.note)
+        except QY.QueryError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return row.as_dict()
+
+    @app.delete("/api/queries/{key}", status_code=204)
+    def forget_a_query(key: str) -> Response:
+        QY.forget(world, key)
+        return Response(status_code=204)
 
     # ---- scenes (§44) -----------------------------------------------------
 
@@ -1247,7 +1403,19 @@ def _fact_out(world: World, fact) -> S.FactOut:
         value=fact.value, valid_from=fact.valid_from, valid_to=fact.valid_to,
         confidence=fact.confidence, secrecy=fact.secrecy, strength=fact.strength,
         note=fact.note, is_secret=fact.is_secret,
+        valid_from_text=(world.calendar.format(fact.valid_from)
+                         if fact.valid_from is not None else ""),
+        valid_to_text=(world.calendar.format(fact.valid_to)
+                       if fact.valid_to is not None else ""),
+        source=_source_label(world, fact.source_id),
     )
+
+
+def _source_label(world: World, source_id: str | None) -> str:
+    if not source_id:
+        return ""
+    row = world.get_source(source_id)
+    return str(row.get("label") or "") if row else ""
 
 
 def _date_out(world: World, day: int) -> S.DateOut:

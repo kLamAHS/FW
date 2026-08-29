@@ -10,18 +10,24 @@
 
 import { useState } from 'react'
 import { api } from '../api'
-import type { Vocabulary } from '../api'
+import type { CalendarInfo, Vocabulary } from '../api'
 import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
+import { Modal, TitleForm } from '../components/forms'
 
 interface Props {
   day: number
   onSelect: (id: string) => void
   version: number
   vocabulary: Vocabulary | null
+  calendar: CalendarInfo
+  onMutate: () => void
 }
 
-export function SuccessionView({ day, onSelect, version, vocabulary }: Props) {
+export function SuccessionView(
+  { day, onSelect, version, vocabulary, calendar, onMutate }: Props,
+) {
   const titles = useAsync(() => api.titles(day), [day, version])
+  const [making, setMaking] = useState(false)
   const [titleId, setTitleId] = useState<string | null>(null)
   const [law, setLaw] = useState<string>('')
   const [illegitimate, setIllegitimate] = useState<string>('')
@@ -51,9 +57,36 @@ export function SuccessionView({ day, onSelect, version, vocabulary }: Props) {
     })),
   )
 
+  // Making a title is what turns this page from a demonstration into a tool: the
+  // succession engine has always worked and there was no way to give it anything to
+  // work on, so a writer's own world showed them an empty screen.
+  const make = (
+    <>
+      <button className="active" onClick={() => setMaking(true)}>+ A title</button>
+      {making && (
+        <Modal title="A title" onClose={() => setMaking(false)}>
+          <TitleForm calendar={calendar} laws={vocabulary?.succession_laws ?? []}
+                     onDone={() => { setMaking(false); onMutate() }}
+                     onCancel={() => setMaking(false)} />
+        </Modal>
+      )}
+    </>
+  )
+
   if (titles.loading) return <Loading />
   if (titles.error) return <ErrorBox error={titles.error} />
-  if (!titles.data?.length) return <p className="muted">This world has no titles yet.</p>
+  if (!titles.data?.length) {
+    return (
+      <Panel title="Succession">
+        <p className="muted">
+          Nothing in this world is inherited yet. A title is the thing a line of
+          succession runs down — make one and its heirs are worked out from your own
+          family tree and the law you choose.
+        </p>
+        <div className="toolbar">{make}</div>
+      </Panel>
+    )
+  }
 
   const anyHypothesis = Boolean(law || illegitimate || dead)
 
@@ -67,6 +100,8 @@ export function SuccessionView({ day, onSelect, version, vocabulary }: Props) {
             {t.name}
           </button>
         ))}
+        <span className="spacer" style={{ flex: 1 }} />
+        {make}
       </div>
 
       <div className="grid wide">

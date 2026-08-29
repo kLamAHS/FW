@@ -33,6 +33,11 @@ export interface Fact {
   strength: string | null
   note: string
   is_secret: boolean
+  /** All three written on every fact since the first migration and rendered nowhere,
+   *  which is worse than absent: a writer who cited a note could not see that they had. */
+  valid_from_text: string
+  valid_to_text: string
+  source: string
 }
 
 export interface WorldDate {
@@ -466,8 +471,137 @@ export interface FactDraft {
   note?: string
 }
 
+/* ---- questions (§49) ---------------------------------------------------- */
+
+export interface QueryCondition {
+  predicate: string
+  direction?: 'out' | 'in'
+  test?: string
+  value?: string
+  object_id?: string
+  object_type?: string
+  strength?: string[]
+  at?: number | null
+  negate?: boolean
+}
+
+export interface QueryWithin {
+  start_id: string
+  predicates: string[]
+  hops: number
+  direction?: 'out' | 'in' | 'either'
+  at?: number | null
+  include_start?: boolean
+}
+
+export interface QueryShape {
+  types?: string[]
+  name_contains?: string
+  tags?: string[]
+  confidence?: string[]
+  exists_on?: number | null
+  began_after?: number | null
+  began_before?: number | null
+  conditions?: QueryCondition[]
+  within?: QueryWithin | null
+  order?: string
+  descending?: boolean
+  limit?: number
+  explain?: boolean
+}
+
+export interface QueryRow {
+  id: string
+  name: string
+  type_key: string
+  summary: string
+  confidence: string
+  exists_from: number | null
+  exists_to: number | null
+  because: string[]
+  distance: number | null
+}
+
+export interface QueryAnswer {
+  query: QueryShape
+  rows: QueryRow[]
+  total: number
+  truncated: boolean
+  sql: string
+  ms: number
+  notes: string[]
+}
+
+export interface QueryVocabulary {
+  directions: string[]
+  tests: string[]
+  orders: string[]
+  confidence: string[]
+  tags: string[]
+}
+
+export interface SavedQuery {
+  key: string
+  name: string
+  note: string
+  query: QueryShape
+}
+
+/* ---- titles and secrets ------------------------------------------------- */
+
+export interface TitleDraft {
+  name: string
+  rank?: number
+  territory_id?: string | null
+  succession_law?: string
+  dynasty_root_id?: string | null
+  created_on?: number | null
+  entity_id?: string | null
+}
+
+export interface GrantDraft {
+  holder_id: string
+  from_day?: number | null
+  to_day?: number | null
+  how?: string
+  disputed?: boolean
+  note?: string
+}
+
+export interface SecretDraft {
+  name: string
+  truth?: string
+  about_id?: string | null
+  fact_id?: string | null
+  severity?: string
+}
+
+export interface KnowledgeDraft {
+  observer_id: string
+  secret_id: string
+  stance: string
+  about_observer_id?: string | null
+  acquired_on?: number | null
+  acquired_from?: string | null
+  scene_id?: string | null
+  note?: string
+}
+
+export interface Chapter {
+  id: string
+  work_id: string
+  work_title: string
+  title: string
+  position: number
+  summary: string
+}
+
 export interface SceneDraft {
   title: string
+  /** Which chapter it belongs to (§43). The column has been there all along and
+   *  nothing could set one, so every scene was loose in the world rather than in
+   *  the book. */
+  chapter_id?: string | null
   day?: number | null
   end_day?: number | null
   location_id?: string | null
@@ -636,6 +770,24 @@ export const api = {
     type_key?: string; at?: number; limit?: number; hide_generated?: boolean
   }) => get<Entity[]>('/entities', params),
   entity: (id: string, at?: number) => get<EntityBundle>(`/entities/${id}`, { at }),
+  /* ---- questions (§49) ------------------------------------------------- */
+  ask: (query: QueryShape) => send<QueryAnswer>('/query', 'POST', { query }),
+  queryVocabulary: () => get<QueryVocabulary>('/query/vocabulary'),
+  chapters: () => get<Chapter[]>('/chapters'),
+  savedQueries: () => get<SavedQuery[]>('/queries'),
+  saveQuery: (name: string, query: QueryShape, note = '') =>
+    send<SavedQuery>('/queries', 'POST', { name, note, query }),
+  forgetQuery: (key: string) => send<void>(`/queries/${key}`, 'DELETE'),
+
+  /* ---- the write surfaces for §8 and §6 --------------------------------- */
+  createTitle: (draft: TitleDraft) => send<{ id: string }>('/titles', 'POST', draft),
+  grantTitle: (titleId: string, draft: GrantDraft) =>
+    send<{ id: string }>(`/titles/${titleId}/grants`, 'POST', draft),
+  createSecret: (draft: SecretDraft) =>
+    send<{ id: string }>('/secrets', 'POST', draft),
+  recordKnowledge: (draft: KnowledgeDraft) =>
+    send<{ id: string }>('/knowledge', 'POST', draft),
+
   /** Everywhere a journey can start or end — islands as well as towns. */
   travelPlaces: () =>
     get<{ id: string; name: string; type_key: string }[]>('/travel/places'),

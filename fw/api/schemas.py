@@ -58,6 +58,11 @@ class FactOut(BaseModel):
     strength: str | None = None
     note: str = ""
     is_secret: bool = False
+    # Written on every fact since the first migration and rendered nowhere, which is
+    # worse than absent: a writer who cited a note could not see that they had.
+    valid_from_text: str = ""
+    valid_to_text: str = ""
+    source: str = ""
 
 
 class FactIn(BaseModel):
@@ -206,8 +211,71 @@ class MapOut(BaseModel):
     draw: dict[str, Any] = {}
 
 
+class QueryIn(BaseModel):
+    """A question, as the form built it (§49). See `fw.core.query.language`."""
+
+    query: dict[str, Any] = {}
+
+
+class SaveQueryIn(BaseModel):
+    name: str
+    note: str = ""
+    query: dict[str, Any] = {}
+
+
+# ---- the write surfaces for §8's titles and §6's secrets ------------------
+#
+# Every one of these `World` methods has existed since the world model was written,
+# is revision-logged and branch-scoped, and had no HTTP route and no form. Which meant
+# succession, scene context and half the dashboard were dead code for any world but the
+# seeded demo: a writer could not create a title, so nothing could be inherited; could
+# not record a secret, so nobody could know one.
+
+class TitleIn(BaseModel):
+    name: str
+    rank: int = 0
+    territory_id: str | None = None
+    succession_law: str = "male_preference_primogeniture"
+    dynasty_root_id: str | None = None
+    created_on: int | None = None
+    entity_id: str | None = None
+
+
+class GrantIn(BaseModel):
+    holder_id: str
+    from_day: int | None = None
+    to_day: int | None = None
+    how: str = "inheritance"
+    disputed: bool = False
+    note: str = ""
+
+
+class SecretIn(BaseModel):
+    name: str
+    truth: str = ""
+    about_id: str | None = None
+    fact_id: str | None = None
+    severity: str = "major"
+
+
+class KnowledgeIn(BaseModel):
+    observer_id: str
+    secret_id: str
+    stance: str
+    about_observer_id: str | None = None
+    acquired_on: int | None = None
+    acquired_from: str | None = None
+    scene_id: str | None = None
+    note: str = ""
+
+
 class SceneIn(BaseModel):
     title: str
+    # Which chapter it belongs to (§43/§44). The column and its foreign key have been in
+    # the schema since the first migration and nothing could set one, so every scene a
+    # writer made was loose in the world rather than in their book.
+    chapter_id: str | None = None
+    position: int = 0
     day: int | None = None
     end_day: int | None = None
     location_id: str | None = None

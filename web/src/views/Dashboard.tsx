@@ -15,6 +15,7 @@ import { useState } from 'react'
 import { api } from '../api'
 import type { WorldSummary } from '../api'
 import { Badge, ErrorBox, Loading, Panel, SEVERITY_GLYPH, useAsync } from '../components/common'
+import { Modal, SecretForm } from '../components/forms'
 
 interface Props {
   world: WorldSummary
@@ -38,6 +39,7 @@ export function Dashboard(
   const deleted = useAsync(() => api.deleted(6), [version])
 
   const [restoreError, setRestoreError] = useState<string | null>(null)
+  const [tellingASecret, setTellingASecret] = useState(false)
   const restore = async (revisionId: number) => {
     setRestoreError(null)
     try {
@@ -197,7 +199,21 @@ export function Dashboard(
             </div>
           ))}
           {(secrets.data ?? []).length === 0 && (
-            <p className="muted">No secrets recorded.</p>
+            <p className="muted">
+              Nothing here is hidden from anybody yet. A secret is a thing that is true
+              and that not everyone has been told — the truth lives once, and what each
+              person thinks about it lives beside it.
+            </p>
+          )}
+          <div className="toolbar" style={{ marginTop: 8 }}>
+            <button onClick={() => setTellingASecret(true)}>+ A secret</button>
+          </div>
+          {tellingASecret && (
+            <Modal title="A secret" onClose={() => setTellingASecret(false)}>
+              <SecretForm calendar={world.calendar}
+                          onDone={() => { setTellingASecret(false); onMutate() }}
+                          onCancel={() => setTellingASecret(false)} />
+            </Modal>
           )}
         </Panel>
 

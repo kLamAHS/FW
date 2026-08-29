@@ -165,7 +165,9 @@ Three things are tested in ways worth mentioning:
 
 ## Scope
 
-Implemented: the entity and relationship model with custom types, temporal facts,
+Implemented: the entity and relationship model with custom types — structurally, through
+the same rows the built-ins use, though a writer still adds one through the API or the CLI
+rather than a screen — temporal facts,
 world-state-at-date, genealogy with legal/biological/adoptive parentage, twelve succession
 laws with hypotheticals, the four-way territorial distinction (§11), layered temporal maps,
 the relationship graph, the pedigree, events and causal chains, layered knowledge and
@@ -174,28 +176,36 @@ routing, search, and the "why does this matter" / "what if it vanished" analyses
 
 Building happens in the client too: create entities (three fields, everything else behind
 one disclosure, per §56), write scenes and record events with participants and roles (§31,
-§44), link one event to its consequences (§32), record relationships and properties with
+§44), place a scene in a chapter of the manuscript (§43), create a title and grant it so
+there is something to inherit (§8), record a secret and who thinks what about it (§6),
+link one event to its consequences (§32), record relationships and properties with
 in-world dates, end a fact on the timeline's current date rather than deleting it (§106.3's
 rule as the one-click path), and edit or delete from the side panel without losing your
-place (§76). Every mutation is written to the §59 revision log inside the same
+place (§76). And ask the world questions (§49): a structured filter over the fact spine,
+built from a form rather than typed, compiled to one SQL statement, with the answer's
+working shown and the question keepable so it can be asked again when the answer has
+changed. Every mutation is written to the §59 revision log inside the same
 transaction — deletions record the complete row, including the facts an entity takes with
 it — and any recorded change can be walked back: a deleted entity is restored from the
 dashboard with its connections, an edit from the entity's own change history, and a restore
 is itself a logged, reversible change. The dashboard shows what changed most recently
 (§74), and `fw restore` does all of this from the command line.
 
+The map is grown from what the writer wrote rather than from noise: one reading of their
+world (regions, houses, titles, roads, rivers, events, resources — not two fields), a
+continent shaped before politics, erosion and rain shadow, vegetation, movement cost,
+settlements sited from the ground, roads that bundle into highways, castles at the passes,
+borders that follow where the towns stop reaching, and a name for everything it draws.
+Nothing is written until the writer accepts it, feature by feature, with the case for each
+one in a sentence (§66, §67).
+
 Deliberately not yet built, and reachable because of the decisions above:
 
-- **Alternate timelines (§105).** `branch_id` is on every temporal table from the first
-  migration and the MVP resolves a single branch with an equality predicate. The column
-  exists; branch overlay resolution does not.
 - **Perspective and fog-of-knowledge maps (§93, §94).** Knowledge attaches to secrets, not
   yet to geometry or labels.
 - **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
   features (§103) and plugins (§102).
 - **Prose.** Scenes carry metadata and context, not manuscript text.
-- **A full undo stack.** Restore works per recorded change; a single walk-backwards
-  undo/redo pointer over the log is not built.
 
 ## The brief's own principles
 

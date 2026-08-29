@@ -30,6 +30,7 @@ import { GraphView } from './views/GraphView'
 import { PedigreeView } from './views/PedigreeView'
 import { SceneView } from './views/SceneView'
 import { SuccessionView } from './views/SuccessionView'
+import { AskView } from './views/AskView'
 import { TravelView } from './views/TravelView'
 import { ContinuityView, EntitiesView, EventsView } from './views/BrowseView'
 import { GroupsView } from './views/GroupsView'
@@ -44,6 +45,7 @@ const VIEWS = [
   { key: 'scenes', label: 'Scenes' },
   { key: 'travel', label: 'Travel' },
   { key: 'groups', label: 'Groups' },
+  { key: 'ask', label: 'Ask' },
   { key: 'entities', label: 'Everything' },
   { key: 'continuity', label: 'Checks' },
 ] as const
@@ -230,7 +232,8 @@ export function App() {
           )}
           {view === 'succession' && (
             <SuccessionView day={currentDay} onSelect={setSelected} version={version}
-                            vocabulary={vocabulary.data} />
+                            vocabulary={vocabulary.data}
+                            calendar={world.data.calendar} onMutate={bump} />
           )}
           {view === 'scenes' && (
             <SceneView onSelect={setSelected} version={version}
@@ -239,6 +242,10 @@ export function App() {
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
           {view === 'groups' && (
             <GroupsView day={currentDay} onSelect={setSelected} version={version} />
+          )}
+          {view === 'ask' && (
+            <AskView day={currentDay} vocabulary={vocabulary.data}
+                     onSelect={setSelected} version={version} />
           )}
           {view === 'entities' && (
             <EntitiesView world={world.data} day={currentDay} onSelect={setSelected}

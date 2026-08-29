@@ -581,6 +581,41 @@ class World:
             raise WorldError(f"a timeline named {name!r} already exists") from exc
         return name
 
+    def get_source(self, source_id: str) -> dict[str, Any] | None:
+        """Where a fact came from (§53).
+
+        The table has been in the schema since the first migration and `assert_fact`
+        has taken a `source_id` all along; nothing could read one back, so every fact
+        the writer cited was cited into a void.
+        """
+        row = self.db.one("SELECT * FROM source WHERE id = ?", (source_id,))
+        return dict(row) if row else None
+
+    def sources(self) -> list[dict[str, Any]]:
+        return [dict(r) for r in self.db.query(
+            "SELECT * FROM source WHERE project_id = ? ORDER BY label",
+            (self.project_id,))]
+
+    def add_source(self, label: str, *, kind: str = "author_note", detail: str = "",
+                   scene_id: str | None = None) -> str:
+        sid = new_id()
+        with self.db.transaction():
+            self.db.insert("source", {
+                "id": sid, "project_id": self.project_id, "kind": kind,
+                "label": label, "detail": detail, "scene_id": scene_id})
+        return sid
+
+    def all_tags(self) -> list[str]:
+        """Every tag anybody has used, so a form can offer them rather than ask.
+
+        A writer who has to remember whether they wrote `port-town` or `port town` will
+        get it wrong once and lose the query.
+        """
+        scope, params = self.branch_scope("e")
+        return [r["value"] for r in self.db.query(
+            f"SELECT DISTINCT json_each.value AS value FROM entity e, json_each(e.tags) "
+            f"WHERE {scope} ORDER BY value", params)]
+
     def counts_by_type(self) -> dict[str, int]:
         return {r["type_key"]: r["n"] for r in self.db.query(
             f"SELECT type_key, count(*) AS n FROM entity WHERE {self._in_chain} "
@@ -622,6 +657,25 @@ class World:
         if row is None:
             raise WorldError(f"no timeline named {name!r}")
         return World(self.db, self.project_id, row["id"])
+
+    # ---- scoping, for anything that composes its own SQL (§49) ------------
+
+    def branch_scope(self, alias: str = "") -> tuple[str, list[Any]]:
+        """The SQL and parameters that limit a table to this branch and its ancestors.
+
+        Public because the query engine composes its own statements and must not be
+        allowed to forget this: a query that skipped the branch chain would answer a
+        what-if with canon's data, or canon's with a what-if's, which is the one mistake
+        the whole overlay model exists to prevent.
+        """
+        column = f"{alias}.branch_id" if alias else "branch_id"
+        return (f"{column} IN (" + ",".join("?" for _ in self._chain) + ")",
+                list(self._chain))
+
+    def fact_visibility(self, alias: str) -> tuple[str, list[Any]]:
+        """The SQL and parameters that hide a fact this branch has overridden."""
+        sql, params = self._live_fact(alias)
+        return sql, list(params)
 
     def _live_fact(self, alias: str) -> tuple[str, list[str]]:
         """SQL for a fact row's visibility under this branch's overlays.
@@ -2700,6 +2754,27 @@ class World:
         self.db.insert("work", {"id": wid, "project_id": self.project_id, "title": title,
                                 "kind": kind, "position": position, "summary": summary})
         return wid
+
+    def works(self) -> list[dict[str, Any]]:
+        """The manuscripts this project holds (§43).
+
+        `work` and `chapter` have been in the schema since the first migration and
+        nothing could read them back, so a scene's `chapter_id` — the field that puts a
+        scene in the book — could be written and never chosen.
+        """
+        return [dict(r) for r in self.db.query(
+            "SELECT * FROM work WHERE project_id = ? ORDER BY position, title",
+            (self.project_id,))]
+
+    def chapters(self, work_id: str | None = None) -> list[dict[str, Any]]:
+        sql = ("SELECT c.*, w.title AS work_title FROM chapter c "
+               "JOIN work w ON w.id = c.work_id WHERE w.project_id = ?")
+        params: list[Any] = [self.project_id]
+        if work_id:
+            sql += " AND c.work_id = ?"
+            params.append(work_id)
+        return [dict(r) for r in self.db.query(
+            sql + " ORDER BY w.position, c.position, c.title", params)]
 
     def add_chapter(self, work_id: str, title: str, *, position: int = 0,
                     summary: str = "") -> str:
