@@ -85,6 +85,53 @@ def fbm(seed: str, x: float, y: float, *, octaves: int = 4,
     return total / norm if norm else 0.0
 
 
+def field(seed: str, size: int, *, wavelength: float, octaves: int = 4,
+          stride: int = 1) -> list[list[float]]:
+    """A whole lattice of fractal noise, sampled every `stride` cells and interpolated.
+
+    Most of the fields the generator builds vary over tens of cells — where the coast
+    bulges, how rough a stretch of shore is, how hard the rock is — and evaluating them
+    per cell asks a dozen hashes to describe something that has barely changed since the
+    last answer. Sampling them at the scale they actually vary over and interpolating
+    between costs a fraction and produces the same field, because a field with no content
+    below the sampling scale loses nothing by not being asked about it.
+
+    The stride is the caller's to choose and is a claim about the field: pass one that is
+    a large fraction of the wavelength and the interpolation will show, as flats and
+    creases. A quarter of the wavelength is comfortable.
+    """
+    if stride < 1:
+        stride = 1
+    span = (size + stride - 1) // stride + 2
+    step = stride / wavelength
+    coarse = [[fbm(seed, cx * step, cy * step, octaves=octaves)
+               for cx in range(span)] for cy in range(span)]
+    if stride == 1:
+        return [row[:size] for row in coarse[:size]]
+
+    out: list[list[float]] = []
+    limit = span - 1.001
+    for j in range(size):
+        y = j / stride
+        if y > limit:
+            y = limit
+        cj = int(y)
+        fy = y - cj
+        near, far = coarse[cj], coarse[cj + 1]
+        row = [0.0] * size
+        for i in range(size):
+            x = i / stride
+            if x > limit:
+                x = limit
+            ci = int(x)
+            fx = x - ci
+            top = near[ci] + (near[ci + 1] - near[ci]) * fx
+            low = far[ci] + (far[ci + 1] - far[ci]) * fx
+            row[i] = top + (low - top) * fy
+        out.append(row)
+    return out
+
+
 def jitter(seed: str, key: str, spread: float) -> float:
     """A stable offset in [-spread, +spread] for a named thing.
 

@@ -29,7 +29,17 @@ from fw.core.mapgen.guards import rcp_exp
 PROSE_WEIGHT = 0.72
 
 LAPSE = 0.9               # how much colder the peaks are than the shore
-RAIN_PER_RISE = 5.0       # how sharply a rise wrings the air out
+RAIN_PER_RISE = 5.0
+
+# What the air is carrying where it enters the map: saturated if it arrives over water,
+# and something moderate if the very edge of the map is land.
+OCEAN_FETCH = 0.92
+EDGE_LAND = 0.35
+
+# How much of the rain that falls on a cell of land goes back into the air over it.
+# Continental moisture recycling is a large fraction in reality, and it is what keeps a
+# continental interior habitable rather than arid.
+RECYCLED = 0.62       # how sharply a rise wrings the air out
 BLEND_CELLS = 8.0         # how far a border's smoothing reaches inland
 
 
@@ -149,9 +159,19 @@ def _sweep(grid: Grid, *, elevation: Field, sea: list[list[bool]], wind: Wind,
 
     for _key, i, j in order:
         upwind = (i - int(round(wx)), j - int(round(wy)))
-        incoming = 0.0
         if grid.holds(*upwind):
             incoming = carried[upwind[1]][upwind[0]]
+        elif sea[j][i]:
+            # The ocean does not stop at the edge of the picture. Air arriving over water
+            # from beyond the frame has crossed water to get here, so it arrives loaded.
+            # Starting it at nothing instead made the upwind margin of every map a
+            # desert: measured, a coastal plain with open sea immediately upwind of it
+            # was receiving exactly zero rain, because the air needed a dozen cells of
+            # fetch to pick anything up and the frame did not give it a dozen cells.
+            incoming = OCEAN_FETCH
+        else:
+            # Land at the very edge, with no sea upwind of it inside the map at all.
+            incoming = EDGE_LAND
         if sea[j][i]:
             # Over water the air loads up; a long fetch arrives wetter than a strait.
             carried[j][i] = min(1.0, incoming + 0.09)
@@ -160,8 +180,6 @@ def _sweep(grid: Grid, *, elevation: Field, sea: list[list[bool]], wind: Wind,
         rise = 0.0
         if grid.holds(*upwind) and not sea[upwind[1]][upwind[0]]:
             rise = max(0.0, elevation[j][i] - elevation[upwind[1]][upwind[0]])
-        elif not grid.holds(*upwind):
-            incoming = 0.35
         # Air holds less the higher and colder it gets; what it cannot hold, it drops.
         capacity = rcp_exp(max(0.0, elevation[j][i] - sea_level) * RAIN_PER_RISE)
         dropped = max(0.0, incoming - incoming * capacity) + rise * 1.6 * incoming
@@ -169,7 +187,20 @@ def _sweep(grid: Grid, *, elevation: Field, sea: list[list[bool]], wind: Wind,
         # A little always falls, or the deep lee reads as lunar rather than dry.
         dropped = max(dropped, incoming * 0.04)
         rain[j][i] = dropped
-        carried[j][i] = max(0.0, incoming - dropped)
+        # Land puts water back into the air, and how much depends on how much just fell
+        # on it. Without any recharge the sweep is a one-way budget — whatever the air
+        # picked up over the sea is all it will ever have — so on a continent sixty cells
+        # wide it is exhausted long before the middle and the whole interior comes out a
+        # desert, the windward flank of an inland range included, which then casts no
+        # shadow because there is nothing left to drop.
+        #
+        # Recycling what fell is the right form, and topping the air back up towards
+        # saturation is not: the latter recharges a rain shadow just as fast as a river
+        # plain, so the lee of a range refills within a dozen cells and the shadow
+        # disappears — which is exactly what it did. Ground that rain has just fallen on
+        # gives water back; ground in a lee has none to give.
+        left = max(0.0, incoming - dropped)
+        carried[j][i] = min(1.0, left + RECYCLED * dropped)
     return rain
 
 
@@ -211,13 +242,17 @@ def _reconcile(grid: Grid, *, rain: Field, sea: list[list[bool]],
     middle = fell[len(fell) // 2] or 1e-6
     wettest = fell[-1] or 1e-6
 
+    # One field rather than a fractal sample per land cell: it varies over fifteen cells
+    # and is only there to keep the moisture from reading as a smooth gradient.
+    grain_field = noise.field(f"{seed}|wet", size, wavelength=15.0, octaves=3, stride=3)
+
     moisture = grid.filled(1.0)
     shadow = grid.filled(0.0)
     for i, j in land:
         index = owner[j][i]
         key = keys[index] if 0 <= index < len(keys) else None
         modelled = min(1.0, rain[j][i] / (middle * 2.0))
-        grain = noise.fbm(f"{seed}|wet", i / 15.0, j / 15.0, octaves=3)
+        grain = grain_field[j][i]
         modelled = max(0.0, min(1.0, modelled * 0.82 + grain * 0.18))
         if key is not None and stated.get(key):
             said = moisture_of.get(key, 0.5)
@@ -233,22 +268,57 @@ def dryness_across(grid: Grid, climate: Climate, mountain_spine,
                    sea: list[list[bool]]) -> tuple[float, float]:
     """Mean rain on the windward and lee flanks of a spine.
 
-    Not used by the pipeline — this is what the test asks, and the honest way to
-    answer "is there actually a rain shadow" is to measure one.
+    Not used by the pipeline — this is what the test asks, and the honest way to answer
+    "is there actually a rain shadow" is to measure one.
+
+    Measuring it is fiddlier than it sounds, and the first version got a real shadow
+    wrong. A wide band either side of the spine takes in the far coast on both flanks,
+    and a coastal cell with an inlet upwind of it is wet whichever side of the mountain
+    it stands on — so the average reported no shadow at all while a transect through the
+    crest showed rain falling from 0.37 to 0.0006 over twelve cells. Three restrictions
+    fix it: only the middle of the range, where a flank is a flank rather than the end of
+    one; only ground close enough to be on the mountain; and only ground with unbroken
+    land between it and the crest, so that water the air crossed on the way is not
+    counted as the mountain's doing.
     """
+    if len(mountain_spine) < 3:
+        return (0.0, 0.0)
     wx, wy = climate.wind.vector
+    low = int(len(mountain_spine) * 0.2)
+    high = max(low + 1, int(len(mountain_spine) * 0.8))
+    middle = list(mountain_spine[low:high])
+
+    near_limit = grid.size * 0.02
+    far_limit = grid.size * 0.11
+
     windward: list[float] = []
     lee: list[float] = []
     for j in range(grid.size):
         for i in range(grid.size):
             if sea[j][i]:
                 continue
-            near = min((math.dist((i, j), point) for point in mountain_spine),
-                       default=1e9)
-            if near > grid.size * 0.16 or near < grid.size * 0.03:
+            closest = min(middle, key=lambda p: math.dist((i, j), p))
+            near = math.dist((i, j), closest)
+            if near > far_limit or near < near_limit:
                 continue
-            closest = min(mountain_spine, key=lambda p: math.dist((i, j), p))
+            if not _dry_land_between(sea, (i, j), closest):
+                continue
             side = (i - closest[0]) * -wx + (j - closest[1]) * -wy
             (windward if side > 0 else lee).append(climate.rain[j][i])
     return (sum(windward) / len(windward) if windward else 0.0,
             sum(lee) / len(lee) if lee else 0.0)
+
+
+def _dry_land_between(sea: list[list[bool]], start: tuple[int, int],
+                      finish: tuple[float, float]) -> bool:
+    """Whether the straight run from a cell to the crest stays on land throughout."""
+    ax, ay = start
+    bx, by = finish
+    steps = max(1, int(max(abs(bx - ax), abs(by - ay))))
+    for k in range(steps + 1):
+        t = k / steps
+        i = int(round(ax + (bx - ax) * t))
+        j = int(round(ay + (by - ay) * t))
+        if 0 <= j < len(sea) and 0 <= i < len(sea[0]) and sea[j][i]:
+            return False
+    return True

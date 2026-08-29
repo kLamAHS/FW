@@ -25,7 +25,7 @@ from typing import Any
 # Where a shape is drawn. The client hides and shows by layer, so a new one is a new
 # checkbox in front of the writer.
 LAYERS = ("land", "waters", "regions", "relief", "features", "waterways",
-          "settlements", "roads")
+          "settlements", "roads", "castles")
 
 # What a shape is *for*, which is how a regeneration recognises its own previous work
 # and how the client decides what to paint it with.

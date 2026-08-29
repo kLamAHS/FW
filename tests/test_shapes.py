@@ -158,3 +158,27 @@ class TestGrid:
         assert (9, 5) not in set(disc((5, 5), 2.0))
         drawn = list(line((0, 0), (6, 0)))
         assert drawn[0] == (0, 0) and drawn[-1] == (6, 0) and len(drawn) == 7
+
+
+class TestAnOpenLineIsEasedWithoutMovingItsEnds:
+    def test_both_ends_stay_exactly_where_they_were(self):
+        line = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0)]
+        out = shapes.eased(line)
+        assert out[0] == line[0] and out[-1] == line[-1]
+
+    def test_a_right_angle_stops_being_a_right_angle(self):
+        """The corner is what the easing is for: a lattice path is all right angles."""
+        line = [(0.0, 0.0), (0.0, 10.0), (10.0, 10.0)]
+        out = shapes.eased(line)
+        corner = min(math.dist(p, (0.0, 10.0)) for p in out)
+        assert corner > 1.0, "the corner is still on the corner"
+
+    def test_it_never_leaves_the_ground_the_line_covered(self):
+        """Corner cutting stays inside the hull of what it cuts, so a road cannot
+        wander off the country its path crossed."""
+        line = [(2.0, 3.0), (2.0, 40.0), (30.0, 40.0), (30.0, 12.0)]
+        out = shapes.eased(line, rounds=3)
+        assert all(2.0 <= x <= 30.0 and 3.0 <= y <= 40.0 for x, y in out)
+
+    def test_a_line_too_short_to_have_a_corner_is_returned_as_it_is(self):
+        assert shapes.eased([(1.0, 1.0), (4.0, 4.0)]) == [(1.0, 1.0), (4.0, 4.0)]

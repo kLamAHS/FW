@@ -38,6 +38,7 @@ from fw.core.mapgen.plan import (
     PlannedFeature,
     PlanStats,
     Retirement,
+    Terrain,
     digest_of,
     order_features,
 )
@@ -59,7 +60,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
             "a map can only be drawn on the main timeline — this what-if inherits the "
             "map from canon, and cannot redraw it")])
 
-    drafts, stage_ms, stage_findings = _compute(world, brief)
+    drafts, stage_ms, stage_findings, terrain = _compute(world, brief)
     findings.extend(stage_findings)
     if not drafts:
         findings.append(note(
@@ -86,6 +87,7 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
         brief=brief,
         features=features,
         retiring=retiring,
+        terrain=terrain,
         stats=stats,
         findings=tuple(findings),
     )
@@ -94,7 +96,8 @@ def plan_map(world: World, brief: MapBrief | None = None) -> MapPlan:
 # ---- the compute, still the first generator's ------------------------------
 
 def _compute(world: World, brief: MapBrief
-             ) -> tuple[list[FeatureDraft], dict[str, int], list[Finding]]:
+             ) -> tuple[list[FeatureDraft], dict[str, int], list[Finding],
+                        Terrain | None]:
     """Run the geography and collect drafts. No writes."""
     from fw.core.mapgen.generate import MapGenerator
 
@@ -104,20 +107,25 @@ def _compute(world: World, brief: MapBrief
 
     regions = generator.regions_of_the_world()
     if not regions:
-        return [], timings, findings
+        return [], timings, findings, None
 
     mark = time.perf_counter()
     generator.profiles = {
         r.id: _profile(world, r.id, brief.at) for r in regions}
-    authored = generator._authored_outlines()
-    generator._build_landmass(authored)
-    generator._assign_cells(regions, authored)
-    generator._build_fields()
-    rivers = generator._trace_rivers()
-    generator._classify_ground()
-    generator._build_costs()
+    authored, rivers = generator.build_the_world()
     placements = generator._site_settlements(propose=brief.invent_settlements)
     timings["geography"] = int((time.perf_counter() - mark) * 1000)
+
+    # What the later stages noticed and could not quietly resolve. A march described for
+    # its fisheries with no coast, a city standing on ground that would feed a hamlet:
+    # each of these is either something the writer knows and has a reason for, or
+    # something they had not thought about, and both are worth one sentence.
+    if generator.resources is not None:
+        findings.extend(generator.resources.notes)
+    if generator.vegetation is not None:
+        findings.extend(generator.vegetation.notes)
+    findings.extend(generator.settlement_findings())
+    findings.extend(generator.frontier_findings())
 
     mark = time.perf_counter()
     namer = Namer.from_world(world, seed=generator.seed)
@@ -136,8 +144,33 @@ def _compute(world: World, brief: MapBrief
         drafts.extend(_settlement_drafts(generator, placements, namer))
     if brief.wants("road"):
         drafts.extend(_road_drafts(generator, placements))
+    if brief.wants("castle"):
+        drafts.extend(_castle_drafts(generator, placements))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
-    return drafts, timings, findings
+    return drafts, timings, findings, _terrain_of(generator)
+
+
+def _terrain_of(generator) -> Terrain | None:
+    """The surface this plan was worked out on, to be kept if it is accepted.
+
+    Three fields and no more. Height is what the relief is lit from; cover and standing
+    water are what the ground is coloured by. Everything else the generator held — the
+    flow network, the temperature, the rock hardness — is either recoverable from these
+    or was scaffolding, and a world file is a thing a writer keeps for years.
+    """
+    from fw.core.mapgen.generate import GRID, SEA_LEVEL
+
+    if not generator.elevation or generator.vegetation is None:
+        return None
+    grid = generator._grid()
+    return Terrain(
+        seed=generator.seed, size=GRID, span=grid.span,
+        origin_x=grid.origin_x, origin_y=grid.origin_y, sea_level=SEA_LEVEL,
+        fields={
+            "elevation": generator.elevation,
+            "canopy": generator.vegetation.canopy,
+            "marsh": generator.vegetation.marsh,
+        })
 
 
 def _profile(world: World, region_id: str, at: int | None):
@@ -221,12 +254,33 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               approximate=True),),
             reasons=(Reason(kind="authored", weight=1.0,
                             template="drawn where its neighbours leave room",
-                            evidence=profile.why("terrain")),),
+                            evidence=profile.why("terrain")),
+                     *_frontier_reasons(generator, profile.name)),
             detail={"share": round(len(_cells_of(generator, region_id))
                                    / max(1, generator.land_cells()), 3),
                     "dominant": profile.dominant},
         ))
     return out
+
+
+def _frontier_reasons(generator, name: str) -> tuple[Reason, ...]:
+    """What lies between this country and each of its neighbours.
+
+    The single most useful derived fact about a border and the one a coloured fill hides
+    completely: whether the march with the next country climbs a ridge, follows a river,
+    or crosses forty miles of wheat. The writer gets it on the region itself, where they
+    will be reading about the place, rather than only as a warning when it is open.
+    """
+    out: list[Reason] = []
+    for frontier in generator.frontiers:
+        if name not in frontier.between:
+            continue
+        other = frontier.between[1] if frontier.between[0] == name else frontier.between[0]
+        out.append(Reason(
+            kind="crossing", weight=0.6,
+            template=f"its border with {other} runs along {frontier.runs_along}",
+            evidence=f"{frontier.length} cells of it"))
+    return tuple(out[:3])
 
 
 def _cells_of(generator, region_id: str) -> list[tuple[int, int]]:
@@ -325,31 +379,102 @@ def _feature_drafts(generator) -> list[FeatureDraft]:
     return out
 
 
+# The widths a river is drawn at, thinnest first, and the share of its own catchment at
+# which it steps up to each. Five, because that is about as many as a reader can tell
+# apart on a printed map, and because a river that is one width for its whole length is
+# the single most obvious way a drawn map differs from a real one: the Trident is not the
+# same river at Riverrun and at the Bay.
+RIVER_WIDTHS = (1.2, 1.9, 2.8, 4.0, 5.6)
+RIVER_STEPS = (0.0, 0.06, 0.16, 0.36, 0.66)
+
+
 def _river_drafts(generator, rivers, namer: Namer) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_WATER
 
+    # Measured against the biggest river on the map, not against each river's own mouth.
+    # Per-river, every river spans the same widths — a beck and a trunk are drawn
+    # identically, each thickening along its own length — which is a width that says
+    # "how far along this river are you" rather than "how much water is this". The point
+    # of drawing five widths is that a reader can tell the Trident from a tributary.
+    widest = max(
+        (max(generator.flow[j][i] for i, j in path) for path in rivers), default=1.0
+    ) or 1.0
+
     out: list[FeatureDraft] = []
     for path in rivers:
-        points = [[round(x, 1), round(y, 1)]
-                  for x, y in (generator._centre(i, j) for i, j in path)]
         mouth, source = path[-1], path[0]
+        # A running maximum, not the flow as read. The flow field shares each cell's
+        # water between all its downhill neighbours, which is what keeps the drainage
+        # from snapping to eight compass directions — but it means the figure at a cell
+        # on the traced course can be lower than the one just upstream of it, where the
+        # water took more than one way down. Read literally, a river then narrows and
+        # widens along its length like a string of sausages. Water does not leave a
+        # river, so the width does not go back down.
+        carried: list[float] = []
+        so_far = 0.0
+        for i, j in path:
+            so_far = max(so_far, generator.flow[j][i])
+            carried.append(so_far)
+        biggest = carried[-1] or 1.0
+        bands = [_band(value / widest) for value in carried]
+
+        # One shape per run of equal width, each overlapping the next by a point so the
+        # river is continuous where it steps. Emitting a shape per *segment* instead
+        # would be five times the vertices for the same picture.
+        shapes: list[ShapeSpec] = []
+        start = 0
+        for n in range(1, len(path) + 1):
+            if n < len(path) and bands[n] == bands[start]:
+                continue
+            run = path[start:min(n + 1, len(path))]
+            if len(run) >= 2:
+                shapes.append(ShapeSpec(
+                    # The first reach is the river's spine and the rest are segments of
+                    # it. Roles are a closed vocabulary on purpose — the same argument as
+                    # the finding codes — so a river's reaches are named from it rather
+                    # than given a scheme of their own.
+                    role="spine" if start == 0 else "segment",
+                    kind="line",
+                    coordinates=[[round(x, 1), round(y, 1)]
+                                 for x, y in (generator._centre(i, j) for i, j in run)],
+                    layer=LAYER_WATER,
+                    style={"stroke": "#4a7fa5",
+                           "stroke-width": RIVER_WIDTHS[bands[start]]},
+                    approximate=True))
+            start = n
+        if not shapes:
+            continue
+
         out.append(FeatureDraft(
             kind="river",
             key_parts=(mouth[0], mouth[1], source[0], source[1]),
             subject=SubjectSpec(
                 mode="new", type_key="waterway", tags=(GENERATED_TAG,),
                 summary_template="Traced by the map; rename it and it is yours."),
-            shapes=(ShapeSpec(role="spine", kind="line", coordinates=points,
-                              layer=LAYER_WATER, style={"stroke": "#4a7fa5"},
-                              approximate=True),),
+            shapes=tuple(shapes),
             reasons=(Reason(kind="mouth", weight=1.0,
                             template="runs from the high ground to the sea"),),
             name_request=NameRequest(
                 key=name_key("river", (str(mouth[0]), str(mouth[1]))),
                 kind="waterway", hint="river"),
-            detail={"mouth": list(mouth), "strahler": 1},
+            detail={"mouth": list(mouth), "strahler": bands[-1] + 1,
+                    "discharge": round(biggest, 1)},
         ))
     return out
+
+
+def _band(share: float) -> int:
+    """Which drawn width a stretch of river falls in, by the share of its own catchment.
+
+    Relative to the river rather than to the map, so a modest river still thickens along
+    its length instead of being drawn hairline everywhere because a bigger one exists
+    somewhere else. Discharge goes as catchment area, so the steps are spread wide at the
+    bottom: most of a river's length carries very little of its water.
+    """
+    for band in range(len(RIVER_STEPS) - 1, -1, -1):
+        if share >= RIVER_STEPS[band]:
+            return band
+    return 0
 
 
 def _known_id(world: World, placement) -> str | None:
@@ -430,6 +555,54 @@ def _settlement_drafts(generator, placements, namer: Namer) -> list[FeatureDraft
     return out
 
 
+def _castle_drafts(generator, placements) -> list[FeatureDraft]:
+    """The places worth holding, and what each of them holds.
+
+    Proposed rather than drawn: a castle is a noun, and inventing a noun is the writer's
+    to accept (§66). The reasons are the whole value of the proposal — a keep offered
+    with no account of itself is just a pin — so what it watches goes in the sentence.
+    """
+    from fw.core.mapgen.generate import LAYER_CASTLES
+
+    holds = generator._site_castles(placements)
+    out: list[FeatureDraft] = []
+    for place in holds:
+        invented = place.entity_id is None
+        where = generator.owner[place.cell[1]][place.cell[0]]
+        region_name = generator.profiles[where].name if where else ""
+        x, y = generator._centre(*place.cell)
+        reasons = tuple(Reason(kind="crossing", weight=1.0, template=text)
+                        for text in place.reasons[:3])
+        if not reasons:
+            reasons = (Reason(kind="authored", weight=1.0,
+                              template="stands where you placed it"),)
+        out.append(FeatureDraft(
+            kind="castle",
+            key_parts=("h", region_name, place.cell[0], place.cell[1]),
+            subject=(SubjectSpec(mode="new", type_key="holding",
+                                 tags=(GENERATED_TAG,),
+                                 summary_template="Proposed by the map.")
+                     if invented else
+                     SubjectSpec(mode="existing", type_key="holding",
+                                 entity_id=place.entity_id)),
+            shapes=(ShapeSpec(role="point", kind="point",
+                              coordinates=[round(x, 1), round(y, 1)],
+                              layer=LAYER_CASTLES,
+                              style={"rank": place.rank}, approximate=True),),
+            facts=((FactSpec("located_in", object_ref=where),) if invented and where
+                   else ()),
+            reasons=reasons,
+            name_request=(NameRequest(
+                key=name_key("castle", (region_name,),
+                             place.cell[0] * 1000 + place.cell[1]),
+                kind="castle", hint=place.watches)
+                if invented else None),
+            default_accept=not invented,
+            detail={"rank": place.rank},
+        ))
+    return out
+
+
 def _hint_of(placement) -> str:
     """Why this town is here, in the namer's closed vocabulary."""
     joined = " ".join(placement.reasons).lower()
@@ -463,6 +636,11 @@ def _ref_for(generator, placement) -> str:
     return "@" + _endpoint_id(generator, placement)
 
 
+# How a road of each grade is drawn, and how much quicker it is to travel.
+ROAD_WIDTHS = {"highway": 3.4, "road": 2.2, "track": 1.3}
+ROAD_QUALITY = {"highway": 0.95, "road": 0.8, "track": 0.6}
+
+
 def _road_drafts(generator, placements) -> list[FeatureDraft]:
     import math
 
@@ -476,16 +654,13 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                                 if p.entity_id not in seen]
     if len(known) < 2:
         return []
-    edges = generator._road_edges(known) if hasattr(generator, "_road_edges") else []
+    network = generator.road_network(known)
     out: list[FeatureDraft] = []
-    for order, (a, b) in enumerate(edges):
+    for order, route in enumerate(network.routes):
+        a, b = route.joins
         p, q = known[a], known[b]
-        path = generator._route(generator._cell_of(p.x, p.y),
-                                generator._cell_of(q.x, q.y))
-        points = [[p.x, p.y]] + [[round(x, 1), round(y, 1)]
-                                 for x, y in (generator._centre(i, j)
-                                              for i, j in path[1:-1])]
-        points.append([q.x, q.y])
+        path = list(route.cells)
+        points = generator._road_line(p, path, q)
         length = sum(math.dist(points[n], points[n + 1])
                      for n in range(len(points) - 1))
         # A road to a town the writer turned down is a road to nowhere, so it says
@@ -500,17 +675,24 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                                 summary_template="Laid by the map between the places "
                                                  "it knows."),
             shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
-                              layer=LAYER_ROADS, style={"stroke": "#8a7550"},
+                              layer=LAYER_ROADS,
+                              style={"stroke": "#8a7550",
+                                     "stroke-width": ROAD_WIDTHS.get(route.grade, 2.0)},
                               approximate=True),),
             segments=(SegmentSpec(
                 from_ref=_ref_for(generator, p),
                 to_ref=_ref_for(generator, q),
-                length=round(length, 1), medium="road", quality=0.8,
+                length=round(length, 1), medium="road",
+                # A highway is a made road and a track is a path through the heather,
+                # and a traveller on one arrives a good deal sooner than on the other.
+                quality=ROAD_QUALITY.get(route.grade, 0.7),
                 terrain=generator._road_terrain(path)),),
             depends_on_keys=needs,
             reasons=(Reason(kind="crossing", weight=1.0,
                             template="the easiest ground between {0} and {1}",
-                            refs=(p.name, q.name)),),
+                            refs=(p.name, q.name)),
+                     Reason(kind="crossing", weight=0.8,
+                            template=route.because),),
             name_request=NameRequest(key=name_key("road", ends, order),
                                      kind="road", hint=""),
             detail={"tier": "road", "span": round(length, 1)},

@@ -215,10 +215,19 @@ export function ProposalOverlay({ plan, accepted }: {
             )
           }
           const [x, y] = shape.coordinates as number[]
+          // The same shapes the drawn map uses, so a writer reviewing nine castles and
+          // eighteen towns can tell at a glance which pin is which.
           return (
             <g key={key}>
-              <circle cx={x} cy={y} r={6} fill="none" stroke="#7a2b2b"
+              {shape.layer === 'castles' ? (
+                <rect x={x - 4.7} y={y - 4.7} width={9.4} height={9.4}
+                      transform={`rotate(45 ${x} ${y})`}
+                      fill="none" stroke="#7a2b2b"
                       strokeWidth={1.4} strokeDasharray="3 3" />
+              ) : (
+                <circle cx={x} cy={y} r={6} fill="none" stroke="#7a2b2b"
+                        strokeWidth={1.4} strokeDasharray="3 3" />
+              )}
               <circle cx={x} cy={y} r={2.5} fill="#7a2b2b" />
             </g>
           )

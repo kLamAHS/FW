@@ -43,7 +43,7 @@ def shaped(world: World, seed: str = "fixed") -> MapGenerator:
     generator.profiles = {r.id: profile_region(world, r.id) for r in regions}
     authored = generator._authored_outlines()
     generator._build_landmass(authored)
-    generator._assign_cells(regions, authored)
+    generator._assign_cells()
     return generator
 
 

@@ -321,8 +321,9 @@ class TestRegenerationIsClean:
             owned = {(i, j) for j in range(GRID) for i in range(GRID)
                      if generator.owner[j][i] == region_id}
             assert owned & drawn, "a region owns no part of what the writer drew"
-            # and its territory is one piece, reachable from the drawn ground — the bug
-            # gave a region a disconnected island forty cells from anything it owned
+            # Its mainland territory is one piece, reachable from the drawn ground. The
+            # bug this pins gave a region a block of the continent forty cells away with
+            # somebody else's country in between.
             reached = set(owned & drawn)
             frontier = list(reached)
             while frontier:
@@ -332,7 +333,74 @@ class TestRegenerationIsClean:
                     if step in owned and step not in reached:
                         reached.add(step)
                         frontier.append(step)
-            assert reached == owned, "a region owns ground detached from what was drawn"
+
+            # What is left over is allowed, but only if it is genuinely an island. Now
+            # that the continent is shaped before anybody is placed on it, it comes with
+            # offshore land, and every acre of that is given to somebody — so a region
+            # holding a nearby island is the map working, not the map failing. A piece
+            # reachable *over land* from the region's main body is a different matter:
+            # that is the region's own country, cut in two by a neighbour.
+            for cell in sorted(owned - reached):
+                walked = {cell}
+                stack = [cell]
+                joined = False
+                while stack and not joined:
+                    i, j = stack.pop()
+                    for di, dj in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                        step = (i + di, j + dj)
+                        if not (0 <= step[0] < GRID and 0 <= step[1] < GRID):
+                            continue
+                        if generator.sea[step[1]][step[0]] or step in walked:
+                            continue
+                        if step in reached:
+                            joined = True
+                            break
+                        walked.add(step)
+                        stack.append(step)
+                assert not joined, (
+                    f"{cell} is joined to its region by land but owned across a gap, "
+                    "so the region has been cut in two by a neighbour")
+
+
+class TestRiversAreDrawnByTheWaterInThem:
+    """Spec section 52: five widths, chosen by discharge.
+
+    A river drawn one width for its whole length is one of the plainest ways a made map
+    differs from a real one, and drawing every river the same width is the other.
+    """
+
+    def test_a_river_only_ever_widens(self, renn: World):
+        from fw.core.mapgen.pipeline import plan_map
+
+        generator = MapGenerator(renn, at=renn.day(PRESENT_YEAR))
+        generator.generate()
+        plan = plan_map(renn)
+        rivers = plan.by_kind("river")
+        assert rivers, "no rivers to measure"
+        for river in rivers:
+            widths = [shape.style.get("stroke-width") for shape in river.shapes]
+            assert all(w is not None for w in widths), "a reach with no width"
+            assert widths == sorted(widths), (
+                f"{river.name} narrows and widens along its length: {widths}")
+
+    def test_the_reaches_of_a_river_join_up(self, renn: World):
+        """Each reach shares an endpoint with the next, or the river has gaps in it."""
+        from fw.core.mapgen.pipeline import plan_map
+
+        for river in plan_map(renn).by_kind("river"):
+            reaches = list(river.shapes)
+            for before, after in zip(reaches, reaches[1:], strict=False):
+                assert before.coordinates[-1] == after.coordinates[0], (
+                    f"{river.name} has a gap between reaches")
+
+    def test_a_bigger_river_is_drawn_wider_than_a_smaller_one(self, renn: World):
+        """The width says how much water, not how far along the river you are."""
+        from fw.core.mapgen.pipeline import RIVER_WIDTHS, _band
+
+        assert _band(1.0) == len(RIVER_WIDTHS) - 1
+        assert _band(0.0) == 0
+        assert _band(0.5) > _band(0.05), "a river ten times the size is drawn the same"
+        assert list(RIVER_WIDTHS) == sorted(RIVER_WIDTHS)
 
 
 class TestProseIsReadAsWritten:

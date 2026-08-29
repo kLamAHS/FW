@@ -1020,6 +1020,7 @@ class TestSchemaMigration:
         conn.execute("ALTER TABLE title_holding DROP COLUMN branch_id")
         conn.execute("ALTER TABLE geometry DROP COLUMN props")
         conn.execute("DROP TABLE app_state")
+        conn.execute("DROP TABLE terrain")
         conn.executescript("""
             CREATE TABLE causal_link_v1 (
                 id TEXT PRIMARY KEY, project_id TEXT NOT NULL, cause_id TEXT NOT NULL,
@@ -1622,6 +1623,7 @@ class TestEras:
             ALTER TABLE era_v4 RENAME TO era;
             ALTER TABLE geometry DROP COLUMN props;
             DROP TABLE app_state;
+            DROP TABLE terrain;
         """)
         conn.execute("PRAGMA user_version = 4")
         conn.close()

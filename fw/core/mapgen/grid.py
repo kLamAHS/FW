@@ -126,34 +126,115 @@ class Grid:
                 row[i] = best
         return grid
 
+    def nearest_from(self, sources: Iterable[tuple[Cell, float]]) -> tuple[Field, Field]:
+        """Distance to the nearest source, and what that source was carrying.
+
+        The same two chamfer sweeps as `distance_from`, but each cell also inherits a
+        value from whichever source turned out to be nearest. That is what lets a whole
+        mountain system — a dozen ridges, each with its own height varying along its
+        length — be turned into a height field in one pass rather than one pass per
+        ridge. Ask "how far to the nearest ridge, and how high was it there", and the
+        answer to both arrives together.
+        """
+        size = self.size
+        far = [[INFINITY] * size for _ in range(size)]
+        carried = [[0.0] * size for _ in range(size)]
+        for (i, j), value in sources:
+            if self.holds(i, j) and value > carried[j][i]:
+                far[j][i] = 0.0
+                carried[j][i] = value
+
+        for j in range(size):
+            row, hold = far[j], carried[j]
+            above, held = (far[j - 1], carried[j - 1]) if j else (None, None)
+            for i in range(size):
+                best, value = row[i], hold[i]
+                if i and row[i - 1] + 1.0 < best:
+                    best, value = row[i - 1] + 1.0, hold[i - 1]
+                if above is not None:
+                    if above[i] + 1.0 < best:
+                        best, value = above[i] + 1.0, held[i]
+                    if i and above[i - 1] + _DIAGONAL < best:
+                        best, value = above[i - 1] + _DIAGONAL, held[i - 1]
+                    if i + 1 < size and above[i + 1] + _DIAGONAL < best:
+                        best, value = above[i + 1] + _DIAGONAL, held[i + 1]
+                row[i], hold[i] = best, value
+
+        for j in range(size - 1, -1, -1):
+            row, hold = far[j], carried[j]
+            below, held = ((far[j + 1], carried[j + 1]) if j + 1 < size
+                           else (None, None))
+            for i in range(size - 1, -1, -1):
+                best, value = row[i], hold[i]
+                if i + 1 < size and row[i + 1] + 1.0 < best:
+                    best, value = row[i + 1] + 1.0, hold[i + 1]
+                if below is not None:
+                    if below[i] + 1.0 < best:
+                        best, value = below[i] + 1.0, held[i]
+                    if i + 1 < size and below[i + 1] + _DIAGONAL < best:
+                        best, value = below[i + 1] + _DIAGONAL, held[i + 1]
+                    if i and below[i - 1] + _DIAGONAL < best:
+                        best, value = below[i - 1] + _DIAGONAL, held[i - 1]
+                row[i], hold[i] = best, value
+        return far, carried
+
     def claimed_by(self, seeds: Iterable[tuple[Cell, float]], *,
-                   passable=None) -> list[list[int]]:
-        """Which seed reaches each cell first — a partition, by one flood.
+                   passable=None, cost: Field | None = None) -> list[list[int]]:
+        """One seed per claimant. See `claimed_from` for several."""
+        return self.claimed_from((((cell,), rate) for cell, rate in seeds),
+                                 passable=passable, cost=cost)
 
-        Seeds are ((i, j), rate): a bigger rate spreads faster, so a region the writer
-        gave a large population claims more ground than a small one, without anyone
-        having to compute a weighted Voronoi diagram.
+    def claimed_from(self, groups: Iterable[tuple[Iterable[Cell], float]], *,
+                     passable=None, cost: Field | None = None) -> list[list[int]]:
+        """Which claimant reaches each cell first — a partition, by one flood.
 
-        Ties break on the seed's index, so the same seeds always produce the same
+        Each claimant is (cells, rate): it spreads outward from all of its cells at once,
+        and a bigger rate spreads faster, so a region the writer gave a large population
+        claims more ground than a small one without anyone having to compute a weighted
+        Voronoi diagram.
+
+        With a `cost` field the flood spreads over the *ground* rather than over the
+        plane, so reach means what it means to somebody riding it: the land a claimant
+        can actually get to. Where a road up a valley is worth ten miles of fen, the
+        territory runs up the valley.
+
+        What that does *not* do, though it is the first thing one expects of it, is put
+        the border on the range. A barrier between two claimants adds the same crossing
+        cost to both of them everywhere beyond it, so it slides the line where their
+        costs are equal rather than catching it: measured on the example continent, cost
+        weighting moved one per cent of the land and left the border sitting on ground
+        marginally *easier* than its surroundings. Making a thin barrier expensive along
+        every drainage divide did not help either, because at this lattice a divide is
+        not a regional feature — every region spans a dozen catchments, so a border must
+        cross divides wherever it runs. Where a border does follow the country, it is
+        because of what it is grown *from*, not what it is grown *over*.
+
+        Ties break on the claimant's index, so the same seeds always produce the same
         partition — a flood that broke ties on heap order would redraw every border
         whenever an unrelated region was added.
         """
         owner = [[-1] * self.size for _ in range(self.size)]
         heap: list[tuple[float, int, int, int]] = []
         rates: list[float] = []
-        for index, ((i, j), rate) in enumerate(seeds):
+        for index, (cells, rate) in enumerate(groups):
             rates.append(max(rate, 1e-6))
-            if self.holds(i, j):
-                heapq.heappush(heap, (0.0, index, i, j))
+            for i, j in cells:
+                if self.holds(i, j):
+                    heapq.heappush(heap, (0.0, index, i, j))
         while heap:
-            cost, index, i, j = heapq.heappop(heap)
+            paid, index, i, j = heapq.heappop(heap)
             if owner[j][i] != -1:
                 continue
             owner[j][i] = index
-            step = 1.0 / rates[index]
+            rate = rates[index]
             for ni, nj in self.neighbours(i, j, diagonal=False):
-                if owner[nj][ni] == -1 and (passable is None or passable(ni, nj)):
-                    heapq.heappush(heap, (cost + step, index, ni, nj))
+                if owner[nj][ni] != -1 or (passable is not None
+                                           and not passable(ni, nj)):
+                    continue
+                step = (cost[nj][ni] if cost is not None else 1.0) / rate
+                if step == math.inf:
+                    continue
+                heapq.heappush(heap, (paid + step, index, ni, nj))
         return owner
 
     def eased_across(self, field: Field, owner: list[list[int]],
@@ -198,6 +279,75 @@ class Grid:
                         break
         return out
 
+    def spread(self, field: Field, *, stride: int = 6, rounds: int = 8) -> Field:
+        """Smooth a field over tens of cells, cheaply, leaving no edge anywhere.
+
+        `eased_across` exists to hide a border while keeping a region's interior; this is
+        the opposite instruction, and the two are needed for different things. When the
+        writer says one region is high ground and its neighbour is a plain, the ground
+        itself does not step at the line between them — it swells across it over a
+        distance far larger than any border. Getting that with `blurred` would take
+        dozens of passes over the whole lattice, which is seconds.
+
+        So the field is averaged down to a coarse grid, smoothed there, and interpolated
+        back. A field whose only remaining content is broad is exactly what a coarse grid
+        can hold, so nothing is lost, and the cost falls by the square of the stride.
+        """
+        size = self.size
+        span = (size + stride - 1) // stride
+        coarse = [[0.0] * span for _ in range(span)]
+        counts = [[0] * span for _ in range(span)]
+        for j in range(size):
+            cj = j // stride
+            row, tally = coarse[cj], counts[cj]
+            source = field[j]
+            for i in range(size):
+                ci = i // stride
+                row[ci] += source[i]
+                tally[ci] += 1
+        for cj in range(span):
+            for ci in range(span):
+                if counts[cj][ci]:
+                    coarse[cj][ci] /= counts[cj][ci]
+
+        for _ in range(rounds):
+            out = [row[:] for row in coarse]
+            for cj in range(span):
+                for ci in range(span):
+                    total, weight = 0.0, 0.0
+                    for dj in (-1, 0, 1):
+                        nj = cj + dj
+                        if not 0 <= nj < span:
+                            continue
+                        for di in (-1, 0, 1):
+                            ni = ci + di
+                            if 0 <= ni < span:
+                                w = 4.0 if not (di or dj) else (1.0 if not (di and dj)
+                                                                else 0.5)
+                                total += coarse[nj][ni] * w
+                                weight += w
+                    out[cj][ci] = total / weight
+            coarse = out
+
+        out = self.filled()
+        limit = span - 1.001
+        for j in range(size):
+            y = (j + 0.5) / stride - 0.5
+            y = 0.0 if y < 0.0 else (limit if y > limit else y)
+            cj = int(y)
+            fy = y - cj
+            near, far = coarse[cj], coarse[cj + 1]
+            row = out[j]
+            for i in range(size):
+                x = (i + 0.5) / stride - 0.5
+                x = 0.0 if x < 0.0 else (limit if x > limit else x)
+                ci = int(x)
+                fx = x - ci
+                top = near[ci] + (near[ci + 1] - near[ci]) * fx
+                low = far[ci] + (far[ci + 1] - far[ci]) * fx
+                row[i] = top + (low - top) * fy
+        return out
+
     def blurred(self, field: Field, rounds: int = 1) -> Field:
         """A light box pass.
 
@@ -218,6 +368,30 @@ class Grid:
                     ) / 12.0
             field = out
         return field
+
+
+def sample(field: Field, x: float, y: float) -> float:
+    """Read a lattice field at a continuous position, bilinearly.
+
+    Fields that are computed coarsely and read at warped positions need this, and there
+    is exactly one right way to write it, so it lives here rather than three times.
+    """
+    size = len(field)
+    limit = size - 1.001
+    if x < 0.0:
+        x = 0.0
+    elif x > limit:
+        x = limit
+    if y < 0.0:
+        y = 0.0
+    elif y > limit:
+        y = limit
+    i, j = int(x), int(y)
+    fx, fy = x - i, y - j
+    near, far = field[j], field[j + 1]
+    top = near[i] + (near[i + 1] - near[i]) * fx
+    low = far[i] + (far[i + 1] - far[i]) * fx
+    return top + (low - top) * fy
 
 
 def disc(centre: tuple[float, float], radius: float) -> Iterator[Cell]:
@@ -242,3 +416,26 @@ def line(start: tuple[float, float], end: tuple[float, float]) -> Iterator[Cell]
         if cell != previous:
             yield cell
             previous = cell
+
+
+def stands_above(grid: Grid, field: Field, sea: list[list[bool]], i: int, j: int, *,
+                 reach: int = 3) -> float:
+    """How far a cell rises over the lowest land within `reach` of it.
+
+    Against the lowest rather than the mean, because every question this answers is about
+    somebody climbing — a garrison to be reached, a town to be stormed, a border to be
+    crossed — and they will come by the easiest way there is, not by the average one.
+
+    One definition, because there were three: settlement, castles and borders all want
+    this number and had each grown their own, with the arguments in a different order in
+    every copy. Two of them also compared it against the same absolute constant, which
+    turned out to be true of ninety per cent of a continent.
+    """
+    size = grid.size
+    here = field[j][i]
+    lowest = here
+    for b in range(max(0, j - reach), min(size, j + reach + 1)):
+        for a in range(max(0, i - reach), min(size, i + reach + 1)):
+            if not sea[b][a] and field[b][a] < lowest:
+                lowest = field[b][a]
+    return here - lowest

@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -389,6 +389,21 @@ CREATE TABLE app_state (
 ) STRICT;
 CREATE UNIQUE INDEX ux_app_state ON app_state(project_id, branch_id, namespace, key);
 
+CREATE TABLE terrain (
+    id          TEXT PRIMARY KEY,
+    project_id  TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    branch_id   TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+    seed        TEXT NOT NULL,
+    size        INTEGER NOT NULL,
+    span        REAL NOT NULL,
+    origin_x    REAL NOT NULL,
+    origin_y    REAL NOT NULL,
+    sea_level   REAL NOT NULL,
+    fields      BLOB NOT NULL,
+    updated_at  TEXT NOT NULL
+) STRICT;
+CREATE UNIQUE INDEX ux_terrain ON terrain(project_id, branch_id);
+
 CREATE TABLE geometry (
     id            TEXT PRIMARY KEY,
     project_id    TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
@@ -662,5 +677,34 @@ MIGRATIONS: dict[int, str] = {
             updated_at  TEXT NOT NULL
         ) STRICT;
         CREATE UNIQUE INDEX ux_app_state ON app_state(project_id, branch_id, namespace, key)
+    """,
+    # 8: the ground itself is kept, not just the shapes drawn on it.
+    #
+    #    Everything the map generator emitted until now was geometry — outlines, courses,
+    #    points — and geometry is what the browser draws. Relief is not geometry. It is a
+    #    height at every position, and the picture a reader recognises as a physical map
+    #    is made by lighting that surface, which cannot be done from the outlines that
+    #    were derived from it.
+    #
+    #    It is stored rather than recomputed because the generator is a function of the
+    #    world, and the world moves: a writer who adds a region after accepting a map
+    #    would otherwise find the mountains had shifted under the towns they had already
+    #    placed. The fields are the ones the writer accepted, and they stay that way until
+    #    a new map is accepted.
+    8: """
+        CREATE TABLE terrain (
+            id          TEXT PRIMARY KEY,
+            project_id  TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+            branch_id   TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+            seed        TEXT NOT NULL,
+            size        INTEGER NOT NULL,
+            span        REAL NOT NULL,
+            origin_x    REAL NOT NULL,
+            origin_y    REAL NOT NULL,
+            sea_level   REAL NOT NULL,
+            fields      BLOB NOT NULL,
+            updated_at  TEXT NOT NULL
+        ) STRICT;
+        CREATE UNIQUE INDEX ux_terrain ON terrain(project_id, branch_id)
     """,
 }

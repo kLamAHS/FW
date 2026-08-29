@@ -263,6 +263,38 @@ class TestTheWritersWorkIsSafe:
         assert all(prose.get_entity(rid) is not None for rid in rivers)
 
 
+class TestThePlanStaysInsideItsOwnVocabulary:
+    """Roles, layers and finding codes are closed sets, and a plan is checked against
+    them before anything is written.
+
+    Pinned here rather than left to `apply` because that is the wrong place to find out.
+    Adding river reaches as separate shapes invented `reach0`, `reach1`, `reach2` as
+    roles; every plan containing a river then failed to apply, and it surfaced as six
+    unrelated-looking failures in tests about retiring and adopting places.
+    """
+
+    def test_every_shape_a_plan_proposes_has_a_known_role_and_layer(self, renn: World):
+        from fw.core.mapgen.drafts import LAYERS, ROLES
+        from fw.core.mapgen.pipeline import plan_map
+
+        plan = plan_map(renn)
+        assert plan.features, "nothing to check"
+        for feature in plan.features:
+            for shape in feature.shapes:
+                assert shape.role in ROLES, (
+                    f"{feature.kind} {feature.name!r} invented the role "
+                    f"{shape.role!r}")
+                assert shape.layer in LAYERS, (
+                    f"{feature.kind} {feature.name!r} invented the layer "
+                    f"{shape.layer!r}")
+
+    def test_a_freshly_computed_plan_holds_together(self, renn: World):
+        """`violations` is what `apply` refuses on, so it must be empty to begin with."""
+        from fw.core.mapgen.pipeline import plan_map
+
+        assert plan_map(renn).violations() == []
+
+
 class TestRefusals:
     def test_answers_about_another_map_are_refused(self, prose: World):
         plan = full(prose)
