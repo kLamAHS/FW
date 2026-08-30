@@ -30,6 +30,11 @@ LEGACY_MARK = ("generated_by", "mapgen/1")
 
 TAG_PREFIX = "mapgen:"
 
+# The curated, kind-contracted semantics a feature carries (`PlannedFeature.detail`,
+# whose shape DETAIL_KEYS enforces). Kept beside the provenance, not inside it: the
+# provenance never crosses the wire, this always does.
+SEMANTICS_KEY = "sem"
+
 
 @dataclass(frozen=True)
 class LedgerRow:
@@ -55,6 +60,19 @@ def provenance(geometry: Geometry) -> dict:
     return marker if isinstance(marker, dict) else {}
 
 
+def semantics(geometry: Geometry) -> dict:
+    """What the generator understood about this shape — stream order, road grade,
+    coast character — as distinct from the provenance beside it.
+
+    This is the half of `props` that IS meant to reach a renderer: `/api/map`
+    serialises exactly this dict and nothing else from props, so the provenance
+    stays unpaintable while the cartography stops guessing semantics back out of
+    stroke widths.
+    """
+    told = (geometry.props or {}).get(SEMANTICS_KEY)
+    return told if isinstance(told, dict) else {}
+
+
 def is_generated(geometry: Geometry) -> bool:
     if provenance(geometry):
         return True
@@ -65,15 +83,19 @@ def is_generated(geometry: Geometry) -> bool:
 
 
 def stamp(feature_id: str, role: str, signature: str, name: str,
-          *, pinned: bool = False, summary: str = "") -> dict:
+          *, pinned: bool = False, summary: str = "",
+          sem: dict | None = None) -> dict:
     """The provenance to write onto a shape.
 
     The name and summary are recorded as written, so a later run can tell "the writer
     changed this" from "this is exactly what we put here".
     """
-    return {PROVENANCE_KEY: {"gen": ALGORITHM, "feature": feature_id, "role": role,
-                             "sig": signature, "name": name, "pinned": pinned,
-                             "summary": summary}}
+    marked = {PROVENANCE_KEY: {"gen": ALGORITHM, "feature": feature_id, "role": role,
+                               "sig": signature, "name": name, "pinned": pinned,
+                               "summary": summary}}
+    if sem:
+        marked[SEMANTICS_KEY] = dict(sem)
+    return marked
 
 
 def entity_tags(feature_id: str) -> tuple[str, ...]:

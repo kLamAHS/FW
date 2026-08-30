@@ -1,0 +1,836 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Edgegate",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 539.4,
+   "y": 539.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Muchill",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 292.0,
+   "y": 695.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Muchollow",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 582.2,
+   "y": 355.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Nowhes",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 463.5,
+   "y": 534.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Outmarch",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 479.8,
+   "y": 571.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgebridge",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 371.5,
+   "y": 301.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgeford",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 339.0,
+   "y": 474.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgeholt",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 485.2,
+   "y": 431.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgepass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 382.3,
+   "y": 517.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgestead",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 306.5,
+   "y": 517.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Edgewick",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 496.0,
+   "y": 268.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchbank",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 268.2,
+   "y": 338.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 219.4,
+   "y": 532.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchclose",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 382.7,
+   "y": 328.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchfield",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 369.5,
+   "y": 289.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchgate",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 729.7,
+   "y": 481.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchmoor",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 239.4,
+   "y": 135.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchreach",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 703.7,
+   "y": 523.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Muchvale",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 328.5,
+   "y": 695.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Nowherstead",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 501.1,
+   "y": 262.5
+  }
+ ],
+ "labels": [
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     486.0,
+     328.9
+    ],
+    [
+     488.6,
+     331.5
+    ],
+    [
+     498.1,
+     335.6
+    ],
+    [
+     515.7,
+     353.2
+    ],
+    [
+     517.5,
+     354.3
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Edgebank",
+   "tier": 2,
+   "x": 498.1,
+   "y": 335.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 12.29,
+   "text": "Edgecoast",
+   "tier": 1,
+   "x": 130.4,
+   "y": 303.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     399.6,
+     290.2
+    ],
+    [
+     423.6,
+     290.2
+    ],
+    [
+     433.1,
+     284.8
+    ],
+    [
+     439.9,
+     284.8
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Edgefield",
+   "tier": 2,
+   "x": 433.1,
+   "y": 284.8
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Edgegate",
+   "tier": 2,
+   "x": 547.9,
+   "y": 540.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 7.0,
+   "text": "Edgemere",
+   "tier": 1,
+   "x": 776.6,
+   "y": 230.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     555.9,
+     382.6
+    ],
+    [
+     559.0,
+     385.7
+    ],
+    [
+     560.7,
+     388.4
+    ],
+    [
+     562.1,
+     393.8
+    ],
+    [
+     566.1,
+     399.2
+    ],
+    [
+     567.5,
+     404.6
+    ],
+    [
+     576.3,
+     414.1
+    ],
+    [
+     577.6,
+     419.5
+    ],
+    [
+     578.1,
+     420.3
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Edgemoor",
+   "tier": 2,
+   "x": 566.1,
+   "y": 399.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     329.8,
+     259.4
+    ],
+    [
+     360.4,
+     290.0
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Muchford",
+   "tier": 2,
+   "x": 360.4,
+   "y": 290.0
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Muchill",
+   "tier": 1,
+   "x": 301.8,
+   "y": 696.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Muchollow",
+   "tier": 2,
+   "x": 590.7,
+   "y": 356.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 19.8,
+   "text": "Nowhere Much",
+   "tier": 0,
+   "x": 543.9,
+   "y": 454.3
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Nowhes",
+   "tier": 2,
+   "x": 472.0,
+   "y": 534.6
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Outmarch",
+   "tier": 2,
+   "x": 488.3,
+   "y": 572.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The Edge",
+   "tier": 0,
+   "x": 364.5,
+   "y": 590.0
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgebridge",
+   "tier": 2,
+   "x": 380.0,
+   "y": 314.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 11.06,
+   "text": "The Edgecape",
+   "tier": 1,
+   "x": 751.2,
+   "y": 595.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 12.69,
+   "text": "The Edgecombe",
+   "tier": 1,
+   "x": 429.7,
+   "y": 137.6
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgeford",
+   "tier": 2,
+   "x": 348.5,
+   "y": 474.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     286.7,
+     388.0
+    ],
+    [
+     293.6,
+     387.7
+    ],
+    [
+     296.3,
+     388.7
+    ],
+    [
+     301.7,
+     392.8
+    ],
+    [
+     311.2,
+     393.5
+    ],
+    [
+     318.0,
+     398.2
+    ],
+    [
+     327.4,
+     398.9
+    ],
+    [
+     334.2,
+     403.6
+    ],
+    [
+     339.6,
+     405.0
+    ],
+    [
+     354.2,
+     419.5
+    ],
+    [
+     355.1,
+     421.9
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Edgehollow",
+   "tier": 1,
+   "x": 318.0,
+   "y": 398.2
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgeholt",
+   "tier": 2,
+   "x": 494.7,
+   "y": 431.3
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgepass",
+   "tier": 2,
+   "x": 391.8,
+   "y": 518.0
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgestead",
+   "tier": 2,
+   "x": 297.0,
+   "y": 508.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 10.0,
+   "text": "The Edgethorpe",
+   "tier": 1,
+   "x": 654.8,
+   "y": 112.0
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Edgewick",
+   "tier": 2,
+   "x": 504.5,
+   "y": 269.1
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Muchbank",
+   "tier": 2,
+   "x": 276.7,
+   "y": 339.5
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Muchbridge",
+   "tier": 1,
+   "x": 229.2,
+   "y": 533.3
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Muchclose",
+   "tier": 2,
+   "x": 391.2,
+   "y": 329.3
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Muchgate",
+   "tier": 1,
+   "x": 739.5,
+   "y": 482.3
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Muchmoor",
+   "tier": 2,
+   "x": 247.9,
+   "y": 135.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     362.3,
+     440.2
+    ],
+    [
+     374.8,
+     427.7
+    ],
+    [
+     378.9,
+     418.2
+    ],
+    [
+     396.9,
+     400.2
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Mucholt",
+   "tier": 2,
+   "x": 378.9,
+   "y": 418.2
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Muchreach",
+   "tier": 2,
+   "x": 712.2,
+   "y": 524.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Muchvale",
+   "tier": 2,
+   "x": 328.5,
+   "y": 713.5
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Nowherstead",
+   "tier": 2,
+   "x": 492.6,
+   "y": 263.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 19.8,
+   "text": "The Out-Marches",
+   "tier": 0,
+   "x": 448.7,
+   "y": 359.7
+  }
+ ],
+ "legend": [
+  {
+   "label": "Hamlet",
+   "note": "",
+   "role": "settlement",
+   "swatch": "dot"
+  },
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Edgeclose"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Edgeflow"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Edgehill"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Edgereach"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Edgerun"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Edgerush"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Edgevale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Edgewaste"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchcombe"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Muchfield"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchmere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchstead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchwick"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  }
+ ]
+}

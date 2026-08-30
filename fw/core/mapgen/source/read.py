@@ -149,7 +149,7 @@ def read_world(world, *, at: int | None = None, north: str = "up") -> WorldReadi
         borders=borders,
         names=tuple(sorted(e.name for e in entities if e.name)),
         corpus=tuple(sorted((e.type_key, e.name) for e in entities if e.name)),
-        seasons=_seasons(world))
+        seasons=_seasons(world), presence=_presence(world, keys))
     findings.extend(_ground_two_houses_claim(reading, named))
     findings.extend(_events_before_their_ground(settlements, events))
 
@@ -250,6 +250,20 @@ def _is_the_maps_own(fact) -> bool:
     """
     props = getattr(fact, "props", None) or {}
     return bool(props.get("mapgen")) and fact.confidence == "speculative"
+
+
+def _presence(world, keys) -> dict[str, int]:
+    """How often each place carries the story: the scenes the writer set there.
+
+    Counted for every scene whatever the map's date — a place the story keeps
+    returning to matters on every day's map, not only after the chapters happen.
+    """
+    counts: dict[str, int] = {}
+    for scene in world.scenes():
+        place = keys.get(getattr(scene, "location_id", None) or "")
+        if place:
+            counts[place] = counts.get(place, 0) + 1
+    return counts
 
 
 def _mentions(entities, keys, gazetteer) -> dict[str, tuple]:

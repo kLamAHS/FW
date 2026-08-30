@@ -81,3 +81,50 @@ def _filter_sub(row: bytes) -> bytes:
 def _weight(row: bytes) -> int:
     """Sum of the bytes read as signed — the standard filter-choice heuristic."""
     return sum(b if b < 128 else 256 - b for b in row)
+
+
+def decode(data: bytes) -> tuple[int, int, bytes]:
+    """The encoder's own files, back to `(width, height, pixels)`.
+
+    Only what `encode` writes — 8-bit RGB, filters 0/1/2, no interlace — because the
+    callers are the golden harness (which hashes pixels rather than the file, so a
+    zlib build cannot fail a test while a pixel still can) and the export path. It is
+    not a general PNG reader and refuses anything it did not write.
+    """
+    if data[:8] != _SIGNATURE:
+        raise ValueError("not a PNG")
+    position, pixels, header = 8, b"", None
+    while position < len(data):
+        length = struct.unpack(">I", data[position:position + 4])[0]
+        kind = data[position + 4:position + 8]
+        body = data[position + 8:position + 8 + length]
+        if kind == b"IHDR":
+            header = struct.unpack(">IIBBBBB", body)
+        elif kind == b"IDAT":
+            pixels += body
+        position += 12 + length
+    if header is None:
+        raise ValueError("no IHDR")
+    width, height, depth, colour, compression, filtering, interlace = header
+    if (depth, colour, compression, filtering, interlace) != (8, 2, 0, 0, 0):
+        raise ValueError("not a file this encoder writes")
+
+    raw = zlib.decompress(pixels)
+    stride = width * 3
+    out, previous, cursor = bytearray(), bytearray(stride), 0
+    for _ in range(height):
+        kind_byte = raw[cursor]
+        cursor += 1
+        row = bytearray(raw[cursor:cursor + stride])
+        cursor += stride
+        if kind_byte == 1:
+            for n in range(3, stride):
+                row[n] = (row[n] + row[n - 3]) & 0xFF
+        elif kind_byte == 2:
+            for n in range(stride):
+                row[n] = (row[n] + previous[n]) & 0xFF
+        elif kind_byte != 0:
+            raise ValueError(f"unexpected filter {kind_byte}")
+        out += row
+        previous = row
+    return width, height, bytes(out)

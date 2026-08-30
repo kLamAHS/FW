@@ -641,6 +641,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     @app.get("/api/map", response_model=S.MapOut)
     def get_map(day: int | None = None, layer: str | None = None,
                 mode: str = "legally_owns", labels: bool = True,
+                debug: bool = False,
                 seen_as: str | None = Query(None, alias="as")) -> S.MapOut:
         """§34/§35/§36: geometry for a date, with the control facts attached.
 
@@ -689,6 +690,10 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 # and the client draws a generated edge as the guess it is.
                 "generated": ledger.is_generated(geometry),
                 "control": control,
+                # What the generator understood about the shape — stream order, road
+                # grade, coast character. The one part of `props` that is meant to be
+                # painted; the provenance beside it still never crosses the wire.
+                "semantics": ledger.semantics(geometry),
             })
         layers = sorted({f["layer"] for f in features})
         ground = holder.get().terrain()
@@ -697,8 +702,11 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                    ground["origin_y"] + ground["span"]] if ground else None)
         drawn = cartography.draw(features, mode=mode, ground=extent, label=labels,
                                  world_name=world.name)
+        # `debug` carries the solver's scaffolding — label boxes, drop reasons — for
+        # the overlay a person tunes the composition with (V2 §50). Not the default
+        # payload: every client on every day does not need the working.
         return S.MapOut(day=at, layers=layers, features=features,
-                        draw=drawn.as_dict(),
+                        draw=drawn.as_dict(debug=debug),
                         seen_as=seen_as, seen_as_name=_name_of(world, seen_as))
 
     @app.post("/api/geometry", status_code=201)

@@ -112,7 +112,8 @@ class TestTextIsNeverUpsideDown:
             key="r", text="The Extremely Long River Of Many Names", kind="river",
             tier=1, role="label-water", size=11.0,
             line=((0.0, 0.0), (10.0, 0.0)))])
-        assert not placed and missed == ("r",)
+        assert not placed
+        assert [(m.key, m.reason) for m in missed] == [("r", "no room")]
 
 
 class TestTwoNamesNeverSitOnEachOther:
@@ -301,3 +302,25 @@ class TestTheDrawPlan:
         used |= {entry.role for entry in plan.legend}
         used |= {label.role for label in plan.labels}
         assert used <= set(cartography.ROLES), used - set(cartography.ROLES)
+
+
+class TestTheWorkingIsAvailableOnAsk:
+    """V2 §50: the solver's scaffolding reaches a debug overlay, and only a debug
+    overlay — the ordinary payload stays clean."""
+
+    def test_boxes_are_kept_off_the_ordinary_wire(self):
+        placed, _ = labels.solve([labels.Wanted(
+            key="t", text="Rennford", kind="town", tier=1, role="label", size=11.0,
+            point=(100.0, 100.0), clearance=4.0)])
+        assert "boxes" not in placed[0].as_dict()
+        told = placed[0].as_dict(debug=True)
+        assert told["boxes"] and len(told["boxes"][0]) == 4
+
+    def test_a_drop_names_itself_and_says_why(self):
+        _, missed = labels.solve([labels.Wanted(
+            key="r", text="The Longest Name Ever Written On A Map", kind="river",
+            tier=1, role="label-water", size=11.0,
+            line=((0.0, 0.0), (8.0, 0.0)))])
+        assert missed[0].text.startswith("The Longest")
+        assert missed[0].reason == "no room"
+        assert missed[0].as_dict()["reason"] == "no room"

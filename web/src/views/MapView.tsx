@@ -54,8 +54,12 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // §94: whose eyes. Empty is the map from nowhere, which is what the writer sees until
   // they ask for somebody's — a perspective is a lens over the world, never the world.
   const [seenAs, setSeenAs] = useState('')
+  // The solver's own working — label boxes, drop reasons — drawn over the map, for
+  // tuning the composition rather than for writing (V2 §50).
+  const [debug, setDebug] = useState(false)
   const { data, error, loading } = useAsync(
-    () => api.map(day, undefined, mode, seenAs || null), [day, version, mode, seenAs])
+    () => api.map(day, undefined, mode, seenAs || null, debug),
+    [day, version, mode, seenAs, debug])
   const eyes = useAsync(() => api.perspectives(), [version])
   const theirView = useAsync(
     () => (seenAs ? api.perspective(seenAs, day) : Promise.resolve(null)),
@@ -102,7 +106,10 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
     return () => {
       live = false
     }
-  }, [day, report])
+    // The ground is per-branch, not per-day — it changes when a map is accepted
+    // (report here, version when the accept happened anywhere else), never with the
+    // timeline slider.
+  }, [version, report])
   const pan = usePanZoom(1)
 
   // Propose first (§66). The map is worked out and shown; nothing is written until
@@ -366,6 +373,12 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             {showLabels && draw.labels.map((label) => (
               <Name key={label.key} label={label} />
             ))}
+            {debug && draw.labels.map((label) => (label.boxes ?? []).map((b, i) => (
+              <rect key={`${label.key}-box-${i}`} x={b[0]} y={b[1]}
+                    width={b[2] - b[0]} height={b[3] - b[1]} fill="none"
+                    stroke="var(--map-contested)" strokeWidth={0.8}
+                    strokeDasharray="2 2" pointerEvents="none" />
+            )))}
             {plan && <ProposalOverlay plan={plan} accepted={accepted} />}
             {drawing && <InProgress drawing={drawing} />}
           </g>
@@ -401,6 +414,12 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             <input type="checkbox" checked={showLabels}
                    onChange={() => setShowLabels((v) => !v)} />
             labels
+          </label>
+          <label title="The solver's working: label boxes on the map, and why each
+missing name was dropped">
+            <input type="checkbox" checked={debug}
+                   onChange={() => setDebug((v) => !v)} />
+            label debug
           </label>
           <button onClick={pan.reset} style={{ marginTop: 4 }}>Reset view</button>
         </div>
@@ -600,8 +619,15 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             Legal ownership, administration, occupation, taxation and claims are five
             different facts and are tracked separately — switch above to see each one.
             {draw.unlabelled.length > 0 && ` ${draw.unlabelled.length} name${
-              draw.unlabelled.length === 1 ? '' : 's'} would not fit; zoom in for them.`}
+              draw.unlabelled.length === 1 ? '' : 's'} would not fit.`}
           </p>
+          {debug && draw.unlabelled.length > 0 && (
+            <ul className="clean small muted">
+              {draw.unlabelled.map((gone) => (
+                <li key={gone.key}>{gone.text} — {gone.reason}</li>
+              ))}
+            </ul>
+          )}
         </Panel>
       )}
     </>

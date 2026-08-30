@@ -1,0 +1,1343 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Belowbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 186.1,
+   "y": 546.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Belowpass",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 310.0,
+   "y": 529.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greybank",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 627.2,
+   "y": 615.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greybridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 269.0,
+   "y": 401.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greyclose",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 266.6,
+   "y": 185.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greyfield",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 174.5,
+   "y": 666.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greymoor",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 692.1,
+   "y": 561.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greypass",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 340.0,
+   "y": 652.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelbridge",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 274.6,
+   "y": 638.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelcombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 330.0,
+   "y": 197.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 290.4,
+   "y": 663.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelhollow",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 429.3,
+   "y": 535.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelholt",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 300.0,
+   "y": 490.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelmere",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 371.6,
+   "y": 457.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelow",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 474.4,
+   "y": 339.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelpass",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 500.8,
+   "y": 394.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelreach",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 465.3,
+   "y": 487.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelstead",
+   "radius": 7.0,
+   "rank": "city",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 279.4,
+   "y": 148.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelthorpe",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 339.9,
+   "y": 686.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneelwick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 306.9,
+   "y": 393.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kneeth",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 566.5,
+   "y": 599.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Vale Bel",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 566.5,
+   "y": 404.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Vale Te Teel",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 664.0,
+   "y": 561.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Vall",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 647.7,
+   "y": 783.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The White Bel",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 609.8,
+   "y": 506.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The White Below",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 339.0,
+   "y": 653.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The White Te Bel",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 311.9,
+   "y": 528.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The White Teelow",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 669.4,
+   "y": 469.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Whiteel",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 501.5,
+   "y": 393.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Whiteelow",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 485.2,
+   "y": 441.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Whiteeth",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 734.4,
+   "y": 349.8
+  }
+ ],
+ "labels": [
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Belowbridge",
+   "tier": 2,
+   "x": 194.6,
+   "y": 546.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     441.5,
+     575.4
+    ],
+    [
+     441.5,
+     576.6
+    ],
+    [
+     437.8,
+     582.0
+    ],
+    [
+     438.5,
+     584.7
+    ],
+    [
+     440.5,
+     587.4
+    ],
+    [
+     440.5,
+     588.8
+    ],
+    [
+     436.8,
+     594.2
+    ],
+    [
+     435.4,
+     599.6
+    ],
+    [
+     431.4,
+     605.1
+    ],
+    [
+     431.0,
+     613.2
+    ],
+    [
+     433.1,
+     617.2
+    ],
+    [
+     440.9,
+     625.4
+    ],
+    [
+     442.2,
+     630.8
+    ],
+    [
+     447.0,
+     637.6
+    ],
+    [
+     447.6,
+     641.6
+    ],
+    [
+     452.4,
+     648.4
+    ],
+    [
+     452.4,
+     651.5
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Belowcombe",
+   "tier": 1,
+   "x": 431.4,
+   "y": 605.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "range",
+   "path": [
+    [
+     648.7,
+     381.4
+    ],
+    [
+     656.3,
+     393.1
+    ],
+    [
+     663.5,
+     412.0
+    ],
+    [
+     665.5,
+     425.3
+    ],
+    [
+     665.3,
+     446.2
+    ],
+    [
+     663.0,
+     460.7
+    ],
+    [
+     668.2,
+     480.1
+    ],
+    [
+     673.4,
+     486.4
+    ]
+   ],
+   "role": "label-relief",
+   "size": 14.0,
+   "text": "The Belowdowns",
+   "tier": 1,
+   "x": 665.3,
+   "y": 446.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     337.4,
+     316.0
+    ],
+    [
+     337.9,
+     316.6
+    ],
+    [
+     339.3,
+     322.0
+    ],
+    [
+     341.0,
+     324.7
+    ],
+    [
+     354.2,
+     338.3
+    ],
+    [
+     355.5,
+     343.7
+    ],
+    [
+     357.2,
+     346.4
+    ],
+    [
+     374.8,
+     364.0
+    ],
+    [
+     376.5,
+     366.7
+    ],
+    [
+     377.9,
+     372.1
+    ],
+    [
+     383.8,
+     378.2
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Belowflow",
+   "tier": 1,
+   "x": 355.5,
+   "y": 343.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "range",
+   "path": [
+    [
+     549.9,
+     683.1
+    ],
+    [
+     552.8,
+     691.5
+    ],
+    [
+     563.8,
+     713.4
+    ],
+    [
+     573.0,
+     727.0
+    ],
+    [
+     582.7,
+     750.6
+    ],
+    [
+     601.8,
+     758.4
+    ],
+    [
+     604.1,
+     759.5
+    ]
+   ],
+   "role": "label-relief",
+   "size": 14.0,
+   "text": "The Belowford",
+   "tier": 1,
+   "x": 573.0,
+   "y": 727.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     363.1,
+     292.7
+    ],
+    [
+     385.7,
+     315.3
+    ],
+    [
+     387.7,
+     319.3
+    ],
+    [
+     388.0,
+     327.4
+    ],
+    [
+     397.5,
+     338.3
+    ],
+    [
+     397.9,
+     339.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Belowhill",
+   "tier": 2,
+   "x": 388.0,
+   "y": 327.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "range",
+   "path": [
+    [
+     476.7,
+     331.6
+    ],
+    [
+     480.0,
+     330.6
+    ],
+    [
+     491.9,
+     327.9
+    ],
+    [
+     506.6,
+     317.6
+    ],
+    [
+     514.2,
+     306.7
+    ],
+    [
+     528.5,
+     268.5
+    ],
+    [
+     541.6,
+     258.4
+    ]
+   ],
+   "role": "label-relief",
+   "size": 14.0,
+   "text": "The Belowmoor",
+   "tier": 1,
+   "x": 506.6,
+   "y": 317.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     188.1,
+     653.5
+    ],
+    [
+     202.9,
+     652.8
+    ],
+    [
+     209.6,
+     648.0
+    ],
+    [
+     219.1,
+     647.4
+    ],
+    [
+     225.9,
+     642.6
+    ],
+    [
+     256.8,
+     642.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Belowreach",
+   "tier": 2,
+   "x": 219.1,
+   "y": 647.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 9.91,
+   "text": "The Belowshire",
+   "tier": 2,
+   "x": 718.0,
+   "y": 379.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Belowstead",
+   "tier": 2,
+   "x": 624.4,
+   "y": 560.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 8.31,
+   "text": "The Grey Wale Bel",
+   "tier": 1,
+   "x": 654.8,
+   "y": 112.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The Grey Wall",
+   "tier": 0,
+   "x": 708.4,
+   "y": 520.3
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Greybank",
+   "tier": 2,
+   "x": 635.7,
+   "y": 615.6
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Greybridge",
+   "tier": 1,
+   "x": 278.8,
+   "y": 402.5
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Greyclose",
+   "tier": 2,
+   "x": 275.1,
+   "y": 186.3
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Greyfield",
+   "tier": 2,
+   "x": 166.0,
+   "y": 666.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     319.7,
+     562.7
+    ],
+    [
+     326.1,
+     569.8
+    ],
+    [
+     328.1,
+     573.9
+    ],
+    [
+     328.1,
+     607.8
+    ],
+    [
+     333.2,
+     615.9
+    ],
+    [
+     333.3,
+     616.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Greygate",
+   "tier": 2,
+   "x": 328.1,
+   "y": 607.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     515.4,
+     488.0
+    ],
+    [
+     564.6,
+     537.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Greyhollow",
+   "tier": 2,
+   "x": 564.6,
+   "y": 537.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Greymoor",
+   "tier": 2,
+   "x": 700.6,
+   "y": 561.8
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Greypass",
+   "tier": 1,
+   "x": 349.8,
+   "y": 653.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "role": "label",
+   "size": 9.5,
+   "text": "The Greythorpe",
+   "tier": 2,
+   "x": 278.6,
+   "y": 528.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "path": [
+    [
+     651.6,
+     698.0
+    ],
+    [
+     702.0,
+     698.0
+    ],
+    [
+     709.2,
+     703.2
+    ]
+   ],
+   "role": "label-region",
+   "size": 12.99,
+   "text": "The Kneel",
+   "tier": 0,
+   "x": 702.0,
+   "y": 698.0
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelbridge",
+   "tier": 2,
+   "x": 266.1,
+   "y": 630.9
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelcombe",
+   "tier": 2,
+   "x": 338.5,
+   "y": 211.2
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Kneelholt",
+   "tier": 1,
+   "x": 309.8,
+   "y": 490.7
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Kneelmere",
+   "tier": 1,
+   "x": 381.4,
+   "y": 458.6
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelpass",
+   "tier": 2,
+   "x": 492.3,
+   "y": 394.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelreach",
+   "tier": 2,
+   "x": 465.3,
+   "y": 477.6
+  },
+  {
+   "anchor": "end",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "The Kneelstead",
+   "tier": 1,
+   "x": 267.8,
+   "y": 149.5
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelthorpe",
+   "tier": 2,
+   "x": 348.4,
+   "y": 686.8
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelwick",
+   "tier": 2,
+   "x": 298.4,
+   "y": 385.4
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneeth",
+   "tier": 2,
+   "x": 576.0,
+   "y": 599.3
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Vale Bel",
+   "tier": 2,
+   "x": 576.0,
+   "y": 404.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The Vale Below",
+   "tier": 0,
+   "x": 464.2,
+   "y": 532.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 12.55,
+   "text": "The Vale Te Bel",
+   "tier": 1,
+   "x": 429.7,
+   "y": 137.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Vale Te Teel",
+   "tier": 2,
+   "x": 664.0,
+   "y": 579.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 8.37,
+   "text": "The Vale Te Teeth",
+   "tier": 1,
+   "x": 751.2,
+   "y": 595.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Vale Teel",
+   "tier": 2,
+   "x": 762.2,
+   "y": 443.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 8.26,
+   "text": "The Vale Teeth",
+   "tier": 1,
+   "x": 130.4,
+   "y": 303.5
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Vall",
+   "tier": 2,
+   "x": 656.2,
+   "y": 783.7
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The White Below",
+   "tier": 2,
+   "x": 329.5,
+   "y": 667.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 7.0,
+   "text": "The White Teel",
+   "tier": 1,
+   "x": 776.6,
+   "y": 230.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The White Teeth",
+   "tier": 0,
+   "x": 630.7,
+   "y": 355.3
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Whiteel",
+   "tier": 2,
+   "x": 511.0,
+   "y": 393.4
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Whiteelow",
+   "tier": 2,
+   "x": 494.7,
+   "y": 442.2
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Whiteeth",
+   "tier": 2,
+   "x": 742.9,
+   "y": 350.4
+  }
+ ],
+ "legend": [
+  {
+   "label": "City",
+   "note": "",
+   "role": "settlement",
+   "swatch": "ring"
+  },
+  {
+   "label": "Hamlet",
+   "note": "",
+   "role": "settlement",
+   "swatch": "dot"
+  },
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowbank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowclose"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowfield"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowgate"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowhollow"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Belowholt"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Belowick"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Belowmarch"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowmere"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Belowold"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Belowpass"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Belowrush"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Belowthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Belowvale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greycombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyhill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greymere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greystead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyvale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greywick"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Kneelford"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Kneelhollow"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The Kneelow"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Vale Te Below"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Vale Teelow"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The White Bel"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The White Te Bel"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The White Te Teel"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The White Teelow"
+  }
+ ]
+}

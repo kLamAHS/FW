@@ -24,12 +24,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from fw.core.mapgen import guards
 from fw.core.mapgen import ledger as ledger_module
 from fw.core.mapgen.decide import Decision, DecisionSet, load_standing, resolve, save_standing
 from fw.core.mapgen.drafts import FactSpec, SegmentSpec, ShapeSpec
 from fw.core.mapgen.findings import Finding, note, warn
 from fw.core.mapgen.ids import kind_of, shape_signature
-from fw.core.mapgen.plan import MapPlan, PlannedFeature
+from fw.core.mapgen.plan import PROVENANCE_KEY, MapPlan, PlannedFeature
 from fw.core.world import World, WorldError
 
 # What each op means, in the order a report should read them.
@@ -119,6 +120,9 @@ class _Writer:
         self.findings: list[Finding] = list(plan.findings)
         self.entity_of: dict[str, str] = {}      # feature id -> entity id
         self.wrote = False
+        # The segments already in the world, read once and only if something is
+        # rewritten — the price of taking back a feature's old sayings.
+        self._old_segments: list | None = None
 
     # ---- the run ----------------------------------------------------------
 
@@ -189,7 +193,16 @@ class _Writer:
         wanted = {shape_signature(s.coordinates): s for s in feature.shapes}
         present = {ledger_module.provenance(g).get("sig", ""): g
                    for g in (row.geometries if row else ())}
-        if row is not None and set(wanted) == set(present) - {""} and present:
+        # "Unchanged" means the shapes AND what the map understands about them. A row
+        # written before a stage learned something new (a river's true order, a coast's
+        # character) differs in semantics though not a vertex moved — and comparing
+        # canonically is what lets re-accepting a plan upgrade an old map in place.
+        same_story = all(
+            guards.canonical_json(ledger_module.semantics(g))
+            == guards.canonical_json(feature.detail)
+            for g in (row.geometries if row else ()))
+        if (row is not None and set(wanted) == set(present) - {""} and present
+                and same_story):
             self.outcomes.append(FeatureOutcome(
                 feature_id=feature.id, name=name, op="unchanged",
                 entity_id=entity_id, geometry_ids=row.geometry_ids,
@@ -199,6 +212,8 @@ class _Writer:
         for geometry in (row.geometries if row else ()):
             self.world.delete_geometry(geometry.id)
             self.wrote = True
+        if row is not None:
+            self._take_back_sayings(feature.id, entity_id)
 
         drawn: list[str] = []
         for shape in feature.shapes:
@@ -251,7 +266,8 @@ class _Writer:
             style=dict(shape.style), approximate=shape.approximate,
             props=ledger_module.stamp(feature.id, shape.role,
                                       shape_signature(shape.coordinates), name,
-                                      summary=(entity.summary if entity else "")),
+                                      summary=(entity.summary if entity else ""),
+                                      sem=feature.detail),
         )
         self.wrote = True
         return drawn.id
@@ -295,6 +311,28 @@ class _Writer:
             return self.entity_of.get(ref[1:])
         return ref if self.world.get_entity(ref) else None
 
+    def _take_back_sayings(self, feature_id: str, entity_id: str | None) -> None:
+        """What this feature asserted last time, deleted before it says it again.
+
+        Re-drawing used to only delete the *shapes*: every re-accepted plan then added
+        another copy of the same `located_in` and another identical route segment, and
+        the router quietly counted the road twice. Only the feature's own stamped
+        sayings go; the writer's facts about the same entity are not the map's to touch.
+        """
+        for fact in guards.sorted_facts(
+                self.world.facts_about(entity_id) if entity_id else ()):
+            marker = (getattr(fact, "props", None) or {}).get(PROVENANCE_KEY) or {}
+            if marker.get("feature") == feature_id:
+                self.world.delete_fact(fact.id)
+                self.wrote = True
+        if self._old_segments is None:
+            self._old_segments = self.world.route_segments()
+        for segment in self._old_segments:
+            marker = (segment.props or {}).get(PROVENANCE_KEY) or {}
+            if marker.get("feature") == feature_id:
+                self.world.delete_route_segment(segment.id)
+                self.wrote = True
+
     # ---- clearing the last map -------------------------------------------
 
     def _retire(self, accepted: list[PlannedFeature]) -> None:
@@ -309,7 +347,7 @@ class _Writer:
             # Only kinds this map actually looked at. Narrowing the brief is not a way
             # to delete everything else.
             kind = kind_of(feature_id)
-            if kind is not None and not self.plan.brief.wants(kind):
+            if kind is not None and not self.plan.brief.covers(kind):
                 continue
             touched = ledger_module.writer_touched(
                 self.world, row.entity_id, row.name_at_write,

@@ -135,6 +135,12 @@ export interface MapFeature {
   /** Whose shape this is. False means the writer drew it themselves (§66). */
   generated: boolean
   control: Record<string, { id: string; name: string }[]>
+  /**
+   * What the generator understood about the shape — a river's stream order, a road's
+   * grade, a coast's character. Empty for the writer's own shapes and for maps
+   * accepted before the generator started saying (re-accepting a proposal fills it).
+   */
+  semantics: Record<string, unknown>
 }
 
 /**
@@ -156,6 +162,17 @@ export interface MapLabel {
   anchor: 'start' | 'middle' | 'end'
   /** Set only when the name really bends; then the text runs along this path. */
   path?: number[][]
+  /** The reserved boxes, present only when the map was asked with ?debug=1. */
+  boxes?: number[][]
+}
+
+/** A name that is not on the map, and the reason it is not (V2 §50). */
+export interface MapUnlabelled {
+  key: string
+  text: string
+  kind: string
+  tier: number
+  reason: string
 }
 
 export interface MapIcon {
@@ -189,7 +206,7 @@ export interface DrawPlan {
   icons: MapIcon[]
   legend: MapLegendEntry[]
   holders: Record<string, string>
-  unlabelled: string[]
+  unlabelled: MapUnlabelled[]
 }
 
 export interface MapData {
@@ -989,8 +1006,10 @@ export const api = {
 
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
-  map: (day?: number, layer?: string, mode?: string, as?: string | null) =>
-    get<MapData>('/map', { day, layer, mode, as: as ?? undefined }),
+  map: (day?: number, layer?: string, mode?: string, as?: string | null,
+        debug?: boolean) =>
+    get<MapData>('/map', { day, layer, mode, as: as ?? undefined,
+                           debug: debug || undefined }),
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),

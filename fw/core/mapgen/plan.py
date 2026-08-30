@@ -53,21 +53,30 @@ KIND_ORDER = ("coast", "island", "region", "range", "hills", "sea", "water", "la
 # the stage that emitted it, and `violations()` is how it gets caught in a test rather
 # than in front of the writer.
 DETAIL_KEYS: dict[str, tuple[str, ...]] = {
-    "coast": ("landmass", "area"),
-    "island": ("landmass", "area"),
-    "region": ("share", "dominant"),
-    "range": ("strike", "crest"),
-    "hills": ("crest",),
-    "sea": ("water_kind",),
-    "water": ("water_kind",),
-    "lake": ("area",),
-    "river": ("mouth", "strahler"),
-    "natural": ("feature_kind", "area_cells"),
-    "settlement": ("rank",),
-    "castle": ("rank",),
-    "ruin": ("rank",),
-    "road": ("tier", "span"),
-    "lane": ("tier", "span", "lands_at"),
+    "coast": ("landmass", "area", "importance"),
+    "island": ("landmass", "area", "importance"),
+    "region": ("share", "dominant", "importance"),
+    "range": ("strike", "crest", "importance"),
+    "hills": ("crest", "importance"),
+    "sea": ("water_kind", "importance"),
+    "water": ("water_kind", "importance"),
+    "lake": ("area", "importance"),
+    "river": ("mouth", "strahler", "importance"),
+    "natural": ("feature_kind", "area_cells", "importance"),
+    "settlement": ("rank", "importance"),
+    "castle": ("rank", "importance"),
+    "ruin": ("rank", "importance"),
+    "road": ("tier", "span", "importance"),
+    "lane": ("tier", "span", "lands_at", "importance"),
+}
+
+
+# Kinds drafted under another kind's switch, mirroring `pipeline._compute`: islands
+# fall out of tracing the coast, lanes are drawn only when both roads and a coast are.
+# Every other kind answers for itself.
+_DRAFT_GATES: dict[str, tuple[str, ...]] = {
+    "island": ("coast",),
+    "lane": ("road", "coast"),
 }
 
 
@@ -105,6 +114,16 @@ class MapBrief:
 
     def wants(self, kind: str) -> bool:
         return kind in self.include
+
+    def covers(self, kind: str) -> bool:
+        """Whether this brief could have proposed the kind — the retirement question.
+
+        Not the same as `wants`: islands ride the coast gate and sea lanes need both
+        of their parents, exactly as in the pipeline's drafting gates. A brief never
+        says "island", so a retirement gated on `wants` could not take one back — an
+        island the new map does not have would stand forever.
+        """
+        return all(self.wants(k) for k in _DRAFT_GATES.get(kind, (kind,)))
 
 
 @dataclass(frozen=True)

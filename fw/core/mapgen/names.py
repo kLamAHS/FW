@@ -391,9 +391,11 @@ class Namer:
             return ""
         context = BOUNDARY * ORDER
         out: list[str] = []
+        ended = False
         for step in range(MAX_LENGTH):
             successors = chain.get(context)
             if not successors:
+                ended = True
                 break
             total = sum(count for _, count in successors)
             pick = noise.unit(f"{self.seed}|{kind}|{key}|{attempt}", step) * total
@@ -405,10 +407,14 @@ class Namer:
                     char = candidate
                     break
             if char == END:
+                ended = True
                 break
             out.append(char)
             context = (context + char)[-ORDER:]
-        return "".join(out).strip()
+        # A walk the cap cut off mid-word is not a name — "The Norey Shorth S" is
+        # fourteen characters of somewhere real. Returned empty so the attempt loop
+        # tries again rather than shipping the stump.
+        return "".join(out).strip() if ended else ""
 
     def name(self, kind: str, key: str, *, hint: str = "") -> str:
         """A name for one generated thing.
@@ -429,8 +435,13 @@ class Namer:
             else:
                 candidate = self._spin(kind, model, key, attempt)
             flat = candidate.replace(" ", "")
+            # The last-word floor guards against a low-order chain's fake endings:
+            # with two characters of context, "Marsh" teaches that "sh" can end a
+            # name, and "The Norey Sh" follows. No real toponym has a two-letter
+            # final word.
             if (len(candidate) < 4 or candidate in self.taken
-                    or candidate in model.names or flat in AVOID):
+                    or candidate in model.names or flat in AVOID
+                    or len(candidate.split()[-1]) < 3):
                 continue
             self.taken.add(candidate)
             return self._dress(model, candidate, key)

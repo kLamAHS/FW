@@ -17,7 +17,7 @@ from __future__ import annotations
 import math
 import time
 
-from fw.core.mapgen import cartography, shapes
+from fw.core.mapgen import cartography, importance, shapes
 from fw.core.mapgen import ledger as ledger_module
 from fw.core.mapgen.drafts import (
     FactSpec,
@@ -160,6 +160,10 @@ def _compute(world: World, brief: MapBrief
         drafts.extend(_castle_drafts(generator, placements))
     if brief.wants("road") and brief.wants("coast"):
         drafts.extend(_sea_lane_drafts(generator, placements))
+    # Every draft leaves knowing how much it matters (V2 §31). Graded here, after all
+    # drafting, so a stage cannot forget it and nothing downstream has to guess a
+    # hierarchy back out of icon sizes.
+    importance.grade(drafts, generator.reading)
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
     return drafts, timings, findings, _terrain_of(generator), generator.reading
 
@@ -264,12 +268,11 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               # Two fills, not two shapes: a political map is the same
                               # country in a different colour, so the client switches
                               # mode rather than turning a second layer on over the
-                              # first and getting the borders twice.
-                              style={"role": _terrain_role(profile.dominant),
-                                     **({"holder": held["holder_key"],
-                                         "holder_name": held["holder"],
-                                         "authority": held["authority"]}
-                                        if held.get("holder_key") else {})},
+                              # first and getting the borders twice. Who holds it is
+                              # semantics, not paint — it rides `detail["politics"]`;
+                              # three style keys said the same thing here for a phase
+                              # and were read by nothing.
+                              style={"role": _terrain_role(profile.dominant)},
                               approximate=True),),
             reasons=(Reason(kind="authored", weight=1.0,
                             template="drawn where its neighbours leave room",
@@ -1120,7 +1123,7 @@ def _retirements(world: World, brief: MapBrief,
         # looked at. Narrowing what you are drawing is not the same as saying the rest
         # should go.
         kind = kind_of(fid)
-        if kind is not None and not brief.wants(kind):
+        if kind is not None and not brief.covers(kind):
             continue
         touched = ledger_module.writer_touched(
             world, row.entity_id, row.name_at_write,

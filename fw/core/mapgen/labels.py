@@ -134,7 +134,7 @@ class Placed:
     path: tuple[Point, ...] = ()
     boxes: tuple[Box, ...] = ()
 
-    def as_dict(self) -> dict:
+    def as_dict(self, *, debug: bool = False) -> dict:
         out: dict = {"key": self.key, "text": self.text, "kind": self.kind,
                      "tier": self.tier, "role": self.role,
                      "size": round(self.size, 2),
@@ -142,7 +142,31 @@ class Placed:
                      "anchor": self.anchor}
         if self.path:
             out["path"] = [[round(x, 1), round(y, 1)] for x, y in self.path]
+        if debug:
+            # The reserved boxes, for the debug overlay only — the ordinary payload
+            # does not carry the solver's scaffolding to every client on every day.
+            out["boxes"] = [[round(v, 1) for v in box] for box in self.boxes]
         return out
+
+
+@dataclass(frozen=True)
+class Dropped:
+    """One name that is not on the map, and the reason it is not.
+
+    The reason is the point (V2 §50): a bare key told the writer nothing, and the
+    legend's old copy — "zoom in for them" — described a behaviour the map did not
+    have.
+    """
+
+    key: str
+    text: str
+    kind: str
+    tier: int
+    reason: str          # "no room" | "nothing to hang it on"
+
+    def as_dict(self) -> dict:
+        return {"key": self.key, "text": self.text, "kind": self.kind,
+                "tier": self.tier, "reason": self.reason}
 
 
 @dataclass
@@ -176,8 +200,8 @@ class Reserved:
 
 
 def solve(wanted: list[Wanted], *, reserved: Reserved | None = None,
-          ) -> tuple[tuple[Placed, ...], tuple[str, ...]]:
-    """Place what fits, in a stated order, and say what did not.
+          ) -> tuple[tuple[Placed, ...], tuple[Dropped, ...]]:
+    """Place what fits, in a stated order, and say what did not — and why not.
 
     Greedy: every label is offered its candidate positions in a cartographer's order of
     preference and takes the first that is clear. Greedy is the right shape here because
@@ -188,11 +212,14 @@ def solve(wanted: list[Wanted], *, reserved: Reserved | None = None,
     """
     taken = reserved if reserved is not None else Reserved()
     placed: list[Placed] = []
-    dropped: list[str] = []
+    dropped: list[Dropped] = []
     for want in sorted(wanted, key=Wanted.order):
         got = _place(want, taken)
         if got is None:
-            dropped.append(want.key)
+            shapeless = want.point is None and not want.ring and not want.line
+            dropped.append(Dropped(
+                key=want.key, text=want.text, kind=want.kind, tier=want.tier,
+                reason="nothing to hang it on" if shapeless else "no room"))
             continue
         for box in got.boxes:
             taken.take(box)

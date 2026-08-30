@@ -1,0 +1,1859 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitabridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 513.9,
+   "y": 283.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitaford",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 463.5,
+   "y": 566.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitagate",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 441.9,
+   "y": 496.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitaholt",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 485.2,
+   "y": 387.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capital 1",
+   "radius": 8.5,
+   "rank": "capital",
+   "role": "settlement",
+   "shape": "star",
+   "x": 635.8,
+   "y": 419.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitapass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 317.3,
+   "y": 566.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitaport",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 240.9,
+   "y": 349.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capitastead",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 420.2,
+   "y": 593.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Capity",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 555.6,
+   "y": 441.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Cital",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 539.4,
+   "y": 398.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "City 2",
+   "radius": 7.0,
+   "rank": "city",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 268.3,
+   "y": 185.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "City 3",
+   "radius": 7.0,
+   "rank": "city",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 245.7,
+   "y": 508.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Hamlet 11",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 486.0,
+   "y": 641.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Hamlet 12",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 174.3,
+   "y": 663.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Hamlet Town",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 306.5,
+   "y": 371.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Hamletbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 682.1,
+   "y": 478.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Market",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 517.7,
+   "y": 512.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Market Town 4",
+   "radius": 6.0,
+   "rank": "market town",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 669.4,
+   "y": 349.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Town 5",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 267.5,
+   "y": 100.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Town 6",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 318.7,
+   "y": 565.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Town 7",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 770.4,
+   "y": 367.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitabank",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 382.0,
+   "y": 308.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitabridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 686.0,
+   "y": 515.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitacombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 731.1,
+   "y": 440.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitaford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 563.1,
+   "y": 307.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitagate",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 349.2,
+   "y": 691.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitahill",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 268.3,
+   "y": 337.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitahollow",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 283.6,
+   "y": 660.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitaholt",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 652.4,
+   "y": 750.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitamere",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 241.5,
+   "y": 649.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitamoor",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 378.9,
+   "y": 344.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitareach",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 323.6,
+   "y": 641.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitastead",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 561.4,
+   "y": 178.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitathorpe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 236.0,
+   "y": 684.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitavale",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 359.7,
+   "y": 270.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Upper Capitawick",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 719.2,
+   "y": 480.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Village 10",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 557.2,
+   "y": 348.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Village 8",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 429.5,
+   "y": 407.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Village 9",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 350.1,
+   "y": 727.7
+  }
+ ],
+ "labels": [
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Beltgate",
+   "tier": 2,
+   "x": 351.9,
+   "y": 694.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Belthollow",
+   "tier": 2,
+   "x": 230.8,
+   "y": 485.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 7.31,
+   "text": "Belthorpe",
+   "tier": 2,
+   "x": 500.9,
+   "y": 453.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 7.0,
+   "text": "Beltland",
+   "tier": 1,
+   "x": 776.6,
+   "y": 230.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.02,
+   "text": "Beltvale",
+   "tier": 2,
+   "x": 173.8,
+   "y": 160.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Beltwick",
+   "tier": 2,
+   "x": 412.9,
+   "y": 87.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     447.3,
+     281.1
+    ],
+    [
+     447.3,
+     331.5
+    ],
+    [
+     448.3,
+     334.2
+    ],
+    [
+     448.8,
+     334.9
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "Capitabank",
+   "tier": 1,
+   "x": 448.3,
+   "y": 334.2
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitabridge",
+   "tier": 2,
+   "x": 522.4,
+   "y": 275.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 7.9,
+   "text": "Capitacombe",
+   "tier": 2,
+   "x": 451.9,
+   "y": 552.1
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitaford",
+   "tier": 2,
+   "x": 454.0,
+   "y": 566.8
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitagate",
+   "tier": 2,
+   "x": 450.4,
+   "y": 496.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     495.7,
+     674.7
+    ],
+    [
+     500.9,
+     670.0
+    ],
+    [
+     559.0,
+     670.0
+    ]
+   ],
+   "role": "label",
+   "size": 11.0,
+   "text": "Capitahollow",
+   "tier": 2,
+   "x": 500.9,
+   "y": 670.0
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitaholt",
+   "tier": 2,
+   "x": 493.7,
+   "y": 388.3
+  },
+  {
+   "anchor": "end",
+   "kind": "capital",
+   "role": "label",
+   "size": 15.0,
+   "text": "Capital 1",
+   "tier": 0,
+   "x": 622.0,
+   "y": 406.3
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitapass",
+   "tier": 2,
+   "x": 307.8,
+   "y": 557.3
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitaport",
+   "tier": 2,
+   "x": 232.4,
+   "y": 350.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     387.7,
+     680.0
+    ],
+    [
+     391.1,
+     683.6
+    ],
+    [
+     393.1,
+     687.7
+    ],
+    [
+     393.1,
+     738.0
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "Capitareach",
+   "tier": 1,
+   "x": 393.1,
+   "y": 687.7
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capity",
+   "tier": 2,
+   "x": 564.1,
+   "y": 442.5
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Cital",
+   "tier": 2,
+   "x": 530.9,
+   "y": 411.9
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "City 2",
+   "tier": 1,
+   "x": 279.9,
+   "y": 186.4
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "City 3",
+   "tier": 1,
+   "x": 257.2,
+   "y": 508.6
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Hamlet 11",
+   "tier": 2,
+   "x": 494.5,
+   "y": 642.4
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Hamlet 12",
+   "tier": 2,
+   "x": 165.8,
+   "y": 664.5
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Hamlet Town",
+   "tier": 2,
+   "x": 316.0,
+   "y": 371.8
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Hamletbridge",
+   "tier": 2,
+   "x": 673.6,
+   "y": 470.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     391.4,
+     353.5
+    ],
+    [
+     407.3,
+     369.4
+    ],
+    [
+     409.4,
+     373.5
+    ],
+    [
+     409.4,
+     385.7
+    ],
+    [
+     410.4,
+     388.4
+    ],
+    [
+     418.3,
+     396.3
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletclose",
+   "tier": 2,
+   "x": 409.4,
+   "y": 385.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     378.5,
+     600.7
+    ],
+    [
+     391.1,
+     613.2
+    ],
+    [
+     393.8,
+     614.9
+    ],
+    [
+     399.2,
+     616.2
+    ],
+    [
+     404.6,
+     620.3
+    ],
+    [
+     422.6,
+     620.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletfield",
+   "tier": 2,
+   "x": 399.2,
+   "y": 616.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     517.1,
+     294.7
+    ],
+    [
+     537.3,
+     315.3
+    ],
+    [
+     539.0,
+     318.0
+    ],
+    [
+     540.4,
+     323.4
+    ],
+    [
+     544.5,
+     328.8
+    ],
+    [
+     544.7,
+     332.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletgate",
+   "tier": 2,
+   "x": 540.4,
+   "y": 323.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     530.6,
+     250.4
+    ],
+    [
+     553.6,
+     227.2
+    ],
+    [
+     555.3,
+     224.5
+    ],
+    [
+     555.4,
+     216.0
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamlethill",
+   "tier": 2,
+   "x": 555.3,
+   "y": 224.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     637.0,
+     400.4
+    ],
+    [
+     637.2,
+     355.9
+    ],
+    [
+     640.3,
+     351.8
+    ],
+    [
+     644.3,
+     349.8
+    ],
+    [
+     650.2,
+     349.7
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamlethollow",
+   "tier": 2,
+   "x": 640.3,
+   "y": 351.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     626.1,
+     651.6
+    ],
+    [
+     625.7,
+     643.0
+    ],
+    [
+     620.6,
+     634.8
+    ],
+    [
+     620.6,
+     617.2
+    ],
+    [
+     622.7,
+     613.2
+    ],
+    [
+     631.1,
+     603.7
+    ],
+    [
+     631.1,
+     603.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletstead",
+   "tier": 2,
+   "x": 620.6,
+   "y": 617.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     180.9,
+     659.9
+    ],
+    [
+     182.4,
+     658.9
+    ],
+    [
+     192.0,
+     658.2
+    ],
+    [
+     200.2,
+     653.1
+    ],
+    [
+     234.0,
+     653.1
+    ],
+    [
+     234.5,
+     652.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hintercombe",
+   "tier": 2,
+   "x": 200.2,
+   "y": 653.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     681.0,
+     483.9
+    ],
+    [
+     680.9,
+     484.2
+    ],
+    [
+     682.2,
+     487.2
+    ],
+    [
+     695.8,
+     500.1
+    ],
+    [
+     698.5,
+     499.4
+    ],
+    [
+     712.1,
+     485.9
+    ],
+    [
+     714.6,
+     483.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hinterfield",
+   "tier": 2,
+   "x": 695.8,
+   "y": 500.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 19.6,
+   "text": "Hinterlage",
+   "tier": 1,
+   "x": 429.7,
+   "y": 137.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     732.0,
+     422.8
+    ],
+    [
+     749.6,
+     404.6
+    ],
+    [
+     751.0,
+     399.2
+    ],
+    [
+     755.7,
+     392.4
+    ],
+    [
+     756.0,
+     384.3
+    ],
+    [
+     757.1,
+     381.6
+    ],
+    [
+     757.4,
+     381.3
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hintermoor",
+   "tier": 2,
+   "x": 755.7,
+   "y": 392.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 15.75,
+   "text": "Mard",
+   "tier": 1,
+   "x": 654.8,
+   "y": 112.0
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Market",
+   "tier": 2,
+   "x": 527.2,
+   "y": 512.6
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "Market Town 4",
+   "tier": 1,
+   "x": 680.4,
+   "y": 350.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "path": [
+    [
+     622.3,
+     435.9
+    ],
+    [
+     677.9,
+     435.9
+    ],
+    [
+     703.0,
+     422.5
+    ]
+   ],
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The Belt",
+   "tier": 0,
+   "x": 677.9,
+   "y": 435.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.02,
+   "text": "The Beltclose",
+   "tier": 2,
+   "x": 427.7,
+   "y": 270.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     451.9,
+     521.8
+    ],
+    [
+     454.8,
+     524.3
+    ],
+    [
+     492.5,
+     524.3
+    ],
+    [
+     495.0,
+     525.4
+    ]
+   ],
+   "role": "label",
+   "size": 6.5,
+   "text": "The Beltcombe",
+   "tier": 2,
+   "x": 492.5,
+   "y": 524.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     321.5,
+     419.0
+    ],
+    [
+     324.3,
+     416.7
+    ],
+    [
+     373.9,
+     416.7
+    ]
+   ],
+   "role": "label",
+   "size": 8.91,
+   "text": "The Beltfield",
+   "tier": 2,
+   "x": 324.3,
+   "y": 416.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     238.4,
+     166.1
+    ],
+    [
+     241.7,
+     163.7
+    ],
+    [
+     276.0,
+     163.7
+    ]
+   ],
+   "role": "label",
+   "size": 6.5,
+   "text": "The Beltford",
+   "tier": 2,
+   "x": 241.7,
+   "y": 163.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     103.8,
+     619.5
+    ],
+    [
+     108.4,
+     622.8
+    ],
+    [
+     158.9,
+     622.8
+    ]
+   ],
+   "role": "label",
+   "size": 8.91,
+   "text": "The Beltmere",
+   "tier": 2,
+   "x": 108.4,
+   "y": 622.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 10.77,
+   "text": "The Beltreach",
+   "tier": 2,
+   "x": 279.5,
+   "y": 680.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Beltstead",
+   "tier": 2,
+   "x": 419.0,
+   "y": 468.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     441.9,
+     583.5
+    ],
+    [
+     441.9,
+     607.8
+    ],
+    [
+     442.9,
+     610.5
+    ],
+    [
+     450.7,
+     618.6
+    ],
+    [
+     452.7,
+     622.7
+    ],
+    [
+     452.7,
+     648.8
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Capitahill",
+   "tier": 1,
+   "x": 450.7,
+   "y": 618.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 7.0,
+   "text": "The Capitamere",
+   "tier": 2,
+   "x": 523.3,
+   "y": 553.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "path": [
+    [
+     189.5,
+     589.3
+    ],
+    [
+     211.1,
+     579.1
+    ],
+    [
+     342.1,
+     579.1
+    ]
+   ],
+   "role": "label-region",
+   "size": 22.0,
+   "text": "The Coastward",
+   "tier": 0,
+   "x": 211.1,
+   "y": 579.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 8.92,
+   "text": "The Coastwarket",
+   "tier": 1,
+   "x": 751.2,
+   "y": 595.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "region",
+   "path": [
+    [
+     287.1,
+     323.0
+    ],
+    [
+     296.8,
+     316.0
+    ],
+    [
+     404.6,
+     316.0
+    ]
+   ],
+   "role": "label-region",
+   "size": 17.82,
+   "text": "The Hinterland",
+   "tier": 0,
+   "x": 296.8,
+   "y": 316.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     282.8,
+     297.6
+    ],
+    [
+     304.4,
+     276.0
+    ],
+    [
+     306.5,
+     271.9
+    ],
+    [
+     306.1,
+     253.0
+    ],
+    [
+     297.7,
+     243.5
+    ],
+    [
+     296.8,
+     241.7
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Hinterstead",
+   "tier": 2,
+   "x": 306.1,
+   "y": 253.0
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Town 5",
+   "tier": 1,
+   "x": 277.3,
+   "y": 101.5
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Town 6",
+   "tier": 1,
+   "x": 328.5,
+   "y": 556.7
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Town 7",
+   "tier": 1,
+   "x": 780.2,
+   "y": 368.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitabank",
+   "tier": 2,
+   "x": 382.0,
+   "y": 298.8
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitabridge",
+   "tier": 2,
+   "x": 694.5,
+   "y": 516.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitacombe",
+   "tier": 2,
+   "x": 739.6,
+   "y": 441.0
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitaford",
+   "tier": 2,
+   "x": 571.6,
+   "y": 308.4
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitahill",
+   "tier": 2,
+   "x": 259.8,
+   "y": 329.4
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Upper Capitahollow",
+   "tier": 1,
+   "x": 293.4,
+   "y": 661.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitaholt",
+   "tier": 2,
+   "x": 660.9,
+   "y": 751.2
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitamere",
+   "tier": 2,
+   "x": 250.0,
+   "y": 641.7
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitamoor",
+   "tier": 2,
+   "x": 370.4,
+   "y": 345.2
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitastead",
+   "tier": 2,
+   "x": 569.9,
+   "y": 178.8
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitathorpe",
+   "tier": 2,
+   "x": 227.5,
+   "y": 684.7
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Upper Capitawick",
+   "tier": 1,
+   "x": 729.0,
+   "y": 481.0
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Village 10",
+   "tier": 2,
+   "x": 565.7,
+   "y": 349.0
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Village 8",
+   "tier": 2,
+   "x": 438.0,
+   "y": 408.2
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Village 9",
+   "tier": 2,
+   "x": 341.6,
+   "y": 728.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 18.09,
+   "text": "Villand",
+   "tier": 1,
+   "x": 130.4,
+   "y": 303.5
+  }
+ ],
+ "legend": [
+  {
+   "label": "Capital",
+   "note": "",
+   "role": "settlement",
+   "swatch": "star"
+  },
+  {
+   "label": "City",
+   "note": "",
+   "role": "settlement",
+   "swatch": "ring"
+  },
+  {
+   "label": "Hamlet",
+   "note": "",
+   "role": "settlement",
+   "swatch": "dot"
+  },
+  {
+   "label": "Market Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "ring"
+  },
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Beltbank"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Belthill"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Beltholt"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Beltmoor"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Capitaclose"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Capitafield"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Capitaland"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Capitamoor"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Capitastead"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Capitathorpe"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Capitavale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletcombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletmere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletmoor"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletvale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterbank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterclose"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hintereach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hintermere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hintervale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Capitawick"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletbank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamlethorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletland"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletwick"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hinterford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hintergate"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hinterhill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hinterhollow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hinterwick"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Upper Beltland"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Upper Beltstead"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Upper Capitagate"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Upper Capitareach"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Upper Capitavale"
+  }
+ ]
+}

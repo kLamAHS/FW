@@ -1,21 +1,26 @@
-"""Draw a world's map to a picture, with no server and no client.
+"""Draw a world's map exactly the way the application draws it, with no server running.
 
-Every real defect the generator has shipped so far was found by *looking* at the
-output, not by reading a test: every region an island, harbours on an inland vale,
-roads cutting dead straight across a mountain range, settlements labelled for the
-wrong region. Tests pin what you already thought to check; the picture shows what you
-did not.
+Every real defect the generator has shipped was found by *looking* at the output, not
+by reading a test. But the old version of this script drew its own picture — hex fills
+the generator no longer emits, its own layer order, no icons and no labels — so what it
+showed was not what the writer would see, and a defect it revealed might not exist.
 
-Standing up FastAPI, Vite and the React client to see one map costs about half a
-minute. This reads the world file directly and writes an SVG, and — if a Chromium is
-on the machine — rasterises it so it can be looked at without a browser at all.
+This one is a parity renderer. The features and the draw plan come from the same
+`/api/map` handler the client calls (through the in-process test client, so no port is
+opened); the relief PNG is the server's own render, embedded; the colours are parsed
+out of the client's stylesheet; and the painter's order — ground, polygons, hatch,
+lines, icons, names — mirrors `MapView.tsx`. When this picture is wrong, the map is
+wrong.
 
     python scripts/render_map.py demo.fwworld --out /tmp/map.png --generate
+    python scripts/render_map.py demo.fwworld --mode occupies --dark --at 4200
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
+import re
 import sys
 from pathlib import Path
 
@@ -23,98 +28,249 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fw.core.world import World  # noqa: E402
 
-# Drawing order, back to front: everything is painted over the land, and the labels
-# are painted over everything.
-LAYER_ORDER = ("base", "regions", "biomes", "waterways", "roads", "borders",
-               "settlements", "sites", "labels")
+STYLESHEET = Path(__file__).resolve().parent.parent / "web" / "src" / "styles.css"
 
-FALLBACK_FILL = "#b9c4a0"
-SEA = "#3f5b6c"
-PAPER = "#e8e0cc"
+# MapView's own compositing rules, mirrored.
+REDUNDANT_OVER_GROUND = {"land", "features", "waters"}
+LABEL_HALO_WIDTH = 3.0
+
+STAR = ((0, -1), (0.225, -0.309), (0.951, -0.309), (0.363, 0.118), (0.588, 0.809),
+        (0, 0.382), (-0.588, 0.809), (-0.363, 0.118), (-0.951, -0.309),
+        (-0.225, -0.309))
 
 
-def _bounds(features: list) -> tuple[float, float, float, float]:
-    xs: list[float] = []
-    ys: list[float] = []
+def stylesheet_colours(dark: bool = False) -> dict[str, str]:
+    """Every CSS custom property, resolved, from the client's own stylesheet.
 
-    def walk(node) -> None:
-        if isinstance(node, (int, float)):
-            return
-        if (len(node) == 2 and all(isinstance(v, (int, float)) for v in node)):
-            xs.append(float(node[0]))
-            ys.append(float(node[1]))
-            return
-        for child in node:
-            walk(child)
+    The light block is everything up to the dark media query; dark overlays it.
+    `var(--x)` references are chased so a role defined in terms of another resolves
+    to paint.
+    """
+    css = STYLESHEET.read_text()
+    parts = css.split("@media (prefers-color-scheme: dark)")
+    declarations = re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", parts[0])
+    values = dict(declarations)
+    if dark and len(parts) > 1:
+        # Only the first block of the media query is theme overrides; later rules
+        # with variables would be component styling, and overriding from those
+        # would scramble the palette.
+        depth, cut = 0, len(parts[1])
+        for n, ch in enumerate(parts[1]):
+            if ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    cut = n
+                    break
+        values.update(re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", parts[1][:cut]))
 
-    for feature in features:
-        walk(feature.coordinates)
-    if not xs:
-        return 0.0, 0.0, 100.0, 100.0
-    pad = max(20.0, (max(xs) - min(xs)) * 0.03)
-    return min(xs) - pad, min(ys) - pad, max(xs) + pad, max(ys) + pad
+    def resolve(value: str, seen: frozenset = frozenset()) -> str:
+        match = re.match(r"var\(--([a-z0-9-]+)\)", value.strip())
+        if match and match.group(1) not in seen:
+            inner = values.get(match.group(1), "#888888")
+            return resolve(inner, seen | {match.group(1)})
+        return value.strip()
+
+    return {name: resolve(value) for name, value in values.items()}
+
+
+def paint(css: dict[str, str], role: str, fallback: str = "#888888") -> str:
+    return css.get(f"map-{role}", css.get(role, fallback))
+
+
+def the_map(world: World, *, day: int | None, mode: str, seen_as: str | None,
+            scale: int):
+    """The same three requests the client makes, through the in-process client."""
+    from fastapi.testclient import TestClient
+
+    from fw.api.app import create_app
+
+    client = TestClient(create_app(world))
+    query: dict = {"mode": mode}
+    if day is not None:
+        query["day"] = day
+    if seen_as:
+        query["as"] = seen_as
+    data = client.get("/api/map", params=query).json()
+    relief = client.get("/api/map/relief").json()
+    png = None
+    if relief.get("available"):
+        got = client.get(f"/api/map/relief.png?scale={scale}")
+        if got.status_code == 200:
+            png = got.content
+    return data, relief, png
+
+
+def fill_for(feature: dict, mode: str, holders: dict[str, str],
+             css: dict[str, str]) -> str:
+    """MapView's `fillFor`, resolved to a literal colour."""
+    holder = (feature.get("control", {}).get(mode) or [None])[0]
+    if holder and holders.get(holder["id"]):
+        return paint(css, holders[holder["id"]])
+    role = (feature.get("style") or {}).get("role")
+    if role:
+        return paint(css, str(role))
+    style = feature.get("style") or {}
+    return str(style.get("fill") or style.get("stroke") or css.get("ink-faint", "#777"))
 
 
 def _points(ring) -> str:
     return " ".join(f"{float(p[0]):.1f},{float(p[1]):.1f}" for p in ring)
 
 
-def render_svg(world: World, *, at: int | None = None, width: int = 1400) -> str:
-    features = [g for g in world.geometries(at=at)]
-    features.sort(key=lambda g: (LAYER_ORDER.index(g.layer)
-                                 if g.layer in LAYER_ORDER else len(LAYER_ORDER),
-                                 g.id))
-    min_x, min_y, max_x, max_y = _bounds(features)
-    span_x, span_y = max_x - min_x, max_y - min_y
-    height = int(width * (span_y / span_x)) if span_x else width
+def _polygon_path(rings) -> str:
+    return " ".join(
+        "M" + " L".join(f"{float(p[0]):.1f},{float(p[1]):.1f}" for p in ring) + " Z"
+        for ring in rings)
 
-    names = {e.id: e.name for e in world.entities()}
-    out: list[str] = [
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="{min_x:.1f} {min_y:.1f} {span_x:.1f} {span_y:.1f}">',
-        f'<rect x="{min_x:.1f}" y="{min_y:.1f}" width="{span_x:.1f}" '
-        f'height="{span_y:.1f}" fill="{SEA}"/>',
-    ]
-    labels: list[str] = []
 
-    for f in features:
-        style = f.style or {}
-        dash = ' stroke-dasharray="7 5"' if f.approximate else ""
-        if f.kind == "polygon":
-            fill = style.get("fill", FALLBACK_FILL)
-            for ring in f.coordinates:
-                out.append(f'<polygon points="{_points(ring)}" fill="{fill}" '
-                           f'fill-opacity="0.85" stroke="{fill}" '
-                           f'stroke-width="1.2"{dash}/>')
-        elif f.kind == "line":
-            stroke = style.get("stroke", "#666")
-            wide = 2.6 if f.layer == "waterways" else 1.8
-            out.append(f'<polyline points="{_points(f.coordinates)}" fill="none" '
-                       f'stroke="{stroke}" stroke-width="{wide}" '
-                       f'stroke-linecap="round" stroke-linejoin="round"{dash}/>')
-        elif f.kind == "point":
-            x, y = float(f.coordinates[0]), float(f.coordinates[1])
-            out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="3.4" '
-                       f'fill="{style.get("fill", "#7a2b2b")}" '
-                       f'stroke="{PAPER}" stroke-width="1.2"/>')
-            name = names.get(f.entity_id)
-            if name:
-                labels.append(
-                    f'<text x="{x + 5:.1f}" y="{y + 3:.1f}" font-size="9" '
-                    f'font-family="Georgia,serif" fill="#2b2118" '
-                    f'stroke="{PAPER}" stroke-width="2.4" paint-order="stroke">'
-                    f'{_escape(name)}</text>')
-
-    out.extend(labels)
-    out.append("</svg>")
-    return "\n".join(out)
+def _line_path(points) -> str:
+    return "M" + " L".join(f"{float(p[0]):.1f},{float(p[1]):.1f}" for p in points)
 
 
 def _escape(text: str) -> str:
     return (text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
 
-def rasterise(svg: str, destination: Path) -> bool:
+def _icon(icon: dict, css: dict[str, str]) -> str:
+    """One place, as `Place` in MapView draws it."""
+    x, y, r = float(icon["x"]), float(icon["y"]), float(icon["radius"])
+    fill = (paint(css, icon["holder_role"]) if icon.get("holder_role")
+            else paint(css, icon["role"]))
+    panel = css.get("panel", "#ffffff")
+    shape = icon.get("shape", "disc")
+    out: list[str] = []
+    if shape == "star":
+        d = " ".join(f"{'M' if i == 0 else 'L'}{x + dx * r:.1f},{y + dy * r:.1f}"
+                     for i, (dx, dy) in enumerate(STAR)) + " Z"
+        out.append(f'<path d="{d}" fill="{fill}" stroke="{panel}" stroke-width="2"/>')
+    elif shape == "keep":
+        s = r * 0.78
+        out.append(f'<rect x="{x - s:.1f}" y="{y - s:.1f}" width="{2 * s:.1f}" '
+                   f'height="{2 * s:.1f}" transform="rotate(45 {x:.1f} {y:.1f})" '
+                   f'fill="{fill}" stroke="{panel}" stroke-width="2"/>')
+    elif shape == "tower":
+        out.append(f'<rect x="{x - r * 0.5:.1f}" y="{y - r:.1f}" width="{r:.1f}" '
+                   f'height="{2 * r:.1f}" fill="{fill}" stroke="{panel}" '
+                   f'stroke-width="1.5"/>')
+    elif shape == "ring":
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r:.1f}" fill="{panel}" '
+                   f'stroke="{fill}" stroke-width="3"/>')
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r * 0.34:.1f}" '
+                   f'fill="{fill}"/>')
+    elif shape == "anchor":
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r:.1f}" fill="{fill}" '
+                   f'stroke="{panel}" stroke-width="2"/>')
+        out.append(f'<path d="M{x:.1f},{y - r * 0.7:.1f}V{y + r * 0.7:.1f}'
+                   f'M{x - r * 0.6:.1f},{y + r * 0.15:.1f} '
+                   f'A{r * 0.6:.1f},{r * 0.6:.1f} 0 0 0 '
+                   f'{x + r * 0.6:.1f},{y + r * 0.15:.1f}" fill="none" '
+                   f'stroke="{panel}" stroke-width="1.4"/>')
+    else:
+        radius = r * 0.7 if shape == "dot" else r
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{radius:.1f}" '
+                   f'fill="{fill}" stroke="{panel}" stroke-width="2"/>')
+    if icon.get("contested"):
+        out.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="{r + 5:.1f}" fill="none" '
+                   f'stroke="{paint(css, "contested")}" stroke-width="1.5" '
+                   f'stroke-dasharray="3 3"/>')
+    return "".join(out)
+
+
+def _label(label: dict, css: dict[str, str], n: int) -> str:
+    """One name, as `Name` in MapView draws it — halo, voice colours, curves."""
+    role = str(label.get("role") or "label")
+    fill = css.get(f"map-{role}", css.get("map-label", "#16181d"))
+    halo = css.get("map-halo", "#f7f5f1")
+    size = float(label["size"])
+    extra = ""
+    if role == "label-region":
+        extra = ' letter-spacing="0.14em" font-weight="500"'
+    elif role == "label-water":
+        extra = ' font-style="italic" letter-spacing="0.08em"'
+    elif role == "label-relief":
+        extra = ' letter-spacing="0.10em"'
+    text = label["text"]
+    if role in ("label-region", "label-relief"):
+        text = text.upper()
+    common = (f'font-size="{size:.1f}" fill="{fill}" stroke="{halo}" '
+              f'stroke-width="{LABEL_HALO_WIDTH}" stroke-linejoin="round" '
+              f'paint-order="stroke" font-family="Georgia, \'Times New Roman\', serif"'
+              + extra)
+    path = label.get("path")
+    if path and len(path) > 1:
+        return (f'<defs><path id="lp{n}" d="{_line_path(path)}" fill="none"/></defs>'
+                f'<text {common} text-anchor="middle" dy="{size * 0.34:.1f}">'
+                f'<textPath href="#lp{n}" startOffset="50%">{_escape(text)}'
+                f'</textPath></text>')
+    anchor = {"start": "start", "end": "end"}.get(str(label.get("anchor")), "middle")
+    return (f'<text x="{float(label["x"]):.1f}" y="{float(label["y"]):.1f}" '
+            f'text-anchor="{anchor}" {common}>{_escape(text)}</text>')
+
+
+def render_svg(data: dict, relief: dict, png: bytes | None, *,
+               css: dict[str, str], mode: str, width: int = 1400,
+               labels: bool = True) -> str:
+    draw = data.get("draw") or {}
+    bounds = draw.get("bounds") or {"x": 0, "y": 0, "width": 100, "height": 100}
+    x0, y0 = float(bounds["x"]), float(bounds["y"])
+    w, h = float(bounds["width"]), float(bounds["height"])
+    height = int(width * (h / w)) if w else width
+    holders = {str(k): str(v) for k, v in (draw.get("holders") or {}).items()}
+    ground = bool(png)
+    contested_colour = paint(css, "contested")
+
+    out = [
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
+        f'viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}">',
+        # The open water past the rendered ground — MapView paints it on the wrapper.
+        f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{w:.1f}" height="{h:.1f}" '
+        f'fill="{paint(css, "sea")}"/>',
+        f'<defs><pattern id="contested-hatch" width="8" height="8" '
+        f'patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
+        f'<line x1="0" y1="0" x2="0" y2="8" stroke="{contested_colour}" '
+        f'stroke-width="1.6"/></pattern></defs>',
+    ]
+    if png:
+        uri = "data:image/png;base64," + base64.b64encode(png).decode()
+        out.append(f'<image href="{uri}" x="{relief["x"]}" y="{relief["y"]}" '
+                   f'width="{relief["width"]}" height="{relief["height"]}" '
+                   f'preserveAspectRatio="none"/>')
+
+    features = data.get("features") or []
+    for f in (f for f in features if f["kind"] == "polygon"):
+        fill = fill_for(f, mode, holders, css)
+        opacity = 0.0 if ground and f["layer"] in REDUNDANT_OVER_GROUND else (
+            0.12 if ground else 0.3)
+        dash = ' stroke-dasharray="7 5"' if f.get("approximate") else ""
+        d = _polygon_path(f["coordinates"])
+        out.append(f'<path d="{d}" fill="{fill}" fill-opacity="{opacity}" '
+                   f'stroke="{fill}" stroke-width="1.5"{dash}/>')
+        if (f.get("control") or {}).get("claims"):
+            out.append(f'<path d="{d}" fill="url(#contested-hatch)" stroke="none"/>')
+
+    for f in (f for f in features if f["kind"] == "line"):
+        style = f.get("style") or {}
+        wide = style.get("stroke-width") or (3.5 if f["layer"] == "waterways" else 2.5)
+        # Only an explicit dash in the style: MapView does not dash approximate
+        # *lines* (a generated river is a guess about a real river, not a sketch).
+        dash = ' stroke-dasharray="6 4"' if style.get("dash") else ""
+        out.append(f'<path d="{_line_path(f["coordinates"])}" fill="none" '
+                   f'stroke="{fill_for(f, mode, holders, css)}" '
+                   f'stroke-width="{wide}" stroke-linecap="round" '
+                   f'stroke-linejoin="round"{dash}/>')
+
+    for icon in draw.get("icons") or []:
+        out.append(_icon(icon, css))
+    if labels:
+        for n, label in enumerate(draw.get("labels") or []):
+            out.append(_label(label, css, n))
+    out.append("</svg>")
+    return "\n".join(out)
+
+
+def rasterise(svg: str, destination: Path, background: str) -> bool:
     """Turn the SVG into a PNG with the Chromium already on the machine."""
     try:
         from playwright.sync_api import sync_playwright
@@ -128,7 +284,7 @@ def rasterise(svg: str, destination: Path) -> bool:
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=binary, args=["--no-sandbox"])
         page = browser.new_page()
-        page.set_content(f'<body style="margin:0">{svg}</body>')
+        page.set_content(f'<body style="margin:0;background:{background}">{svg}</body>')
         page.locator("svg").screenshot(path=str(destination))
         browser.close()
     return True
@@ -139,24 +295,45 @@ def main() -> int:
     parser.add_argument("world", help="path to a .fwworld file")
     parser.add_argument("--out", default="/tmp/map.png")
     parser.add_argument("--at", type=int, default=None, help="day index to draw")
+    parser.add_argument("--mode", default="legally_owns",
+                        help="which authority colours the map")
+    parser.add_argument("--as", dest="seen_as", default=None,
+                        help="observer entity id — whose eyes (§94)")
     parser.add_argument("--width", type=int, default=1400)
+    parser.add_argument("--scale", type=int, default=8, help="relief render scale")
+    parser.add_argument("--dark", action="store_true", help="the night palette")
+    parser.add_argument("--no-labels", action="store_true")
     parser.add_argument("--generate", action="store_true",
-                        help="generate a map into the world first")
+                        help="plan and accept a map into the world first")
     parser.add_argument("--seed", default="render")
     args = parser.parse_args()
 
     world = World.open(args.world)
     try:
         if args.generate:
-            from fw.core.mapgen.generate import generate_map
-            print(generate_map(world, seed=args.seed).summary())
-        svg = render_svg(world, at=args.at, width=args.width)
+            from fw.core.mapgen.apply import apply_plan
+            from fw.core.mapgen.decide import DecisionSet
+            from fw.core.mapgen.pipeline import plan_map
+            from fw.core.mapgen.plan import MapBrief
+
+            plan = plan_map(world, MapBrief(seed=args.seed, at=args.at,
+                                            invent_settlements=True))
+            report = apply_plan(world, plan, DecisionSet.accept_all(plan))
+            print(f"accepted {sum(report.counts.values())} features "
+                  f"({report.counts})")
+        data, relief, png = the_map(world, day=args.at, mode=args.mode,
+                                    seen_as=args.seen_as, scale=args.scale)
     finally:
         world.close()
 
+    css = stylesheet_colours(dark=args.dark)
+    svg = render_svg(data, relief, png, css=css, mode=args.mode, width=args.width,
+                     labels=not args.no_labels)
+
     destination = Path(args.out)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.suffix == ".svg" or not rasterise(svg, destination):
+    if destination.suffix == ".svg" or not rasterise(
+            svg, destination, css.get("map-sea", "#4a6580")):
         destination = destination.with_suffix(".svg")
         destination.write_text(svg)
     print(f"wrote {destination}")

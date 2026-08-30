@@ -52,6 +52,9 @@ MODE_WORDS = {
 ROLES = (
     "land", "water", "sea", "border", "coastline", "ridge", "waterway", "road",
     "highway", "track", "settlement", "castle", "port", "contested", "label",
+    # The paper colour every label is haloed with. In the list so the theme guard
+    # covers the one colour the whole map's text depends on.
+    "halo",
     "label-water", "label-region", "label-relief",
     "terrain-mountain", "terrain-glacier", "terrain-hills", "terrain-highland",
     "terrain-forest", "terrain-plain", "terrain-farmland", "terrain-steppe",
@@ -81,21 +84,22 @@ HOLDER_ROLES = tuple(f"holder-{n}" for n in range(8))
 # What a place of each rank is drawn as, and how big. A city is not a hamlet and a
 # castle is not a small town; the generator has known the difference for two phases and
 # the picture has not. Radius in world units at the map's own scale.
-RANKS: dict[str, tuple[str, float, int]] = {
-    # rank -> (icon, radius, label tier)
-    "capital": ("star", 8.5, 0),
-    "city": ("ring", 7.0, 1),
-    "port": ("anchor", 6.5, 1),
-    "market town": ("ring", 6.0, 1),
-    "town": ("disc", 5.5, 1),
-    "fortress": ("keep", 6.5, 1),
-    "village": ("disc", 4.2, 2),
-    "hamlet": ("dot", 3.4, 2),
-    "castle": ("keep", 6.0, 2),
-    "keep": ("keep", 5.0, 2),
-    "tower": ("tower", 4.2, 2),
+RANKS: dict[str, tuple[str, float]] = {
+    # rank -> (icon, radius). Label tiers live in TYPE, which is where the solver
+    # reads them; a third column here was carried for two phases and read by nothing.
+    "capital": ("star", 8.5),
+    "city": ("ring", 7.0),
+    "port": ("anchor", 6.5),
+    "market town": ("ring", 6.0),
+    "town": ("disc", 5.5),
+    "fortress": ("keep", 6.5),
+    "village": ("disc", 4.2),
+    "hamlet": ("dot", 3.4),
+    "castle": ("keep", 6.0),
+    "keep": ("keep", 5.0),
+    "tower": ("tower", 4.2),
 }
-DEFAULT_RANK = ("disc", 5.0, 2)
+DEFAULT_RANK = ("disc", 5.0)
 
 # How big each kind of name is set, in world units, and how hard the map tries to fit
 # it. Tier 0 is placed before anything else can take the room.
@@ -194,17 +198,17 @@ class DrawPlan:
     icons: tuple[Icon, ...] = ()
     legend: tuple[LegendEntry, ...] = ()
     holders: Mapping[str, str] = field(default_factory=dict)   # entity id -> role
-    unlabelled: tuple[str, ...] = ()
+    unlabelled: tuple[labels.Dropped, ...] = ()
 
-    def as_dict(self) -> dict:
+    def as_dict(self, *, debug: bool = False) -> dict:
         return {
             "bounds": self.bounds.as_dict(),
             "mode": self.mode,
-            "labels": [label.as_dict() for label in self.labels],
+            "labels": [label.as_dict(debug=debug) for label in self.labels],
             "icons": [icon.as_dict() for icon in self.icons],
             "legend": [entry.as_dict() for entry in self.legend],
             "holders": dict(self.holders),
-            "unlabelled": list(self.unlabelled),
+            "unlabelled": [gone.as_dict() for gone in self.unlabelled],
         }
 
 
@@ -254,7 +258,7 @@ def draw(features: Sequence[Mapping[str, Any]], *, mode: str = "legally_owns",
     holders = _holder_roles(features)
     icons = _icons(features, mode, holders)
     placed: tuple[labels.Placed, ...] = ()
-    missed: tuple[str, ...] = ()
+    missed: tuple[labels.Dropped, ...] = ()
     if label:
         placed, missed = labels.solve(
             _wanted(features, icons, bounds, world_name))
@@ -337,7 +341,7 @@ def _icons(features: Sequence[Mapping[str, Any]], mode: str,
             continue
         style = feature.get("style") or {}
         rank = str(style.get("rank") or _rank_of(feature))
-        shape, radius, _tier = RANKS.get(rank.lower(), DEFAULT_RANK)
+        shape, radius = RANKS.get(rank.lower(), DEFAULT_RANK)
         holder = _holder_of(feature, mode)
         out.append(Icon(
             key=str(feature.get("id")),
@@ -538,7 +542,7 @@ def _legend(features: Sequence[Mapping[str, Any]], icons: Sequence[Icon],
 
     ranks = sorted({icon.rank for icon in icons if icon.role == "settlement"})
     for rank in ranks:
-        shape, _radius, _tier = RANKS.get(rank.lower(), DEFAULT_RANK)
+        shape, _radius = RANKS.get(rank.lower(), DEFAULT_RANK)
         out.append(LegendEntry(key=f"rank:{rank}", label=rank.title(),
                                role="settlement", swatch=shape))
     if any(icon.role == "castle" for icon in icons):

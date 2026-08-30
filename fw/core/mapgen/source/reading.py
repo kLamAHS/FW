@@ -249,6 +249,10 @@ class WorldReading:
     # again — the seventh traversal, and the last one.
     corpus: tuple[tuple[str, str], ...] = ()
     seasons: tuple[str, ...] = ()
+    # How often each place carries the story: scenes the writer set there, by key.
+    # The one narrative signal the map reads — an event is a fact about the world,
+    # a scene is the writer spending pages in a place.
+    presence: Mapping[Key, int] = field(default_factory=dict)
 
     def region(self, key: Key) -> RegionReading | None:
         return self._first(self.regions, key)
