@@ -118,6 +118,11 @@ class Erosion:
     cut: Field                           # height removed by incision
     settled: Field                       # height added back as sediment
     downstream: list[list[int]]          # packed j * size + i, or -1 at base level
+    # How much the final pit-fill raised each cell. `elevation` is the *drained*
+    # surface — every depression filled to its outlet so all land runs to the sea —
+    # and this is the water standing in the difference: where it is deep over a
+    # broad patch, the ground truth is a lake, and hydrology reads it as one.
+    fill: Field = field(default_factory=list)
     notes: list[Finding] = field(default_factory=list)
 
     def carved(self) -> float:
@@ -167,6 +172,7 @@ def erode(grid: Grid, *, elevation: Field, sea: list[list[bool]], seed: str,
             total_settled[k] += settled[k]
         height = _creep(size, table, height, wet, creep)
 
+    before = height[:]
     height = _drain(size, table, height, wet)
     receiver, order, _ = _route(size, table, height, wet)
     flow = _accumulate(size, table, height, wet, rain)
@@ -179,6 +185,7 @@ def erode(grid: Grid, *, elevation: Field, sea: list[list[bool]], seed: str,
         cut=_rows(size, total_cut),
         settled=_rows(size, total_settled),
         downstream=[receiver[j * size:(j + 1) * size] for j in range(size)],
+        fill=_rows(size, [max(0.0, height[k] - before[k]) for k in range(cells)]),
         notes=[])
 
 

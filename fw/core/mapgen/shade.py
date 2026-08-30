@@ -35,6 +35,7 @@ from __future__ import annotations
 import math
 from array import array
 from dataclasses import dataclass
+from functools import lru_cache
 
 from fw.core.mapgen import noise
 from fw.core.mapgen.grid import Field, Grid
@@ -98,14 +99,61 @@ LAND_RAMP = (
 # than as water over a slope.
 SEA_RAMP = (
     (0.000, 0.478, 0.565, 0.604),      # the shore
-    (0.220, 0.404, 0.502, 0.565),      # shelf
-    (0.600, 0.333, 0.443, 0.529),
+    (0.140, 0.404, 0.502, 0.565),      # shallows
+    (0.520, 0.333, 0.443, 0.529),      # the shelf proper
     (1.000, 0.290, 0.396, 0.494),      # deep
 )
 
 # The depth, below sea level in the same units as the height field, at which the sea
-# ramp bottoms out.
-SHELF_DEPTH = 0.10
+# ramp bottoms out. This IS the bathymetry's own depth — `generate` imports it — and
+# for a phase it was not: the model built a shelf 0.22 deep while the ramp saturated
+# at 0.10, so the outer half of every shelf rendered as one flat colour and the
+# shallow band hugged the whole coast at a uniform width. That band was the "halo".
+SHELF_DEPTH = 0.22
+
+# Where the drainage is carved into the drawn surface (V2 §3). The erosion's valleys
+# are real but sub-visible at the lattice scale; incising the render surface along
+# the persisted flow makes them read as structure. Depth in height units, faded near
+# the waterline so the raster shore stays where the vector coast says it is.
+CARVE = 0.035
+# In root space, because that is how the field arrives: the terrain store keeps
+# sqrt(cells drained), the same discharge exponent the erosion cuts with.
+CARVE_FLOW_LOW = 5.0         # sqrt(flow) at which a channel starts to show
+CARVE_FLOW_HIGH = 22.4       # sqrt(flow) at which it is as deep as it gets
+CARVE_FADE = 0.05            # height above sea over which carving fades in
+
+# Texture restraint (V2 §3: "empty terrain is important"). The fine detail is scaled
+# by how rugged the ground actually is, so lowland plains go quiet instead of
+# carrying the same fractal grain as a mountainside — the northern porridge was too
+# much energy, not too little.
+QUIET_FLOOR = 0.30           # detail share kept on perfectly smooth ground
+ROUGH_FULL = 0.045           # local relief at which detail runs at full strength
+
+# Standing water: where the persisted marsh field is at its deepest, the ground is
+# open water rather than reeds — the same reading hydrology draws its meres from,
+# so the raster and the lake rings agree about where the water is.
+LAKE_MARSH = 0.22
+LAKE_FULL = 0.30
+LAKE_TINT = (0.478, 0.565, 0.604)     # the sea ramp's own shore colour
+
+# The coast's character in the shallows (V2 §4), keyed by the shoreline field's
+# class codes (shore.CODE). What breaks the uniform halo: a beach gets a sand line,
+# a delta a mud fan, a marsh shore bleeds into the water, and a cliff or fjord coast
+# drops straight into deep colour with no bright band at all.
+SAND_TINT = (0.749, 0.716, 0.596)
+MUD_TINT = (0.639, 0.667, 0.545)      # the land ramp's own delta green
+SAND_DEPTH = 0.014                    # how deep the sand line reaches
+MUD_DEPTH = 0.018
+REED_DEPTH = 0.022
+HARD_SHORE_PUSH = 64                  # ramp steps a cliff/fjord shore skips ahead
+CALM_SHORE_PULL = 22                  # ramp steps an estuary/shelter holds back
+# Both faded out with depth, and inside the class spread's own reach, so the effect
+# dies before the spread does — a constant push showed its boundary as blocks of
+# lighter water three cells off every sheltered islet.
+HARD_FADE_DEPTH = 0.11
+CALM_FADE_DEPTH = 0.06
+_DELTA, _ESTUARY, _MARSH_SHORE, _FJORD, _CLIFF = 1, 2, 3, 4, 5
+_ROCKY, _SHELTERED, _BEACH = 6, 7, 8
 
 # Woodland. Drawn as a darkening of the ground it stands on rather than as a fill, and
 # broken up at the scale of a stand of trees, because a wood on a physical map is a
@@ -149,7 +197,8 @@ class Relief:
 def render(grid: Grid, *, elevation: Field, seed: str, scale: int = SCALE,
            sea_level: float = 0.0, detail: float = DETAIL,
            relief_gain: float = RELIEF_GAIN, canopy: Field | None = None,
-           marsh: Field | None = None) -> Relief:
+           marsh: Field | None = None, flow: Field | None = None,
+           shoreline: Field | None = None) -> Relief:
     """Shade a height field into an image several times the lattice's resolution.
 
     `elevation` is one continuous field over the whole map, sea floor included, and
@@ -159,11 +208,16 @@ def render(grid: Grid, *, elevation: Field, seed: str, scale: int = SCALE,
     shore off the interpolated surface instead means it is a contour of a continuous
     field — so it has inlets and spits a few pixels across, which is what a coastline
     looks like, and the shelf shading is real depth rather than distance from a mask.
+
+    `flow` is the erosion's own drainage, when the world carries it: valleys are
+    carved into the drawn surface along it, which is what makes the network legible
+    as structure rather than trusting the lattice-scale cuts to survive upsampling.
     """
-    surface, size, width = _surface(grid, elevation, seed, scale, detail,
-                                    sea_level)
+    surface, size, width, shore_codes = _surface(
+        grid, elevation, seed, scale, detail, sea_level, flow, shoreline)
     cover = _cover(grid, canopy, marsh, seed, scale, width)
-    return _paint(surface, width, scale, sea_level, relief_gain, cover)
+    return _paint(surface, width, scale, sea_level, relief_gain, cover,
+                  shore_codes)
 
 
 def _cover(grid: Grid, canopy: Field | None, marsh: Field | None, seed: str,
@@ -233,7 +287,9 @@ def _cover(grid: Grid, canopy: Field | None, marsh: Field | None, seed: str,
 
 
 def _surface(grid: Grid, elevation: Field, seed: str, scale: int, detail: float,
-             sea_level: float) -> tuple[array, int, int]:
+             sea_level: float, flow: Field | None = None,
+             shoreline: Field | None = None
+             ) -> tuple[array, int, int, bytearray | None]:
     """Interpolate the lattice up, warping the sample point and adding fine relief.
 
     Two things are going on and they fix different halves of the same problem.
@@ -260,6 +316,18 @@ def _surface(grid: Grid, elevation: Field, seed: str, scale: int, detail: float,
     warp_x, warp_y, warp_span = _warp_fields(size, seed)
     fine, fine_span = _detail_field(size, seed)
     flat = [value for row in elevation for value in row]
+    # The drainage, softened to a carve strength per cell, and the ground's own
+    # ruggedness — both sampled at the same warped point as the height, so the
+    # valleys land in the valleys and the quiet lands on the plains.
+    carve = _carve_field(size, flat, flow) if flow is not None else None
+    rough = _ruggedness(size, flat)
+    # The coast's class codes ride along, nearest-sampled at the same warped point
+    # as the height — a label cannot be blended, but it can be warped, and it has
+    # to be: the drawn shore comes off the warped surface, so an unwarped class
+    # boundary shows as cell-scale rectangles against it.
+    flat_shore = ([value for row in shoreline for value in row]
+                  if shoreline is not None else None)
+    codes = bytearray(width * width) if flat_shore is not None else None
 
     surface = array("f", bytes(4 * width * width))
     warp_reach = 1.0 / WARP_SCALE
@@ -352,6 +420,31 @@ def _surface(grid: Grid, elevation: Field, seed: str, scale: int, detail: float,
                 + dy * (flat[lower + left] * ax + flat[lower + i] * bx
                         + flat[lower + i + 1] * cx + flat[lower + right] * dx))
 
+            # Bilinear taps into the per-cell carve and ruggedness fields, at the
+            # same warped point the height came from.
+            a = j * size + i
+            b = a + size
+            if flat_shore is not None:
+                near = flat_shore[(b if fy > 0.5 else a) + (1 if fx > 0.5 else 0)]
+                if near > 0.5:
+                    codes[base + px] = int(near + 0.5)
+            if carve is not None:
+                top = carve[a] + (carve[a + 1] - carve[a]) * fx
+                low = carve[b] + (carve[b + 1] - carve[b]) * fx
+                cut = top + (low - top) * fy
+                if cut > 0.0:
+                    over_sea = height - sea_level
+                    if over_sea > 0.0:
+                        # Faded in above the waterline, so carving a mouth cannot
+                        # move the raster shore off the drawn coastline.
+                        if over_sea < CARVE_FADE:
+                            cut *= over_sea / CARVE_FADE
+                        height -= cut
+            top = rough[a] + (rough[a + 1] - rough[a]) * fx
+            low = rough[b] + (rough[b + 1] - rough[b]) * fx
+            ruggedness = top + (low - top) * fy
+            grain = detail * (QUIET_FLOOR + (1.0 - QUIET_FLOOR) * ruggedness)
+
             gx, gy = sx * detail_reach, sy * detail_reach
             if gx > fine_limit:
                 gx = fine_limit
@@ -372,10 +465,63 @@ def _surface(grid: Grid, elevation: Field, seed: str, scale: int, detail: float,
                 else:
                     over = 1.0
                 surface[base + px] = (height
-                                      + (top + (low - top) * gfy - 0.5) * detail * over)
+                                      + (top + (low - top) * gfy - 0.5) * grain * over)
             else:
                 surface[base + px] = height
-    return surface, size, width
+    return surface, size, width, codes
+
+
+def _carve_field(size: int, flat: list[float],
+                 flow: Field) -> list[float]:
+    """How deep the drawn surface is cut at each cell, from the drainage through it.
+
+    `flow` arrives in root space (see the terrain store), which is also the shape a
+    carve wants: linear between the two marks there means a trunk is markedly
+    deeper than the stream that feeds it without the headwaters vanishing entirely.
+    """
+    span = CARVE_FLOW_HIGH - CARVE_FLOW_LOW
+    out = [0.0] * (size * size)
+    k = 0
+    for row in flow:
+        for value in row:
+            if value > CARVE_FLOW_LOW:
+                t = (value - CARVE_FLOW_LOW) / span
+                if t > 1.0:
+                    t = 1.0
+                # smoothstep, so the carve eases in rather than kinking.
+                out[k] = CARVE * t * t * (3.0 - 2.0 * t)
+            k += 1
+    return out
+
+
+def _ruggedness(size: int, flat: list[float]) -> list[float]:
+    """Local relief per cell, 0 on a billiard table and 1 in real mountains.
+
+    What the fine detail is scaled by: fractal grain everywhere reads as porridge,
+    and the difference between country that has texture and country that does not is
+    itself information — it is how a reader tells the highlands from the plain.
+    """
+    out = [0.0] * (size * size)
+    inverse = 1.0 / ROUGH_FULL
+    for j in range(size):
+        base = j * size
+        above = base - size if j else base
+        below = base + size if j + 1 < size else base
+        for i in range(size):
+            left = i - 1 if i else 0
+            right = i + 1 if i + 1 < size else i
+            lowest = highest = flat[base + i]
+            for k in (above + left, above + i, above + right,
+                      base + left, base + right,
+                      below + left, below + i, below + right):
+                value = flat[k]
+                if value < lowest:
+                    lowest = value
+                elif value > highest:
+                    highest = value
+            t = (highest - lowest) * inverse
+            out[base + i] = 1.0 if t > 1.0 else t
+    return out
 
 
 def _warp_fields(size: int, seed: str) -> tuple[list[float], list[float], int]:
@@ -400,7 +546,8 @@ def _detail_field(size: int, seed: str) -> tuple[list[float], int]:
 
 
 def _paint(surface: array, width: int, scale: int, sea_level: float,
-           relief_gain: float, cover: tuple[array, array] | None = None) -> Relief:
+           relief_gain: float, cover: tuple[array, array] | None = None,
+           shore_codes: bytearray | None = None) -> Relief:
     """Shade and tint the surface, one pass, through a precomputed blend table."""
     lx, ly, lz = LIGHT
     fx, fy, fz = FILL_LIGHT
@@ -424,6 +571,15 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
     marsh_r = int(MARSH_TINT[0] * 255.0 + 0.5)
     marsh_g = int(MARSH_TINT[1] * 255.0 + 0.5)
     marsh_b = int(MARSH_TINT[2] * 255.0 + 0.5)
+    lake_r = int(LAKE_TINT[0] * 255.0 + 0.5)
+    lake_g = int(LAKE_TINT[1] * 255.0 + 0.5)
+    lake_b = int(LAKE_TINT[2] * 255.0 + 0.5)
+    sand_r = int(SAND_TINT[0] * 255.0 + 0.5)
+    sand_g = int(SAND_TINT[1] * 255.0 + 0.5)
+    sand_b = int(SAND_TINT[2] * 255.0 + 0.5)
+    mud_r = int(MUD_TINT[0] * 255.0 + 0.5)
+    mud_g = int(MUD_TINT[1] * 255.0 + 0.5)
+    mud_b = int(MUD_TINT[2] * 255.0 + 0.5)
 
     pixels = bytearray(width * width * 3)
     land = bytearray(width * width)
@@ -441,15 +597,45 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
             k = base + px
             height = surface[k]
             if height <= sea_level:
-                shelf = int((sea_level - height) * depth_step)
+                depth = sea_level - height
+                shelf = int(depth * depth_step)
+                code = shore_codes[k] if shore_codes is not None else 0
+                if code:
+                    if (code == _CLIFF or code == _FJORD) and depth < HARD_FADE_DEPTH:
+                        # A wall into the water: no bright band at all.
+                        shelf += int(HARD_SHORE_PUSH
+                                     * (1.0 - depth / HARD_FADE_DEPTH))
+                    elif ((code == _ESTUARY or code == _SHELTERED)
+                          and depth < CALM_FADE_DEPTH):
+                        shelf -= int(CALM_SHORE_PULL
+                                     * (1.0 - depth / CALM_FADE_DEPTH))
                 if shelf > top_tint:
                     shelf = top_tint
                 elif shelf < 0:
                     shelf = 0
                 index = shelf * 3
-                pixels[out] = sea_table[index]
-                pixels[out + 1] = sea_table[index + 1]
-                pixels[out + 2] = sea_table[index + 2]
+                red = sea_table[index]
+                green = sea_table[index + 1]
+                blue = sea_table[index + 2]
+                if code and depth < REED_DEPTH:
+                    if code == _BEACH and depth < SAND_DEPTH:
+                        pull = 0.55 * (1.0 - depth / SAND_DEPTH)
+                        red += int((sand_r - red) * pull)
+                        green += int((sand_g - green) * pull)
+                        blue += int((sand_b - blue) * pull)
+                    elif code == _DELTA and depth < MUD_DEPTH:
+                        pull = 0.6 * (1.0 - depth / MUD_DEPTH)
+                        red += int((mud_r - red) * pull)
+                        green += int((mud_g - green) * pull)
+                        blue += int((mud_b - blue) * pull)
+                    elif code == _MARSH_SHORE:
+                        pull = 0.45 * (1.0 - depth / REED_DEPTH)
+                        red += int((marsh_r - red) * pull)
+                        green += int((marsh_g - green) * pull)
+                        blue += int((marsh_b - blue) * pull)
+                pixels[out] = red
+                pixels[out + 1] = green
+                pixels[out + 2] = blue
                 out += 3
                 continue
             land[k] = 1
@@ -482,6 +668,17 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
                     red += int((marsh_r - red) * pull)
                     green += int((marsh_g - green) * pull)
                     blue += int((marsh_b - blue) * pull)
+                    if fen > LAKE_MARSH:
+                        # The deep core of a broad fen is open water — the same
+                        # reading hydrology draws its meres from, so the raster
+                        # and the lake rings agree about where the water stands.
+                        t = (fen - LAKE_MARSH) / (LAKE_FULL - LAKE_MARSH)
+                        if t > 1.0:
+                            t = 1.0
+                        wet = t * t * (3.0 - 2.0 * t) * 0.85
+                        red += int((lake_r - red) * wet)
+                        green += int((lake_g - green) * wet)
+                        blue += int((lake_b - blue) * wet)
                 wood = cover[0][k]
                 if wood > 0.01:
                     # The wood *darkens* the ground rather than replacing it, so the
@@ -519,8 +716,12 @@ def _ramp(stops, steps: int) -> list[tuple[float, float, float]]:
     return out
 
 
+@lru_cache(maxsize=1)
 def _blend_table() -> bytes:
-    """Every tint crossed with every shade level, worked out once.
+    """Every tint crossed with every shade level, worked out once — and kept.
+
+    Cached because it is pure and was being rebuilt on every render: a quarter of a
+    megabyte of identical arithmetic per request, for a table that never changes.
 
     Sixty-five thousand colours is a quarter of a megabyte and a few milliseconds. Doing
     the same arithmetic inside the pixel loop is two million multiplies and clamps per
@@ -540,6 +741,7 @@ def _blend_table() -> bytes:
     return bytes(out)
 
 
+@lru_cache(maxsize=1)
 def _sea_table() -> bytes:
     out = bytearray(_TINT_STEPS * 3)
     n = 0

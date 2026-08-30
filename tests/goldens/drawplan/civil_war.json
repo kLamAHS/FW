@@ -32,28 +32,6 @@
    "contested": false,
    "holder_role": "",
    "name": "Kingsbank",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 280.7,
-   "y": 463.8
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "Kingscombe",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 668.2,
-   "y": 349.9
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "Kingsfield",
    "radius": 7.0,
    "rank": "city",
    "role": "settlement",
@@ -80,19 +58,19 @@
    "rank": "village",
    "role": "settlement",
    "shape": "disc",
-   "x": 288.4,
-   "y": 508.8
+   "x": 322.6,
+   "y": 642.7
   },
   {
    "contested": false,
    "holder_role": "",
    "name": "Kingsmere",
-   "radius": 5.5,
-   "rank": "town",
+   "radius": 4.2,
+   "rank": "village",
    "role": "settlement",
    "shape": "disc",
-   "x": 282.7,
-   "y": 657.4
+   "x": 288.4,
+   "y": 508.8
   },
   {
    "contested": false,
@@ -108,13 +86,35 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "Kingsreach",
+   "name": "Kingsthorpe",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 282.7,
+   "y": 657.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsvale",
    "radius": 4.2,
    "rank": "village",
    "role": "settlement",
    "shape": "disc",
-   "x": 322.6,
-   "y": 642.7
+   "x": 280.7,
+   "y": 463.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingswick",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 668.2,
+   "y": 349.9
   },
   {
    "contested": false,
@@ -152,7 +152,7 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "Prizeholt",
+   "name": "Prizestead",
    "radius": 4.2,
    "rank": "village",
    "role": "settlement",
@@ -274,6 +274,28 @@
    "contested": false,
    "holder_role": "",
    "name": "The Kingsclose",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 378.5,
+   "y": 345.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingscombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 767.8,
+   "y": 464.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsfield",
    "radius": 3.4,
    "rank": "hamlet",
    "role": "settlement",
@@ -285,12 +307,23 @@
    "contested": false,
    "holder_role": "",
    "name": "The Kingshill",
-   "radius": 3.4,
-   "rank": "hamlet",
+   "radius": 5.5,
+   "rank": "town",
    "role": "settlement",
-   "shape": "dot",
-   "x": 257.3,
-   "y": 405.5
+   "shape": "disc",
+   "x": 266.7,
+   "y": 99.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsholt",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 643.8,
+   "y": 494.3
   },
   {
    "contested": false,
@@ -306,35 +339,13 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "The Kingsthorpe",
-   "radius": 4.2,
-   "rank": "village",
+   "name": "The Kingsreach",
+   "radius": 3.4,
+   "rank": "hamlet",
    "role": "settlement",
-   "shape": "disc",
-   "x": 767.8,
-   "y": 464.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Kingsvale",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 266.7,
-   "y": 99.3
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Kingswick",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 643.8,
-   "y": 494.3
+   "shape": "dot",
+   "x": 257.3,
+   "y": 405.5
   },
   {
    "contested": false,
@@ -390,17 +401,6 @@
    "shape": "keep",
    "x": 441.9,
    "y": 496.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Prizestead",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 378.5,
-   "y": 345.9
   },
   {
    "contested": false,
@@ -471,42 +471,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     630.9,
-     652.4
-    ],
-    [
-     621.6,
-     643.0
-    ],
-    [
-     620.6,
-     640.3
-    ],
-    [
-     620.6,
-     617.2
-    ],
-    [
-     622.7,
-     613.2
-    ],
-    [
-     633.1,
-     602.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Crowncombe",
-   "tier": 2,
-   "x": 620.6,
-   "y": 617.2
-  },
-  {
-   "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 7.31,
@@ -555,6 +519,26 @@
   },
   {
    "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Kings Wood",
+   "tier": 2,
+   "x": 565.4,
+   "y": 314.6
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "Kingsbank",
+   "tier": 1,
+   "x": 299.9,
+   "y": 328.0
+  },
+  {
+   "anchor": "middle",
    "kind": "landmass",
    "role": "label-region",
    "size": 11.54,
@@ -562,16 +546,6 @@
    "tier": 1,
    "x": 130.4,
    "y": 303.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Kingscombe",
-   "tier": 1,
-   "x": 678.0,
-   "y": 350.6
   },
   {
    "anchor": "middle",
@@ -607,16 +581,6 @@
   },
   {
    "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Kingsfield",
-   "tier": 1,
-   "x": 299.9,
-   "y": 328.0
-  },
-  {
-   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
@@ -626,24 +590,24 @@
    "y": 588.7
   },
   {
-   "anchor": "middle",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "Kingshollow",
    "tier": 2,
-   "x": 288.4,
-   "y": 527.3
+   "x": 314.1,
+   "y": 634.8
   },
   {
-   "anchor": "start",
-   "kind": "town",
+   "anchor": "middle",
+   "kind": "village",
    "role": "label",
-   "size": 11.5,
+   "size": 10.0,
    "text": "Kingsmere",
-   "tier": 1,
-   "x": 292.5,
-   "y": 658.1
+   "tier": 2,
+   "x": 288.4,
+   "y": 527.3
   },
   {
    "anchor": "start",
@@ -656,34 +620,44 @@
    "y": 366.5
   },
   {
-   "anchor": "end",
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Kingsthorpe",
+   "tier": 1,
+   "x": 292.5,
+   "y": 658.1
+  },
+  {
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "Kingsreach",
+   "text": "Kingsvale",
    "tier": 2,
-   "x": 314.1,
-   "y": 634.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.19,
-   "text": "Kingsweald",
-   "tier": 2,
-   "x": 126.8,
-   "y": 319.9
+   "x": 289.2,
+   "y": 464.4
   },
   {
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 11.0,
-   "text": "Kingswood",
+   "text": "Kingsweald",
    "tier": 2,
-   "x": 220.6,
-   "y": 362.2
+   "x": 241.3,
+   "y": 483.6
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Kingswick",
+   "tier": 1,
+   "x": 678.0,
+   "y": 350.6
   },
   {
    "anchor": "end",
@@ -728,16 +702,6 @@
    "y": 460.2
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.81,
-   "text": "Prize Shaw",
-   "tier": 2,
-   "x": 459.9,
-   "y": 618.2
-  },
-  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -748,11 +712,31 @@
    "y": 751.1
   },
   {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Prizeholt",
+   "tier": 2,
+   "x": 540.3,
+   "y": 475.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Prizeshaw",
+   "tier": 2,
+   "x": 705.2,
+   "y": 371.3
+  },
+  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "Prizeholt",
+   "text": "Prizestead",
    "tier": 2,
    "x": 439.3,
    "y": 411.4
@@ -768,6 +752,16 @@
    "y": 640.9
   },
   {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Prizewold",
+   "tier": 2,
+   "x": 412.9,
+   "y": 87.3
+  },
+  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -775,7 +769,7 @@
    "text": "Rebel Bridge",
    "tier": 2,
    "x": 656.9,
-   "y": 379.4
+   "y": 392.2
   },
   {
    "anchor": "end",
@@ -850,14 +844,62 @@
    "y": 230.6
   },
   {
-   "anchor": "end",
-   "kind": "village",
+   "anchor": "middle",
+   "kind": "feature",
    "role": "label",
-   "size": 10.0,
-   "text": "The Crown Bridge",
+   "size": 8.93,
+   "text": "Rebelmarsh",
    "tier": 2,
-   "x": 258.0,
-   "y": 186.7
+   "x": 443.6,
+   "y": 795.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     161.7,
+     688.8
+    ],
+    [
+     165.9,
+     690.9
+    ],
+    [
+     168.9,
+     691.1
+    ],
+    [
+     176.3,
+     694.8
+    ],
+    [
+     179.3,
+     697.6
+    ],
+    [
+     190.2,
+     703.0
+    ],
+    [
+     193.2,
+     703.3
+    ],
+    [
+     201.1,
+     706.6
+    ],
+    [
+     212.5,
+     706.6
+    ]
+   ],
+   "role": "label",
+   "size": 11.0,
+   "text": "Rebelmoor",
+   "tier": 2,
+   "x": 179.3,
+   "y": 697.6
   },
   {
    "anchor": "middle",
@@ -865,83 +907,43 @@
    "path": [
     [
      447.3,
-     266.0
-    ],
-    [
-     447.3,
-     271.9
-    ],
-    [
-     448.3,
-     274.6
-    ],
-    [
-     451.4,
-     278.7
-    ],
-    [
-     451.4,
-     280.1
-    ],
-    [
-     448.3,
-     284.1
-    ],
-    [
-     447.3,
-     286.8
+     287.1
     ],
     [
      447.3,
      331.5
     ],
     [
-     448.3,
-     334.2
-    ],
-    [
-     452.4,
-     339.6
-    ],
-    [
-     453.7,
-     345.1
-    ],
-    [
-     456.1,
-     347.7
+     447.6,
+     332.2
     ]
    ],
    "role": "label-water",
    "size": 11.0,
-   "text": "The Crown Flow",
+   "text": "Rebelrun",
    "tier": 1,
    "x": 447.3,
-   "y": 286.8
+   "y": 331.5
   },
   {
    "anchor": "middle",
    "kind": "feature",
-   "path": [
-    [
-     105.4,
-     619.5
-    ],
-    [
-     108.6,
-     621.8
-    ],
-    [
-     163.3,
-     621.8
-    ]
-   ],
    "role": "label",
-   "size": 7.22,
-   "text": "The Crown Shaw",
+   "size": 9.58,
+   "text": "Rebelshaw",
    "tier": 2,
-   "x": 108.6,
-   "y": 621.8
+   "x": 358.6,
+   "y": 723.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Crown Bridge",
+   "tier": 2,
+   "x": 275.0,
+   "y": 186.7
   },
   {
    "anchor": "middle",
@@ -1076,24 +1078,14 @@
    "y": 496.0
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Kings Bridge",
    "tier": 2,
-   "x": 334.6,
-   "y": 618.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.82,
-   "text": "The Kings Fells",
-   "tier": 2,
-   "x": 268.8,
-   "y": 469.4
+   "x": 351.6,
+   "y": 605.9
   },
   {
    "anchor": "middle",
@@ -1106,34 +1098,6 @@
    "y": 112.0
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     283.3,
-     418.9
-    ],
-    [
-     283.8,
-     419.3
-    ],
-    [
-     293.4,
-     423.8
-    ],
-    [
-     362.9,
-     423.8
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "The Kings Wood",
-   "tier": 2,
-   "x": 293.4,
-   "y": 423.8
-  },
-  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -1144,70 +1108,24 @@
    "y": 528.6
   },
   {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Kingsclose",
-   "tier": 2,
-   "x": 361.3,
-   "y": 259.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     560.2,
-     316.6
-    ],
-    [
-     561.0,
-     320.7
-    ],
-    [
-     555.6,
-     330.2
-    ],
-    [
-     556.0,
-     343.7
-    ],
-    [
-     557.7,
-     346.4
-    ],
-    [
-     579.4,
-     368.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Kingsford",
-   "tier": 2,
-   "x": 556.0,
-   "y": 343.7
-  },
-  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "The Kingshill",
+   "text": "The Kingsfield",
    "tier": 2,
-   "x": 265.8,
-   "y": 406.1
+   "x": 369.8,
+   "y": 269.7
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
+   "anchor": "start",
+   "kind": "town",
    "role": "label",
-   "size": 8.09,
-   "text": "The Kingsholt",
-   "tier": 2,
-   "x": 524.8,
-   "y": 552.6
+   "size": 11.5,
+   "text": "The Kingshill",
+   "tier": 1,
+   "x": 276.5,
+   "y": 100.0
   },
   {
    "anchor": "middle",
@@ -1255,13 +1173,23 @@
   },
   {
    "anchor": "start",
-   "kind": "town",
+   "kind": "village",
    "role": "label",
-   "size": 11.5,
-   "text": "The Kingsvale",
-   "tier": 1,
-   "x": 276.5,
-   "y": 100.0
+   "size": 10.0,
+   "text": "The Kingsreach",
+   "tier": 2,
+   "x": 265.8,
+   "y": 406.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.06,
+   "text": "The Kingswold",
+   "tier": 2,
+   "x": 649.0,
+   "y": 659.4
   },
   {
    "anchor": "middle",
@@ -1340,30 +1268,6 @@
    "y": 523.1
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     293.4,
-     188.5
-    ],
-    [
-     301.3,
-     181.8
-    ],
-    [
-     346.1,
-     181.8
-    ]
-   ],
-   "role": "label",
-   "size": 7.22,
-   "text": "The Prize Weald",
-   "tier": 2,
-   "x": 301.3,
-   "y": 181.8
-  },
-  {
    "anchor": "end",
    "kind": "village",
    "role": "label",
@@ -1391,7 +1295,7 @@
    "text": "The Prizeford",
    "tier": 2,
    "x": 573.8,
-   "y": 385.2
+   "y": 372.4
   },
   {
    "anchor": "middle",
@@ -1478,16 +1382,6 @@
   {
    "anchor": "middle",
    "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Rebel Shaw",
-   "tier": 2,
-   "x": 469.9,
-   "y": 468.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
    "path": [
     [
      450.6,
@@ -1522,14 +1416,14 @@
    "y": 528.2
   },
   {
-   "anchor": "start",
+   "anchor": "middle",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Rebelford",
    "tier": 2,
-   "x": 568.0,
-   "y": 304.6
+   "x": 559.5,
+   "y": 331.0
   },
   {
    "anchor": "start",
@@ -1540,44 +1434,6 @@
    "tier": 1,
    "x": 329.3,
    "y": 561.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "The Rebelweald",
-   "tier": 2,
-   "x": 427.7,
-   "y": 270.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     500.7,
-     688.1
-    ],
-    [
-     507.6,
-     688.3
-    ],
-    [
-     517.4,
-     694.4
-    ],
-    [
-     561.7,
-     694.4
-    ]
-   ],
-   "role": "label",
-   "size": 8.91,
-   "text": "The Rebelwood",
-   "tier": 2,
-   "x": 517.4,
-   "y": 694.4
   },
   {
    "anchor": "start",
@@ -1679,6 +1535,11 @@
   {
    "kind": "road",
    "reason": "no room",
+   "text": "Crowncombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
    "text": "Crownhill"
   },
   {
@@ -1702,11 +1563,6 @@
    "text": "Crownvale"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Crownweald"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "Crownwick"
@@ -1720,11 +1576,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Kings Port"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Kingsbank"
   },
   {
    "kind": "road",
@@ -1747,14 +1598,9 @@
    "text": "Prizegate"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "Prizeweald"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Rebel Wood"
+   "text": "Prizerun"
   },
   {
    "kind": "road",
@@ -1767,9 +1613,24 @@
    "text": "Rebelmarch"
   },
   {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Rebelwater"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Crown Land"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Crown Shaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Crown Weald"
   },
   {
    "kind": "road",
@@ -1785,11 +1646,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Crownclose"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Crownflow"
   },
   {
    "kind": "road",
@@ -1827,6 +1683,11 @@
    "text": "The Crownwood"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Kings Fells"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Kings Land"
@@ -1837,9 +1698,19 @@
    "text": "The Kings March"
   },
   {
-   "kind": "river",
+   "kind": "town",
    "reason": "no room",
-   "text": "The Kingsflow"
+   "text": "The Kingsclose"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Kingscombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kingsford"
   },
   {
    "kind": "feature",
@@ -1849,12 +1720,12 @@
   {
    "kind": "village",
    "reason": "no room",
-   "text": "The Kingsthorpe"
+   "text": "The Kingsholt"
   },
   {
-   "kind": "village",
+   "kind": "river",
    "reason": "no room",
-   "text": "The Kingswick"
+   "text": "The Kingsrun"
   },
   {
    "kind": "sea",
@@ -1870,6 +1741,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Prize March"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Prize Shaw"
   },
   {
    "kind": "river",
@@ -1892,24 +1768,14 @@
    "text": "The Prizeport"
   },
   {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Prizerush"
-  },
-  {
-   "kind": "town",
-   "reason": "no room",
-   "text": "The Prizestead"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Rebel Port"
   },
   {
-   "kind": "river",
+   "kind": "feature",
    "reason": "no room",
-   "text": "The Rebelflow"
+   "text": "The Rebelholt"
   },
   {
    "kind": "castle",
@@ -1920,6 +1786,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Rebelport"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Rebelrush"
   }
  ]
 }

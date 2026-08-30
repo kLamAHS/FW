@@ -171,9 +171,11 @@ def _compute(world: World, brief: MapBrief
 def _terrain_of(generator) -> Terrain | None:
     """The surface this plan was worked out on, to be kept if it is accepted.
 
-    Three fields and no more. Height is what the relief is lit from; cover and standing
-    water are what the ground is coloured by. Everything else the generator held — the
-    flow network, the temperature, the rock hardness — is either recoverable from these
+    Four fields. Height is what the relief is lit from; cover and standing water are
+    what the ground is coloured by; and the flow is what makes the valleys legible —
+    the renderer carves the drainage into the picture, and a saved world whose map
+    cannot show its own valleys is a world that has forgotten why they are there.
+    Everything else the generator held — temperature, rock hardness — is recoverable
     or was scaffolding, and a world file is a thing a writer keeps for years.
     """
     from fw.core.mapgen.generate import GRID, SEA_LEVEL
@@ -188,6 +190,16 @@ def _terrain_of(generator) -> Terrain | None:
             "elevation": generator.elevation,
             "canopy": generator.vegetation.canopy,
             "marsh": generator.vegetation.marsh,
+            # Stored as the square root — the discharge exponent erosion itself
+            # uses. Raw flow spans four orders of magnitude, which quantised to
+            # sixteen bits loses exactly the small channels; in root space the
+            # store's precision survives the trip at every size of stream.
+            "flow": [[math.sqrt(value) for value in row]
+                     for row in generator.erosion.flow],
+            # Integer class codes (shore.CODE), spread a few cells into the sea so
+            # a shallow pixel knows whose water it is. Integers survive the
+            # sixteen-bit trip exactly; readers round.
+            "shoreline": generator.shore.seaward,
         })
 
 
@@ -240,9 +252,70 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
             name_request=None if mainland else NameRequest(
                 key=name_key("island", ("landmass",), ordinal),
                 kind="region", hint="coast"),
-            detail={"landmass": ordinal, "area": round(area, 1)},
+            detail={"landmass": ordinal, "area": round(area, 1),
+                    "shore": _shore_runs(generator, points)},
         ))
     return out
+
+
+def _shore_runs(generator, ring) -> list[list]:
+    """The coast's character along this ring, run-length encoded (V2 §4).
+
+    One `[class, vertices]` pair per stretch, aligned to the drawn ring's own
+    vertices, so a renderer can vary the stroke without re-deriving the geography.
+    """
+    from fw.core.mapgen import shore as shore_module
+
+    told = generator.shore
+    if told is None or not ring:
+        return []
+    grid = generator._grid()
+    codes: list[int] = []
+    for x, y in ring:
+        i, j = grid.cell_of(x, y)
+        code = told.classes.get((i, j), 0)
+        if code == 0:
+            # The smoothed ring can stand a cell off the classified shore; take
+            # the strongest voice within one cell rather than reporting silence.
+            votes: dict[int, int] = {}
+            for dj in (-1, 0, 1):
+                for di in (-1, 0, 1):
+                    near = told.classes.get((i + di, j + dj))
+                    if near:
+                        votes[near] = votes.get(near, 0) + 1
+            code = (max(sorted(votes), key=lambda c: (votes[c], -c))
+                    if votes else 0)
+        codes.append(code)
+
+    # The cell-level smoothing does not survive the mapping onto ring vertices —
+    # neighbouring vertices straddle cells and flip — so the vote runs again in
+    # vertex space, around the ring, until character comes in stretches. Held
+    # mouth classes stay held here too.
+    held = {shore_module.CODE["delta"], shore_module.CODE["estuary"]}
+    count = len(codes)
+    if count > 4:
+        for _ in range(3):
+            smoothed = list(codes)
+            for n, code in enumerate(codes):
+                if code in held:
+                    continue
+                votes = {}
+                for step in (-2, -1, 0, 1, 2):
+                    near = codes[(n + step) % count]
+                    if near not in held:
+                        votes[near] = votes.get(near, 0) + 1
+                if votes:
+                    smoothed[n] = max(sorted(votes), key=lambda c: (votes[c], -c))
+            codes = smoothed
+
+    runs: list[list] = []
+    for code in codes:
+        kind = shore_module.NAME.get(code, "open")
+        if runs and runs[-1][0] == kind:
+            runs[-1][1] += 1
+        else:
+            runs.append([kind, 1])
+    return runs
 
 
 def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
@@ -651,75 +724,192 @@ RIVER_STEPS = (0.0, 0.06, 0.16, 0.36, 0.66)
 
 
 def _river_drafts(generator, rivers) -> list[FeatureDraft]:
-    from fw.core.mapgen.generate import LAYER_WATER
+    """Rivers as systems (V2 §6): a mainstem, its tributaries, and its lakes.
 
-    # Measured against the biggest river on the map, not against each river's own mouth.
-    # Per-river, every river spans the same widths — a beck and a trunk are drawn
-    # identically, each thickening along its own length — which is a width that says
-    # "how far along this river are you" rather than "how much water is this". The point
-    # of drawing five widths is that a reader can tell the Trident from a tributary.
-    widest = max(
-        (max(generator.flow[j][i] for i, j in path) for path in rivers), default=1.0
-    ) or 1.0
+    The old tracer walked every source to the sea as its own river, so one real
+    system arrived as a sheaf of overlapping strands and the `strahler` in its
+    detail was a drawing width plus one. Now the hydrology's own graph is drawn:
+    one trunk per mouth, each order-two tributary joined to it at its confluence,
+    true stream order in the detail, and the meres the wet basins hold.
+    """
+    hyd = generator.hydrology
+    if hyd is None:
+        return []
+    widest = max((s.discharge for s in hyd.systems), default=1.0) or 1.0
 
     out: list[FeatureDraft] = []
-    for path in rivers:
-        mouth, source = path[-1], path[0]
-        # A running maximum, not the flow as read. The flow field shares each cell's
-        # water between all its downhill neighbours, which is what keeps the drainage
-        # from snapping to eight compass directions — but it means the figure at a cell
-        # on the traced course can be lower than the one just upstream of it, where the
-        # water took more than one way down. Read literally, a river then narrows and
-        # widens along its length like a string of sausages. Water does not leave a
-        # river, so the width does not go back down.
-        carried: list[float] = []
-        so_far = 0.0
-        for i, j in path:
-            so_far = max(so_far, generator.flow[j][i])
-            carried.append(so_far)
-        biggest = carried[-1] or 1.0
-        bands = [_band(value / widest) for value in carried]
-
-        # One shape per run of equal width, each overlapping the next by a point so the
-        # river is continuous where it steps. Emitting a shape per *segment* instead
-        # would be five times the vertices for the same picture.
-        shapes: list[ShapeSpec] = []
-        start = 0
-        for n in range(1, len(path) + 1):
-            if n < len(path) and bands[n] == bands[start]:
-                continue
-            run = path[start:min(n + 1, len(path))]
-            if len(run) >= 2:
-                shapes.append(ShapeSpec(
-                    # The first reach is the river's spine and the rest are segments of
-                    # it. Roles are a closed vocabulary on purpose — the same argument as
-                    # the finding codes — so a river's reaches are named from it rather
-                    # than given a scheme of their own.
-                    role="spine" if start == 0 else "segment",
-                    kind="line",
-                    coordinates=generator._water_line(run),
-                    layer=LAYER_WATER,
-                    style={"role": "waterway",
-                           "stroke-width": RIVER_WIDTHS[bands[start]]},
-                    approximate=True))
-            start = n
-        if not shapes:
+    for system in hyd.systems:
+        trunk_key = (system.mouth[0], system.mouth[1],
+                     system.mainstem[0][0], system.mainstem[0][1])
+        trunk = _one_river(
+            generator, list(system.mainstem), key_parts=trunk_key,
+            widest=widest, order=system.order,
+            mouth_kind=system.mouth_kind,
+            reasons=(Reason(kind="mouth", weight=1.0,
+                            template="runs from the high ground to the sea"),))
+        if trunk is None:
             continue
+        out.append(trunk)
+        for arc in system.tributaries:
+            junction, source = arc.cells[-1], arc.cells[0]
+            tributary = _one_river(
+                generator, list(arc.cells),
+                key_parts=(junction[0], junction[1], source[0], source[1]),
+                widest=widest, order=arc.order,
+                mouth_kind="confluence",
+                reasons=(Reason(kind="confluence", weight=0.9,
+                                template="feeds {0} at their meeting",
+                                refs=(feature_id("river", *trunk_key),)),))
+            if tributary is not None:
+                out.append(tributary)
+    out.extend(_lake_drafts(generator, hyd))
+    return out
 
+
+def _one_river(generator, path, *, key_parts, widest, order,
+               mouth_kind, reasons) -> FeatureDraft | None:
+    from fw.core.mapgen.generate import LAYER_WATER
+
+    mouth, source = path[-1], path[0]
+    # A running maximum, not the flow as read. The flow field shares each cell's
+    # water between all its downhill neighbours, which is what keeps the drainage
+    # from snapping to eight compass directions — but it means the figure at a cell
+    # on the traced course can be lower than the one just upstream of it. Water does
+    # not leave a river, so the drawn width does not go back down.
+    carried: list[float] = []
+    so_far = 0.0
+    for i, j in path:
+        so_far = max(so_far, generator.flow[j][i])
+        carried.append(so_far)
+    biggest = carried[-1] or 1.0
+    bands = [_band(value / widest) for value in carried]
+
+    # One shape per run of equal width, each overlapping the next by a point so the
+    # river is continuous where it steps. A course crossing a mere is drawn straight
+    # through — the water is the same colour, and a split would break the invariant
+    # that a river's reaches join.
+    shapes: list[ShapeSpec] = []
+    start = 0
+    for n in range(1, len(path) + 1):
+        if n < len(path) and bands[n] == bands[start]:
+            continue
+        run = path[start:min(n + 1, len(path))]
+        if len(run) >= 2:
+            shapes.append(ShapeSpec(
+                # The first reach is the river's spine and the rest are segments of
+                # it — roles are a closed vocabulary, like the finding codes.
+                role="spine" if not shapes else "segment",
+                kind="line",
+                coordinates=generator._water_line(run),
+                layer=LAYER_WATER,
+                style={"role": "waterway",
+                       "stroke-width": RIVER_WIDTHS[bands[start]]},
+                approximate=True))
+        start = n
+    if not shapes:
+        return None
+    shapes.extend(_delta_arms(generator, path, mouth_kind, bands[-1]))
+
+    return FeatureDraft(
+        kind="river",
+        key_parts=key_parts,
+        subject=SubjectSpec(
+            mode="new", type_key="waterway", tags=(GENERATED_TAG,),
+            summary_template="Traced by the map; rename it and it is yours."),
+        shapes=tuple(shapes),
+        reasons=reasons,
+        name_request=NameRequest(
+            key=name_key("river", (str(mouth[0]), str(mouth[1]))),
+            kind="waterway", hint="river"),
+        detail={"mouth": list(mouth), "strahler": order,
+                "discharge": round(biggest, 1),
+                "source_elevation": round(
+                    generator.elevation[source[1]][source[0]], 3),
+                "mouth_kind": mouth_kind},
+    )
+
+
+def _delta_arms(generator, path, mouth_kind: str, band: int) -> list[ShapeSpec]:
+    """A delta's distributaries: two short arms fanning seaward of the mouth.
+
+    Drawn, not simulated — the classification already said the shelf is shallow and
+    the sediment heavy; the arms are what that looks like. The fan is built from the
+    river's own final direction and its perpendicular, so no angles anywhere.
+    """
+    from fw.core.mapgen.generate import LAYER_WATER
+
+    if mouth_kind != "delta" or len(path) < 3:
+        return []
+    (ax, ay) = generator._centre(*path[-3])
+    (bx, by) = generator._centre(*path[-1])
+    dx, dy = bx - ax, by - ay
+    length = math.hypot(dx, dy) or 1.0
+    dx, dy = dx / length, dy / length
+    px, py = -dy, dx                       # the perpendicular, for the spread
+    reach = generator._grid().span / generator._grid().size * 1.8
+    arms: list[ShapeSpec] = []
+    for side in (-0.55, 0.55):
+        tip = (bx + (dx + px * side) * reach, by + (dy + py * side) * reach)
+        mid = (bx + (dx + px * side * 0.4) * reach * 0.5,
+               by + (dy + py * side * 0.4) * reach * 0.5)
+        arms.append(ShapeSpec(
+            role="arm", kind="line",
+            coordinates=[[round(bx, 1), round(by, 1)],
+                         [round(mid[0], 1), round(mid[1], 1)],
+                         [round(tip[0], 1), round(tip[1], 1)]],
+            layer=LAYER_WATER,
+            style={"role": "waterway",
+                   "stroke-width": RIVER_WIDTHS[max(0, band - 2)]},
+            approximate=True))
+    return arms
+
+
+def _lake_drafts(generator, hyd) -> list[FeatureDraft]:
+    """The meres the wet basins hold, drawn the way the woods are.
+
+    The same mask-to-rings walk as a natural feature, because a lake is one: the
+    vegetation stage found the flat, wet, undrained ground; the deep core of a broad
+    basin is open water rather than reeds.
+    """
+    from fw.core.mapgen import hydrology
+    from fw.core.mapgen import shapes as shapes_module
+
+    grid = generator._grid()
+    out: list[FeatureDraft] = []
+    for number, lake in enumerate(hyd.lakes):
+        mask = grid.filled(0.0)
+        for i, j in lake.cells:
+            mask[j][i] = 1.0
+        # `smallest` is in the field's own cell² space — a mere at the size floor
+        # covers LAKE_CELLS of them, so the ring filter tracks the same dial.
+        rings = [shapes_module.closed(grid.to_world(ring))
+                 for ring, encloses in shapes_module.outlines(
+                     grid.blurred(mask), 0.30,
+                     smallest=hydrology.LAKE_CELLS * 0.6, most=120)
+                 if encloses]
+        if not rings:
+            continue
+        anchor = min(lake.cells)
         out.append(FeatureDraft(
-            kind="river",
-            key_parts=(mouth[0], mouth[1], source[0], source[1]),
+            kind="lake",
+            key_parts=(anchor[0], anchor[1]),
             subject=SubjectSpec(
                 mode="new", type_key="waterway", tags=(GENERATED_TAG,),
-                summary_template="Traced by the map; rename it and it is yours."),
-            shapes=tuple(shapes),
-            reasons=(Reason(kind="mouth", weight=1.0,
-                            template="runs from the high ground to the sea"),),
+                summary_template="Standing water the map found; rename it and "
+                                 "it is yours."),
+            shapes=tuple(ShapeSpec(role="outline", kind="polygon",
+                                   coordinates=[ring], layer="waters",
+                                   style={"role": "water"}, approximate=True)
+                         for ring in rings),
+            reasons=(Reason(kind="history", weight=0.8,
+                            template="standing water in a basin the rivers "
+                                     "cannot drain"),),
             name_request=NameRequest(
-                key=name_key("river", (str(mouth[0]), str(mouth[1]))),
-                kind="waterway", hint="river"),
-            detail={"mouth": list(mouth), "strahler": bands[-1] + 1,
-                    "discharge": round(biggest, 1)},
+                key=name_key("lake", (str(anchor[0]), str(anchor[1]))),
+                kind="waterway", hint="lake"),
+            detail={"area": len(lake.cells),
+                    "outlet": list(lake.outlet) if lake.outlet else None,
+                    "number": number},
         ))
     return out
 

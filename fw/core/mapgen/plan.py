@@ -53,15 +53,16 @@ KIND_ORDER = ("coast", "island", "region", "range", "hills", "sea", "water", "la
 # the stage that emitted it, and `violations()` is how it gets caught in a test rather
 # than in front of the writer.
 DETAIL_KEYS: dict[str, tuple[str, ...]] = {
-    "coast": ("landmass", "area", "importance"),
-    "island": ("landmass", "area", "importance"),
+    "coast": ("landmass", "area", "shore", "importance"),
+    "island": ("landmass", "area", "shore", "importance"),
     "region": ("share", "dominant", "importance"),
     "range": ("strike", "crest", "importance"),
     "hills": ("crest", "importance"),
     "sea": ("water_kind", "importance"),
     "water": ("water_kind", "importance"),
-    "lake": ("area", "importance"),
-    "river": ("mouth", "strahler", "importance"),
+    "lake": ("area", "outlet", "importance"),
+    "river": ("mouth", "strahler", "discharge", "source_elevation", "mouth_kind",
+              "importance"),
     "natural": ("feature_kind", "area_cells", "importance"),
     "settlement": ("rank", "importance"),
     "castle": ("rank", "importance"),
@@ -77,6 +78,7 @@ DETAIL_KEYS: dict[str, tuple[str, ...]] = {
 _DRAFT_GATES: dict[str, tuple[str, ...]] = {
     "island": ("coast",),
     "lane": ("road", "coast"),
+    "lake": ("river",),
 }
 
 

@@ -830,7 +830,8 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                  origin_x=ground["origin_x"], origin_y=ground["origin_y"]),
             elevation=fields["elevation"], seed=ground["seed"], scale=scale,
             sea_level=ground["sea_level"], canopy=fields.get("canopy"),
-            marsh=fields.get("marsh"))
+            marsh=fields.get("marsh"), flow=fields.get("flow"),
+            shoreline=fields.get("shoreline"))
         png = raster.encode(picture.width, picture.height, picture.pixels)
         app.state.relief_cache = (stamp, png)
         return Response(content=png, media_type="image/png",

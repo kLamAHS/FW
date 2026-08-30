@@ -88,7 +88,8 @@ def render_ground(world: World, scale: int = RELIEF_SCALE):
              origin_x=ground["origin_x"], origin_y=ground["origin_y"]),
         elevation=fields["elevation"], seed=ground["seed"], scale=scale,
         sea_level=ground["sea_level"], canopy=fields.get("canopy"),
-        marsh=fields.get("marsh"))
+        marsh=fields.get("marsh"), flow=fields.get("flow"),
+        shoreline=fields.get("shoreline"))
 
 
 def relief_signature(world: World) -> str:

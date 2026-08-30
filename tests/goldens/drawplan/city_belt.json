@@ -442,20 +442,20 @@
    "kind": "feature",
    "role": "label",
    "size": 11.0,
-   "text": "Beltgate",
+   "text": "Beltfield",
    "tier": 2,
-   "x": 351.9,
-   "y": 694.9
+   "x": 244.8,
+   "y": 481.2
   },
   {
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 11.0,
-   "text": "Belthollow",
+   "text": "Beltgate",
    "tier": 2,
-   "x": 230.8,
-   "y": 485.4
+   "x": 705.3,
+   "y": 371.3
   },
   {
    "anchor": "middle",
@@ -481,11 +481,31 @@
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 8.02,
+   "size": 11.0,
+   "text": "Beltmoor",
+   "tier": 2,
+   "x": 565.4,
+   "y": 315.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 9.9,
+   "text": "Beltreach",
+   "tier": 2,
+   "x": 700.3,
+   "y": 698.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
    "text": "Beltvale",
    "tier": 2,
-   "x": 173.8,
-   "y": 160.1
+   "x": 586.0,
+   "y": 245.6
   },
   {
    "anchor": "middle",
@@ -498,34 +518,6 @@
    "y": 87.3
   },
   {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     447.3,
-     281.1
-    ],
-    [
-     447.3,
-     331.5
-    ],
-    [
-     448.3,
-     334.2
-    ],
-    [
-     448.8,
-     334.9
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "Capitabank",
-   "tier": 1,
-   "x": 448.3,
-   "y": 334.2
-  },
-  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -533,61 +525,51 @@
    "text": "Capitabridge",
    "tier": 2,
    "x": 522.4,
-   "y": 275.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.9,
-   "text": "Capitacombe",
-   "tier": 2,
-   "x": 451.9,
-   "y": 552.1
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Capitaford",
-   "tier": 2,
-   "x": 454.0,
-   "y": 566.8
+   "y": 284.0
   },
   {
    "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
+   "text": "Capitaford",
+   "tier": 2,
+   "x": 473.0,
+   "y": 566.8
+  },
+  {
+   "anchor": "end",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
    "text": "Capitagate",
    "tier": 2,
-   "x": 450.4,
+   "x": 433.4,
    "y": 496.6
   },
   {
    "anchor": "middle",
-   "kind": "feature",
+   "kind": "river",
    "path": [
     [
-     495.7,
-     674.7
+     447.3,
+     287.4
     ],
     [
-     500.9,
-     670.0
+     447.3,
+     331.5
     ],
     [
-     559.0,
-     670.0
+     448.3,
+     334.1
     ]
    ],
-   "role": "label",
+   "role": "label-water",
    "size": 11.0,
-   "text": "Capitahollow",
-   "tier": 2,
-   "x": 500.9,
-   "y": 670.0
+   "text": "Capitahill",
+   "tier": 1,
+   "x": 447.3,
+   "y": 331.5
   },
   {
    "anchor": "start",
@@ -608,6 +590,16 @@
    "tier": 0,
    "x": 622.0,
    "y": 406.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "Capitaland",
+   "tier": 2,
+   "x": 545.0,
+   "y": 481.4
   },
   {
    "anchor": "end",
@@ -634,8 +626,8 @@
    "kind": "river",
    "path": [
     [
-     387.7,
-     680.0
+     385.8,
+     678.1
     ],
     [
      391.1,
@@ -647,7 +639,7 @@
     ],
     [
      393.1,
-     738.0
+     735.3
     ]
    ],
    "role": "label-water",
@@ -656,6 +648,68 @@
    "tier": 1,
    "x": 393.1,
    "y": 687.7
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Capitastead",
+   "tier": 2,
+   "x": 429.7,
+   "y": 593.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     158.2,
+     687.0
+    ],
+    [
+     165.9,
+     690.9
+    ],
+    [
+     168.9,
+     691.1
+    ],
+    [
+     176.3,
+     694.8
+    ],
+    [
+     179.3,
+     697.6
+    ],
+    [
+     190.2,
+     703.0
+    ],
+    [
+     193.2,
+     703.3
+    ],
+    [
+     201.1,
+     706.6
+    ],
+    [
+     213.7,
+     706.6
+    ],
+    [
+     216.1,
+     708.0
+    ]
+   ],
+   "role": "label",
+   "size": 11.0,
+   "text": "Capitathorpe",
+   "tier": 2,
+   "x": 190.2,
+   "y": 703.0
   },
   {
    "anchor": "start",
@@ -728,58 +782,12 @@
    "y": 371.8
   },
   {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Hamletbridge",
-   "tier": 2,
-   "x": 673.6,
-   "y": 470.2
-  },
-  {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     391.4,
-     353.5
-    ],
-    [
-     407.3,
-     369.4
-    ],
-    [
-     409.4,
-     373.5
-    ],
-    [
-     409.4,
-     385.7
-    ],
-    [
-     410.4,
-     388.4
-    ],
-    [
-     418.3,
-     396.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hamletclose",
-   "tier": 2,
-   "x": 409.4,
-   "y": 385.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     378.5,
-     600.7
+     378.8,
+     601.0
     ],
     [
      391.1,
@@ -798,120 +806,70 @@
      620.3
     ],
     [
-     422.6,
+     422.3,
      620.4
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletbank",
+   "tier": 2,
+   "x": 399.2,
+   "y": 616.2
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Hamletbridge",
+   "tier": 2,
+   "x": 673.6,
+   "y": 470.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     392.1,
+     354.2
+    ],
+    [
+     407.3,
+     369.4
+    ],
+    [
+     409.4,
+     373.5
+    ],
+    [
+     409.4,
+     385.7
+    ],
+    [
+     410.4,
+     388.4
+    ],
+    [
+     417.5,
+     395.6
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "Hamletfield",
    "tier": 2,
-   "x": 399.2,
-   "y": 616.2
+   "x": 409.4,
+   "y": 385.7
   },
   {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     517.1,
-     294.7
-    ],
-    [
-     537.3,
-     315.3
-    ],
-    [
-     539.0,
-     318.0
-    ],
-    [
-     540.4,
-     323.4
-    ],
-    [
-     544.5,
-     328.8
-    ],
-    [
-     544.7,
-     332.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hamletgate",
-   "tier": 2,
-   "x": 540.4,
-   "y": 323.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     530.6,
-     250.4
-    ],
-    [
-     553.6,
-     227.2
-    ],
-    [
-     555.3,
-     224.5
-    ],
-    [
-     555.4,
-     216.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hamlethill",
-   "tier": 2,
-   "x": 555.3,
-   "y": 224.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     637.0,
-     400.4
-    ],
-    [
-     637.2,
-     355.9
-    ],
-    [
-     640.3,
-     351.8
-    ],
-    [
-     644.3,
-     349.8
-    ],
-    [
-     650.2,
-     349.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hamlethollow",
-   "tier": 2,
-   "x": 640.3,
-   "y": 351.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     626.1,
-     651.6
+     626.0,
+     649.1
     ],
     [
      625.7,
@@ -930,17 +888,13 @@
      613.2
     ],
     [
-     631.1,
-     603.7
-    ],
-    [
-     631.1,
-     603.4
+     629.7,
+     605.3
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "Hamletstead",
+   "text": "Hamletland",
    "tier": 2,
    "x": 620.6,
    "y": 617.2
@@ -950,45 +904,37 @@
    "kind": "road",
    "path": [
     [
-     180.9,
-     659.9
+     637.0,
+     397.6
     ],
     [
-     182.4,
-     658.9
+     637.2,
+     355.9
     ],
     [
-     192.0,
-     658.2
+     640.3,
+     351.8
     ],
     [
-     200.2,
-     653.1
+     644.3,
+     349.8
     ],
     [
-     234.0,
-     653.1
-    ],
-    [
-     234.5,
-     652.9
+     647.4,
+     349.7
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "Hintercombe",
+   "text": "Hamletmere",
    "tier": 2,
-   "x": 200.2,
-   "y": 653.1
+   "x": 640.3,
+   "y": 351.8
   },
   {
    "anchor": "middle",
    "kind": "road",
    "path": [
-    [
-     681.0,
-     483.9
-    ],
     [
      680.9,
      484.2
@@ -1010,16 +956,52 @@
      485.9
     ],
     [
-     714.6,
-     483.9
+     714.3,
+     484.2
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hinterbank",
+   "tier": 2,
+   "x": 698.5,
+   "y": 499.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     551.2,
+     345.1
+    ],
+    [
+     559.0,
+     353.2
+    ],
+    [
+     561.7,
+     354.9
+    ],
+    [
+     575.3,
+     355.2
+    ],
+    [
+     584.7,
+     349.8
+    ],
+    [
+     593.3,
+     349.7
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "Hinterfield",
    "tier": 2,
-   "x": 695.8,
-   "y": 500.1
+   "x": 575.3,
+   "y": 355.2
   },
   {
    "anchor": "middle",
@@ -1036,8 +1018,8 @@
    "kind": "road",
    "path": [
     [
-     732.0,
-     422.8
+     734.1,
+     420.7
     ],
     [
      749.6,
@@ -1056,20 +1038,44 @@
      384.3
     ],
     [
-     757.1,
-     381.6
-    ],
-    [
-     757.4,
-     381.3
+     756.1,
+     384.0
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "Hintermoor",
+   "text": "Hintervale",
    "tier": 2,
    "x": 755.7,
    "y": 392.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     184.1,
+     658.8
+    ],
+    [
+     192.0,
+     658.2
+    ],
+    [
+     200.2,
+     653.1
+    ],
+    [
+     231.1,
+     653.1
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hinterwick",
+   "tier": 2,
+   "x": 200.2,
+   "y": 653.1
   },
   {
    "anchor": "middle",
@@ -1128,16 +1134,6 @@
   {
    "anchor": "middle",
    "kind": "feature",
-   "role": "label",
-   "size": 8.02,
-   "text": "The Beltclose",
-   "tier": 2,
-   "x": 427.7,
-   "y": 270.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
    "path": [
     [
      451.9,
@@ -1168,30 +1164,6 @@
    "kind": "feature",
    "path": [
     [
-     321.5,
-     419.0
-    ],
-    [
-     324.3,
-     416.7
-    ],
-    [
-     373.9,
-     416.7
-    ]
-   ],
-   "role": "label",
-   "size": 8.91,
-   "text": "The Beltfield",
-   "tier": 2,
-   "x": 324.3,
-   "y": 416.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
      238.4,
      166.1
     ],
@@ -1214,40 +1186,6 @@
   {
    "anchor": "middle",
    "kind": "feature",
-   "path": [
-    [
-     103.8,
-     619.5
-    ],
-    [
-     108.4,
-     622.8
-    ],
-    [
-     158.9,
-     622.8
-    ]
-   ],
-   "role": "label",
-   "size": 8.91,
-   "text": "The Beltmere",
-   "tier": 2,
-   "x": 108.4,
-   "y": 622.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.77,
-   "text": "The Beltreach",
-   "tier": 2,
-   "x": 279.5,
-   "y": 680.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
    "role": "label",
    "size": 11.0,
    "text": "The Beltstead",
@@ -1257,49 +1195,13 @@
   },
   {
    "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     441.9,
-     583.5
-    ],
-    [
-     441.9,
-     607.8
-    ],
-    [
-     442.9,
-     610.5
-    ],
-    [
-     450.7,
-     618.6
-    ],
-    [
-     452.7,
-     622.7
-    ],
-    [
-     452.7,
-     648.8
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "The Capitahill",
-   "tier": 1,
-   "x": 450.7,
-   "y": 618.6
-  },
-  {
-   "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 7.0,
-   "text": "The Capitamere",
+   "text": "The Capitacombe",
    "tier": 2,
-   "x": 523.3,
-   "y": 553.5
+   "x": 443.6,
+   "y": 795.9
   },
   {
    "anchor": "middle",
@@ -1358,42 +1260,6 @@
    "tier": 0,
    "x": 296.8,
    "y": 316.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     282.8,
-     297.6
-    ],
-    [
-     304.4,
-     276.0
-    ],
-    [
-     306.5,
-     271.9
-    ],
-    [
-     306.1,
-     253.0
-    ],
-    [
-     297.7,
-     243.5
-    ],
-    [
-     296.8,
-     241.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Hinterstead",
-   "tier": 2,
-   "x": 306.1,
-   "y": 253.0
   },
   {
    "anchor": "start",
@@ -1456,14 +1322,14 @@
    "y": 441.0
   },
   {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "Upper Capitaford",
+   "text": "Upper Capitagate",
    "tier": 2,
-   "x": 571.6,
-   "y": 308.4
+   "x": 340.7,
+   "y": 691.6
   },
   {
    "anchor": "end",
@@ -1526,14 +1392,14 @@
    "y": 178.8
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "Upper Capitathorpe",
+   "text": "Upper Capitavale",
    "tier": 2,
-   "x": 227.5,
-   "y": 684.7
+   "x": 368.2,
+   "y": 270.9
   },
   {
    "anchor": "start",
@@ -1544,16 +1410,6 @@
    "tier": 1,
    "x": 729.0,
    "y": 481.0
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Village 10",
-   "tier": 2,
-   "x": 565.7,
-   "y": 349.0
   },
   {
    "anchor": "start",
@@ -1658,6 +1514,11 @@
   {
    "kind": "feature",
    "reason": "no room",
+   "text": "Beltclose"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
    "text": "Belthill"
   },
   {
@@ -1668,22 +1529,27 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "Beltmoor"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Capitaclose"
+   "text": "Beltmere"
   },
   {
    "kind": "river",
    "reason": "no room",
+   "text": "Capitabank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
    "text": "Capitafield"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "Capitaland"
+   "text": "Capitahollow"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Capitamere"
   },
   {
    "kind": "river",
@@ -1691,39 +1557,34 @@
    "text": "Capitamoor"
   },
   {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Capitastead"
-  },
-  {
    "kind": "feature",
    "reason": "no room",
-   "text": "Capitathorpe"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "Capitavale"
+   "text": "Capitawick"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hamletcombe"
+   "text": "Hamletgate"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hamletford"
+   "text": "Hamlethill"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hamletmere"
+   "text": "Hamlethorpe"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hamletmoor"
+   "text": "Hamletreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletstead"
   },
   {
    "kind": "road",
@@ -1733,7 +1594,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hinterbank"
+   "text": "Hamletwick"
   },
   {
    "kind": "road",
@@ -1743,17 +1604,27 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hintereach"
+   "text": "Hintercombe"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hinterholt"
+   "text": "Hinterford"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hintermere"
+   "text": "Hinterhill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterhollow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hintermoor"
   },
   {
    "kind": "road",
@@ -1761,19 +1632,39 @@
    "text": "Hinterthorpe"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Hintervale"
-  },
-  {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Capitawick"
+   "text": "The Belthollow"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hamletbank"
+   "text": "The Capitaclose"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Capitavale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletclose"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletcombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamletford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Hamlethollow"
   },
   {
    "kind": "road",
@@ -1783,27 +1674,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hamlethorpe"
+   "text": "The Hamletmoor"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hamletland"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamletreach"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamletwick"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hinterford"
+   "text": "The Hintereach"
   },
   {
    "kind": "road",
@@ -1813,17 +1689,17 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hinterhill"
+   "text": "The Hinterholt"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hinterhollow"
+   "text": "The Hintermere"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hinterwick"
+   "text": "The Hinterstead"
   },
   {
    "kind": "sea",
@@ -1836,14 +1712,9 @@
    "text": "Upper Beltland"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Upper Beltstead"
-  },
-  {
    "kind": "village",
    "reason": "no room",
-   "text": "Upper Capitagate"
+   "text": "Upper Capitaford"
   },
   {
    "kind": "village",
@@ -1853,7 +1724,12 @@
   {
    "kind": "village",
    "reason": "no room",
-   "text": "Upper Capitavale"
+   "text": "Upper Capitathorpe"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Village 10"
   }
  ]
 }

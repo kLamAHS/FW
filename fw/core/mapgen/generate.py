@@ -37,13 +37,16 @@ from fw.core.mapgen import (
     erode,
     guards,
     hold,
+    hydrology,
     movement,
     noise,
     relief,
     resources,
     roads,
     settle,
+    shade,
     shapes,
+    shore,
     source,
     territory,
     vegetation,
@@ -80,7 +83,11 @@ CELL = SPAN / GRID
 # a bit flat" rather than as an error.
 SEA_LEVEL = 0.0
 SHELF_CELLS = 14.0             # how far offshore the sea floor keeps falling
-SHELF_DEPTH = 0.22             # how deep it gets, in the same units as the land
+# How deep the shelf gets, in the same units as the land. The renderer's sea ramp is
+# defined over the same number — one constant, one home — because for a phase they
+# disagreed (0.22 modelled, 0.10 rendered) and the outer half of every shelf drew as
+# one flat colour with a uniform bright band hugging the coast.
+SHELF_DEPTH = shade.SHELF_DEPTH
 SHORE_CELLS = 4.0              # over how many cells inland the land takes over the shore
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
@@ -218,6 +225,8 @@ class MapGenerator:
         self.relief: relief.Relief | None = None
         self.erosion: erode.Erosion | None = None
         self.vegetation: vegetation.Vegetation | None = None
+        self.hydrology: hydrology.Hydrology | None = None
+        self.shore: shore.Shoreline | None = None
         self.movement: movement.Movement | None = None
         self.resources: resources.Resources | None = None
         self.settlement: settle.Settlement | None = None
@@ -442,6 +451,21 @@ class MapGenerator:
         self._assign_cells()
         self._build_fields()
         rivers = self._trace_rivers()
+        # The drainage as a *system* (V2 §6): true stream order, mainstem-and-
+        # tributary rivers, mouth kinds, and the meres in the wet basins. Read off
+        # what erosion and vegetation already worked out, never recomputed.
+        self.hydrology = hydrology.study(
+            GRID, sea=self.sea, flow=self.erosion.flow,
+            downstream=self.erosion.downstream, marsh=self.vegetation.marsh,
+            settled=self.erosion.settled, elevation=self.elevation,
+            sea_level=SEA_LEVEL, shelf_depth=SHELF_DEPTH, share=RIVER_SHARE)
+        # And the coast's character (V2 §4), from the same fields plus the mouths
+        # just classified — a delta is where a specific river arrives.
+        self.shore = shore.classify(
+            GRID, sea=self.sea, elevation=self.elevation,
+            slope=self.erosion.slope, marsh=self.vegetation.marsh,
+            seed=self.seed,
+            mouths={s.mouth: s.mouth_kind for s in self.hydrology.systems})
         self._build_movement()
         self._build_civilisation()
         self._assign_cells(cost=self.movement.cost, from_the_towns=True)
@@ -1334,7 +1358,9 @@ class MapGenerator:
             claims=claims, seed=self.seed, sea_level=SEA_LEVEL)
         self.features = features_module.plan_features(
             grid, biome=self.biome, sea=self.sea, channel=self.channel,
-            owner=owner, keys=keys)
+            owner=owner, keys=keys,
+            canopy=self.vegetation.canopy if self.vegetation else None,
+            marsh=self.vegetation.marsh if self.vegetation else None)
         notes = features_module.adopt(list(self.features.features),
                                       self._authored_features())
         self.features.notes.extend(notes)

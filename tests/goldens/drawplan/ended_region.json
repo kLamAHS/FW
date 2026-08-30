@@ -316,24 +316,14 @@
    "y": 375.4
   },
   {
-   "anchor": "start",
+   "anchor": "middle",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Drowned Ford",
    "tier": 2,
-   "x": 276.3,
-   "y": 457.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "The Drowned Holt",
-   "tier": 2,
-   "x": 773.5,
-   "y": 321.9
+   "x": 267.8,
+   "y": 475.0
   },
   {
    "anchor": "middle",
@@ -367,6 +357,38 @@
   },
   {
    "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     335.6,
+     707.4
+    ],
+    [
+     389.2,
+     707.4
+    ],
+    [
+     395.2,
+     712.3
+    ],
+    [
+     407.3,
+     718.2
+    ],
+    [
+     421.6,
+     718.2
+    ]
+   ],
+   "role": "label",
+   "size": 9.9,
+   "text": "The Drowned Wood",
+   "tier": 2,
+   "x": 395.2,
+   "y": 712.3
+  },
+  {
+   "anchor": "middle",
    "kind": "landmass",
    "role": "label-region",
    "size": 8.45,
@@ -377,23 +399,23 @@
   },
   {
    "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.36,
-   "text": "The Drownedfen",
-   "tier": 2,
-   "x": 700.0,
-   "y": 701.3
-  },
-  {
-   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Drownedford",
    "tier": 2,
-   "x": 295.0,
-   "y": 517.3
+   "x": 286.5,
+   "y": 507.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.9,
+   "text": "The Drownedmere",
+   "tier": 2,
+   "x": 530.9,
+   "y": 750.1
   },
   {
    "anchor": "end",
@@ -520,70 +542,6 @@
    "y": 303.5
   },
   {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     480.7,
-     377.2
-    ],
-    [
-     489.9,
-     376.5
-    ],
-    [
-     495.4,
-     372.5
-    ],
-    [
-     502.1,
-     370.4
-    ],
-    [
-     505.9,
-     366.7
-    ],
-    [
-     507.2,
-     361.3
-    ],
-    [
-     510.3,
-     357.2
-    ],
-    [
-     513.0,
-     355.5
-    ],
-    [
-     518.4,
-     354.2
-    ],
-    [
-     523.8,
-     350.1
-    ],
-    [
-     537.3,
-     349.8
-    ],
-    [
-     540.1,
-     350.8
-    ],
-    [
-     542.7,
-     352.8
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "The High Flow",
-   "tier": 1,
-   "x": 510.3,
-   "y": 357.2
-  },
-  {
    "anchor": "start",
    "kind": "town",
    "role": "label",
@@ -605,16 +563,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The High Moor",
-   "tier": 2,
-   "x": 705.3,
-   "y": 375.9
-  },
-  {
-   "anchor": "middle",
    "kind": "village",
    "role": "label",
    "size": 10.0,
@@ -622,6 +570,26 @@
    "tier": 2,
    "x": 296.2,
    "y": 599.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.64,
+   "text": "The High Shaw",
+   "tier": 2,
+   "x": 546.5,
+   "y": 328.6
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 9.86,
+   "text": "The High Weald",
+   "tier": 2,
+   "x": 250.3,
+   "y": 459.5
   },
   {
    "anchor": "middle",
@@ -634,14 +602,14 @@
    "y": 112.0
   },
   {
-   "anchor": "start",
+   "anchor": "middle",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Highbridge",
    "tier": 2,
-   "x": 299.3,
-   "y": 708.2
+   "x": 290.8,
+   "y": 726.1
   },
   {
    "anchor": "middle",
@@ -668,48 +636,72 @@
    "kind": "feature",
    "path": [
     [
-     588.2,
-     562.9
+     171.5,
+     692.6
     ],
     [
-     630.0,
-     562.9
+     175.4,
+     695.7
     ],
     [
-     640.9,
-     553.1
+     177.9,
+     696.0
+    ],
+    [
+     186.8,
+     700.8
+    ],
+    [
+     189.0,
+     700.9
+    ],
+    [
+     193.0,
+     703.3
+    ],
+    [
+     196.4,
+     703.4
+    ],
+    [
+     198.0,
+     704.5
+    ],
+    [
+     201.4,
+     704.6
+    ],
+    [
+     202.9,
+     705.7
+    ],
+    [
+     206.3,
+     705.9
+    ],
+    [
+     208.2,
+     707.0
+    ],
+    [
+     218.4,
+     707.0
+    ],
+    [
+     223.9,
+     709.4
+    ],
+    [
+     225.2,
+     709.5
     ]
    ],
    "role": "label",
-   "size": 8.02,
-   "text": "The Highmarsh",
+   "size": 8.91,
+   "text": "The Highmoor",
    "tier": 2,
-   "x": 630.0,
-   "y": 562.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     586.6,
-     344.6
-    ],
-    [
-     592.1,
-     339.5
-    ],
-    [
-     627.0,
-     339.5
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "The Highmere",
-   "tier": 2,
-   "x": 592.1,
-   "y": 339.5
+   "x": 198.0,
+   "y": 704.5
   },
   {
    "anchor": "start",
@@ -742,32 +734,14 @@
    "y": 681.6
   },
   {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     502.3,
-     609.8
-    ],
-    [
-     559.0,
-     609.8
-    ],
-    [
-     568.5,
-     615.2
-    ],
-    [
-     569.2,
-     615.0
-    ]
-   ],
+   "anchor": "start",
+   "kind": "castle",
    "role": "label",
-   "size": 9.5,
-   "text": "The Home Land",
+   "size": 10.0,
+   "text": "The Home Ford",
    "tier": 2,
-   "x": 568.5,
-   "y": 615.2
+   "x": 288.9,
+   "y": 523.4
   },
   {
    "anchor": "end",
@@ -783,45 +757,31 @@
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 9.43,
-   "text": "The Home Marsh",
+   "size": 7.0,
+   "text": "The Home Mere",
    "tier": 2,
-   "x": 780.2,
-   "y": 513.0
+   "x": 555.7,
+   "y": 701.3
   },
   {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Home Pass",
    "tier": 2,
-   "x": 391.8,
+   "x": 372.8,
    "y": 631.8
   },
   {
    "anchor": "middle",
    "kind": "feature",
-   "path": [
-    [
-     514.1,
-     699.4
-    ],
-    [
-     519.3,
-     703.2
-    ],
-    [
-     562.2,
-     703.2
-    ]
-   ],
    "role": "label",
-   "size": 6.5,
-   "text": "The Home Shaw",
+   "size": 11.0,
+   "text": "The Home Wood",
    "tier": 2,
-   "x": 519.3,
-   "y": 703.2
+   "x": 589.7,
+   "y": 475.4
   },
   {
    "anchor": "start",
@@ -837,71 +797,11 @@
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 11.0,
-   "text": "The Homeholt",
-   "tier": 2,
-   "x": 792.4,
-   "y": 481.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     264.2,
-     462.2
-    ],
-    [
-     264.0,
-     462.6
-    ],
-    [
-     263.1,
-     465.6
-    ],
-    [
-     263.5,
-     500.8
-    ],
-    [
-     265.2,
-     503.5
-    ],
-    [
-     277.3,
-     515.7
-    ],
-    [
-     279.8,
-     516.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Homeland",
-   "tier": 2,
-   "x": 263.5,
-   "y": 500.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.73,
-   "text": "The Homemarsh",
-   "tier": 2,
-   "x": 581.5,
-   "y": 765.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.77,
+   "size": 7.11,
    "text": "The Homemere",
    "tier": 2,
-   "x": 647.8,
-   "y": 658.5
+   "x": 487.2,
+   "y": 622.5
   },
   {
    "anchor": "start",
@@ -944,14 +844,24 @@
    "y": 380.8
   },
   {
-   "anchor": "end",
-   "kind": "village",
+   "anchor": "middle",
+   "kind": "feature",
    "role": "label",
-   "size": 10.0,
-   "text": "The Living Pass",
+   "size": 9.01,
+   "text": "The Living Moor",
    "tier": 2,
-   "x": 371.8,
-   "y": 632.8
+   "x": 449.7,
+   "y": 782.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Living Shaw",
+   "tier": 2,
+   "x": 579.0,
+   "y": 245.1
   },
   {
    "anchor": "start",
@@ -1002,6 +912,74 @@
    "y": 567.1
   },
   {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     479.8,
+     377.6
+    ],
+    [
+     480.5,
+     377.2
+    ],
+    [
+     489.9,
+     376.5
+    ],
+    [
+     495.4,
+     372.5
+    ],
+    [
+     502.1,
+     370.4
+    ],
+    [
+     505.9,
+     366.7
+    ],
+    [
+     507.2,
+     361.3
+    ],
+    [
+     510.3,
+     357.2
+    ],
+    [
+     513.0,
+     355.5
+    ],
+    [
+     518.4,
+     354.2
+    ],
+    [
+     523.8,
+     350.1
+    ],
+    [
+     537.3,
+     349.8
+    ],
+    [
+     540.1,
+     350.8
+    ],
+    [
+     543.5,
+     353.4
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Livingrush",
+   "tier": 1,
+   "x": 510.3,
+   "y": 357.2
+  },
+  {
    "anchor": "end",
    "kind": "castle",
    "role": "label",
@@ -1009,7 +987,17 @@
    "text": "The Livingwick",
    "tier": 2,
    "x": 666.3,
-   "y": 579.9
+   "y": 567.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Livingwood",
+   "tier": 2,
+   "x": 346.4,
+   "y": 138.1
   }
  ],
  "legend": [
@@ -1070,11 +1058,6 @@
    "text": "The Drownecombe"
   },
   {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Drowned Flow"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Drowned Land"
@@ -1082,12 +1065,7 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Drowned Moor"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Drowned Shaw"
+   "text": "The Drowned Weald"
   },
   {
    "kind": "road",
@@ -1100,19 +1078,9 @@
    "text": "The Drownedmarch"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "The Drownedmarsh"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Drownedmere"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Drownedmoor"
+   "text": "The Drownedwater"
   },
   {
    "kind": "road",
@@ -1140,6 +1108,11 @@
    "text": "The Drownewick"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The High Holt"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The High Land"
@@ -1150,6 +1123,16 @@
    "text": "The High March"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The High Mere"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The High Run"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Highland"
@@ -1158,6 +1141,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Highmarch"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Highshaw"
   },
   {
    "kind": "range",
@@ -1172,12 +1160,12 @@
   {
    "kind": "castle",
    "reason": "no room",
-   "text": "The Home Ford"
+   "text": "The Home Gate"
   },
   {
-   "kind": "castle",
+   "kind": "road",
    "reason": "no room",
-   "text": "The Home Gate"
+   "text": "The Home Land"
   },
   {
    "kind": "feature",
@@ -1185,9 +1173,9 @@
    "text": "The Home Moor"
   },
   {
-   "kind": "river",
+   "kind": "road",
    "reason": "no room",
-   "text": "The Homeflow"
+   "text": "The Homeland"
   },
   {
    "kind": "road",
@@ -1197,7 +1185,17 @@
   {
    "kind": "river",
    "reason": "no room",
-   "text": "The Living Flow"
+   "text": "The Homerun"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Homerush"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Homeshaw"
   },
   {
    "kind": "castle",
@@ -1217,7 +1215,17 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Living Shaw"
+   "text": "The Living Mere"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Living Pass"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Living Rush"
   },
   {
    "kind": "river",
@@ -1240,14 +1248,9 @@
    "text": "The Livingmoor"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "The Livingshaw"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Livingweald"
+   "text": "The Livingwater"
   },
   {
    "kind": "sea",

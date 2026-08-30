@@ -384,7 +384,8 @@ class TestRiversAreDrawnByTheWaterInThem:
         rivers = plan.by_kind("river")
         assert rivers, "no rivers to measure"
         for river in rivers:
-            widths = [shape.style.get("stroke-width") for shape in river.shapes]
+            course = [s for s in river.shapes if s.role != "arm"]
+            widths = [shape.style.get("stroke-width") for shape in course]
             assert all(w is not None for w in widths), "a reach with no width"
             assert widths == sorted(widths), (
                 f"{river.name} narrows and widens along its length: {widths}")
@@ -394,7 +395,9 @@ class TestRiversAreDrawnByTheWaterInThem:
         from fw.core.mapgen.pipeline import plan_map
 
         for river in plan_map(renn).by_kind("river"):
-            reaches = list(river.shapes)
+            # A delta's arms both leave the same mouth, so they are not reaches of
+            # the course and carry their own role.
+            reaches = [s for s in river.shapes if s.role != "arm"]
             for before, after in zip(reaches, reaches[1:], strict=False):
                 assert before.coordinates[-1] == after.coordinates[0], (
                     f"{river.name} has a gap between reaches")

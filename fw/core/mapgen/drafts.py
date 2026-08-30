@@ -28,8 +28,10 @@ LAYERS = ("land", "waters", "regions", "relief", "features", "waterways",
           "settlements", "roads", "castles")
 
 # What a shape is *for*, which is how a regeneration recognises its own previous work
-# and how the client decides what to paint it with.
-ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill")
+# and how the client decides what to paint it with. An "arm" is a delta's
+# distributary: part of the river, but exempt from the course's own invariants —
+# it is narrower than the mouth it leaves, which no reach upstream may be.
+ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill", "arm")
 
 
 @dataclass(frozen=True)

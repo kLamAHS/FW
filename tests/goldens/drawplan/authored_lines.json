@@ -293,6 +293,64 @@
    "y": 512.6
   },
   {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     452.4,
+     539.1
+    ],
+    [
+     456.1,
+     542.8
+    ],
+    [
+     458.1,
+     546.8
+    ],
+    [
+     458.1,
+     559.0
+    ],
+    [
+     457.1,
+     561.7
+    ],
+    [
+     453.7,
+     565.8
+    ],
+    [
+     452.7,
+     568.5
+    ],
+    [
+     452.7,
+     586.1
+    ],
+    [
+     453.4,
+     588.1
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "End Water",
+   "tier": 1,
+   "x": 457.1,
+   "y": 561.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.91,
+   "text": "Endfen",
+   "tier": 2,
+   "x": 478.6,
+   "y": 643.6
+  },
+  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -323,22 +381,12 @@
    "y": 387.4
   },
   {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Endwick",
-   "tier": 2,
-   "x": 515.6,
-   "y": 357.5
-  },
-  {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     693.8,
-     509.5
+     694.1,
+     509.3
     ],
     [
      699.8,
@@ -349,49 +397,35 @@
      499.4
     ],
     [
-     720.7,
-     488.3
+     720.5,
+     488.5
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "Ink Vale",
+   "text": "Endvale",
    "tier": 2,
    "x": 709.3,
    "y": 499.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     304.7,
-     430.7
-    ],
-    [
-     343.8,
-     430.7
-    ],
-    [
-     348.7,
-     426.9
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "Ink Wood",
-   "tier": 2,
-   "x": 343.8,
-   "y": 430.7
   },
   {
    "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
+   "text": "Endwick",
+   "tier": 2,
+   "x": 515.6,
+   "y": 357.5
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
    "text": "Inkford",
    "tier": 2,
-   "x": 290.6,
+   "x": 307.6,
    "y": 676.8
   },
   {
@@ -491,16 +525,6 @@
    "y": 544.8
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 9.9,
-   "text": "Penn Wood",
-   "tier": 2,
-   "x": 374.8,
-   "y": 662.5
-  },
-  {
    "anchor": "start",
    "kind": "town",
    "role": "label",
@@ -512,23 +536,13 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     454.2,
-     302.7
-    ],
-    [
-     481.8,
-     330.2
-    ]
-   ],
+   "kind": "feature",
    "role": "label",
-   "size": 9.5,
-   "text": "Pennvale",
+   "size": 11.0,
+   "text": "Pennwood",
    "tier": 2,
-   "x": 481.8,
-   "y": 330.2
+   "x": 704.3,
+   "y": 698.2
   },
   {
    "anchor": "end",
@@ -539,30 +553,6 @@
    "tier": 2,
    "x": 185.7,
    "y": 555.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     294.1,
-     187.9
-    ],
-    [
-     301.3,
-     181.8
-    ],
-    [
-     345.2,
-     181.8
-    ]
-   ],
-   "role": "label",
-   "size": 8.02,
-   "text": "The Endbridge",
-   "tier": 2,
-   "x": 301.3,
-   "y": 181.8
   },
   {
    "anchor": "start",
@@ -645,24 +635,14 @@
    "y": 750.5
   },
   {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Endthorpe",
-   "tier": 2,
-   "x": 551.5,
-   "y": 633.1
-  },
-  {
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 7.22,
+   "size": 11.0,
    "text": "The Endwood",
    "tier": 2,
-   "x": 314.5,
-   "y": 102.5
+   "x": 514.4,
+   "y": 339.9
   },
   {
    "anchor": "middle",
@@ -716,16 +696,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Inkwood",
-   "tier": 2,
-   "x": 173.8,
-   "y": 160.1
-  },
-  {
-   "anchor": "middle",
    "kind": "region",
    "role": "label-region",
    "size": 22.0,
@@ -733,6 +703,44 @@
    "tier": 0,
    "x": 651.7,
    "y": 462.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "path": [
+    [
+     495.9,
+     247.8
+    ],
+    [
+     542.6,
+     247.8
+    ],
+    [
+     558.4,
+     239.3
+    ],
+    [
+     571.2,
+     239.3
+    ]
+   ],
+   "role": "label",
+   "size": 11.0,
+   "text": "The Open Wood",
+   "tier": 2,
+   "x": 558.4,
+   "y": 239.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 8.33,
+   "text": "The Openmoor",
+   "tier": 2,
+   "x": 458.5,
+   "y": 783.5
   },
   {
    "anchor": "start",
@@ -781,48 +789,6 @@
    "y": 462.9
   },
   {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     199.6,
-     771.3
-    ],
-    [
-     207.8,
-     771.3
-    ],
-    [
-     211.5,
-     773.2
-    ],
-    [
-     216.9,
-     777.8
-    ],
-    [
-     241.2,
-     777.8
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "The Openwood",
-   "tier": 2,
-   "x": 211.5,
-   "y": 773.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.33,
-   "text": "The Pen Wood",
-   "tier": 2,
-   "x": 245.7,
-   "y": 362.2
-  },
-  {
    "anchor": "end",
    "kind": "castle",
    "role": "label",
@@ -833,13 +799,13 @@
    "y": 377.5
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Penn Bridge",
    "tier": 2,
-   "x": 363.0,
+   "x": 380.0,
    "y": 296.2
   },
   {
@@ -879,16 +845,6 @@
    "tier": 2,
    "x": 397.2,
    "y": 453.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "The Pennwood",
-   "tier": 2,
-   "x": 126.8,
-   "y": 319.9
   },
   {
    "anchor": "middle",
@@ -941,12 +897,88 @@
   {
    "anchor": "middle",
    "kind": "feature",
+   "path": [
+    [
+     151.5,
+     683.8
+    ],
+    [
+     151.5,
+     683.9
+    ],
+    [
+     157.8,
+     684.3
+    ],
+    [
+     165.3,
+     689.9
+    ],
+    [
+     184.5,
+     699.6
+    ],
+    [
+     187.3,
+     699.8
+    ],
+    [
+     194.4,
+     702.8
+    ],
+    [
+     198.3,
+     702.9
+    ],
+    [
+     200.6,
+     704.4
+    ],
+    [
+     204.6,
+     704.5
+    ],
+    [
+     206.9,
+     706.0
+    ],
+    [
+     212.0,
+     706.0
+    ],
+    [
+     214.8,
+     707.5
+    ],
+    [
+     223.0,
+     707.5
+    ],
+    [
+     225.4,
+     709.0
+    ],
+    [
+     227.2,
+     709.5
+    ]
+   ],
+   "role": "label",
+   "size": 11.0,
+   "text": "The Writer'sfen",
+   "tier": 2,
+   "x": 200.6,
+   "y": 704.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
    "role": "label",
    "size": 11.0,
    "text": "The Writer'swood",
    "tier": 2,
-   "x": 126.0,
-   "y": 728.7
+   "x": 738.1,
+   "y": 386.4
   },
   {
    "anchor": "start",
@@ -1016,9 +1048,19 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Endbridge"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "Endholt"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Endwater"
   },
   {
    "kind": "road",
@@ -1026,14 +1068,19 @@
    "text": "Inkbridge"
   },
   {
-   "kind": "road",
+   "kind": "feature",
    "reason": "no room",
-   "text": "The End Vale"
+   "text": "Inkwood"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The End Water"
+   "text": "Pennvale"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Pennwater"
   },
   {
    "kind": "road",
@@ -1041,19 +1088,24 @@
    "text": "The Endford"
   },
   {
-   "kind": "feature",
+   "kind": "village",
    "reason": "no room",
-   "text": "The Endvale"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Endwater"
+   "text": "The Endthorpe"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The Ink Bridge"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Ink Vale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Ink Wood"
   },
   {
    "kind": "road",
@@ -1066,9 +1118,19 @@
    "text": "The Open Sea"
   },
   {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Open Water"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Openbridge"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Openmere"
   },
   {
    "kind": "river",
@@ -1076,19 +1138,24 @@
    "text": "The Openwater"
   },
   {
-   "kind": "river",
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Openwood"
+  },
+  {
+   "kind": "road",
    "reason": "no room",
    "text": "The Pen Water"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Pen Wood"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The Penn Vale"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Pennwater"
   },
   {
    "kind": "road",
@@ -1109,11 +1176,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Writer's Water"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Writer's Wood"
   },
   {
    "kind": "road",

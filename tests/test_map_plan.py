@@ -319,7 +319,9 @@ class TestRefusals:
 
     def test_narrowing_the_brief_does_not_propose_what_it_dropped(self, prose: World):
         plan = plan_map(prose, MapBrief(include=("river",)))
-        assert {f.kind for f in plan.features} == {"river"}
+        # Lakes ride the river gate: asking for the water gets all of the water.
+        assert {f.kind for f in plan.features} <= {"river", "lake"}
+        assert any(f.kind == "river" for f in plan.features)
 
 
 class TestCarryingAnswersForward:
