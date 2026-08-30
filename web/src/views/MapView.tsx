@@ -16,14 +16,19 @@
  * mapping library would spend most of its effort on machinery this world does not have.
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 import type {
-  ApplyReport, MapDecision, MapFeature, MapIcon, MapLabel, MapPlan,
+  ApplyReport, Entity, MapDecision, MapFeature, MapIcon, MapLabel, MapPlan,
 } from '../api'
 import { ProposalOverlay, ProposalPanel } from './map/ProposalPanel'
 import {
-  ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
+  DRAWABLE, coordinatesOf, isFinishable, worldPointOf,
+} from './map/drawing'
+import type { Drawable, Drawing } from './map/drawing'
+import { EntityPicker } from '../components/forms'
+import {
+  Badge, ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
 } from '../components/common'
 
 const CONTROL_MODES = [
@@ -63,6 +68,16 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // does on its own.
   const [relief, setRelief] = useState<ReliefBounds | null>(null)
   const [showRelief, setShowRelief] = useState(true)
+  // Drawing on the map yourself (§66). `null` is the ordinary state — the tool is a
+  // mode a writer enters deliberately, because a map that places a town wherever you
+  // happened to click is a map you cannot pan.
+  const [drawing, setDrawing] = useState<Drawing | null>(null)
+  const [choosing, setChoosing] = useState<Drawable | null>(null)
+  const [chosen, setChosen] = useState<Entity | null>(null)
+  const [drawError, setDrawError] = useState<string | null>(null)
+  // The transformed group, so a click can be turned into world units by the browser's
+  // own matrix rather than by arithmetic of ours that would drift from it.
+  const surface = useRef<SVGGElement | null>(null)
 
   useEffect(() => {
     let live = true
@@ -103,6 +118,53 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
     }
   }
 
+  // Escape abandons a drawing, which is the key everybody reaches for. Bound while the
+  // tool is open only, so it never competes with anything else on the page.
+  useEffect(() => {
+    if (!drawing) return undefined
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDrawing(null)
+      if (e.key === 'Enter' && isFinishable(drawing)) void save()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
+  const place = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!drawing) return
+    const where = worldPointOf(e, surface.current)
+    if (!where) return
+    setDrawing({ ...drawing, points: [...drawing.points, where] })
+  }
+
+  const save = async () => {
+    if (!drawing || !isFinishable(drawing)) return
+    setDrawError(null)
+    try {
+      await api.draw({
+        entity_id: drawing.entity.id,
+        kind: drawing.what.kind,
+        layer: drawing.what.layer,
+        coordinates: coordinatesOf(drawing),
+        style: { role: drawing.what.role },
+      })
+      setDrawing(null)
+      onMutate()
+    } catch (err) {
+      setDrawError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  const erase = async (geometryId: string) => {
+    setDrawError(null)
+    try {
+      await api.erase(geometryId)
+      onMutate()
+    } catch (err) {
+      setDrawError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
   const keep = async (decisions: MapDecision[]) => {
     if (!plan || generating) return
     setGenerating(true)
@@ -136,6 +198,9 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   const visible = data.features.filter((f) => !hidden.has(f.layer))
   const draw = data.draw
   const byId = new Map(data.features.map((f) => [f.id, f]))
+  // The writer's own shapes. `generated` comes from the server's own ledger rule, so
+  // this is the same answer the regeneration uses when deciding what is its to replace.
+  const mine = data.features.filter((f) => !f.generated)
   // A fictional world's coordinates are whatever the writer drew them as, so the frame is
   // derived from the content rather than assumed. Worked out on the server: the client
   // used to spread every coordinate into `Math.min(...xs)`, which past about sixty-five
@@ -183,9 +248,15 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
       <div className="map-wrap"
            style={groundShown ? { background: OPEN_WATER } : undefined}>
         <svg className="map-svg" viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
-             {...pan.handlers} role="img"
+             // While the tool is open a click places a corner rather than starting a
+             // drag: a surface that pans under the cursor cannot be drawn on. The wheel
+             // still zooms, because drawing at one scale is how a border goes wrong.
+             {...(drawing ? { onWheel: pan.handlers.onWheel } : pan.handlers)}
+             onClick={drawing ? place : undefined}
+             style={drawing ? { cursor: 'crosshair' } : undefined}
+             role="img"
              aria-label={`Map of the world on ${day}, coloured by ${mode.replace(/_/g, ' ')}`}>
-          <g transform={pan.transform}>
+          <g ref={surface} transform={pan.transform}>
             {/* The ground first of all. Everything else is drawn over it, which is the
                 whole point: a coastline that is a stroke on a flat fill reads as a
                 diagram, and the same stroke over lit relief reads as a coast. */}
@@ -261,6 +332,7 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
               <Name key={label.key} label={label} />
             ))}
             {plan && <ProposalOverlay plan={plan} accepted={accepted} />}
+            {drawing && <InProgress drawing={drawing} />}
           </g>
         </svg>
 
@@ -298,6 +370,68 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
           <button onClick={pan.reset} style={{ marginTop: 4 }}>Reset view</button>
         </div>
       </div>
+
+      {/* Drawing it yourself (§66). The generator is built entirely around honouring
+          what the writer drew — it refuses to redraw a region they outlined and grows
+          the coastline to fit their borders — and until now nothing could draw one. */}
+      <div className="toolbar" style={{ marginTop: 12 }}>
+        <span className="small muted">Draw</span>
+        {DRAWABLE.map((what) => (
+          <button key={what.key}
+                  className={choosing?.key === what.key ? 'active' : ''}
+                  onClick={() => {
+                    setDrawing(null)
+                    setChosen(null)
+                    setChoosing(choosing?.key === what.key ? null : what)
+                  }}>
+            {what.label}
+          </button>
+        ))}
+        {choosing && (
+          <>
+            <EntityPicker label="" chosen={chosen}
+                          onChoose={(entity) => {
+                            setChosen(entity)
+                            if (entity) {
+                              setDrawing({ what: choosing, entity, points: [] })
+                              setChoosing(null)
+                            }
+                          }} />
+            <span className="small muted">whose {choosing.label} is it?</span>
+          </>
+        )}
+        {drawing && (
+          <>
+            <span className="small">
+              <strong>{drawing.entity.name}</strong> — {drawing.what.hint}{' '}
+              {drawing.points.length} placed.
+            </span>
+            <button className="active" disabled={!isFinishable(drawing)}
+                    onClick={() => void save()}>Done</button>
+            <button onClick={() => setDrawing({ ...drawing,
+                                                points: drawing.points.slice(0, -1) })}
+                    disabled={!drawing.points.length}>Undo a corner</button>
+            <button onClick={() => setDrawing(null)}>Cancel</button>
+          </>
+        )}
+      </div>
+      {drawError && <div className="error-box small">{drawError}</div>}
+
+      {/* What they have drawn, and the way to rub one out. Only their own shapes: the
+          map's are managed by accepting or rejecting a proposal. */}
+      {mine.length > 0 && (
+        <Panel title="Drawn by you" count={mine.length}>
+          {mine.map((f) => (
+            <div key={f.id} className="entity-line">
+              <button className="name" style={{ border: 0, background: 'none' }}
+                      onClick={() => onSelect(f.entity_id)}>{f.name}</button>
+              <Badge>{f.kind}</Badge>
+              <span className="desc">on {f.layer}</span>
+              <button className="danger" onClick={() => void erase(f.id)}>rub out</button>
+            </div>
+          ))}
+        </Panel>
+      )}
 
       {/* §34: grow the map from what the regions already say about themselves. */}
       <div className="toolbar" style={{ marginTop: 12 }}>
@@ -393,6 +527,33 @@ interface ReliefBounds {
   width: number
   height: number
   updated_at: string
+}
+
+/**
+ * The shape as it is being drawn.
+ *
+ * Corners as well as the line between them, because a writer placing the fourth corner
+ * of a border needs to see the three they have already placed — a bare polyline shows
+ * where the shape is going and not where it has been.
+ */
+function InProgress({ drawing }: { drawing: Drawing }) {
+  const points = drawing.points
+  if (!points.length) return null
+  const path = points.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x},${y}`).join(' ')
+  return (
+    <g className="map-drawing" pointerEvents="none">
+      {points.length > 1 && (
+        <path d={drawing.what.kind === 'polygon' ? `${path} Z` : path}
+              fill={drawing.what.kind === 'polygon' ? 'var(--map-border)' : 'none'}
+              fillOpacity={0.18} stroke="var(--map-border)" strokeWidth={2}
+              strokeDasharray="6 4" strokeLinejoin="round" />
+      )}
+      {points.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={4} fill="var(--map-contested)"
+                stroke="var(--panel)" strokeWidth={1.5} />
+      ))}
+    </g>
+  )
 }
 
 /** The deep end of the relief renderer's own sea ramp, so the two meet without a seam. */

@@ -46,6 +46,11 @@ LAND = {"plain": 1.0, "hill": 0.75, "mountain": 0.45, "forest": 0.7,
         "marsh": 0.5, "desert": 0.8, "water": 0.0}
 WATER = {"water": 1.0}
 
+# The ways that are sailed rather than walked. Named here because this is where the
+# distinction is *used* — a medium missing from this set is routed over dry ground,
+# scores zero against water, and drops out of every journey without an error anywhere.
+SAILED = ("river", "sea", "canal")
+
 PROFILES: dict[str, TransportProfile] = {
     p.key: p
     for p in (
@@ -147,7 +152,7 @@ class Router:
         for segment in self.segments:
             if not segment.usable_on(day, season):
                 continue
-            if transport.water != (segment.medium in ("river", "sea", "canal")):
+            if transport.water != (segment.medium in SAILED):
                 continue
             speed = transport.speed_on(segment.terrain, segment.quality)
             if speed <= 0:

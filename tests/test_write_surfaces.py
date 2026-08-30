@@ -157,6 +157,68 @@ class TestASecretCanBeRecordedAndKnown:
                    for line in context["secrets"])
 
 
+class TestTheBookItselfCanBeMade:
+    """The half of §43 the previous commit left open.
+
+    A scene could be *placed in* a chapter and nothing could make one, so the scene
+    form's "where it sits in the book" field appeared for the seeded demo and for
+    nobody else — the writer could see the shape of something they could not use.
+    """
+
+    def test_a_book_and_its_chapters(self, client):
+        book = client.post("/api/works", json={"title": "The Iron Road"}).json()
+        client.post("/api/chapters", json={"work_id": book["id"], "title": "The Ford"})
+        client.post("/api/chapters", json={"work_id": book["id"], "title": "The Keep",
+                                           "position": 1})
+        listed = client.get("/api/works").json()
+        made = next(w for w in listed if w["title"] == "The Iron Road")
+        assert [c["title"] for c in made["chapters"]] == ["The Ford", "The Keep"]
+
+    def test_the_book_shows_what_is_written_in_it(self, client):
+        """The only useful question about a manuscript is what is in it, in order."""
+        book = client.post("/api/works", json={"title": "The Iron Road"}).json()["id"]
+        chapter = client.post("/api/chapters", json={
+            "work_id": book, "title": "The Ford"}).json()["id"]
+        client.post("/api/scenes", json={"title": "At the ford", "chapter_id": chapter,
+                                         "position": 1})
+        client.post("/api/scenes", json={"title": "Before the ford",
+                                         "chapter_id": chapter, "position": 0})
+        client.post("/api/scenes", json={"title": "Loose"})
+        written = next(w for w in client.get("/api/works").json()
+                       if w["title"] == "The Iron Road")
+        assert [s["title"] for s in written["chapters"][0]["scenes"]] == [
+            "Before the ford", "At the ford"]
+        assert written["loose_scenes"] >= 1
+
+    def test_a_chapter_of_a_book_that_does_not_exist_is_refused(self, client):
+        answer = client.post("/api/chapters", json={"work_id": "nope", "title": "One"})
+        assert answer.status_code == 404
+        assert "no such book" in answer.json()["detail"]
+
+    def test_a_book_with_no_title_is_refused(self, client):
+        assert client.post("/api/works", json={"title": "   "}).status_code == 422
+
+    def test_making_a_book_undoes_like_everything_else(self, client, world):
+        """§59. A writer who mistypes a title presses Ctrl+Z and expects it gone —
+        and until this had a route nobody could make one by accident, so nobody
+        found out that `add_work` never wrote to the revision log at all."""
+        before = len(world.works())
+        client.post("/api/works", json={"title": "Wrong Title"})
+        assert any(w["title"] == "Wrong Title" for w in world.works())
+        world.undo()
+        assert len(world.works()) == before
+        assert not any(w["title"] == "Wrong Title" for w in world.works())
+
+    def test_undoing_a_chapter_leaves_the_book_it_was_in(self, client, world):
+        """Undo is a stack, so this is the chapter's own action coming back off it."""
+        book = client.post("/api/works", json={"title": "The Iron Road"}).json()["id"]
+        chapter = client.post("/api/chapters", json={
+            "work_id": book, "title": "The Ford"}).json()["id"]
+        world.undo()
+        assert any(w["id"] == book for w in world.works())
+        assert not any(c["id"] == chapter for c in world.chapters())
+
+
 class TestASceneCanGoInTheBook:
     def test_a_scene_can_be_placed_in_a_chapter(self, client, world):
         work = world.add_work("The Iron Road")

@@ -103,6 +103,13 @@ export interface Vocabulary {
   scales: { key: string; label: string; steps: string }[]
   succession_laws: { key: string; label: string; description: string }[]
   transport_profiles: { key: string; label: string; description: string }[]
+  /** Served rather than spelled again here: a form offering a word the server refuses
+   *  produces errors nobody can act on, and one missing a word it takes hides a
+   *  feature that exists. (§58, §20/§21.) */
+  source_kinds: { key: string; label: string }[]
+  route_media: string[]
+  route_sailed: string[]
+  route_terrains: string[]
 }
 
 export interface WorldState {
@@ -123,6 +130,8 @@ export interface MapFeature {
   layer: string
   style: Record<string, unknown>
   approximate: boolean
+  /** Whose shape this is. False means the writer drew it themselves (§66). */
+  generated: boolean
   control: Record<string, { id: string; name: string }[]>
 }
 
@@ -469,6 +478,8 @@ export interface FactDraft {
   secrecy?: string
   strength?: string | null
   note?: string
+  /** Where it came from (§58). */
+  source_id?: string | null
 }
 
 /* ---- questions (§49) ---------------------------------------------------- */
@@ -547,6 +558,21 @@ export interface SavedQuery {
   query: QueryShape
 }
 
+/**
+ * A shape the writer drew (§66).
+ *
+ * No `props`: provenance is the server's to write. A client able to set it could stamp
+ * its own drawing as generated and have the next run sweep the writer's coastline away.
+ */
+export interface DrawnShape {
+  entity_id: string
+  kind: 'point' | 'line' | 'polygon'
+  coordinates: number[] | number[][] | number[][][]
+  layer?: string
+  style?: Record<string, unknown>
+  approximate?: boolean
+}
+
 /* ---- titles and secrets ------------------------------------------------- */
 
 export interface TitleDraft {
@@ -594,6 +620,35 @@ export interface Chapter {
   title: string
   position: number
   summary: string
+}
+
+/** Somewhere a fact came from (§58). */
+export interface Source {
+  id: string
+  kind: string
+  label: string
+  label_kind: string
+  detail: string
+  scene_id: string | null
+}
+
+/** A book, its chapters, and what is written in each (§43). */
+export interface Work {
+  id: string
+  title: string
+  kind: string
+  position: number
+  summary: string
+  chapters: WorkChapter[]
+  loose_scenes: number
+}
+
+export interface WorkChapter {
+  id: string
+  title: string
+  position: number
+  summary: string
+  scenes: { id: string; title: string; day: number | null; position: number }[]
 }
 
 export interface SceneDraft {
@@ -774,10 +829,49 @@ export const api = {
   ask: (query: QueryShape) => send<QueryAnswer>('/query', 'POST', { query }),
   queryVocabulary: () => get<QueryVocabulary>('/query/vocabulary'),
   chapters: () => get<Chapter[]>('/chapters'),
+
+  /* ---- the writer's own roads (§20, §21) --------------------------------- */
+  layRoad: (body: {
+    from_entity_id: string; to_entity_id: string; length: number
+    medium?: string; quality?: number; terrain?: string
+    closed_seasons?: string[]; danger?: string
+  }) => send<{ id: string }>('/segments', 'POST', body),
+  eraseRoad: (id: string) => send<void>(`/segments/${id}`, 'DELETE'),
+
+  /* ---- a world that need not be medieval Europe (§60) -------------------- */
+  addEntityType: (body: {
+    key: string; label: string; plural?: string; category?: string; icon?: string
+  }) => send<{ key: string }>('/vocabulary/entity-types', 'POST', body),
+  addPredicate: (body: {
+    key: string; label: string; kind?: string; inverse_key?: string | null
+    symmetric?: boolean; transitive?: boolean; category?: string; description?: string
+  }) => send<{ key: string }>('/vocabulary/predicates', 'POST', body),
+
+  /* ---- naming a moment on the timeline (§80) ---------------------------- */
+  nameTheDay: (name: string, day: number, note = '') =>
+    send<{ id: string }>('/snapshots', 'POST', { name, day, note }),
+  forgetTheDay: (id: string) => send<void>(`/snapshots/${id}`, 'DELETE'),
+
+  /* ---- citing where a fact came from (§58) ------------------------------ */
+  sources: () => get<Source[]>('/sources'),
+  addSource: (label: string, kind: string, detail = '') =>
+    send<Source>('/sources', 'POST', { label, kind, detail }),
+
+  /* ---- the manuscript (§43) -------------------------------------------- */
+  works: () => get<Work[]>('/works'),
+  addWork: (title: string, kind = 'novel') =>
+    send<{ id: string }>('/works', 'POST', { title, kind }),
+  addChapter: (workId: string, title: string, position = 0) =>
+    send<{ id: string }>('/chapters', 'POST',
+                         { work_id: workId, title, position }),
   savedQueries: () => get<SavedQuery[]>('/queries'),
   saveQuery: (name: string, query: QueryShape, note = '') =>
     send<SavedQuery>('/queries', 'POST', { name, note, query }),
   forgetQuery: (key: string) => send<void>(`/queries/${key}`, 'DELETE'),
+
+  /* ---- drawing on your own map (§66) ------------------------------------ */
+  draw: (shape: DrawnShape) => send<{ id: string }>('/geometry', 'POST', shape),
+  erase: (geometryId: string) => send<void>(`/geometry/${geometryId}`, 'DELETE'),
 
   /* ---- the write surfaces for §8 and §6 --------------------------------- */
   createTitle: (draft: TitleDraft) => send<{ id: string }>('/titles', 'POST', draft),

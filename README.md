@@ -166,8 +166,7 @@ Three things are tested in ways worth mentioning:
 ## Scope
 
 Implemented: the entity and relationship model with custom types — structurally, through
-the same rows the built-ins use, though a writer still adds one through the API or the CLI
-rather than a screen — temporal facts,
+the same rows the built-ins use, and added from a screen of their own — temporal facts,
 world-state-at-date, genealogy with legal/biological/adoptive parentage, twelve succession
 laws with hypotheticals, the four-way territorial distinction (§11), layered temporal maps,
 the relationship graph, the pedigree, events and causal chains, layered knowledge and

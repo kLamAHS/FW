@@ -16,7 +16,7 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api'
 import type {
-  CalendarInfo, Chapter, Entity, EntityDraft, EventDraft, SceneDraft,
+  CalendarInfo, Chapter, Entity, EntityDraft, EventDraft, SceneDraft, Source,
   Vocabulary,
 } from '../api'
 import { useAsync, useDebounced } from './common'
@@ -306,6 +306,7 @@ export function EntityForm(
 
 const SECRECY_LEVELS = ['public', 'known', 'discreet', 'secret', 'deep_secret'] as const
 
+
 export function FactForm(
   { subject, vocabulary, calendar, onDone, onCancel }:
   {
@@ -330,8 +331,16 @@ export function FactForm(
   const [secrecy, setSecrecy] = useState('public')
   const [from, setFrom] = useState<CivilDraft>(EMPTY_DATE)
   const [note, setNote] = useState('')
+  const [source, setSource] = useState('')
+  const [sources, setSources] = useState<Source[]>([])
+  const [newSource, setNewSource] = useState<{ label: string; kind: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // §58: the citation was rendered on every fact line before anything could make one.
+  useEffect(() => {
+    void api.sources().then(setSources).catch(() => setSources([]))
+  }, [])
 
   const predicate = vocabulary.predicates.find((p) => p.key === predicateKey)
   const isRelationship = predicate?.kind === 'rel'
@@ -346,6 +355,18 @@ export function FactForm(
       return []
     }
   })()
+
+  const keepSource = async () => {
+    if (!newSource?.label.trim()) return
+    try {
+      const made = await api.addSource(newSource.label.trim(), newSource.kind)
+      setSources(await api.sources())
+      setSource(made.id)
+      setNewSource(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
 
   const submit = async () => {
     if (busy) return
@@ -363,6 +384,7 @@ export function FactForm(
         secrecy,
         valid_from: await resolveDate(from),
         note: note.trim(),
+        source_id: source || null,
       })
       onDone()
     } catch (err) {
@@ -434,6 +456,42 @@ export function FactForm(
         <div className="small muted">A note (optional)</div>
         <input value={note} onChange={(e) => setNote(e.target.value)}
                placeholder="Why, or how it came to be" />
+      </label>
+
+      {/* §58. A picker with nothing in it is the half-finished shape this whole
+          commit exists to remove, so a source can be made from right here. */}
+      <label className="field">
+        <div className="small muted">Where this came from (§58)</div>
+        {newSource ? (
+          <div className="toolbar">
+            <input autoFocus value={newSource.label} placeholder="Chapter 3 draft"
+                   onChange={(e) => setNewSource({ ...newSource, label: e.target.value })} />
+            <select value={newSource.kind}
+                    onChange={(e) => setNewSource({ ...newSource, kind: e.target.value })}>
+              {vocabulary.source_kinds.map((k) => (
+                <option key={k.key} value={k.key}>{k.label}</option>
+              ))}
+            </select>
+            <button className="active" disabled={!newSource.label.trim()}
+                    onClick={() => void keepSource()}>Add it</button>
+            <button onClick={() => setNewSource(null)}>Cancel</button>
+          </div>
+        ) : (
+          <select value={source}
+                  onChange={(e) => {
+                    if (e.target.value === '+') {
+                      setNewSource({ label: '', kind: 'author_note' })
+                    } else {
+                      setSource(e.target.value)
+                    }
+                  }}>
+            <option value="">not cited</option>
+            {sources.map((s) => (
+              <option key={s.id} value={s.id}>{s.label} — {s.label_kind}</option>
+            ))}
+            <option value="+">a source you have not recorded yet…</option>
+          </select>
+        )}
       </label>
 
       {error && <div className="error-box">{error}</div>}

@@ -76,6 +76,9 @@ class FactIn(BaseModel):
     secrecy: str = "public"
     strength: str | None = None
     note: str = ""
+    # Where it came from (§58). `assert_fact` has taken this since the first migration
+    # and the fact line has rendered it since the last commit; the form could not set it.
+    source_id: str | None = None
 
 
 class DateOut(BaseModel):
@@ -211,6 +214,25 @@ class MapOut(BaseModel):
     draw: dict[str, Any] = {}
 
 
+class GeometryIn(BaseModel):
+    """A shape the writer drew themselves (§66).
+
+    Deliberately has no `props` field. `props` is the machine-readable provenance that
+    tells a regeneration which shapes are its own to replace — a client able to set it
+    could stamp the writer's own coastline as generated and have the next run sweep it
+    away. Style is theirs; provenance is the server's.
+    """
+
+    entity_id: str
+    kind: str                       # point | line | polygon
+    coordinates: Any
+    layer: str = "regions"
+    style: dict[str, Any] = Field(default_factory=dict)
+    approximate: bool = False
+    valid_from: int | None = None
+    valid_to: int | None = None
+
+
 class QueryIn(BaseModel):
     """A question, as the form built it (§49). See `fw.core.query.language`."""
 
@@ -267,6 +289,96 @@ class KnowledgeIn(BaseModel):
     acquired_from: str | None = None
     scene_id: str | None = None
     note: str = ""
+
+
+# The manuscript (§43). `work` and `chapter` have been in the schema since the first
+# migration, and the previous commit taught a scene to sit in a chapter — while leaving
+# no way to make one, so the "where it sits in the book" field was invisible in every
+# world but the demo. A half-finished feature is worse than an absent one: the writer
+# sees the shape of something they cannot use.
+
+class WorkIn(BaseModel):
+    title: str
+    kind: str = "novel"        # novel, novella, short story, series…
+    position: int = 0
+    summary: str = ""
+
+
+class ChapterIn(BaseModel):
+    work_id: str
+    title: str
+    position: int = 0
+    summary: str = ""
+
+
+# Where a fact came from (§58). The table and `assert_fact`'s `source_id` have been in
+# the schema since the first migration, and the previous commit taught every fact line
+# to render its citation — for citations nothing could create. The kinds are the ones
+# §58 names.
+
+# §60: "Users should be able to customize almost everything… avoid locking the software
+# to European medieval fantasy." Both writers already existed and were reachable only
+# from Python or the CLI, so the one thing standing between this application and a
+# science-fiction or a nomadic-steppe world was a form.
+
+class EntityTypeIn(BaseModel):
+    key: str
+    label: str
+    plural: str = ""
+    category: str = "other"
+    icon: str = ""
+
+
+class PredicateIn(BaseModel):
+    key: str
+    label: str
+    kind: str = "rel"                  # rel (points at something) | prop (a value)
+    inverse_key: str | None = None     # §77: name it once, see it on both pages
+    symmetric: bool = False
+    transitive: bool = False
+    datatype: str = "text"
+    category: str = "other"
+    description: str = ""
+
+
+# A road the writer knows about and the generator never drew (§20, §21). `route_segment`
+# has carried medium, quality, terrain, seasonal closures, danger and a toll holder since
+# the geo engine was written, and the only things that ever created one were the map
+# generator and the seed — so the Travel view could not answer for a road the writer had
+# in their head.
+
+class SegmentIn(BaseModel):
+    from_entity_id: str
+    to_entity_id: str
+    length: float
+    medium: str = "road"
+    quality: float = 1.0
+    terrain: str = "plain"
+    entity_id: str | None = None       # the road itself, if it is a named thing
+    built_on: int | None = None
+    ruined_on: int | None = None
+    closed_seasons: list[str] = Field(default_factory=list)
+    danger: str = "low"
+    toll_holder_id: str | None = None
+
+
+class SnapshotIn(BaseModel):
+    """A name for a moment on the timeline (§80).
+
+    "Before the Red War" is how a writer holds a date; 81400 is not. The timeline has
+    rendered these as chips since it was written and only the seed could make one.
+    """
+
+    name: str
+    day: int
+    note: str = ""
+
+
+class SourceIn(BaseModel):
+    label: str
+    kind: str = "author_note"
+    detail: str = ""
+    scene_id: str | None = None
 
 
 class SceneIn(BaseModel):

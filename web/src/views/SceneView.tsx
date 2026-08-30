@@ -14,6 +14,7 @@ import { api } from '../api'
 import type { CalendarInfo } from '../api'
 import { Badge, ErrorBox, Loading, Panel, useAsync } from '../components/common'
 import { Modal, SceneForm } from '../components/forms'
+import { Manuscript } from './scenes/Manuscript'
 
 interface Props {
   onSelect: (id: string) => void
@@ -24,6 +25,7 @@ interface Props {
 
 export function SceneView({ onSelect, version, calendar, onMutate }: Props) {
   const scenes = useAsync(() => api.scenes(), [version])
+  const works = useAsync(() => api.works(), [version])
   const [chosen, setChosen] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const sceneId = chosen ?? scenes.data?.[0]?.id ?? null
@@ -45,6 +47,10 @@ export function SceneView({ onSelect, version, calendar, onMutate }: Props) {
     </Modal>
   )
 
+  const book = (
+    <Manuscript works={works.data ?? []} onChange={onMutate} onOpenScene={setChosen} />
+  )
+
   if (!scenes.data?.length) {
     return (
       <>
@@ -52,6 +58,7 @@ export function SceneView({ onSelect, version, calendar, onMutate }: Props) {
           This world has no scenes yet.{' '}
           <button onClick={() => setCreating(true)}>Write the first one</button>
         </p>
+        {book}
         {creator}
       </>
     )
@@ -71,6 +78,7 @@ export function SceneView({ onSelect, version, calendar, onMutate }: Props) {
         <button onClick={() => setCreating(true)}>+ New scene</button>
       </div>
       {creator}
+      {book}
 
       {context.loading && <Loading what="Gathering what matters here" />}
       {context.error ? <ErrorBox error={context.error} /> : null}

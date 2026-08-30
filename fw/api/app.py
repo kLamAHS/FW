@@ -12,7 +12,9 @@ nothing else.
 
 from __future__ import annotations
 
+import math
 import sqlite3
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -29,9 +31,12 @@ from fw.core.derive.hierarchy import GROUP_TYPES, Hierarchy
 from fw.core.derive.scene_context import SceneContextEngine
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
+from fw.core.geo.routing import LAND as ROUTING_LAND
 from fw.core.geo.routing import PROFILES, Router
+from fw.core.geo.routing import SAILED as ROUTING_SAILED
 from fw.core.library import Library, LibraryError
 from fw.core.mapgen import cartography, ledger
+from fw.core.mapgen import drafts as MG_DRAFTS
 from fw.core.mapgen import plan as MG
 from fw.core.mapgen.generate import generate_map
 from fw.core.model.vocabulary import (
@@ -226,7 +231,59 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 {"key": k, "label": v.label, "description": v.description}
                 for k, v in PROFILES.items()
             ],
+            # Served rather than spelled again in the client: a form offering a word the
+            # server refuses is a form that produces errors nobody can act on, and a
+            # form missing a word the server takes hides a feature that exists.
+            "source_kinds": [{"key": k, "label": v}
+                             for k, v in SOURCE_KINDS.items()],
+            "route_media": list(SEGMENT_MEDIA),
+            "route_sailed": list(ROUTING_SAILED),
+            "route_terrains": list(SEGMENT_TERRAINS),
         }
+
+    # §60. The README has said, accurately, that this works "through the API or the CLI
+    # rather than a screen". Both writers were there all along; a world that is not a
+    # medieval European kingdom needed a Python prompt to say so.
+
+    @app.post("/api/vocabulary/entity-types", status_code=201)
+    def create_entity_type(payload: S.EntityTypeIn) -> dict[str, Any]:
+        key = _checked_key(payload.key)
+        label = payload.label.strip()
+        if not label:
+            raise HTTPException(422, "a kind of thing needs a name to call it by")
+        if world.db.one("SELECT id FROM entity_type WHERE project_id = ? AND key = ?",
+                        (world.project_id, key)):
+            raise HTTPException(409, f"this world already has a {key!r}")
+        world.add_entity_type(key, label, plural=payload.plural.strip(),
+                              category=payload.category.strip() or "other",
+                              icon=payload.icon.strip())
+        return {"key": key, "label": label}
+
+    @app.post("/api/vocabulary/predicates", status_code=201)
+    def create_predicate(payload: S.PredicateIn) -> dict[str, Any]:
+        key = _checked_key(payload.key)
+        label = payload.label.strip()
+        if not label:
+            raise HTTPException(422, "a relationship needs a name to call it by")
+        if payload.kind not in ("rel", "prop"):
+            raise HTTPException(
+                422, "a predicate either points at something ('rel') or holds a "
+                     "value ('prop')")
+        known = {p["key"] for p in world.db.query(
+            "SELECT key FROM predicate WHERE project_id = ?", (world.project_id,))}
+        if key in known:
+            raise HTTPException(409, f"this world already has a {key!r}")
+        # §77: the inverse is what puts the fact on the other entity's page too. A name
+        # for a predicate that does not exist would put it on nobody's.
+        if payload.inverse_key and payload.inverse_key not in known:
+            raise HTTPException(
+                404, f"there is no {payload.inverse_key!r} to be the other side of it")
+        world.add_predicate(
+            key, label, kind=payload.kind, inverse_key=payload.inverse_key,
+            symmetric=payload.symmetric, transitive=payload.transitive,
+            datatype=payload.datatype, category=payload.category.strip() or "other",
+            description=payload.description)
+        return {"key": key, "label": label}
 
     @app.get("/api/date/{day}", response_model=S.DateOut)
     def get_date(day: int) -> S.DateOut:
@@ -314,6 +371,24 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             {**s, "date": _date_out(world, s["day"]).model_dump()}
             for s in world.snapshots()
         ]
+
+    @app.post("/api/snapshots", status_code=201)
+    def create_snapshot(payload: S.SnapshotIn) -> dict[str, Any]:
+        name = payload.name.strip()
+        if not name:
+            raise HTTPException(422, "a moment needs a name to be remembered by")
+        snapshot_id = world.add_snapshot(name, payload.day, note=payload.note)
+        return {"id": snapshot_id, "name": name, "day": payload.day,
+                "date": _date_out(world, payload.day).model_dump()}
+
+    @app.delete("/api/snapshots/{snapshot_id}", status_code=204)
+    def forget_snapshot(snapshot_id: str) -> Response:
+        """Take the name back off. The day, and everything true on it, stays."""
+        try:
+            world.delete_snapshot(snapshot_id)
+        except WorldError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return Response(status_code=204)
 
     # ---- entities ---------------------------------------------------------
 
@@ -450,6 +525,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             value=payload.value, valid_from=payload.valid_from,
             valid_to=payload.valid_to, confidence=payload.confidence,
             secrecy=payload.secrecy, strength=payload.strength, note=payload.note,
+            source_id=_checked_source(world, payload.source_id),
         )
         return _fact_out(world, fact)
 
@@ -526,6 +602,43 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         return S.MapOut(day=at, layers=layers, features=features,
                         draw=drawn.as_dict())
 
+    @app.post("/api/geometry", status_code=201)
+    def draw_a_shape(payload: S.GeometryIn) -> dict[str, Any]:
+        """Draw something on the map yourself (§66).
+
+        The principle the whole generator is built around — `_authored_outlines` refuses
+        to redraw a region the writer drew, the coastline grows around their borders,
+        their castles are pinned where they put them — and until now nothing could make
+        such a shape, so that entire branch was reachable only for the seeded world.
+
+        What comes back carries no provenance, which is exactly what makes
+        `ledger.is_generated` say False: the next run treats it as truth, builds around
+        it, and never retires it.
+        """
+        if world.get_entity(payload.entity_id) is None:
+            raise HTTPException(404, f"no entity {payload.entity_id}")
+        if payload.layer not in MAP_LAYERS:
+            raise HTTPException(
+                422, f"nothing draws on a layer called {payload.layer!r} "
+                     f"(the layers are: {', '.join(MAP_LAYERS)})")
+        coordinates = _checked_shape(payload.kind, payload.coordinates)
+        drawn = world.add_geometry(
+            payload.entity_id, payload.kind, coordinates,
+            layer=payload.layer, style=payload.style,
+            approximate=payload.approximate,
+            valid_from=payload.valid_from, valid_to=payload.valid_to)
+        return {"id": drawn.id, "entity_id": drawn.entity_id, "kind": drawn.kind,
+                "layer": drawn.layer, "coordinates": drawn.coordinates}
+
+    @app.delete("/api/geometry/{geometry_id}", status_code=204)
+    def erase_a_shape(geometry_id: str) -> Response:
+        """Rub one out. Undoable like everything else, and it takes its R*Tree box."""
+        try:
+            world.delete_geometry(geometry_id)
+        except WorldError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        return Response(status_code=204)
+
     @app.post("/api/map/plan")
     def plan_the_map(payload: S.PlanMapIn) -> dict[str, Any]:
         """Work out a map and return it without writing a thing (§66).
@@ -547,6 +660,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         )
         current = holder.get()
         proposal = plan_map(current, brief)
+        _remember_the_ground(current, proposal)
         # Labelled the same way the accepted map will be: a writer choosing between a
         # proposal and what they have needs the two drawn alike (§66).
         return {**proposal.to_dict(),
@@ -559,13 +673,14 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         from fw.core.mapgen.apply import PlanStale, apply_plan
         from fw.core.mapgen.decide import Decision, DecisionSet
 
-        plan = MG.MapPlan.from_dict(payload.plan)
+        current = holder.get()
+        plan = _with_the_ground(current, MG.MapPlan.from_dict(payload.plan))
         answers = DecisionSet(plan_id=plan.plan_id, decisions=tuple(
             Decision(feature_id=d.feature_id, accept=d.accept, name=d.name,
                      pinned=d.pinned)
             for d in payload.decisions))
         try:
-            report = apply_plan(holder.get(), plan, answers)
+            report = apply_plan(current, plan, answers)
         except PlanStale as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return report.as_dict()
@@ -902,9 +1017,81 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         return {"id": scene.id, "title": scene.title, "day": scene.day}
 
     @app.get("/api/chapters")
-    def list_chapters() -> list[dict[str, Any]]:
+    def list_chapters(work_id: str | None = None) -> list[dict[str, Any]]:
         """The book, so a scene can be put in it rather than only in the world."""
-        return world.chapters()
+        return world.chapters(work_id)
+
+    @app.get("/api/sources")
+    def list_sources() -> list[dict[str, Any]]:
+        """Everywhere the writer has cited (§58)."""
+        return [{**row, "label_kind": SOURCE_KINDS.get(row["kind"], row["kind"])}
+                for row in world.sources()]
+
+    @app.post("/api/sources", status_code=201)
+    def create_source(payload: S.SourceIn) -> dict[str, Any]:
+        label = payload.label.strip()
+        if not label:
+            raise HTTPException(422, "a source needs something to call it")
+        if payload.kind not in SOURCE_KINDS:
+            raise HTTPException(
+                422, "a source can be " + _in_words(sorted(SOURCE_KINDS)))
+        if payload.scene_id and world.get_scene(payload.scene_id) is None:
+            raise HTTPException(404, "there is no such scene to cite")
+        source_id = world.add_source(label, kind=payload.kind,
+                                     detail=payload.detail,
+                                     scene_id=payload.scene_id)
+        return {"id": source_id, "label": label, "kind": payload.kind}
+
+    @app.get("/api/works")
+    def list_works() -> list[dict[str, Any]]:
+        """The manuscripts, each with its chapters and what is written in them (§43).
+
+        The world and the book are the same project seen twice: a writer keeps notes on
+        Greenhollow so they can write chapter nine, and the point of the scene table is
+        to sit between the two. Returned nested rather than as three flat lists because
+        the only useful question is "what is in this book, in order".
+        """
+        scenes = world.scenes()
+        chapters = world.chapters()
+        by_chapter: dict[str, list[dict[str, Any]]] = {}
+        for scene in scenes:
+            if scene.chapter_id:
+                by_chapter.setdefault(scene.chapter_id, []).append(
+                    {"id": scene.id, "title": scene.title, "day": scene.day,
+                     "position": scene.position})
+        return [{
+            "id": work["id"], "title": work["title"], "kind": work["kind"],
+            "position": work["position"], "summary": work["summary"],
+            "chapters": [{
+                "id": chapter["id"], "title": chapter["title"],
+                "position": chapter["position"], "summary": chapter["summary"],
+                "scenes": sorted(by_chapter.get(chapter["id"], []),
+                                 key=lambda s: (s["position"], s["day"] or 0)),
+            } for chapter in chapters if chapter["work_id"] == work["id"]],
+            "loose_scenes": sum(1 for s in scenes if not s.chapter_id),
+        } for work in world.works()]
+
+    @app.post("/api/works", status_code=201)
+    def create_work(payload: S.WorkIn) -> dict[str, Any]:
+        title = payload.title.strip()
+        if not title:
+            raise HTTPException(422, "a book needs a title")
+        work_id = world.add_work(title, kind=payload.kind.strip() or "novel",
+                                 position=payload.position,
+                                 summary=payload.summary)
+        return {"id": work_id, "title": title}
+
+    @app.post("/api/chapters", status_code=201)
+    def create_chapter(payload: S.ChapterIn) -> dict[str, Any]:
+        title = payload.title.strip()
+        if not title:
+            raise HTTPException(422, "a chapter needs a title")
+        if not any(w["id"] == payload.work_id for w in world.works()):
+            raise HTTPException(404, "there is no such book to put a chapter in")
+        chapter_id = world.add_chapter(payload.work_id, title,
+                                       position=payload.position,
+                                       summary=payload.summary)
+        return {"id": chapter_id, "title": title, "work_id": payload.work_id}
 
     @app.post("/api/events", status_code=201)
     def create_event(payload: S.EventIn) -> dict[str, Any]:
@@ -1277,6 +1464,59 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                         "type_key": entity.type_key})
         return out
 
+    @app.post("/api/segments", status_code=201)
+    def create_segment(payload: S.SegmentIn) -> dict[str, Any]:
+        """Lay a road, river or crossing the map never drew (§20, §21).
+
+        The travel engine has always been able to route over these; only the generator
+        and the seed could make one, so a writer whose story turns on the old ford road
+        could ask for a journey along it and be told there was no way through.
+        """
+        _require_entities(payload.from_entity_id, payload.to_entity_id,
+                          payload.entity_id, payload.toll_holder_id)
+        if payload.from_entity_id == payload.to_entity_id:
+            raise HTTPException(422, "a road has to go somewhere else")
+        if payload.length <= 0 or not math.isfinite(payload.length):
+            raise HTTPException(422, "a road needs a length greater than nothing")
+        if not 0 < payload.quality <= 1:
+            raise HTTPException(
+                422, "quality runs from just above 0 (a rutted track) to 1 (a paved road)")
+        if payload.medium not in SEGMENT_MEDIA:
+            raise HTTPException(422, "a way can be " + _in_words(sorted(SEGMENT_MEDIA)))
+        if payload.terrain not in SEGMENT_TERRAINS:
+            raise HTTPException(422,
+                                "the ground can be " + _in_words(sorted(SEGMENT_TERRAINS)))
+        # A boat on a plain scores zero against every profile and vanishes from every
+        # route without a word — the exact defect the generator shipped for sea lanes.
+        wet = payload.medium in ROUTING_SAILED
+        if wet != (payload.terrain == "water"):
+            raise HTTPException(
+                422, f"a {payload.medium} runs over "
+                     f"{'water' if wet else 'dry ground'}, so its ground must "
+                     f"{'be' if wet else 'not be'} 'water' — otherwise no traveller "
+                     f"can use it and nothing will say why")
+        try:
+            segment = world.add_route_segment(
+                payload.from_entity_id, payload.to_entity_id, payload.length,
+                medium=payload.medium, quality=payload.quality,
+                terrain=payload.terrain, entity_id=payload.entity_id,
+                built_on=payload.built_on, ruined_on=payload.ruined_on,
+                closed_seasons=payload.closed_seasons, danger=payload.danger,
+                toll_holder_id=payload.toll_holder_id)
+        except WorldError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return {"id": segment.id, "from_entity_id": segment.from_entity_id,
+                "to_entity_id": segment.to_entity_id, "medium": segment.medium,
+                "length": segment.length}
+
+    @app.delete("/api/segments/{segment_id}", status_code=204)
+    def erase_segment(segment_id: str) -> Response:
+        try:
+            world.delete_route_segment(segment_id)
+        except WorldError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return Response(status_code=204)
+
     @app.get("/api/route", response_model=S.RouteOut)
     def get_route(
         origin_id: str,
@@ -1388,6 +1628,174 @@ def _entity_out(entity) -> S.EntityOut:
         exists_to=entity.exists_to, confidence=entity.confidence,
         tags=list(entity.tags),
     )
+
+
+# The surface the last proposed map was drawn from, kept for the apply that follows it.
+#
+# A plan crosses to the client and back as JSON, and its terrain — around three quarters
+# of a megabyte of floats, which the client never looks at — is deliberately not on that
+# wire. But `apply_plan` stores that surface as the ground the accepted map stands on, so
+# a plan returning from a browser used to arrive with `terrain=None` and write a map with
+# nothing underneath it: every relief the *application* accepted was flat, and only worlds
+# built from Python ever had lit mountains. The seeded demo hid it, because its ground is
+# written by the seed script.
+#
+# One slot, because the shape of the operation is propose-then-accept and the accept
+# follows its own proposal. A miss is not a wrong answer, only a slower one.
+_LAST_GROUND: tuple[tuple[str, str, str], Any] | None = None
+
+
+def _remember_the_ground(world: World, plan) -> None:
+    global _LAST_GROUND
+    if plan.terrain is not None and plan.terrain.fields:
+        _LAST_GROUND = ((world.project_id, world.branch_id, plan.plan_id), plan.terrain)
+
+
+def _with_the_ground(world: World, plan):
+    """The plan, with the heightfield the wire could not carry put back on it.
+
+    A plan is a pure function of the world and the brief, so the surface can always be
+    had again: the one this server computed is kept, and on a miss it is worked out
+    afresh and used only if it proves to be the same plan.
+    """
+    if plan.terrain is not None and plan.terrain.fields:
+        return plan
+    want = (world.project_id, world.branch_id, plan.plan_id)
+    if _LAST_GROUND is not None and _LAST_GROUND[0] == want:
+        return replace(plan, terrain=_LAST_GROUND[1])
+
+    from fw.core.mapgen.pipeline import plan_map
+
+    again = plan_map(world, plan.brief)
+    if again.plan_id != plan.plan_id or again.terrain is None:
+        # The world moved under the plan. Its own surface is gone and this one belongs
+        # to a different map, so the plan is written as the writer saw it and whatever
+        # ground is already stored is left alone — better a map over the old mountains
+        # than one over mountains that were never proposed.
+        return plan
+    _remember_the_ground(world, again)
+    return replace(plan, terrain=again.terrain)
+
+
+# What a way between two places can be, and what it runs over (§20, §21). Mirrors
+# `routing.LAND`/`WATER`, which is where a terrain has to be known for anything to move
+# along it — a segment over ground no profile scores is a road nobody can use.
+def _checked_key(raw: str) -> str:
+    """The key a writer typed, or a sentence about why it cannot be one.
+
+    Keys are what facts are stored against and what a saved question refers to, so they
+    are the one part of a custom type that cannot be renamed later without rewriting
+    every row that used it. Kept to the shape the built-in ones already have.
+    """
+    key = raw.strip().lower().replace(" ", "_").replace("-", "_")
+    if not key:
+        raise HTTPException(422, "it needs a key — a short word to store it under")
+    if not key.replace("_", "").isalnum() or not key[0].isalpha():
+        raise HTTPException(
+            422, f"{raw!r} cannot be a key: use letters, digits and underscores, "
+                 f"starting with a letter — like 'star_system' or 'orbits'")
+    if len(key) > 64:
+        raise HTTPException(422, "that key is too long to live on every fact")
+    return key
+
+
+# The wet media come from the router itself rather than being spelled again here: it
+# decides whether a segment is sailed or walked by testing exactly that set, so a word
+# offered here that it did not know (a ferry, say) would be routed over dry ground,
+# score zero against water, and drop out of every journey without an error anywhere.
+SEGMENT_MEDIA = ("road", "track", "pass") + ROUTING_SAILED
+SEGMENT_TERRAINS = tuple(ROUTING_LAND)      # already carries "water"
+
+
+# What a source can be (§58, which names these five). Kept here rather than in the core
+# because it is a vocabulary the API offers a form, not a rule the world model enforces —
+# `source.kind` is a free TEXT column and an imported world may carry anything.
+SOURCE_KINDS = {
+    "author_note": "an author's note",
+    "chapter": "a chapter",
+    "manuscript_scene": "a scene in the manuscript",
+    "historical_document": "a document from inside the world",
+    "timeline_event": "something on the timeline",
+}
+
+
+def _checked_source(world: World, source_id: str | None) -> str | None:
+    """The cited source, or a 404 saying there is no such thing.
+
+    `fact.source_id` is ON DELETE SET NULL rather than a hard constraint, so a bad id
+    would be written and then silently render as no citation at all — a fact the writer
+    believes they sourced and which says nothing.
+    """
+    if source_id and world.get_source(source_id) is None:
+        raise HTTPException(404, "there is no such source to cite")
+    return source_id
+
+
+def _in_words(items) -> str:
+    """"a, b or c" — an error a writer can act on rather than a set literal."""
+    items = list(items)
+    if len(items) < 2:
+        return "".join(items)
+    return ", ".join(items[:-1]) + " or " + items[-1]
+
+
+# The layers the client can draw on and knows how to paint. A shape on a layer nobody
+# renders is a shape the writer cannot see, which reads to them as a lost drawing.
+MAP_LAYERS = MG_DRAFTS.LAYERS
+
+# How many vertices one drawn shape may carry. Generous — a hand-drawn coastline is a
+# few hundred — and finite, because the R*Tree box is computed over every one of them
+# and a runaway client should not be able to make the file unopenable.
+MOST_VERTICES = 4000
+
+
+def _checked_shape(kind: str, coordinates: Any) -> Any:
+    """The writer's shape, or a sentence saying what is wrong with it.
+
+    Every number is checked for being finite as well as numeric. A NaN reaches the
+    R*Tree index, which stores it happily and then answers every bounding-box query
+    wrongly forever — a corruption with no error message anywhere near its cause.
+    """
+    if kind == "point":
+        return list(_points(coordinates, want=1, what="A point", kind=kind))[0]
+    if kind == "line":
+        return [list(p) for p in _points(coordinates, want=2, what="A line", kind=kind)]
+    if kind == "polygon":
+        rings = coordinates if isinstance(coordinates, list) else []
+        if not rings or not all(isinstance(r, list) for r in rings):
+            raise HTTPException(422, "A polygon is a list of rings, and this has none")
+        out = []
+        for n, ring in enumerate(rings):
+            points = list(_points(ring, want=3, kind=kind,
+                                  what=("The outline" if n == 0 else f"Hole {n}")))
+            # Closed by the server rather than demanded of the client: a writer clicking
+            # the last corner has finished the shape, and asking them to click the first
+            # one again is asking them to know how polygons are stored.
+            if points[0] != points[-1]:
+                points.append(points[0])
+            out.append([list(p) for p in points])
+        return out
+    raise HTTPException(422, f"A shape is a point, a line or a polygon, not {kind!r}")
+
+
+def _points(raw: Any, *, want: int, what: str, kind: str):
+    if not isinstance(raw, list) or len(raw) < want:
+        raise HTTPException(
+            422, f"{what} needs at least {want} point{'s' if want > 1 else ''}, "
+                 f"and this has {len(raw) if isinstance(raw, list) else 0}")
+    if kind == "point" and raw and isinstance(raw[0], (int, float)):
+        raw = [raw]                      # a bare [x, y] is one point, not two numbers
+    if len(raw) > MOST_VERTICES:
+        raise HTTPException(422, f"{what} has {len(raw)} points, and {MOST_VERTICES} "
+                                 "is as many as one shape may carry")
+    for point in raw:
+        if (not isinstance(point, (list, tuple)) or len(point) != 2
+                or not all(isinstance(v, (int, float))
+                           and not isinstance(v, bool)
+                           and math.isfinite(v) for v in point)):
+            raise HTTPException(
+                422, f"{what} has a corner that is not two ordinary numbers: {point!r}")
+        yield (float(point[0]), float(point[1]))
 
 
 def _fact_out(world: World, fact) -> S.FactOut:

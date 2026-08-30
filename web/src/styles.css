@@ -633,3 +633,20 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
 .findings li.warning { border-left-color: var(--error); }
 /* The proposal is drawn dashed and translucent: it is not the map yet. */
 .proposal-overlay { pointer-events: none; }
+
+/* The book (§43): a book, its chapters, and what is written in them. */
+.manuscript-work { padding: 6px 0; border-top: 1px solid var(--line-soft); }
+.manuscript-work:first-of-type { border-top: 0; }
+.manuscript-work ol { margin: 4px 0; }
+.manuscript-work ol > li { list-style: decimal; margin-left: 14px; }
+/* The book is the heading; its chapters sit under it. Without this the chapter
+   titles read louder than the book they are in. */
+.manuscript-work > .entity-line > .name.serif { font-size: 17px; }
+
+/* §80: a named moment, and the way to stop calling it that. */
+.snapshot-chip { display: inline-flex; align-items: stretch; }
+.snapshot-chip .forget { padding: 0 5px; border-left: 0; color: var(--muted);
+                         border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.snapshot-chip > button:first-child { border-top-right-radius: 0;
+                                      border-bottom-right-radius: 0; }
+.snapshots .name-this { color: var(--muted); border-style: dashed; }

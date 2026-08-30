@@ -57,6 +57,15 @@ class TestFromProseToAMapYouCanRead:
         regions = describe(fresh)
         client = TestClient(create_app(fresh))
 
+        # --- what the writer drew themselves comes first (§66) -------------
+        # The generator is built around honouring this: it refuses to redraw a region
+        # they outlined and grows the coastline to fit. Drawn before the plan, so the
+        # rest of the walk happens on a map that had to build around it.
+        theirs = client.post("/api/geometry", json={
+            "entity_id": regions["Greenhollow"], "kind": "polygon",
+            "layer": "regions",
+            "coordinates": [[[60, 60], [300, 60], [300, 300], [60, 300]]]}).json()["id"]
+
         # --- the map is proposed, not written (§66) ------------------------
         before = len(fresh.geometries())
         plan = client.post("/api/map/plan",
@@ -93,6 +102,15 @@ class TestFromProseToAMapYouCanRead:
         for feature in drawn["features"]:
             assert not any(str(v).startswith("#")
                            for v in (feature["style"] or {}).values())
+
+        # The border they drew is still theirs, and the ground the map was accepted
+        # onto came with it — a plan crosses to the client and back, and used to lose
+        # its heightfield on the way, so every map the application accepted drew flat.
+        assert any(g.id == theirs for g in fresh.geometries(layer="regions"))
+        assert "Greenhollow" not in {f["name"] for f in plan["features"]
+                                     if f["kind"] == "region"}
+        assert client.get("/api/map/relief").json()["available"], \
+            "the map was accepted onto no ground"
 
         # --- the world the map made is a world (§49) -----------------------
         answer = client.post("/api/query", json={"query": {
@@ -131,6 +149,17 @@ class TestFromProseToAMapYouCanRead:
             "observer_id": lord.id, "secret_id": secret["id"], "stance": "knows"})
         assert any(s["name"] == "The charter is forged"
                    for s in client.get("/api/secrets").json())
+
+        # --- and the book the whole world is for (§43) ---------------------
+        book = client.post("/api/works", json={"title": "The Iron Road"}).json()["id"]
+        chapter = client.post("/api/chapters", json={
+            "work_id": book, "title": "The Ford"}).json()["id"]
+        client.post("/api/scenes", json={
+            "title": "The reckoning at Greenhollow", "chapter_id": chapter,
+            "participants": [lord.id]})
+        written = next(w for w in client.get("/api/works").json() if w["id"] == book)
+        assert [s["title"] for s in written["chapters"][0]["scenes"]] == [
+            "The reckoning at Greenhollow"]
 
         # --- nothing the map did upset the writer's own world --------------
         complaints = check(fresh)

@@ -34,6 +34,7 @@ import { AskView } from './views/AskView'
 import { TravelView } from './views/TravelView'
 import { ContinuityView, EntitiesView, EventsView } from './views/BrowseView'
 import { GroupsView } from './views/GroupsView'
+import { VocabularyView } from './views/VocabularyView'
 
 const VIEWS = [
   { key: 'dashboard', label: 'World' },
@@ -48,6 +49,9 @@ const VIEWS = [
   { key: 'ask', label: 'Ask' },
   { key: 'entities', label: 'Everything' },
   { key: 'continuity', label: 'Checks' },
+  // §60: the vocabulary the world is described in, which was reachable only from a
+  // Python prompt or the CLI.
+  { key: 'vocabulary', label: 'Your words' },
 ] as const
 
 export function App() {
@@ -55,14 +59,18 @@ export function App() {
   const bump = () => setVersion((v) => v + 1)
 
   const world = useAsync(() => api.world(), [version])
-  // Gated on the world being open: on the launcher these would only 409.
+  // Gated on the world being open: on the launcher these would only 409. Both also
+  // follow `version`, because both are now things the writer can add to — a custom kind
+  // of thing (§60) and a named moment (§80). Keyed on the boolean alone they were fetched
+  // once and never again, so what the writer had just made was missing from the screen
+  // they made it on until they reloaded the page.
   const vocabulary = useAsync(
     () => (world.data ? api.vocabulary() : Promise.resolve(null)),
-    [world.data !== null],
+    [world.data !== null, version],
   )
   const snapshots = useAsync(
     () => (world.data ? api.snapshots() : Promise.resolve(null)),
-    [world.data !== null],
+    [world.data !== null, version],
   )
   const [view, setView] = useState<string>('dashboard')
   const [day, setDay] = useState<number | null>(null)
@@ -201,10 +209,13 @@ export function App() {
         world={world.data}
         day={currentDay}
         onChange={setDay}
-        snapshots={(snapshots.data ?? []).map((s) => ({ name: s.name, day: s.day }))}
+        snapshots={(snapshots.data ?? []).map(
+          (s) => ({ id: s.id, name: s.name, day: s.day }))}
         dateText={dateText}
         season={date.data?.season ?? null}
         onEditEras={() => setEditingEras(true)}
+        onName={(name) => void api.nameTheDay(name, currentDay).then(bump)}
+        onForget={(id) => void api.forgetTheDay(id).then(bump)}
       />
 
       <div className="main">
@@ -253,6 +264,9 @@ export function App() {
           )}
           {view === 'continuity' && (
             <ContinuityView onSelect={setSelected} version={version} />
+          )}
+          {view === 'vocabulary' && (
+            <VocabularyView vocabulary={vocabulary.data} onMutate={bump} />
           )}
         </main>
 
