@@ -51,8 +51,15 @@ interface Props {
 
 export function MapView({ day, onSelect, selectedId, version, onMutate }: Props) {
   const [mode, setMode] = useState<ControlMode>('legally_owns')
+  // §94: whose eyes. Empty is the map from nowhere, which is what the writer sees until
+  // they ask for somebody's — a perspective is a lens over the world, never the world.
+  const [seenAs, setSeenAs] = useState('')
   const { data, error, loading } = useAsync(
-    () => api.map(day, undefined, mode), [day, version, mode])
+    () => api.map(day, undefined, mode, seenAs || null), [day, version, mode, seenAs])
+  const eyes = useAsync(() => api.perspectives(), [version])
+  const theirView = useAsync(
+    () => (seenAs ? api.perspective(seenAs, day) : Promise.resolve(null)),
+    [seenAs, day, version])
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   const [showLabels, setShowLabels] = useState(true)
   const [generating, setGenerating] = useState(false)
@@ -75,6 +82,7 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   const [choosing, setChoosing] = useState<Drawable | null>(null)
   const [chosen, setChosen] = useState<Entity | null>(null)
   const [drawError, setDrawError] = useState<string | null>(null)
+  const [sketch, setSketch] = useState(true)
   // The transformed group, so a click can be turned into world units by the browser's
   // own matrix rather than by arithmetic of ours that would drift from it.
   const surface = useRef<SVGGElement | null>(null)
@@ -147,6 +155,12 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
         layer: drawing.what.layer,
         coordinates: coordinatesOf(drawing),
         style: { role: drawing.what.role },
+        // §92. The whole dashed-edge machinery — column, wire shape, stroke, legend
+        // line — was plumbed through to pixels for the generator's guesses, and the
+        // writer could not say the same thing about their own. A border traced with
+        // a mouse at whatever zoom happened to be open is a sketch, so it says so
+        // until they tick it surveyed.
+        approximate: sketch,
       })
       setDrawing(null)
       onMutate()
@@ -256,6 +270,17 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
              style={drawing ? { cursor: 'crosshair' } : undefined}
              role="img"
              aria-label={`Map of the world on ${day}, coloured by ${mode.replace(/_/g, ' ')}`}>
+          {/* §69: colour must never be the only thing carrying a distinction. A
+              contested *point* has had a ring since the icons were written; a contested
+              region had nothing but its fill, so "whose country is this" was hue plus a
+              legend, and the hover title is not available to keyboard or touch. */}
+          <defs>
+            <pattern id="contested-hatch" width="8" height="8"
+                     patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="8"
+                    stroke="var(--map-contested)" strokeWidth="1.6" />
+            </pattern>
+          </defs>
           <g ref={surface} transform={pan.transform}>
             {/* The ground first of all. Everything else is drawn over it, which is the
                 whole point: a coastline that is a stroke on a flat fill reads as a
@@ -283,6 +308,16 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 >
                   <title>{describeControl(f)}</title>
                 </path>
+                {isContested(f) && (
+                  <path
+                    d={polygonPath(f.coordinates as number[][][])}
+                    fill="url(#contested-hatch)"
+                    stroke="none"
+                    pointerEvents="none"
+                  >
+                    <title>{describeControl(f)}</title>
+                  </path>
+                )}
               </g>
             ))}
 
@@ -371,6 +406,64 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
         </div>
       </div>
 
+      <div className="toolbar" style={{ marginTop: 12 }}>
+        <span className="small muted">Colour by</span>
+        {CONTROL_MODES.map((m) => (
+          <button key={m.key} className={mode === m.key ? 'active' : ''}
+                  onClick={() => setMode(m.key)}>
+            {m.label}
+          </button>
+        ))}
+
+        {/* §93, §94. The list is only those who have said something — an account, a
+            claim, an ignorance — because a picker of every entity in the world would be
+            hundreds of choices that change nothing. */}
+        {(eyes.data ?? []).length > 0 && (
+          <>
+            <span className="spacer" style={{ flex: 1 }} />
+            <label className="small muted" htmlFor="map-perspective">seen by</label>
+            <select id="map-perspective" value={seenAs}
+                    onChange={(e) => setSeenAs(e.target.value)}>
+              <option value="">nobody in particular</option>
+              {(eyes.data ?? []).map((who) => (
+                <option key={who.id} value={who.id}>{who.name}</option>
+              ))}
+            </select>
+          </>
+        )}
+      </div>
+
+      {/* §67: a view that quietly altered the map would be the purest black box, so it
+          says whose it is and exactly what it changes. */}
+      {seenAs && (
+        <Panel title={`As ${data?.seen_as_name || 'they'} see${
+                 data?.seen_as_name ? 's' : ''} it`}>
+          <div className="toolbar">
+            <span className="small muted">
+              Places they have never heard of are missing, they are called what this
+              party calls them, and ground they claim is shown as theirs.
+            </span>
+            <span className="spacer" style={{ flex: 1 }} />
+            <button onClick={() => setSeenAs('')}>Back to the world itself</button>
+          </div>
+          <ul className="clean small" style={{ marginTop: 6 }}>
+            {(theirView.data?.differences ?? []).map((d, i) => (
+              <li key={i} className="difference">
+                <Badge>{d.kind}</Badge> {d.text}
+                {d.evidence[0] && (
+                  <div className="muted" style={{ marginLeft: 6 }}>{d.evidence[0]}</div>
+                )}
+              </li>
+            ))}
+          </ul>
+          {(theirView.data?.differences ?? []).length === 0 && (
+            <p className="muted small">
+              Nothing they have said changes this map yet.
+            </p>
+          )}
+        </Panel>
+      )}
+
       {/* Drawing it yourself (§66). The generator is built entirely around honouring
           what the writer drew — it refuses to redraw a region they outlined and grows
           the coastline to fit their borders — and until now nothing could draw one. */}
@@ -406,6 +499,11 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
               <strong>{drawing.entity.name}</strong> — {drawing.what.hint}{' '}
               {drawing.points.length} placed.
             </span>
+            <label className="small" title="A dashed edge is a shape you mean roughly">
+              <input type="checkbox" checked={sketch}
+                     onChange={(e) => setSketch(e.target.checked)} />{' '}
+              roughly
+            </label>
             <button className="active" disabled={!isFinishable(drawing)}
                     onClick={() => void save()}>Done</button>
             <button onClick={() => setDrawing({ ...drawing,
@@ -479,16 +577,6 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
           </ul>
         </Panel>
       )}
-
-      <div className="toolbar" style={{ marginTop: 12 }}>
-        <span className="small muted">Colour by</span>
-        {CONTROL_MODES.map((m) => (
-          <button key={m.key} className={mode === m.key ? 'active' : ''}
-                  onClick={() => setMode(m.key)}>
-            {m.label}
-          </button>
-        ))}
-      </div>
 
       {/* The key. Built from what is actually on this map rather than from a fixed
           list, so a world with no castles is never told to look for one. */}
@@ -704,6 +792,12 @@ function Swatch({ swatch, role }: { swatch: string; role: string }) {
     </svg>
   )
 }
+
+/** Somebody claims this ground and somebody else holds it (§11, §69). */
+function isContested(feature: MapFeature): boolean {
+  return ((feature.control ?? {}).claims ?? []).length > 0
+}
+
 
 function describeControl(f: MapFeature | undefined): string {
   if (!f) return ''

@@ -28,6 +28,7 @@ from fw.core.calendar.kernel import CalendarError
 from fw.core.continuity.engine import ContinuityEngine, Severity
 from fw.core.derive.dependency import DependencyAnalyst
 from fw.core.derive.hierarchy import GROUP_TYPES, Hierarchy
+from fw.core.derive.perspective import Perspective, who_can_be_one
 from fw.core.derive.scene_context import SceneContextEngine
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
@@ -372,6 +373,39 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             for s in world.snapshots()
         ]
 
+    # ---- whose world is this? (§93, §94) ----------------------------------
+
+    @app.get("/api/perspectives")
+    def list_perspectives() -> list[dict[str, Any]]:
+        """Everybody whose view of the world differs from everyone else's.
+
+        Not every entity: a picker of hundreds in which almost every choice changes
+        nothing would be worse than no picker. A party earns a place here by having said
+        something — an account, a claim, or an ignorance.
+        """
+        return who_can_be_one(world)
+
+    @app.get("/api/perspectives/{observer_id}")
+    def describe_perspective(observer_id: str, day: int | None = None) -> dict[str, Any]:
+        """What changes when you look through their eyes, and why each thing changes.
+
+        §67 refuses black boxes, and a view that quietly altered a map would be the
+        purest kind: the writer has to be able to see that House Marr's map differs
+        *because* House Marr claims the Northmarch — and to disagree.
+        """
+        at = day if day is not None else app.state.present_day
+        seen = _seen_by(world, observer_id, at)
+        return {
+            "observer_id": observer_id,
+            "observer_name": _name_of(world, observer_id),
+            "day": at,
+            "differences": [
+                {"text": f.text, "kind": f.kind, "weight": f.weight,
+                 "evidence": list(f.evidence), "entity_ids": list(f.entity_ids)}
+                for f in seen.differences()
+            ],
+        }
+
     @app.get("/api/interpretations")
     def list_interpretations(event_id: str | None = None, entity_id: str | None = None,
                              holder_id: str | None = None) -> list[dict[str, Any]]:
@@ -587,30 +621,48 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     # ---- world state (§3, §36) --------------------------------------------
 
     @app.get("/api/state", response_model=S.StateOut)
-    def get_state(day: int, include_secret: bool = True) -> S.StateOut:
+    def get_state(day: int, include_secret: bool = True,
+                  seen_as: str | None = Query(None, alias="as")) -> S.StateOut:
+        """What was true on one day — objectively, or as far as one party knows (§94)."""
+        seen = _seen_by(world, seen_as, day)
         state = world.state_at(day, include_secret=include_secret)
+        entities = [e for e in state.entities.values() if seen.sees(e.id)]
+        known = {e.id for e in entities}
         return S.StateOut(
             day=day,
             date=_date_out(world, day),
-            entities=[_entity_out(e) for e in state.entities.values()],
-            facts=[_fact_out(world, f) for f in state.facts],
+            entities=[_entity_out(e).model_copy(
+                          update={"name": seen.name_for(e.id, e.name)})
+                      for e in entities],
+            facts=[_fact_out(world, f) for f in state.facts
+                   if f.subject_id in known
+                   and (f.object_id is None or f.object_id in known)],
             titles=state.titles,
         )
 
     @app.get("/api/map", response_model=S.MapOut)
     def get_map(day: int | None = None, layer: str | None = None,
-                mode: str = "legally_owns", labels: bool = True) -> S.MapOut:
+                mode: str = "legally_owns", labels: bool = True,
+                seen_as: str | None = Query(None, alias="as")) -> S.MapOut:
         """§34/§35/§36: geometry for a date, with the control facts attached.
 
         Each feature carries who owns, administers, occupies, taxes and claims it on that
         day, so §11's distinction is visible on the map rather than only on entity pages.
+
+        `as` draws it through somebody's eyes (§93, §94): places they have never heard of
+        are absent, everything is labelled with their name for it, and the colouring
+        follows their claims rather than the law's. Absent, it is the map from nowhere,
+        which is what the writer sees by default.
         """
         at = day if day is not None else app.state.present_day
+        seen = _seen_by(world, seen_as, at)
         features = []
         for geometry in world.geometries(at=at, layer=layer):
             entity = world.get_entity(geometry.entity_id)
             if entity is None or not entity.exists_on(at):
                 continue
+            if not seen.sees(entity.id):
+                continue        # §93: they have never heard of this place
             control = {}
             for fact in world.facts_where(object_id=entity.id, at=at):
                 if fact.predicate_key in ("legally_owns", "administers", "occupies",
@@ -620,10 +672,15 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                         control.setdefault(fact.predicate_key, []).append({
                             "id": whose.id, "name": whose.name,
                         })
+            if not seen.objective and seen.claims(entity.id):
+                # §94's territorial claims. Their claim is substituted into whatever
+                # authority the map is showing, so the disagreement is rendered rather
+                # than described — and the rest of the world still looks like itself.
+                control = {**control, mode: seen.holder_of(entity.id, control, mode)}
             features.append({
                 "id": geometry.id,
                 "entity_id": entity.id,
-                "name": entity.name,
+                "name": seen.name_for(entity.id, entity.name),
                 "type_key": entity.type_key,
                 "kind": geometry.kind,
                 "coordinates": geometry.coordinates,
@@ -643,7 +700,8 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         drawn = cartography.draw(features, mode=mode, ground=extent, label=labels,
                                  world_name=world.name)
         return S.MapOut(day=at, layers=layers, features=features,
-                        draw=drawn.as_dict())
+                        draw=drawn.as_dict(),
+                        seen_as=seen_as, seen_as_name=_name_of(world, seen_as))
 
     @app.post("/api/geometry", status_code=201)
     def draw_a_shape(payload: S.GeometryIn) -> dict[str, Any]:
@@ -1772,6 +1830,18 @@ def _checked_source(world: World, source_id: str | None) -> str | None:
     if source_id and world.get_source(source_id) is None:
         raise HTTPException(404, "there is no such source to cite")
     return source_id
+
+
+def _seen_by(world: World, observer_id: str | None, day: int) -> Perspective:
+    """The reading for `?as=`, or the view from nowhere when it is absent (§94).
+
+    A perspective that named nobody real would silently render the objective world under
+    a banner claiming otherwise, which is worse than an error: the writer would believe
+    they were looking at House Marr's map.
+    """
+    if observer_id and world.get_entity(observer_id) is None:
+        raise HTTPException(404, "there is nobody by that name to see the world as")
+    return Perspective(world, observer_id, day)
 
 
 def _checked_fact(world: World, fact_id: str | None) -> str | None:

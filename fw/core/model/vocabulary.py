@@ -259,6 +259,13 @@ PREDICATES: tuple[PredicateDef, ...] = (
 
     # -- knowledge and events (§6, §31)
     _rel("knows_about", "knows about", "known_by", category="knowledge"),
+    # §93's fog of knowledge, said as a fact rather than a column so it is dated,
+    # undoable, branch-aware and askable like everything else. Ignorance is the
+    # exception a writer records, not the default the software assumes: a perspective
+    # that hid everything not explicitly granted would show an empty map.
+    _rel("unaware_of", "has never heard of", "unknown_to", category="knowledge",
+         description="§93: what this observer does not know exists. End the fact on "
+                     "the day they find out."),
     _rel("participated_in", "participated in", "had_participant", category="history"),
     _rel("witnessed", "witnessed", "was_witnessed_by", category="history"),
     _rel("killed", "killed", "killed_by", category="history"),

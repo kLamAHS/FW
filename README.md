@@ -198,13 +198,24 @@ borders that follow where the towns stop reaching, and a name for everything it 
 Nothing is written until the writer accepts it, feature by feature, with the case for each
 one in a sentence (§66, §67).
 
+And it can be read through somebody's eyes (§93, §94). The same battle is told three ways
+and the same man is called two things — §33's `interpretation`, which had a table and no
+reader — and a perspective joins that to §11's claims and to what a party has never heard
+of, so House Orren's map shows the Northmarch as theirs, House Marr's list calls Prince
+Oren the Pretender, and a place Lady Mara does not know about is simply not on her map.
+Ignorance is opt-in: a world nobody has annotated renders exactly as it did before, because
+§93 asks for this *optionally* and a lens that hid everything unstated would be useless.
+The objective world is one click away, and the view says exactly what it changed and why
+(§67) rather than quietly altering a map.
+
 Deliberately not yet built, and reachable because of the decisions above:
 
-- **Perspective and fog-of-knowledge maps (§93, §94).** Knowledge attaches to secrets, not
-  yet to geometry or labels.
 - **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
   features (§103) and plugins (§102).
 - **Prose.** Scenes carry metadata and context, not manuscript text.
+- **Perspective outside the map.** The map, the world state and the entity list can be
+  read through one party's eyes; the graph, the pedigree and the timeline are still the
+  view from nowhere.
 
 ## The brief's own principles
 

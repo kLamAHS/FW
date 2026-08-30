@@ -218,6 +218,10 @@ class MapOut(BaseModel):
     # How to draw it: the frame, the labels, the icons and the key, worked out on the
     # server so the same map is labelled the same way whatever is looking at it.
     draw: dict[str, Any] = {}
+    # Whose eyes this was drawn through (§94), so the client can say so plainly rather
+    # than showing an altered map that looks like the objective one.
+    seen_as: str | None = None
+    seen_as_name: str = ""
 
 
 class GeometryIn(BaseModel):

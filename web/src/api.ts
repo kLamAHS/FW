@@ -197,6 +197,9 @@ export interface MapData {
   layers: string[]
   features: MapFeature[]
   draw: DrawPlan
+  /** Whose eyes this was drawn through (§94) — empty for the map from nowhere. */
+  seen_as: string | null
+  seen_as_name: string
 }
 
 export interface GraphData {
@@ -626,6 +629,24 @@ export interface Chapter {
   summary: string
 }
 
+/** Somebody whose view of the world differs from everyone else's (§94). */
+export interface Perspective {
+  id: string
+  name: string
+  type_key: string
+  because: string
+}
+
+export interface PerspectiveDetail {
+  observer_id: string
+  observer_name: string
+  day: number
+  differences: {
+    text: string; kind: string; weight: number
+    evidence: string[]; entity_ids: string[]
+  }[]
+}
+
 /** What one party says about an event or a person (§33, §94). */
 export interface Interpretation {
   id: string
@@ -868,6 +889,11 @@ export const api = {
     send<{ id: string }>('/snapshots', 'POST', { name, day, note }),
   forgetTheDay: (id: string) => send<void>(`/snapshots/${id}`, 'DELETE'),
 
+  /* ---- whose world is this? (§93, §94) ---------------------------------- */
+  perspectives: () => get<Perspective[]>('/perspectives'),
+  perspective: (id: string, day?: number) =>
+    get<PerspectiveDetail>(`/perspectives/${id}`, { day }),
+
   /* ---- the same thing, told differently (§33, §94) ----------------------- */
   interpretations: (params?: {
     event_id?: string; entity_id?: string; holder_id?: string
@@ -919,8 +945,8 @@ export const api = {
 
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
-  map: (day?: number, layer?: string, mode?: string) =>
-    get<MapData>('/map', { day, layer, mode }),
+  map: (day?: number, layer?: string, mode?: string, as?: string | null) =>
+    get<MapData>('/map', { day, layer, mode, as: as ?? undefined }),
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),
