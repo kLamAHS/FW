@@ -156,6 +156,10 @@ class SuccessionOut(BaseModel):
 
 class ViolationOut(BaseModel):
     rule_key: str
+    # What the check is called, in the writer's language. Without it the client showed
+    # `rule_key` — a machine's name, and the thing a suppression is filed under, so
+    # renaming a check for clarity meant changing what every dismissal was keyed by.
+    label: str = ""
     severity: str
     message: str
     entity_ids: list[str]

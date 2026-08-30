@@ -265,7 +265,65 @@ class TestContinuityEngine:
         effect = world.add_event("The effect", start_day=world.day(200))
         world.link_cause(cause.id, effect.id)
         report = ContinuityEngine(world).run()
-        assert any(v.rule_key == "event_before_place_founded" for v in report.errors)
+        assert any(v.rule_key == "effect_precedes_cause" for v in report.errors)
+
+    def test_a_what_if_s_causality_is_not_canon_s_problem(self, world: World):
+        """§105. This rule read `causal_link` by project alone — the only rule that
+        composed its own SQL rather than going through `branch_scope`.
+
+        The events are on *canon* and only the link is on the branch, which is the case
+        where the leak actually bit: with both events on the branch, canon's own
+        `events()` does not contain them and the missing-event guard masked it. So the
+        writer plays out a what-if in which the effect came first, and canon — which
+        records no such link — reports the contradiction.
+        """
+        cause = world.add_event("The cause", start_day=world.day(300))
+        effect = world.add_event("The effect", start_day=world.day(200))
+        world.create_branch("what-if")
+        alt = world.on_branch("what-if")
+        alt.link_cause(cause.id, effect.id)
+
+        assert any(v.rule_key == "effect_precedes_cause"
+                   for v in ContinuityEngine(alt).run().errors)
+        assert not any(v.rule_key == "effect_precedes_cause"
+                       for v in ContinuityEngine(world).run().errors)
+
+    def test_the_writer_reads_a_sentence_not_a_machine_s_name(self, world: World):
+        """`rule_key` was what the client showed under every violation — so renaming a
+        check for clarity was a change to what the writer reads *and* to what their
+        dismissals are filed under, which is why the two were entangled at all."""
+        from fastapi.testclient import TestClient
+
+        from fw.api.app import create_app
+
+        cause = world.add_event("The cause", start_day=world.day(300))
+        effect = world.add_event("The effect", start_day=world.day(200))
+        world.link_cause(cause.id, effect.id)
+        shown = TestClient(create_app(world)).get("/api/continuity").json()
+        row = next(v for v in shown["violations"]
+                   if v["rule_key"] == "effect_precedes_cause")
+        assert row["label"] == "An event predates its own cause"
+
+    def test_a_dismissal_survives_the_check_being_renamed(self, world: World):
+        """The key is hashed *into* the fingerprint, so a suppression cannot be carried
+        by rewriting the column: the row would move and the hash would not, and it would
+        then match under neither name. Carried by the rule instead, and re-filed on the
+        first match so the stale row is never consulted again."""
+        cause = world.add_event("The cause", start_day=world.day(300))
+        effect = world.add_event("The effect", start_day=world.day(200))
+        world.link_cause(cause.id, effect.id)
+
+        found = next(v for v in ContinuityEngine(world).run().errors
+                     if v.rule_key == "effect_precedes_cause")
+        # A dismissal as a world written before the rename would hold it.
+        was = "event_before_place_founded"
+        world.suppress(was, found.fingerprint_as(was), "Deliberate: it is a prophecy.")
+
+        report = ContinuityEngine(world).run()
+        assert not any(v.rule_key == "effect_precedes_cause" for v in report.errors)
+        assert report.suppressed >= 1
+        # And it healed: the dismissal is now filed under the name it will keep.
+        assert ("effect_precedes_cause", found.fingerprint) in world.suppressions()
 
     def test_two_legal_owners_at_once(self, world: World):
         """§11: administration may overlap; legal ownership may not."""

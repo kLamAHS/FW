@@ -1536,7 +1536,8 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             summary=report.summary(),
             violations=[
                 S.ViolationOut(
-                    rule_key=v.rule_key, severity=v.severity.value, message=v.message,
+                    rule_key=v.rule_key, label=report.labels.get(v.rule_key, ""),
+                    severity=v.severity.value, message=v.message,
                     entity_ids=[i for i in v.entity_ids if i], day=v.day,
                     detail=v.detail, fingerprint=v.fingerprint,
                 )

@@ -255,6 +255,9 @@ export interface Succession {
 
 export interface Violation {
   rule_key: string
+  /** What the check is called, in the writer's language. `rule_key` is a machine's
+   *  name and the identity a dismissal is filed under; it should not be on screen. */
+  label: string
   severity: 'error' | 'warning' | 'notice'
   message: string
   entity_ids: string[]

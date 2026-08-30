@@ -266,7 +266,7 @@ export function ContinuityView(
               <div style={{ flex: 1 }}>
                 <div>{v.message}</div>
                 <div className="small muted">
-                  {v.rule_key.replace(/_/g, ' ')}
+                  {v.label || v.rule_key.replace(/_/g, ' ')}
                   {v.detail && ` · ${v.detail}`}
                 </div>
                 {v.entity_ids.length > 0 && (

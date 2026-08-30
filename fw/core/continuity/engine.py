@@ -49,7 +49,17 @@ class Violation:
         Hashed from the rule and the entities involved rather than the message text, so
         rewording a message does not resurrect every violation a writer has dismissed.
         """
-        basis = f"{self.rule_key}|{'|'.join(sorted(self.entity_ids))}|{self.day}"
+        return self.fingerprint_as(self.rule_key)
+
+    def fingerprint_as(self, rule_key: str) -> str:
+        """The same identity, computed under another rule key.
+
+        The key is *inside* the hash, so a rule that is renamed cannot have its stored
+        suppressions rewritten in SQL: the column would move and the hash would not, and
+        the row would then match nothing under either name. Renaming is carried here
+        instead, by taking the old fingerprint and looking for that too.
+        """
+        basis = f"{rule_key}|{'|'.join(sorted(self.entity_ids))}|{self.day}"
         return hashlib.sha256(basis.encode()).hexdigest()[:16]
 
 
@@ -58,6 +68,10 @@ class Report:
     violations: list[Violation] = field(default_factory=list)
     suppressed: int = 0
     checked_rules: tuple[str, ...] = ()
+    #: rule key -> the sentence a writer should read. The key is the suppression's
+    #: identity and a machine's name for the check; showing it to the writer is why
+    #: renaming a rule was a user-facing change rather than a tidy-up.
+    labels: dict[str, str] = field(default_factory=dict)
 
     def by_severity(self, severity: Severity) -> list[Violation]:
         return [v for v in self.violations if v.severity is severity]
@@ -87,6 +101,11 @@ class Rule:
     key = "rule"
     label = "Rule"
     description = ""
+    #: Keys this rule has had before. A writer's dismissal is stored against the key it
+    #: was filed under and fingerprinted with it, so a rename that did not carry these
+    #: would silently resurrect every warning they had already looked at and decided was
+    #: intentional — §46's promise, quietly broken with no error anywhere.
+    legacy_keys: tuple[str, ...] = ()
 
     def check(self, ctx: Context) -> Iterator[Violation]:  # pragma: no cover
         raise NotImplementedError
@@ -607,16 +626,26 @@ class ContradictoryExclusiveControl(Rule):
                             )
 
 
-class EventOutsideParticipantLifespan(Rule):
-    key = "event_before_place_founded"
+class EffectPrecedesCause(Rule):
+    """Its label, description and body all described a cause-and-effect check; only the
+    class name and the key said something else — and the key is what the writer reads
+    under every violation, and what a dismissal is filed against."""
+
+    key = "effect_precedes_cause"
+    legacy_keys = ("event_before_place_founded",)
     label = "An event predates its own cause"
     description = "§32: an effect must not precede its cause."
 
     def check(self, ctx: Context) -> Iterator[Violation]:
         events = {e.id: e for e in ctx.world.events()}
+        # Branch-scoped like every other read. It was not: a causal link recorded on a
+        # what-if raised a violation against canon, and canon's raised one against the
+        # what-if, which is the single mistake the whole overlay model exists to prevent.
+        scope, params = ctx.world.branch_scope()
         for row in ctx.world.db.query(
-            "SELECT cause_id, effect_id FROM causal_link WHERE project_id = ?",
-            (ctx.world.project_id,),
+            f"SELECT cause_id, effect_id FROM causal_link "
+            f"WHERE project_id = ? AND ({scope} OR branch_id IS NULL)",
+            (ctx.world.project_id, *params),
         ):
             cause, effect = events.get(row["cause_id"]), events.get(row["effect_id"])
             if not cause or not effect:
@@ -653,7 +682,7 @@ DEFAULT_RULES: tuple[Rule, ...] = (
     SecretRevealedInSceneBeforeKnown(),
     FactOutlivesItsParticipants(),
     ContradictoryExclusiveControl(),
-    EventOutsideParticipantLifespan(),
+    EffectPrecedesCause(),
 )
 
 
@@ -678,20 +707,44 @@ class ContinuityEngine:
         # else (§66).
         proposals = {e.id for e in self.world.entities() if e.is_a_map_proposal}
 
+        labels: dict[str, str] = {}
         for rule in self.rules:
             for violation in rule.check(ctx):
                 if violation.severity.rank < minimum.rank:
                     continue
                 if proposals.intersection(violation.entity_ids):
                     continue
-                if (not include_suppressed
-                        and (violation.rule_key, violation.fingerprint) in suppressed):
+                if not include_suppressed and self._dismissed(
+                        rule, violation, suppressed):
                     report.suppressed += 1
                     continue
+                labels[violation.rule_key] = rule.label
                 report.violations.append(violation)
 
         report.violations.sort(key=lambda v: (-v.severity.rank, v.rule_key, v.message))
+        report.labels = labels
         return report
+
+    def _dismissed(self, rule: Rule, violation: Violation,
+                   suppressed: set[tuple[str, str]]) -> bool:
+        """Whether the writer has already looked at this and said it was intentional.
+
+        Checked under the rule's current name and under every name it has had. A match
+        on an old one is re-filed under the new key, so the lookup costs nothing the
+        second time and the stale row is simply never consulted again — which is the
+        only way to carry a rename, because the key is hashed into the fingerprint and
+        the hash's other inputs are not stored on the suppression row.
+        """
+        if (violation.rule_key, violation.fingerprint) in suppressed:
+            return True
+        for was in rule.legacy_keys:
+            if (was, violation.fingerprint_as(was)) in suppressed:
+                self.world.suppress(
+                    rule.key, violation.fingerprint,
+                    "carried over when this check was renamed")
+                suppressed.add((violation.rule_key, violation.fingerprint))
+                return True
+        return False
 
 
 def check(world: World, **kw) -> Report:
