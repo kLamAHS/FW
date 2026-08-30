@@ -30,6 +30,7 @@ from fw.core.derive.dependency import DependencyAnalyst
 from fw.core.derive.hierarchy import GROUP_TYPES, Hierarchy
 from fw.core.derive.perspective import Perspective, who_can_be_one
 from fw.core.derive.scene_context import SceneContextEngine
+from fw.core.derive.supply import SupplyAnalyst
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.genealogy.layout import layout_pedigree
 from fw.core.geo.routing import LAND as ROUTING_LAND
@@ -44,6 +45,7 @@ from fw.core.model.vocabulary import (
     CONFIDENCE_LEVELS,
     KNOWLEDGE_STANCES,
     PREDICATES_BY_KEY,
+    SCALES,
     SECRET_SEVERITIES,
 )
 from fw.core.store.db import StoreError
@@ -399,11 +401,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             "observer_id": observer_id,
             "observer_name": _name_of(world, observer_id),
             "day": at,
-            "differences": [
-                {"text": f.text, "kind": f.kind, "weight": f.weight,
-                 "evidence": list(f.evidence), "entity_ids": list(f.entity_ids)}
-                for f in seen.differences()
-            ],
+            "differences": [_finding_out(world, f) for f in seen.differences()],
         }
 
     @app.get("/api/interpretations")
@@ -1427,6 +1425,13 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             "orders": list(QY.ORDERS),
             "confidence": list(CONFIDENCE_LEVELS),
             "tags": world.all_tags(),
+            # `Condition.strength` has been in the query language and the engine all
+            # along, and the form could not offer it — so §49's own example and §18's
+            # "which regions produce grain *at high level*" were unaskable.
+            "strengths": [
+                {"key": step["value"], "label": step["label"], "scale": scale.key}
+                for scale in SCALES for step in scale.steps
+            ],
         }
 
     @app.get("/api/queries")
@@ -1545,6 +1550,49 @@ def create_app(world: World | None = None, *, library: Library | None = None,
     def suppress(payload: S.SuppressIn) -> None:
         """§46: allow intentional exceptions."""
         world.suppress(payload.rule_key, payload.fingerprint, payload.reason)
+
+    # ---- where a place gets what it does not grow (§18, §19, §42) ----------
+
+    @app.get("/api/supply/{place_id}")
+    def what_it_needs(place_id: str, day: int | None = None,
+                      profile: str = "wagon") -> dict[str, Any]:
+        """§19: everything this place says it needs, and where each could come from.
+
+        Traced rather than simulated — §68 and §116 both warn against adding economics
+        for its own sake. Nothing here computes a yield from soil and labour; it joins
+        who says they produce a thing to who says they need it, and asks the router how
+        long the journey takes on the day in question.
+        """
+        if world.get_entity(place_id) is None:
+            raise HTTPException(404, "there is no such place")
+        at = day if day is not None else app.state.present_day
+        analyst = SupplyAnalyst(world, profile=profile)
+        return {
+            "place_id": place_id,
+            "place_name": _name_of(world, place_id),
+            "day": at,
+            "profile": profile,
+            "needs": [_named_supply(world, row.as_dict())
+                      for row in analyst.needs_of(place_id, at)],
+            "depended_on_by": [_finding_out(world, f)
+                               for f in analyst.who_depends_on(place_id, at)],
+            # §86: what a house is worth, counted from what it holds rather than read
+            # off an arbitrary `prestige: high` label — which is the thing the brief
+            # says to avoid.
+            "standing": [_finding_out(world, f)
+                         for f in analyst.standing_of(place_id, at)],
+        }
+
+    @app.get("/api/supply/{place_id}/{resource_id}")
+    def where_one_thing_comes_from(place_id: str, resource_id: str,
+                                   day: int | None = None,
+                                   profile: str = "wagon") -> dict[str, Any]:
+        """The spec's own question: where does Greyhaven get its grain?"""
+        _require_entities(place_id, resource_id)
+        at = day if day is not None else app.state.present_day
+        return _named_supply(world, SupplyAnalyst(
+            world, profile=profile).where_it_comes_from(
+                place_id, resource_id, at).as_dict())
 
     # ---- travel (§22) -----------------------------------------------------
 
@@ -1842,6 +1890,28 @@ def _seen_by(world: World, observer_id: str | None, day: int) -> Perspective:
     if observer_id and world.get_entity(observer_id) is None:
         raise HTTPException(404, "there is nobody by that name to see the world as")
     return Perspective(world, observer_id, day)
+
+
+def _finding_out(world: World, finding) -> dict[str, Any]:
+    """A derived finding on the wire, with its evidence and the things it names.
+
+    The names are resolved here rather than in the client because an id is not something
+    a writer can read, and a row of identical "look at it" links is worse than no links.
+    """
+    return {
+        "text": finding.text, "weight": finding.weight, "kind": finding.kind,
+        "evidence": list(finding.evidence),
+        "entity_ids": list(finding.entity_ids),
+        "entity_names": [_name_of(world, e) for e in finding.entity_ids],
+    }
+
+
+def _named_supply(world: World, supply: dict[str, Any]) -> dict[str, Any]:
+    """The same name resolution, for the findings a supply trace carries."""
+    return {**supply,
+            "findings": [{**f, "entity_names": [_name_of(world, e)
+                                                for e in f["entity_ids"]]}
+                         for f in supply["findings"]]}
 
 
 def _checked_fact(world: World, fact_id: str | None) -> str | None:

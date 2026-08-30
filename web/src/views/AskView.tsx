@@ -115,6 +115,12 @@ export function AskView({ day, vocabulary, onSelect, version }: Props) {
   const types = vocabulary?.entity_types ?? []
   const predicates = vocabulary?.predicates ?? []
 
+  /** The steps this predicate is measured in, if it is measured at all. */
+  const scaleFor = (key: string) => {
+    const scale = predicates.find((p) => p.key === key)?.scale_key
+    return scale ? (words.data?.strengths ?? []).filter((s) => s.scale === scale) : []
+  }
+
   return (
     <>
       <Panel title="Ask the world a question">
@@ -193,6 +199,22 @@ export function AskView({ day, vocabulary, onSelect, version }: Props) {
             {!['exists', 'missing'].includes(condition.test ?? 'exists') && (
               <input value={condition.value ?? ''} placeholder="value"
                      onChange={(e) => setCondition(n, { value: e.target.value })} />
+            )}
+            {/* §5's qualitative steps. The engine has filtered on these since it was
+                written and the form could not offer them, so §49's own example — and
+                "which regions produce grain *at high level*" — were unaskable. Only
+                shown for a predicate that has a scale, because "deeply trusts" is not
+                an answer to "how much grain". */}
+            {scaleFor(condition.predicate).length > 0 && (
+              <select value={(condition.strength ?? [])[0] ?? ''}
+                      onChange={(e) => setCondition(n, {
+                        strength: e.target.value ? [e.target.value] : [],
+                      })}>
+                <option value="">any strength</option>
+                {scaleFor(condition.predicate).map((step) => (
+                  <option key={step.key} value={step.key}>{step.label}</option>
+                ))}
+              </select>
             )}
             <EntityPicker label="the other end"
                           chosen={chosen[n] ?? null}

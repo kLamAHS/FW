@@ -240,11 +240,24 @@ PREDICATES: tuple[PredicateDef, ...] = (
          description="A watercourse joining a greater one, or reaching the sea."),
 
     # -- economy (§17, §19)
-    _rel("produces", "produces", "produced_by", category="economy"),
-    _rel("consumes", "consumes", "consumed_by", category="economy"),
-    _rel("imports", "imports", "imported_by", category="economy"),
-    _rel("exports", "exports", "exported_by", category="economy"),
+    # §18's "simple mode" is `grain production: high`, and `magnitude` has spelled
+    # none/low/medium/high/very high since the first vocabulary. Without a `scale_key`
+    # the fact form hides its strength control entirely, so the seeded world contained
+    # `produces … strength="high"` that the application itself could not author.
+    _rel("produces", "produces", "produced_by", category="economy",
+         scale_key="magnitude"),
+    _rel("consumes", "consumes", "consumed_by", category="economy",
+         scale_key="magnitude"),
+    _rel("imports", "imports", "imported_by", category="economy",
+         scale_key="magnitude"),
+    _rel("exports", "exports", "exported_by", category="economy",
+         scale_key="magnitude"),
     _rel("trades_with", "trades with", symmetric=True, category="economy"),
+    # §19 wants a commodity on a route. `carries` was already *read* when the map
+    # generator collected a road's goods, and was in no vocabulary and written by
+    # nothing — a dead read three layers deep. This is the half that was missing.
+    _rel("carries", "carries", "carried_by", category="economy",
+         description="§19: what moves along this road, river or trade route."),
     _rel("depends_on", "depends on", "depended_on_by", category="economy",
          description="Systemic dependency, used by failure analysis (§85)."),
 

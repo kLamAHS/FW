@@ -398,6 +398,9 @@ export interface Finding {
   evidence: string[]
   entity_ids: string[]
   kind: string
+  /** Resolved server-side: an id is not something a writer can read, and a row of
+   *  identical "look at it" links is worse than none. */
+  entity_names?: string[]
 }
 
 export interface RouteResult {
@@ -556,6 +559,9 @@ export interface QueryVocabulary {
   orders: string[]
   confidence: string[]
   tags: string[]
+  /** §5's qualitative steps. The engine has always filtered on these and the form
+   *  could not offer them, so §49's own example was unaskable. */
+  strengths: { key: string; label: string; scale: string }[]
 }
 
 export interface SavedQuery {
@@ -627,6 +633,37 @@ export interface Chapter {
   title: string
   position: number
   summary: string
+}
+
+/** Where a place gets what it does not grow (§19, §42, §86). */
+export interface SupplySource {
+  entity_id: string
+  name: string
+  level: string
+  exports: boolean
+  days: number | null
+  distance: number | null
+  path: string[]
+  path_names: string[]
+  note: string
+}
+
+export interface SupplyNeed {
+  resource_id: string
+  resource_name: string
+  level: string
+  sources: SupplySource[]
+  findings: Finding[]
+}
+
+export interface SupplyReport {
+  place_id: string
+  place_name: string
+  day: number
+  profile: string
+  needs: SupplyNeed[]
+  depended_on_by: Finding[]
+  standing: Finding[]
 }
 
 /** Somebody whose view of the world differs from everyone else's (§94). */
@@ -888,6 +925,10 @@ export const api = {
   nameTheDay: (name: string, day: number, note = '') =>
     send<{ id: string }>('/snapshots', 'POST', { name, day, note }),
   forgetTheDay: (id: string) => send<void>(`/snapshots/${id}`, 'DELETE'),
+
+  /* ---- where a place gets what it does not grow (§19, §42, §86) --------- */
+  supply: (placeId: string, day?: number, profile?: string) =>
+    get<SupplyReport>(`/supply/${placeId}`, { day, profile }),
 
   /* ---- whose world is this? (§93, §94) ---------------------------------- */
   perspectives: () => get<Perspective[]>('/perspectives'),

@@ -208,10 +208,22 @@ Ignorance is opt-in: a world nobody has annotated renders exactly as it did befo
 The objective world is one click away, and the view says exactly what it changed and why
 (§67) rather than quietly altering a map.
 
+And it answers the question §19 asks it: *where does Greyhaven get its grain?* The facts
+were all there and nothing joined them, so the answer is a trace rather than a simulation
+— the Vale exports it, the road runs Red Ford to Greyhaven, it is 2.8 days by wagon on
+this date, and the Vale is the only source Greyhaven can reach, which is a plot. Seasonal
+closures and construction dates apply, so a supply line can be open in summer and gone in
+winter. The same reading answers §117's *“Who benefits?”*: what a house is worth is
+counted from the ground it holds, the people on it and the roads it can tax, rather than
+read off a `prestige: high` label somebody typed.
+
 Deliberately not yet built, and reachable because of the decisions above:
 
-- **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
-  features (§103) and plugins (§102).
+- **Economic simulation.** Supply is *traced* (§19) — who says they produce a thing, who
+  says they need it, and how long the road takes on the day in question — and nothing
+  computes a yield from soil, labour and rainfall. §68 and §116 both warn against adding
+  simulation for its own sake.
+- **The plausibility assistant (§73), AI features (§103) and plugins (§102).**
 - **Prose.** Scenes carry metadata and context, not manuscript text.
 - **Perspective outside the map.** The map, the world state and the entity list can be
   read through one party's eyes; the graph, the pedigree and the timeline are still the

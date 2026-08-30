@@ -674,3 +674,7 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
 /* §94: what a perspective changes, and why. */
 .difference { padding: 3px 0; }
 .difference + .difference { border-top: 1px solid var(--line-soft); }
+
+/* §19: a supply line, and the fact it was traced from. */
+.supply-finding { padding: 4px 0; }
+.supply-finding + .supply-finding { border-top: 1px solid var(--line-soft); }

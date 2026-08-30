@@ -34,6 +34,7 @@ import { AskView } from './views/AskView'
 import { TravelView } from './views/TravelView'
 import { ContinuityView, EntitiesView, EventsView } from './views/BrowseView'
 import { GroupsView } from './views/GroupsView'
+import { TradeView } from './views/TradeView'
 import { VocabularyView } from './views/VocabularyView'
 
 const VIEWS = [
@@ -45,6 +46,8 @@ const VIEWS = [
   { key: 'succession', label: 'Succession' },
   { key: 'scenes', label: 'Scenes' },
   { key: 'travel', label: 'Travel' },
+  // §19, §42: where a place gets what it does not grow, and who leans on whom.
+  { key: 'trade', label: 'Trade' },
   { key: 'groups', label: 'Groups' },
   { key: 'ask', label: 'Ask' },
   { key: 'entities', label: 'Everything' },
@@ -251,6 +254,10 @@ export function App() {
                        calendar={world.data.calendar} onMutate={bump} />
           )}
           {view === 'travel' && <TravelView day={currentDay} dateText={dateText} />}
+          {view === 'trade' && (
+            <TradeView day={currentDay} dateText={dateText} onSelect={setSelected}
+                       version={version} />
+          )}
           {view === 'groups' && (
             <GroupsView day={currentDay} onSelect={setSelected} version={version} />
           )}
