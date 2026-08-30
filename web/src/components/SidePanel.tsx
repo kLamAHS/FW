@@ -18,6 +18,7 @@ import { api } from '../api'
 import type { CalendarInfo, Fact, Finding, Vocabulary } from '../api'
 import { Badge, ErrorBox, Loading, TypeChip, useAsync } from './common'
 import { EntityForm, FactForm } from './forms'
+import { Accounts } from './Accounts'
 
 interface Props {
   entityId: string
@@ -208,6 +209,12 @@ export function SidePanel(
                   </ul>
                 </Section>
               )}
+
+              {/* §33/§94: what other parties call them. Above the change history,
+                  because "House Marr calls him the Pretender" is about the world and
+                  the history below is about the file. */}
+              <Accounts entityId={entity.id} subject={entity.name}
+                        version={version} onMutate={changed} />
 
               <ChangeHistory entityId={entity.id} onChanged={changed} />
             </>

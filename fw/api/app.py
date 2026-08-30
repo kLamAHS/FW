@@ -372,6 +372,48 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             for s in world.snapshots()
         ]
 
+    @app.get("/api/interpretations")
+    def list_interpretations(event_id: str | None = None, entity_id: str | None = None,
+                             holder_id: str | None = None) -> list[dict[str, Any]]:
+        """The same event told differently, and the same person named differently (§33).
+
+        Returned with the holder's name resolved, because "House Marr" is the whole point
+        of the row and an id is not something a writer can read.
+        """
+        return [{
+            "id": row.id, "label": row.label, "account": row.account,
+            "event_id": row.event_id, "entity_id": row.entity_id,
+            "holder_id": row.holder_id,
+            "holder_name": _name_of(world, row.holder_id),
+            "subject_name": (_name_of(world, row.entity_id) if row.entity_id
+                             else _event_name(world, row.event_id)),
+        } for row in world.interpretations(event_id=event_id, entity_id=entity_id,
+                                           holder_id=holder_id)]
+
+    @app.post("/api/interpretations", status_code=201)
+    def create_interpretation(payload: S.InterpretationIn) -> dict[str, Any]:
+        label = payload.label.strip()
+        if not label:
+            raise HTTPException(422, "an account needs something to call it")
+        if (payload.event_id is None) == (payload.entity_id is None):
+            raise HTTPException(
+                422, "an account is of one event or one thing — not both, and not neither")
+        _require_entities(payload.entity_id, payload.holder_id)
+        if payload.event_id and world.get_event(payload.event_id) is None:
+            raise HTTPException(404, "there is no such event to have an account of")
+        made = world.add_interpretation(
+            label, event_id=payload.event_id, entity_id=payload.entity_id,
+            holder_id=payload.holder_id, account=payload.account)
+        return {"id": made.id, "label": made.label}
+
+    @app.delete("/api/interpretations/{interpretation_id}", status_code=204)
+    def forget_interpretation(interpretation_id: str) -> Response:
+        try:
+            world.delete_interpretation(interpretation_id)
+        except WorldError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        return Response(status_code=204)
+
     @app.post("/api/snapshots", status_code=201)
     def create_snapshot(payload: S.SnapshotIn) -> dict[str, Any]:
         name = payload.name.strip()
@@ -526,6 +568,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             valid_to=payload.valid_to, confidence=payload.confidence,
             secrecy=payload.secrecy, strength=payload.strength, note=payload.note,
             source_id=_checked_source(world, payload.source_id),
+            about_fact_id=_checked_fact(world, payload.about_fact_id),
         )
         return _fact_out(world, fact)
 
@@ -1731,6 +1774,32 @@ def _checked_source(world: World, source_id: str | None) -> str | None:
     return source_id
 
 
+def _checked_fact(world: World, fact_id: str | None) -> str | None:
+    """The fact this one is about, or a 404 (§33).
+
+    `about_fact_id` is ON DELETE CASCADE, so a bad id would be written and the row would
+    then be invisible to the reification closure — a disagreement recorded against
+    nothing, which reads to the writer as a note the software lost.
+    """
+    if fact_id and world.get_fact(fact_id) is None:
+        raise HTTPException(404, "there is no such fact to be about")
+    return fact_id
+
+
+def _name_of(world: World, entity_id: str | None) -> str:
+    if not entity_id:
+        return ""
+    found = world.get_entity(entity_id)
+    return found.name if found else ""
+
+
+def _event_name(world: World, event_id: str | None) -> str:
+    if not event_id:
+        return ""
+    found = world.get_event(event_id)
+    return found.name if found else ""
+
+
 def _in_words(items) -> str:
     """"a, b or c" — an error a writer can act on rather than a set literal."""
     items = list(items)
@@ -1816,6 +1885,7 @@ def _fact_out(world: World, fact) -> S.FactOut:
         valid_to_text=(world.calendar.format(fact.valid_to)
                        if fact.valid_to is not None else ""),
         source=_source_label(world, fact.source_id),
+        about_fact_id=fact.about_fact_id,
     )
 
 

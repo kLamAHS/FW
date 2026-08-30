@@ -32,6 +32,7 @@ from fw.core.model.records import (
     Event,
     Fact,
     Geometry,
+    Interpretation,
     Knowledge,
     RouteSegment,
     Scene,
@@ -97,7 +98,9 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
     "scene_participant": {"refs": {"scene_id": ("scene", "skip"),
                                    "entity_id": ("entity", "skip")},
                           "key": ("scene_id", "entity_id")},
-    "interpretation": {"refs": {"event_id": ("event", "skip"),
+    "interpretation": {"refs": {"branch_id": ("branch", "skip"),
+                                "event_id": ("event", "skip"),
+                                "entity_id": ("entity", "skip"),
                                 "holder_id": ("entity", "skip")}},
     "knowledge_state": {"refs": {"observer_id": ("entity", "skip"),
                                  "secret_id": ("secret", "skip"),
@@ -1825,7 +1828,8 @@ class World:
         doomed += [("entity_override", r) for r in q(
             "SELECT * FROM entity_override WHERE entity_id = ?", (entity_id,))]
         doomed += [("interpretation", r) for r in merged(
-            q("SELECT * FROM interpretation WHERE holder_id = ?", (entity_id,)),
+            q("SELECT * FROM interpretation WHERE holder_id = ? OR entity_id = ?",
+              (entity_id, entity_id)),
             rows_in("interpretation", "event_id", events))]
         doomed += [("knowledge_state", r) for r in merged(
             q("SELECT * FROM knowledge_state WHERE observer_id = ? "
@@ -2707,6 +2711,66 @@ class World:
 
     # ---- secrets and knowledge (§6) ---------------------------------------
 
+    # ---- what each party says happened (§33, §94) --------------------------
+
+    def add_interpretation(self, label: str, *, event_id: str | None = None,
+                           entity_id: str | None = None,
+                           holder_id: str | None = None,
+                           account: str = "") -> Interpretation:
+        """Record one party's version of an event, or their name for somebody (§33).
+
+        The table and its rationale have been in the schema since the first migration,
+        and the only thing that ever wrote to it was the seed — through a raw insert, so
+        the demo world's three accounts of the Red Ford were not even undoable. §94 reads
+        these to answer "show me the world as House Marr sees it", which is why one table
+        carries both the account of a battle and the name for a man.
+        """
+        if (event_id is None) == (entity_id is None):
+            raise WorldError(
+                "an interpretation is of one event or one thing, not both and not neither")
+        iid = new_id()
+        with self.db.transaction():
+            self.db.insert("interpretation", {
+                "id": iid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "event_id": event_id, "entity_id": entity_id,
+                "holder_id": holder_id, "label": label, "account": account,
+            })
+            self._log_revision("interpretation", iid, "insert", None, {"label": label})
+        return Interpretation(id=iid, label=label, account=account, event_id=event_id,
+                              entity_id=entity_id, holder_id=holder_id)
+
+    def interpretations(self, *, event_id: str | None = None,
+                        entity_id: str | None = None,
+                        holder_id: str | None = None) -> list[Interpretation]:
+        """Every version on record, or only those of one subject or one party.
+
+        Branch-scoped like every other assertion: a name House Marr invents on a what-if
+        is that timeline's, and entities are inherited down the chain, so without this a
+        label written on a branch would attach to the canon row and leak into canon.
+        """
+        sql = f"SELECT * FROM interpretation WHERE {self._in_chain}"
+        params: list[Any] = [*self._chain]
+        for column, value in (("event_id", event_id), ("entity_id", entity_id),
+                              ("holder_id", holder_id)):
+            if value is not None:
+                sql += f" AND {column} = ?"
+                params.append(value)
+        return [_interpretation(r) for r in self.db.query(sql + " ORDER BY label", params)]
+
+    def delete_interpretation(self, interpretation_id: str) -> None:
+        row = self.db.one("SELECT * FROM interpretation WHERE id = ?",
+                          (interpretation_id,))
+        if row is None:
+            raise WorldError(f"no interpretation {interpretation_id}")
+        if row["branch_id"] != self.branch_id:
+            raise WorldError(
+                f"“{row['label']}” was written on another timeline; switch to it first")
+        with self.db.transaction():
+            self.db.execute("DELETE FROM interpretation WHERE id = ?",
+                            (interpretation_id,))
+            self._log_revision("interpretation", interpretation_id, "delete",
+                               dict(row), None)
+
     def add_secret(self, name: str, *, truth: str = "", about_id: str | None = None,
                    fact_id: str | None = None, severity: str = "major") -> Secret:
         sid = new_id()
@@ -3261,6 +3325,14 @@ def _secret(row) -> Secret:
     return Secret(id=row["id"], name=row["name"], truth=row["truth"],
                   about_id=row["about_id"], fact_id=row["fact_id"],
                   severity=row["severity"])
+
+
+def _interpretation(row) -> Interpretation:
+    return Interpretation(
+        id=row["id"], label=row["label"], account=row["account"],
+        event_id=row["event_id"], entity_id=row["entity_id"],
+        holder_id=row["holder_id"],
+    )
 
 
 def _knowledge(row) -> Knowledge:

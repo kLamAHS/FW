@@ -207,6 +207,28 @@ class Secret:
 
 
 @dataclass(frozen=True)
+class Interpretation:
+    """What one party says about an event or a person (§33, §94).
+
+    The same battle is a liberation to one house and a massacre to another, and the same
+    man is the King to one and the Pretender to the other. Both are one shape — a holder,
+    a subject, and what the holder calls it — which is why one table carries both and a
+    perspective (§94) can read historical interpretation and political labels from the
+    same place. Exactly one of `event_id` and `entity_id` is set.
+
+    `holder_id` may be None: "the clerical account" is a version nobody in particular owns,
+    and refusing to record it would force the writer to invent a church to hold it.
+    """
+
+    id: str
+    label: str
+    account: str = ""
+    event_id: str | None = None
+    entity_id: str | None = None
+    holder_id: str | None = None
+
+
+@dataclass(frozen=True)
 class Knowledge:
     """Who stands in what relation to a secret (§6).
 

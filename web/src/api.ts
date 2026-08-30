@@ -38,6 +38,8 @@ export interface Fact {
   valid_from_text: string
   valid_to_text: string
   source: string
+  /** §33: this fact is a remark about another fact, not about the world. */
+  about_fact_id?: string | null
 }
 
 export interface WorldDate {
@@ -480,6 +482,8 @@ export interface FactDraft {
   note?: string
   /** Where it came from (§58). */
   source_id?: string | null
+  /** What it is about, when it is about another fact rather than the world (§33). */
+  about_fact_id?: string | null
 }
 
 /* ---- questions (§49) ---------------------------------------------------- */
@@ -620,6 +624,18 @@ export interface Chapter {
   title: string
   position: number
   summary: string
+}
+
+/** What one party says about an event or a person (§33, §94). */
+export interface Interpretation {
+  id: string
+  label: string
+  account: string
+  event_id: string | null
+  entity_id: string | null
+  holder_id: string | null
+  holder_name: string
+  subject_name: string
 }
 
 /** Somewhere a fact came from (§58). */
@@ -851,6 +867,17 @@ export const api = {
   nameTheDay: (name: string, day: number, note = '') =>
     send<{ id: string }>('/snapshots', 'POST', { name, day, note }),
   forgetTheDay: (id: string) => send<void>(`/snapshots/${id}`, 'DELETE'),
+
+  /* ---- the same thing, told differently (§33, §94) ----------------------- */
+  interpretations: (params?: {
+    event_id?: string; entity_id?: string; holder_id?: string
+  }) => get<Interpretation[]>('/interpretations', params),
+  addInterpretation: (body: {
+    label: string; account?: string
+    event_id?: string | null; entity_id?: string | null; holder_id?: string | null
+  }) => send<{ id: string }>('/interpretations', 'POST', body),
+  forgetInterpretation: (id: string) =>
+    send<void>(`/interpretations/${id}`, 'DELETE'),
 
   /* ---- citing where a fact came from (§58) ------------------------------ */
   sources: () => get<Source[]>('/sources'),

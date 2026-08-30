@@ -11,6 +11,7 @@
 import { useState } from 'react'
 import { api } from '../api'
 import type { CalendarInfo, Vocabulary, WorldSummary } from '../api'
+import { Accounts } from '../components/Accounts'
 import { EventForm, Modal } from '../components/forms'
 import {
   Badge, ErrorBox, Loading, Panel, SEVERITY_GLYPH, TypeChip, useAsync,
@@ -201,6 +202,11 @@ export function EventsView(
                     </button>
                   </div>
                   {linkError && <div className="error-box small">{linkError}</div>}
+
+                  {/* §33: the same battle, told three ways. The table has held these
+                      since the first migration and nothing could read them. */}
+                  <Accounts eventId={e.id} subject={`“${e.name}”`}
+                            version={version} onMutate={onMutate} />
                 </div>
               )}
             </li>

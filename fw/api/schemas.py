@@ -63,6 +63,10 @@ class FactOut(BaseModel):
     valid_from_text: str = ""
     valid_to_text: str = ""
     source: str = ""
+    # §33: a fact *about* another fact — "House Marr disputes that the king died of
+    # fever". Accepted by `assert_fact` and tested since the first migration, and until
+    # now on neither wire shape, so the disagreement could be stored and never shown.
+    about_fact_id: str | None = None
 
 
 class FactIn(BaseModel):
@@ -79,6 +83,8 @@ class FactIn(BaseModel):
     # Where it came from (§58). `assert_fact` has taken this since the first migration
     # and the fact line has rendered it since the last commit; the form could not set it.
     source_id: str | None = None
+    # What it is about, when it is about another fact rather than about the world (§33).
+    about_fact_id: str | None = None
 
 
 class DateOut(BaseModel):
@@ -360,6 +366,18 @@ class SegmentIn(BaseModel):
     closed_seasons: list[str] = Field(default_factory=list)
     danger: str = "low"
     toll_holder_id: str | None = None
+
+
+# What one party says about an event or a person (§33, §94). The table has been in the
+# schema since the first migration with a documented rationale, three seed rows and no
+# reader at all — so a demo world had interpretations and a writer's world never could.
+
+class InterpretationIn(BaseModel):
+    label: str
+    event_id: str | None = None
+    entity_id: str | None = None      # exactly one of these two
+    holder_id: str | None = None      # None is "an account nobody in particular owns"
+    account: str = ""
 
 
 class SnapshotIn(BaseModel):

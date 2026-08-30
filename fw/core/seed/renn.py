@@ -30,7 +30,6 @@ new user first opens.
 from __future__ import annotations
 
 from fw.core.calendar.kernel import Calendar, Era, Month, Season
-from fw.core.ids import new_id
 from fw.core.world import World
 
 # The Rennish calendar: five months, a 355-day year, ten-day weeks. Deliberately not
@@ -455,10 +454,20 @@ def seed_renn(path: str = ":memory:") -> World:
         (None, "The clerical account",
          "A judgement upon a king who taxed what he had not built."),
     ):
-        w.db.insert("interpretation", {
-            "id": new_id(), "event_id": red_ford.id, "holder_id": holder,
-            "label": label, "account": account,
-        })
+        w.add_interpretation(label, event_id=red_ford.id, holder_id=holder,
+                             account=account)
+
+    # §94 the same man, called different things. What a house calls somebody is the
+    # shortest statement of where it stands, and it is why a perspective can change the
+    # labels on a map without changing a single fact about the world.
+    for holder, label, account in (
+        (crown_house.id, "His Highness the Prince",
+         "Aldren's son and heir, whatever the northern lords whisper."),
+        (marr.id, "The Pretender",
+         "No son of Aldren's, and no king of ours."),
+    ):
+        w.add_interpretation(label, entity_id=oren.id, holder_id=holder,
+                             account=account)
 
     # ------------------------------------------------- §6 the secret itself
     secret = w.add_secret(

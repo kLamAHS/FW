@@ -19,7 +19,7 @@ European-medieval fantasy.
 
 from __future__ import annotations
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 # `application_id` marks the file as ours so a stray SQLite database is not mistaken for a
 # world. The value is "FWLD" read as big-endian ASCII.
@@ -289,14 +289,30 @@ CREATE UNIQUE INDEX ux_causal_pair
     ON causal_link(cause_id, effect_id, ifnull(branch_id, ''));
 CREATE INDEX ix_causal_branch ON causal_link(branch_id);
 
--- §33 the same event, told differently by different parties
+-- §33 the same event, told differently by different parties -- and §94 the same person
+-- called different things. "The Crown's account of Red Ford" and "House Marr calls Prince
+-- Oren the Pretender" are one idea: a party, a thing, and what that party says about it.
+-- Exactly one of event_id/entity_id is set, so a row cannot be about both or neither.
+-- Branch-scoped like everything else a writer can assert. It was not, and could not
+-- be caught, because nothing read the table: scoping came transitively through the
+-- event. Once a row can be about an *entity*, that stops working — entities are
+-- inherited down the branch chain, so a name invented on a what-if would attach to the
+-- canon row and leak into canon with nothing to filter on.
 CREATE TABLE interpretation (
     id           TEXT PRIMARY KEY,
-    event_id     TEXT NOT NULL REFERENCES event(id) ON DELETE CASCADE,
+    project_id   TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+    branch_id    TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+    event_id     TEXT REFERENCES event(id) ON DELETE CASCADE,
+    entity_id    TEXT REFERENCES entity(id) ON DELETE CASCADE,
     holder_id    TEXT REFERENCES entity(id) ON DELETE CASCADE,
     label        TEXT NOT NULL,
-    account      TEXT NOT NULL DEFAULT ''
+    account      TEXT NOT NULL DEFAULT '',
+    CHECK ((event_id IS NULL) <> (entity_id IS NULL))
 ) STRICT;
+
+CREATE INDEX ix_interpretation_holder ON interpretation(branch_id, holder_id);
+CREATE INDEX ix_interpretation_entity ON interpretation(branch_id, entity_id);
+CREATE INDEX ix_interpretation_event  ON interpretation(branch_id, event_id);
 
 -- ---------------------------------------------------------------- knowledge (§6)
 
@@ -706,5 +722,45 @@ MIGRATIONS: dict[int, str] = {
             updated_at  TEXT NOT NULL
         ) STRICT;
         CREATE UNIQUE INDEX ux_terrain ON terrain(project_id, branch_id)
+    """,
+    # 9: §33's interpretations stop being only about events.
+    #
+    #    "The Crown's account of Red Ford" and "House Marr calls Prince Oren the
+    #    Pretender" are the same idea — a party, a thing, and what that party says about
+    #    it — and §94 needs both to answer "show me the world as House Marr sees it". A
+    #    second table would mean two writers, two readers and two vocabularies for one
+    #    concept, so `event_id` is relaxed to nullable and `entity_id` joins it, with a
+    #    CHECK that exactly one is set: a row about both, or about neither, cannot exist.
+    #
+    #    The rebuild also gives the table the `project_id`/`branch_id` every other
+    #    writable table has. It never had them: scoping came transitively through the
+    #    event, which nothing noticed because nothing read the table. That stops working
+    #    the moment a row can be about an *entity*, because entities are inherited down
+    #    the branch chain — a name invented on a what-if would attach to the canon row.
+    #    Backfilled exactly, because every existing row has a non-null `event_id`.
+    #
+    #    Rebuilt rather than altered because SQLite cannot drop a NOT NULL in place.
+    9: """
+        CREATE TABLE interpretation_v9 (
+            id           TEXT PRIMARY KEY,
+            project_id   TEXT NOT NULL REFERENCES project(id) ON DELETE CASCADE,
+            branch_id    TEXT NOT NULL REFERENCES branch(id) ON DELETE CASCADE,
+            event_id     TEXT REFERENCES event(id) ON DELETE CASCADE,
+            entity_id    TEXT REFERENCES entity(id) ON DELETE CASCADE,
+            holder_id    TEXT REFERENCES entity(id) ON DELETE CASCADE,
+            label        TEXT NOT NULL,
+            account      TEXT NOT NULL DEFAULT '',
+            CHECK ((event_id IS NULL) <> (entity_id IS NULL))
+        ) STRICT;
+        INSERT INTO interpretation_v9 (id, project_id, branch_id, event_id, entity_id,
+                                       holder_id, label, account)
+            SELECT i.id, e.project_id, e.branch_id, i.event_id, NULL, i.holder_id,
+                   i.label, i.account
+            FROM interpretation i JOIN event e ON e.id = i.event_id;
+        DROP TABLE interpretation;
+        ALTER TABLE interpretation_v9 RENAME TO interpretation;
+        CREATE INDEX ix_interpretation_holder ON interpretation(branch_id, holder_id);
+        CREATE INDEX ix_interpretation_entity ON interpretation(branch_id, entity_id);
+        CREATE INDEX ix_interpretation_event  ON interpretation(branch_id, event_id)
     """,
 }
