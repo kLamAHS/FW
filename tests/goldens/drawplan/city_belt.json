@@ -762,16 +762,6 @@
    "y": 642.4
   },
   {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Hamlet 12",
-   "tier": 2,
-   "x": 165.8,
-   "y": 664.5
-  },
-  {
    "anchor": "start",
    "kind": "castle",
    "role": "label",
@@ -825,7 +815,39 @@
    "text": "Hamletbridge",
    "tier": 2,
    "x": 673.6,
-   "y": 470.2
+   "y": 478.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     288.2,
+     292.2
+    ],
+    [
+     304.4,
+     276.0
+    ],
+    [
+     306.5,
+     271.9
+    ],
+    [
+     306.1,
+     253.0
+    ],
+    [
+     301.5,
+     247.8
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamletclose",
+   "tier": 2,
+   "x": 306.5,
+   "y": 271.9
   },
   {
    "anchor": "middle",
@@ -868,6 +890,30 @@
    "kind": "road",
    "path": [
     [
+     252.3,
+     408.8
+    ],
+    [
+     252.3,
+     445.3
+    ],
+    [
+     248.2,
+     451.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Hamlethill",
+   "tier": 2,
+   "x": 252.3,
+   "y": 445.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
      626.0,
      649.1
     ],
@@ -904,104 +950,28 @@
    "kind": "road",
    "path": [
     [
-     637.0,
-     397.6
+     569.8,
+     363.9
     ],
     [
-     637.2,
-     355.9
+     580.7,
+     374.8
     ],
     [
-     640.3,
-     351.8
+     583.4,
+     376.5
     ],
     [
-     644.3,
-     349.8
-    ],
-    [
-     647.4,
-     349.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hamletmere",
-   "tier": 2,
-   "x": 640.3,
-   "y": 351.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     680.9,
-     484.2
-    ],
-    [
-     682.2,
-     487.2
-    ],
-    [
-     695.8,
-     500.1
-    ],
-    [
-     698.5,
-     499.4
-    ],
-    [
-     712.1,
-     485.9
-    ],
-    [
-     714.3,
-     484.2
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hinterbank",
-   "tier": 2,
-   "x": 698.5,
-   "y": 499.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     551.2,
-     345.1
-    ],
-    [
-     559.0,
-     353.2
-    ],
-    [
-     561.7,
-     354.9
-    ],
-    [
-     575.3,
-     355.2
-    ],
-    [
-     584.7,
-     349.8
-    ],
-    [
-     593.3,
-     349.7
+     612.3,
+     376.7
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "Hinterfield",
    "tier": 2,
-   "x": 575.3,
-   "y": 355.2
+   "x": 583.4,
+   "y": 376.5
   },
   {
    "anchor": "middle",
@@ -1012,70 +982,6 @@
    "tier": 1,
    "x": 429.7,
    "y": 137.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     734.1,
-     420.7
-    ],
-    [
-     749.6,
-     404.6
-    ],
-    [
-     751.0,
-     399.2
-    ],
-    [
-     755.7,
-     392.4
-    ],
-    [
-     756.0,
-     384.3
-    ],
-    [
-     756.1,
-     384.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hintervale",
-   "tier": 2,
-   "x": 755.7,
-   "y": 392.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     184.1,
-     658.8
-    ],
-    [
-     192.0,
-     658.2
-    ],
-    [
-     200.2,
-     653.1
-    ],
-    [
-     231.1,
-     653.1
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Hinterwick",
-   "tier": 2,
-   "x": 200.2,
-   "y": 653.1
   },
   {
    "anchor": "middle",
@@ -1362,14 +1268,14 @@
    "y": 751.2
   },
   {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "Upper Capitamere",
    "tier": 2,
-   "x": 250.0,
-   "y": 641.7
+   "x": 233.0,
+   "y": 650.2
   },
   {
    "anchor": "end",
@@ -1386,10 +1292,30 @@
    "kind": "village",
    "role": "label",
    "size": 10.0,
+   "text": "Upper Capitareach",
+   "tier": 2,
+   "x": 332.1,
+   "y": 642.5
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
    "text": "Upper Capitastead",
    "tier": 2,
    "x": 569.9,
    "y": 178.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Upper Capitathorpe",
+   "tier": 2,
+   "x": 236.0,
+   "y": 674.5
   },
   {
    "anchor": "start",
@@ -1410,6 +1336,16 @@
    "tier": 1,
    "x": 729.0,
    "y": 481.0
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Village 10",
+   "tier": 2,
+   "x": 565.7,
+   "y": 349.0
   },
   {
    "anchor": "start",
@@ -1537,11 +1473,6 @@
    "text": "Capitabank"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Capitafield"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "Capitahollow"
@@ -1562,19 +1493,34 @@
    "text": "Capitawick"
   },
   {
-   "kind": "road",
+   "kind": "village",
    "reason": "no room",
-   "text": "Hamletgate"
+   "text": "Hamlet 12"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hamlethill"
+   "text": "Hamletcombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamlethollow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletholt"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "Hamlethorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hamletmere"
   },
   {
    "kind": "road",
@@ -1604,7 +1550,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hintercombe"
+   "text": "Hintereach"
   },
   {
    "kind": "road",
@@ -1614,22 +1560,27 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hinterhill"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "Hinterhollow"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hintermoor"
+   "text": "Hinterholt"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Hinterthorpe"
+   "text": "Hintermere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hinterstead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Hintervale"
   },
   {
    "kind": "feature",
@@ -1649,27 +1600,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hamletclose"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamletcombe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamletford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamlethollow"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Hamletholt"
+   "text": "The Hamletgate"
   },
   {
    "kind": "road",
@@ -1679,7 +1610,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hintereach"
+   "text": "The Hintercombe"
   },
   {
    "kind": "road",
@@ -1689,17 +1620,17 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hinterholt"
+   "text": "The Hinterhill"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hintermere"
+   "text": "The Hinterthorpe"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Hinterstead"
+   "text": "The Hinterwick"
   },
   {
    "kind": "sea",
@@ -1709,27 +1640,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Upper Beltland"
+   "text": "The Upper Beltland"
   },
   {
    "kind": "village",
    "reason": "no room",
    "text": "Upper Capitaford"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Upper Capitareach"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Upper Capitathorpe"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Village 10"
   }
  ]
 }

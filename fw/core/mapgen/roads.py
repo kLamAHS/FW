@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import heapq
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from fw.core.mapgen.grid import Field, Grid
 
@@ -72,9 +72,18 @@ class Roads:
     routes: tuple[Route, ...]
     network: tuple[Route, ...]
     traffic: Field                  # per cell, journeys passing through
+    # Every cell-to-cell link any route uses, graded once — the ground truth both
+    # views are made of. The drawing dedups against this so a street twelve routes
+    # share is inked once, at the grade the ground actually carries.
+    links: dict[tuple[tuple[int, int], tuple[int, int]], str] = field(
+        default_factory=dict)
 
     def carried(self, i: int, j: int) -> float:
         return self.traffic[j][i]
+
+    @staticmethod
+    def link(a: tuple[int, int], b: tuple[int, int]) -> tuple:
+        return (a, b) if a <= b else (b, a)
 
 
 def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float],
@@ -141,11 +150,33 @@ def plan_roads(grid: Grid, *, places: list[tuple[int, int]], weights: list[float
                                      else _because(quietest)),
                             given=route.given))
     joined.sort(key=lambda r: (-r.traffic, r.cells[0]))
+    grade_of, carried_on, joins = _link_grades(routes, traffic, busiest)
     return Roads(routes=tuple(joined),
-                 network=_stretches(routes, traffic, busiest), traffic=traffic)
+                 network=_stretches(grade_of, carried_on, joins),
+                 traffic=traffic, links=grade_of)
 
 
-def _stretches(routes: list[Route], traffic: Field, busiest: float) -> tuple[Route, ...]:
+def _link_grades(routes: list[Route], traffic: Field, busiest: float) -> tuple[
+        dict, dict, dict]:
+    """Every link any route uses, graded by the traffic actually crossing it."""
+    grade_of: dict[tuple[tuple[int, int], tuple[int, int]], str] = {}
+    carried_on: dict[tuple[tuple[int, int], tuple[int, int]], float] = {}
+    joins: dict[tuple[tuple[int, int], tuple[int, int]], tuple[int, int]] = {}
+    for route in routes:
+        for a, b in zip(route.cells, route.cells[1:], strict=False):
+            link = (a, b) if a <= b else (b, a)
+            if link in grade_of:
+                continue
+            # A link is only as busy as its quieter end: the traffic that crosses it
+            # is what both ends have in common.
+            carried = min(traffic[a[1]][a[0]], traffic[b[1]][b[0]]) / busiest
+            grade_of[link] = _grade(carried)
+            carried_on[link] = carried
+            joins[link] = route.joins
+    return grade_of, carried_on, joins
+
+
+def _stretches(grade_of: dict, carried_on: dict, joins: dict) -> tuple[Route, ...]:
     """Turn the routes into the network they actually made, drawn once.
 
     A route is not a thing on the ground; the road is. Twelve routes out of one city all
@@ -164,21 +195,6 @@ def _stretches(routes: list[Route], traffic: Field, busiest: float) -> tuple[Rou
     one grade. Every stretch of road appears exactly once, and where a highway becomes a
     road it becomes one at a junction rather than wherever a route happened to end.
     """
-    grade_of: dict[tuple[tuple[int, int], tuple[int, int]], str] = {}
-    carried_on: dict[tuple[tuple[int, int], tuple[int, int]], float] = {}
-    joins: dict[tuple[tuple[int, int], tuple[int, int]], tuple[int, int]] = {}
-    for route in routes:
-        for a, b in zip(route.cells, route.cells[1:], strict=False):
-            link = (a, b) if a <= b else (b, a)
-            if link in grade_of:
-                continue
-            # A link is only as busy as its quieter end: the traffic that crosses it is
-            # what both ends have in common.
-            carried = min(traffic[a[1]][a[0]], traffic[b[1]][b[0]]) / busiest
-            grade_of[link] = _grade(carried)
-            carried_on[link] = carried
-            joins[link] = route.joins
-
     neighbours: dict[tuple[int, int], list[tuple[int, int]]] = {}
     for a, b in grade_of:
         neighbours.setdefault(a, []).append(b)

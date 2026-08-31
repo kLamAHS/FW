@@ -154,10 +154,18 @@ class Placement:
     x: float
     y: float
     region_id: str
-    rank: str                      # capital | city | town | village
+    # The writer's own settlement_type word, lowercased and open-ended ("capital",
+    # "market town", "fortress"...), else a population tier, else the site's.
+    rank: str
     score: float
     reasons: list[str] = field(default_factory=list)
     proposed: bool = False
+    # What the siting knew and used to throw away (V2 §12): the crossing the place
+    # stands on, how well its market area feeds it, and its lattice cell. Blank for
+    # a place read back from stored geometry — that ground was never scored.
+    crossing: str = ""             # ford | pass | harbour | ""
+    support: float = 0.0
+    cell: tuple[int, int] | None = None
 
     def because(self) -> str:
         if not self.reasons:
@@ -1115,6 +1123,12 @@ class MapGenerator:
         # What the writer said about how big a place is beats what the map worked out,
         # and where they said nothing the map's own reading stands.
         rank = self._rank_of(entity_id, site.rank)
+        # The same veto the reasons get (§66): a harbour crossing in a march the
+        # writer never called coastal is not a harbour the map may claim.
+        crossing = site.crossing
+        profile = self.profiles.get(region_id)
+        if crossing == "harbour" and (profile is None or not profile.coastal):
+            crossing = ""
         return Placement(
             entity_id=entity_id, name=name,
             x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
@@ -1122,6 +1136,7 @@ class MapGenerator:
             region_id=region_id, rank=rank, score=round(site.score, 3),
             reasons=self._reasons_the_region_allows(site, region_id),
             proposed=proposed,
+            crossing=crossing, support=site.support, cell=site.cell,
         )
 
     def _reasons_the_region_allows(self, site, region_id: str) -> list[str]:
@@ -1267,7 +1282,12 @@ class MapGenerator:
         key = tuple((p.x, p.y, p.rank) for p in known)
         if getattr(self, "_network_for", None) == key:
             return self._network
-        weight = {"city": 5.0, "town": 3.0, "village": 1.6, "hamlet": 1.0}
+        # The writer's own rank vocabulary included: a written capital used to fall
+        # to the 1.0 default — below a village — and generated hamlet-level traffic,
+        # so the roads out of it never bundled into anything (V2 §10).
+        weight = {"capital": 6.0, "city": 5.0, "port": 4.5, "harbour": 4.5,
+                  "market town": 3.5, "fortress": 3.0, "town": 3.0,
+                  "village": 1.6, "hamlet": 1.0}
         self._network = roads.plan_roads(
             self._grid(),
             places=[self._cell_of(p.x, p.y) for p in known],
@@ -1328,7 +1348,9 @@ class MapGenerator:
                         x=float(geometry.coordinates[0]),
                         y=float(geometry.coordinates[1]),
                         region_id=region_id, rank=self._rank_of(sid, "town"),
-                        score=0.0))
+                        score=0.0,
+                        cell=self._cell_of(float(geometry.coordinates[0]),
+                                           float(geometry.coordinates[1]))))
                     break
         return out
 

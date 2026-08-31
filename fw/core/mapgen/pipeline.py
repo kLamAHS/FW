@@ -14,10 +14,11 @@ The stages themselves are replaced one at a time after this, each behind the sam
 
 from __future__ import annotations
 
+import heapq
 import math
 import time
 
-from fw.core.mapgen import cartography, importance, shapes
+from fw.core.mapgen import cartography, diagnose, importance, shapes
 from fw.core.mapgen import ledger as ledger_module
 from fw.core.mapgen.drafts import (
     FactSpec,
@@ -164,25 +165,49 @@ def _compute(world: World, brief: MapBrief
     # drafting, so a stage cannot forget it and nothing downstream has to guess a
     # hierarchy back out of icon sizes.
     importance.grade(drafts, generator.reading)
+    # What a reader would question, asked before a reader can (V2 §44). After all
+    # drafting, because the questions are about the finished proposal — a town no
+    # road reaches is only knowable once the roads are drafted.
+    findings.extend(diagnose.study(generator, drafts,
+                                   _known_places(generator, placements)))
     timings["drafting"] = int((time.perf_counter() - mark) * 1000)
-    return drafts, timings, findings, _terrain_of(generator), generator.reading
+    return (drafts, timings, findings, _terrain_of(generator, placements),
+            generator.reading)
 
 
-def _terrain_of(generator) -> Terrain | None:
+def _terrain_of(generator, placements) -> Terrain | None:
     """The surface this plan was worked out on, to be kept if it is accepted.
 
-    Four fields. Height is what the relief is lit from; cover and standing water are
-    what the ground is coloured by; and the flow is what makes the valleys legible —
-    the renderer carves the drainage into the picture, and a saved world whose map
-    cannot show its own valleys is a world that has forgotten why they are there.
+    Height is what the relief is lit from; cover and standing water are what the
+    ground is coloured by; the flow is what makes the valleys legible — the renderer
+    carves the drainage into the picture, and a saved world whose map cannot show its
+    own valleys is a world that has forgotten why they are there. The develop field is
+    the human ground the same way (V2 §14): how worked each acre is, kept beside the
+    physical fields so farmland, track culling and label budgets all read one answer.
     Everything else the generator held — temperature, rock hardness — is recoverable
     or was scaffolding, and a world file is a thing a writer keeps for years.
     """
+    from fw.core.mapgen import density
     from fw.core.mapgen.generate import GRID, SEA_LEVEL
 
     if not generator.elevation or generator.vegetation is None:
         return None
     grid = generator._grid()
+
+    known = _known_places(generator, placements)
+    network = (generator.road_network(known) if len(known) >= 2 else None)
+    seats = []
+    for place in sorted(known, key=lambda p: (p.name, p.x, p.y)):
+        told = (_founding(generator, place.entity_id)
+                if place.entity_id else {})
+        founded = told.get("founded")
+        age = (generator.at - founded
+               if generator.at is not None and founded is not None else None)
+        seats.append((generator._cell_of(place.x, place.y),
+                      density.WORKED.get(place.rank.lower(),
+                                         density.JUST_A_PLACE),
+                      density.grown(age)))
+
     return Terrain(
         seed=generator.seed, size=GRID, span=grid.span,
         origin_x=grid.origin_x, origin_y=grid.origin_y, sea_level=SEA_LEVEL,
@@ -200,6 +225,9 @@ def _terrain_of(generator) -> Terrain | None:
             # a shallow pixel knows whose water it is. Integers survive the
             # sixteen-bit trip exactly; readers round.
             "shoreline": generator.shore.seaward,
+            "develop": density.develop(
+                GRID, generator.sea, seats,
+                traffic=network.traffic if network else None),
         })
 
 
@@ -322,6 +350,7 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_REGIONS, _terrain_role
 
     politics = generator.political()
+    borders = _border_arcs(generator, authored)
     out: list[FeatureDraft] = []
     for region_id in sorted(generator.profiles):
         profile = generator.profiles[region_id]
@@ -331,6 +360,15 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
         if ring is None:
             continue
         held = politics.get(region_id, {})
+        name = profile.name
+        edges = tuple(
+            ShapeSpec(role="border", kind="line",
+                      coordinates=[[round(x, 1), round(y, 1)] for x, y in points],
+                      layer=LAYER_REGIONS,
+                      style={"role": "border", "stroke-width": 1.2,
+                             **({"dash": True} if kind == "surveyed" else {})},
+                      approximate=True)
+            for points, kind in borders.get(name, ()))
         out.append(FeatureDraft(
             kind="region",
             key_parts=(profile.name,),
@@ -345,8 +383,14 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               # semantics, not paint — it rides `detail["politics"]`;
                               # three style keys said the same thing here for a phase
                               # and were read by nothing.
-                              style={"role": _terrain_role(profile.dominant)},
-                              approximate=True),),
+                              # The polygon carries no edge of its own either: its
+                              # border arcs are shared with its neighbours and stroked
+                              # once each, below — a ring that stroked itself drew
+                              # every frontier twice and the coastline three times.
+                              style={"role": _terrain_role(profile.dominant),
+                                     "edge": "none"},
+                              approximate=True),
+                    *edges),
             reasons=(Reason(kind="authored", weight=1.0,
                             template="drawn where its neighbours leave room",
                             evidence=profile.why("terrain")),
@@ -355,9 +399,59 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
             detail={"share": round(len(_cells_of(generator, region_id))
                                    / max(1, generator.land_cells()), 3),
                     "dominant": profile.dominant,
+                    "frontiers": _frontier_detail(generator, name),
                     **({"politics": held} if held else {})},
         ))
     return out
+
+
+def _border_arcs(generator, authored: dict) -> dict[str, list[tuple[list, str]]]:
+    """Each internal frontier arc, once, assigned to the one region that draws it.
+
+    Coastal arcs — one side against the sea — are not here at all: the coastline wins,
+    and a border re-stroked along it is the double line the V2 brief calls out. Arcs
+    are classed by what the frontier they belong to runs along: "natural" ground reads
+    solid, "surveyed" open country reads dashed, which is §92's approximation contract
+    applied to politics.
+    """
+    from fw.core.mapgen import territory
+
+    if generator.partition is None:
+        return {}
+    authored_names = {generator.profiles[rid].name for rid in authored
+                      if rid in generator.profiles}
+    out: dict[str, list[tuple[list, str]]] = {}
+    for left, right, points in territory.drawn_arcs(generator.partition,
+                                                    generator.sea):
+        if left is None or right is None or len(points) < 2:
+            continue
+        keeper = left if left not in authored_names else (
+            right if right not in authored_names else None)
+        if keeper is None:
+            continue                  # both sides are the writer's own drawing (§66)
+        out.setdefault(keeper, []).append(
+            (points, _frontier_kind(generator, left, right)))
+    return out
+
+
+def _frontier_kind(generator, left: str, right: str) -> str:
+    for frontier in generator.frontiers:
+        if {left, right} == set(frontier.between):
+            return ("natural" if frontier.runs_along != "open country"
+                    else "surveyed")
+    # Too short to have been measured (`SHORTEST_FRONTIER`): a corner, drawn as if
+    # someone had to agree on it.
+    return "surveyed"
+
+
+def _frontier_detail(generator, name: str) -> list[dict]:
+    """What this region's borders follow, as data beside the prose reasons."""
+    return [{"with": (f.between[1] if f.between[0] == name else f.between[0]),
+             "along": f.runs_along,
+             "kind": ("natural" if f.runs_along != "open country"
+                      else "surveyed"),
+             "length": f.length}
+            for f in generator.frontiers if name in f.between]
 
 
 # How the map says who holds a place, one sentence per authority the writer named.
@@ -435,10 +529,20 @@ QUAY_REACH = 8
 # What a cell of cart road costs against a cell of open water, when choosing where a
 # crossing lands. Sailing is the easy part.
 INLAND_COST = 6
+# What a cell of sea costs by how far from shore it lies, in cells. A coaster works the
+# shore; open water is a different proposition in any pre-modern world — so the cheapest
+# way between two ports hugs the coast, and only a genuinely narrow crossing pays for
+# blue water. The last band is everything beyond the table.
+EXPOSURE_BANDS = ((2, 1), (5, 2), (9, 4))
+OPEN_WATER_COST = 6
+# Each port trades with its nearest few, not with everyone: n² lanes between every pair
+# of harbours is a shipping map, and this is an atlas.
+CABOTAGE_PARTNERS = 2
 
 
 def _sea_lane_drafts(generator, placements) -> list[FeatureDraft]:
-    """A shipping lane from each island to the nearest port, over water.
+    """A shipping lane from each island to the nearest port, over water — and the
+    coasting runs between the writer's own ports.
 
     Islands are travel orphans. `coast.SMALLEST_ISLAND` guarantees a map has some, the
     router works over segments, and nothing had ever drawn one to an island — so a
@@ -456,17 +560,18 @@ def _sea_lane_drafts(generator, placements) -> list[FeatureDraft]:
     form = generator.landform
     if form is None:
         return []
-    shores = list(form.coastlines())
-    if len(shores) < 2:
-        return []
     seen = {p.entity_id for p in placements if p.entity_id}
     known = list(placements) + [p for p in generator._already_placed(placements)
                                 if p.entity_id not in seen]
     if not known:
         return []
 
+    out: list[FeatureDraft] = _cabotage_drafts(generator, known)
+    shores = list(form.coastlines())
+    if len(shores) < 2:
+        return out
+
     grid = generator._grid()
-    out: list[FeatureDraft] = []
     for ordinal, ring in enumerate(shores):
         if ordinal == 0:
             continue                                # the mainland needs no ferry
@@ -520,6 +625,177 @@ def _sea_lane_drafts(generator, placements) -> list[FeatureDraft]:
                     "lands_at": harbour.name},
         ))
     return out
+
+
+def _cabotage_drafts(generator, known) -> list[FeatureDraft]:
+    """The coasting runs between the writer's own ports (§11 of the V2 brief).
+
+    Port-to-port, each to its nearest few by *priced* sea: every cell of water costs
+    more the further from shore it lies, so the runs hug the coast the way a coaster
+    actually would, and only a narrow strait gets crossed open. Both ends are places
+    the writer ranked as ports themselves, so the lane explains their world rather
+    than adding to it — which is why, unlike an invented island crossing, it is
+    accepted by default.
+    """
+    from fw.core.mapgen.generate import CELL, LAYER_ROADS
+
+    ports = sorted((p for p in known if p.entity_id
+                    and p.rank.lower() in ("port", "harbour", "harbor")),
+                   key=lambda p: p.name)
+    if len(ports) < 2:
+        return []
+    offshore = _offshore(generator)
+    sailed: dict[str, tuple[dict, dict]] = {}
+    for port in ports:
+        seeds = _quay_seeds(generator, port)
+        if seeds:
+            sailed[port.name] = _coastwise(generator, seeds, offshore)
+
+    chosen: dict[tuple[str, str], tuple] = {}
+    for port in ports:
+        if port.name not in sailed:
+            continue
+        _came, best = sailed[port.name]
+        calls = []
+        for other in ports:
+            if other.name == port.name or other.name not in sailed:
+                continue
+            cell = generator._cell_of(other.x, other.y)
+            landings = [(best[step] + inland * INLAND_COST, step)
+                        for step, inland in _quayside(generator, cell)
+                        if step in best]
+            if not landings:
+                continue
+            cost, landing = min(landings)
+            calls.append((cost, other.name, other, landing))
+        calls.sort(key=lambda call: (call[0], call[1]))
+        for _cost, _, other, landing in calls[:CABOTAGE_PARTNERS]:
+            pair = tuple(sorted((port.name, other.name)))
+            if pair not in chosen:
+                chosen[pair] = (port, other, landing)
+
+    out: list[FeatureDraft] = []
+    for pair in sorted(chosen):
+        origin, target, landing = chosen[pair]
+        came, _best = sailed[origin.name]
+        cells = [landing]
+        while cells[-1] in came:
+            cells.append(came[cells[-1]])
+        cells.reverse()
+        path = [generator._centre(i, j) for i, j in cells]
+        points = shapes.simplify(shapes.eased(path, rounds=2), CELL * 0.4)
+        points = [[round(x, 1), round(y, 1)] for x, y in points]
+        if len(points) < 2:
+            points = [[0.0, 0.0], [0.0, 0.0]]
+        points[0] = [round(origin.x, 1), round(origin.y, 1)]
+        points[-1] = [round(target.x, 1), round(target.y, 1)]
+        span = sum(math.dist(points[n], points[n + 1])
+                   for n in range(len(points) - 1))
+        ends = tuple(sorted((_endpoint_id(generator, origin),
+                             _endpoint_id(generator, target))))
+        out.append(FeatureDraft(
+            kind="lane",
+            key_parts=("sail",) + ends,
+            anchor_key=("landmass", 0),
+            shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
+                              layer=LAYER_ROADS,
+                              style={"role": "waterway", "dash": True,
+                                     "stroke-width": 1.8},
+                              approximate=True),),
+            segments=(SegmentSpec(
+                from_ref=_ref_for(generator, origin),
+                to_ref=_ref_for(generator, target),
+                length=round(span, 1), medium="sea", quality=LANE_QUALITY,
+                # `routing.WATER` again — see the island crossing's segment above
+                # for why anything but "water" silently vanishes from every route.
+                terrain="water", danger=LANE_DANGER),),
+            depends_on_keys=(("landmass", 0),),
+            reasons=(Reason(
+                kind="harbour", weight=1.0,
+                template=(f"the coasting trade between {origin.name} "
+                          f"and {target.name}, both harbours by your own account"),
+                evidence=f"{round(span)} along the shore"),),
+            # Named for its ends, like the island crossing for where it lands — a
+            # run is not a place, and no noun is invented for it.
+            name_template="The {0}–{1} run",
+            name_refs=ends,
+            name_request=None,
+            default_accept=True,
+            detail={"tier": "coastal", "span": round(span, 1),
+                    "lands_at": target.name,
+                    "between": [origin.name, target.name]},
+        ))
+    return out
+
+
+def _offshore(generator) -> dict:
+    """How far from the nearest shore every sea cell lies, in cells."""
+    from fw.core.mapgen.generate import GRID
+
+    far: dict = {}
+    for j in range(GRID):
+        for i in range(GRID):
+            if generator.sea[j][i] and any(
+                    not generator.sea[nj][ni]
+                    for ni, nj in ((i + di, j + dj)
+                                   for dj in (-1, 0, 1) for di in (-1, 0, 1))
+                    if 0 <= ni < GRID and 0 <= nj < GRID):
+                far[(i, j)] = 0
+    frontier = sorted(far)
+    steps = 0
+    while frontier:
+        steps += 1
+        nxt: list = []
+        for here in frontier:
+            for step in _sea_neighbours(generator, here):
+                if step not in far:
+                    far[step] = steps
+                    nxt.append(step)
+        frontier = sorted(nxt)
+    return far
+
+
+def _sail_cost(offshore_cells: int) -> int:
+    for edge, cost in EXPOSURE_BANDS:
+        if offshore_cells <= edge:
+            return cost
+    return OPEN_WATER_COST
+
+
+def _quay_seeds(generator, place) -> dict:
+    """Where this port's boats sit on the water, each priced by the walk to it."""
+    cell = generator._cell_of(place.x, place.y)
+    seeds: dict = {}
+    for step, inland in _quayside(generator, cell):
+        cost = inland * INLAND_COST
+        if step not in seeds or cost < seeds[step]:
+            seeds[step] = cost
+    return seeds
+
+
+def _coastwise(generator, seeds: dict, offshore: dict) -> tuple[dict, dict]:
+    """Every sea cell reachable from these seeds, priced by exposure.
+
+    Unlike `_sail_from`, which counts steps because its question is only *which* port,
+    this one prices each cell by `_sail_cost` of its distance to shore. Integer costs
+    and fully-ordered heap entries keep it deterministic; on equal cost the lower cell
+    wins, every run.
+    """
+    best = dict(seeds)
+    came: dict = {}
+    queue = [(cost, cell) for cell, cost in sorted(seeds.items())]
+    heapq.heapify(queue)
+    while queue:
+        cost, cell = heapq.heappop(queue)
+        if cost > best.get(cell, cost):
+            continue
+        for step in _sea_neighbours(generator, cell):
+            through = cost + _sail_cost(offshore.get(step, 0))
+            if step not in best or through < best[step]:
+                best[step] = through
+                came[step] = cell
+                heapq.heappush(queue, (through, step))
+    return came, best
 
 
 def _sail_from(generator, edge: set) -> tuple[dict, dict]:
@@ -1028,6 +1304,91 @@ def _founding(generator, entity_id: str | None) -> dict:
     return out
 
 
+def _known_places(generator, placements) -> list:
+    """Everyone the map knows — the one list roads, lanes and morphology share.
+
+    Built identically at every call site on purpose: `road_network` caches on this
+    list's coordinates, and two departments asking about different lists would lay
+    the whole network twice and could disagree about who joins what.
+    """
+    seen = {p.entity_id for p in placements if p.entity_id}
+    return list(placements) + [p for p in generator._already_placed(placements)
+                               if p.entity_id not in seen]
+
+
+def _settlement_semantics(generator, placement, known, network) -> dict:
+    """What the siting knew about this place, said out loud (V2 §12).
+
+    The crossing it stands on, how well its country feeds it, whether it is a port,
+    and the shape a distant reader would see: a walled hold, a harbour town strung
+    along its quay, a bridge town on its river, a street village on its road, or a
+    plain clustered market.
+    """
+    told: dict = {}
+    if placement.crossing:
+        told["crossing"] = placement.crossing
+    if placement.support:
+        told["support"] = round(placement.support, 2)
+
+    said = generator._said_of(placement.entity_id)
+    port = (placement.crossing == "harbour"
+            or placement.rank.lower() in ("port", "harbour", "harbor")
+            or bool(said is not None and said.port.value))
+    if port:
+        told["port"] = True
+
+    walled = (placement.rank.lower() in ("fortress", "citadel", "stronghold")
+              or bool(said is not None and said.seat_of))
+    on_road, heading = _street_of(generator, placement, known, network)
+    if walled:
+        morphology = "walled"
+    elif port:
+        morphology = "harbour"
+    elif placement.crossing == "ford" or _riverside(generator, placement):
+        morphology = "riverbank"
+    elif on_road:
+        morphology = "street"
+    else:
+        morphology = "clustered"
+    told["morphology"] = morphology
+    if heading is not None:
+        told["orientation"] = heading
+    return told
+
+
+def _riverside(generator, placement) -> bool:
+    if placement.cell is None:
+        return False
+    i, j = placement.cell
+    return any((i + di, j + dj) in generator.channel
+               for dj in (-1, 0, 1) for di in (-1, 0, 1))
+
+
+def _street_of(generator, placement, known, network) -> tuple[bool, list | None]:
+    """Whether a road runs through this place, and which way it leaves.
+
+    The heading is a unit vector along the busiest road out, so a drawn footprint
+    can lie along its street the way a real road-town does. No angles anywhere.
+    """
+    if network is None or placement.cell is None:
+        return False, None
+    for route in network.routes:
+        a, b = route.joins
+        for end in (a, b):
+            place = known[end]
+            if place is not placement and (place.x, place.y) != (placement.x,
+                                                                 placement.y):
+                continue
+            if len(route.cells) < 2:
+                continue
+            step = route.cells[1] if end == a else route.cells[-2]
+            sx, sy = generator._centre(*step)
+            dx, dy = sx - placement.x, sy - placement.y
+            span = math.hypot(dx, dy) or 1.0
+            return True, [round(dx / span, 2), round(dy / span, 2)]
+    return False, None
+
+
 def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
     """Every settlement the map knows about — including the ones it did not move.
 
@@ -1041,9 +1402,11 @@ def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
     seen = {p.entity_id for p in placements if p.entity_id}
     standing = [p for p in generator._already_placed(placements)
                 if p.entity_id not in seen]
+    known = list(placements) + standing
+    network = generator.road_network(known) if len(known) >= 2 else None
 
     out: list[FeatureDraft] = []
-    for placement in list(placements) + standing:
+    for placement in known:
         region_name = generator.profiles[placement.region_id].name
         invented = placement.entity_id is None
         key = _settlement_key(generator, placement)
@@ -1084,9 +1447,27 @@ def _settlement_drafts(generator, placements) -> list[FeatureDraft]:
             # inventing a town is a suggestion they have to accept.
             default_accept=not invented,
             detail={"rank": placement.rank, "region": region_name,
+                    **_settlement_semantics(generator, placement, known, network),
                     **_founding(generator, placement.entity_id)},
         ))
     return out
+
+
+# What a hold is *for*, in the atlas's vocabulary — keyed by what it watches, which is
+# how `hold._worth` chose the ground in the first place.
+ARCHETYPES = {"pass": "mountain stronghold", "ford": "river castle",
+              "harbour": "coastal fortress", "march": "border fortress",
+              "seat": "citadel", "road": "manor"}
+
+
+def _house_entity(generator, house_key: str) -> str | None:
+    """The writer's entity behind a hold's house, for the fact written back."""
+    if not house_key or generator.reading is None:
+        return None
+    for house in generator.reading.houses:
+        if house.key == house_key:
+            return house.entity_id
+    return None
 
 
 def _castle_drafts(generator, placements) -> list[FeatureDraft]:
@@ -1099,6 +1480,7 @@ def _castle_drafts(generator, placements) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_CASTLES
 
     holds = generator._site_castles(placements)
+    politics = generator.political()
     out: list[FeatureDraft] = []
     for place in holds:
         invented = place.entity_id is None
@@ -1111,6 +1493,19 @@ def _castle_drafts(generator, placements) -> list[FeatureDraft]:
         if not reasons:
             reasons = (Reason(kind="authored", weight=1.0,
                               template="stands where you placed it"),)
+        facts: list[FactSpec] = []
+        if invented and where:
+            facts.append(FactSpec("located_in", object_ref=where))
+            # The fact `Hold.house_key` was minted for: the house that holds the
+            # country holds the keep proposed in it, said under the same authority
+            # the country itself is held under — no vaguer, no grander.
+            house_id = _house_entity(generator, place.house_key)
+            authority = str((politics.get(where) or {}).get("authority") or "")
+            if house_id and authority in ("legally_owns", "administers", "occupies"):
+                facts.append(FactSpec(
+                    authority, subject_ref=house_id,
+                    note="proposed with the keep, which stands in this "
+                         "house's country"))
         out.append(FeatureDraft(
             kind="castle",
             key_parts=("h", region_name, place.cell[0], place.cell[1]),
@@ -1124,8 +1519,7 @@ def _castle_drafts(generator, placements) -> list[FeatureDraft]:
                               coordinates=[round(x, 1), round(y, 1)],
                               layer=LAYER_CASTLES,
                               style={"rank": place.rank}, approximate=True),),
-            facts=((FactSpec("located_in", object_ref=where),) if invented and where
-                   else ()),
+            facts=tuple(facts),
             reasons=reasons,
             name_request=(NameRequest(
                 key=name_key("castle", (region_name,),
@@ -1133,7 +1527,8 @@ def _castle_drafts(generator, placements) -> list[FeatureDraft]:
                 kind="castle", hint=place.watches)
                 if invented else None),
             default_accept=not invented,
-            detail={"rank": place.rank},
+            detail={"rank": place.rank, "watches": place.watches,
+                    "archetype": ARCHETYPES.get(place.watches, "border fortress")},
         ))
     return out
 
@@ -1182,12 +1577,17 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
     # Every place the map knows, proposed ones included. Waiting for a town to exist
     # before drawing the road to it meant the first run drew no roads at all and the
     # second drew twelve — so the same map came out different on its second look.
-    seen = {p.entity_id for p in placements if p.entity_id}
-    known = list(placements) + [p for p in generator._already_placed(placements)
-                                if p.entity_id not in seen]
+    known = _known_places(generator, placements)
     if len(known) < 2:
         return []
     network = generator.road_network(known)
+    fords = {crossing.cell for crossing in generator.movement.fords}
+    # The travel graph rides the per-pair routes — a segment must run from one place
+    # the router knows to another — but the *ink* dedups against the link table, so
+    # a street twelve routes share is drawn once, at the grade the ground carries
+    # (V2 §10). The routes come busiest-first, so a shared corridor is inked at its
+    # trunk's width and each later route draws only the stretch that is its own.
+    inked: set = set()
     out: list[FeatureDraft] = []
     for order, route in enumerate(network.routes):
         a, b = route.joins
@@ -1196,22 +1596,26 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
         points = generator._road_line(p, path, q)
         length = sum(math.dist(points[n], points[n + 1])
                      for n in range(len(points) - 1))
+        shapes = _road_shapes(generator, route, p, q, network.links, inked,
+                              LAYER_ROADS)
         # A road to a town the writer turned down is a road to nowhere, so it says
         # which towns it needs and goes when they go.
         needs = tuple(_settlement_key(generator, end)
                       for end in (p, q) if end.entity_id is None)
         ends = tuple(sorted((_endpoint_id(generator, p), _endpoint_id(generator, q))))
+        # §66: a road the writer named is theirs — the drawn road IS their entity,
+        # not a generated twin laid beside it with an invented name.
+        theirs = _writers_route(generator, route.given) if route.given else None
         out.append(FeatureDraft(
             kind="road",
             key_parts=ends,
-            subject=SubjectSpec(mode="new", type_key="road", tags=(GENERATED_TAG,),
-                                summary_template="Laid by the map between the places "
-                                                 "it knows."),
-            shapes=(ShapeSpec(role="segment", kind="line", coordinates=points,
-                              layer=LAYER_ROADS,
-                              style={"role": "road",
-                                     "stroke-width": ROAD_WIDTHS.get(route.grade, 2.0)},
-                              approximate=True),),
+            subject=(SubjectSpec(mode="existing", type_key="road",
+                                 entity_id=theirs)
+                     if theirs else
+                     SubjectSpec(mode="new", type_key="road", tags=(GENERATED_TAG,),
+                                 summary_template="Laid by the map between the "
+                                                  "places it knows.")),
+            shapes=shapes,
             segments=(SegmentSpec(
                 from_ref=_ref_for(generator, p),
                 to_ref=_ref_for(generator, q),
@@ -1219,18 +1623,121 @@ def _road_drafts(generator, placements) -> list[FeatureDraft]:
                 # A highway is a made road and a track is a path through the heather,
                 # and a traveller on one arrives a good deal sooner than on the other.
                 quality=ROAD_QUALITY.get(route.grade, 0.7),
-                terrain=generator._road_terrain(path)),),
+                terrain=generator._road_terrain(path),
+                # A road is no older than the younger of the two places it joins —
+                # an honest bound, not a construction date (V2 §10).
+                built_on=_no_younger_end(generator, p, q)),),
             depends_on_keys=needs,
             reasons=(Reason(kind="crossing", weight=1.0,
                             template="the easiest ground between {0} and {1}",
                             refs=(p.name, q.name)),
                      Reason(kind="crossing", weight=0.8,
                             template=route.because),),
-            name_request=NameRequest(key=name_key("road", ends, order),
-                                     kind="road", hint=""),
-            detail={"tier": "road", "span": round(length, 1)},
+            fixed_name=route.given,
+            name_request=(None if route.given else
+                          NameRequest(key=name_key("road", ends, order),
+                                      kind="road", hint="")),
+            detail={"grade": route.grade, "traffic": route.traffic,
+                    "span": round(length, 1),
+                    "crossings": _river_crossings(generator, path, fords,
+                                                  route.grade)},
         ))
     return out
+
+
+def _road_shapes(generator, route, p, q, links: dict, inked: set,
+                 layer: str) -> tuple[ShapeSpec, ...]:
+    """One route's ink: its un-drawn stretches, each at its own link grade.
+
+    Split where the grade changes and where another route already inked the ground.
+    The first and last vertices snap to the places themselves when the run reaches
+    them, exactly as the whole line used to.
+    """
+    path = list(route.cells)
+    runs: list[tuple[str, list]] = []
+    for n in range(len(path) - 1):
+        link = (path[n], path[n + 1]) if path[n] <= path[n + 1] else (
+            path[n + 1], path[n])
+        if link in inked:
+            if runs and runs[-1][1]:
+                runs.append(("", []))            # a gap: someone drew this stretch
+            continue
+        inked.add(link)
+        grade = links.get(link, route.grade)
+        if not runs or runs[-1][0] != grade or not runs[-1][1]:
+            runs.append((grade, [path[n], path[n + 1]]))
+        else:
+            runs[-1][1].append(path[n + 1])
+    shapes: list[ShapeSpec] = []
+    for grade, run in runs:
+        if len(run) < 2:
+            continue
+        points = [list(generator._centre(i, j)) for i, j in run]
+        if run[0] == path[0]:
+            points[0] = [p.x, p.y]
+        if run[-1] == path[-1]:
+            points[-1] = [q.x, q.y]
+        drawn = _road_run_line(points)
+        shapes.append(ShapeSpec(
+            role="spine" if not shapes else "segment", kind="line",
+            coordinates=drawn, layer=layer,
+            style={"role": "road", "stroke-width": ROAD_WIDTHS.get(grade, 2.0)},
+            approximate=True))
+    return tuple(shapes)
+
+
+def _road_run_line(points: list) -> list:
+    """One run's cells as a drawable line — the same easing the whole road got."""
+    from fw.core.mapgen.generate import ROAD_TOLERANCE
+
+    eased = shapes.simplify(shapes.eased([tuple(p) for p in points]),
+                            ROAD_TOLERANCE)
+    return [[round(x, 1), round(y, 1)] for x, y in eased]
+
+
+def _writers_route(generator, given: str) -> str | None:
+    """The entity behind a road the writer named, if the reading has it."""
+    if generator.reading is None:
+        return None
+    for route in generator.reading.routes:
+        if route.name == given and route.entity_id:
+            return route.entity_id
+    return None
+
+
+def _no_younger_end(generator, p, q) -> int | None:
+    """The later founding of the two ends — the earliest day the road makes sense."""
+    days = []
+    for place in (p, q):
+        if place.entity_id:
+            told = _founding(generator, place.entity_id)
+            if told.get("founded") is not None:
+                days.append(told["founded"])
+        else:
+            bound = _no_older_than(generator, place)
+            if bound is not None:
+                days.append(bound)
+    return max(days) if days else None
+
+
+def _river_crossings(generator, path: list, fords: set,
+                     grade: str) -> list[list]:
+    """Where this road meets real water, and how it gets across (V2 §10).
+
+    A ford where the movement stage found one wadeable; a bridge where a highway
+    crosses a channel with no ford to use; nothing at all for a track through a
+    stream — a reader assumes travellers wade.
+    """
+    told: list[list] = []
+    for cell in path:
+        i, j = cell
+        if cell in fords:
+            x, y = generator._centre(i, j)
+            told.append([round(x, 1), round(y, 1), "ford"])
+        elif cell in generator.channel and grade == "highway":
+            x, y = generator._centre(i, j)
+            told.append([round(x, 1), round(y, 1), "bridge"])
+    return told[:3]                     # the budget: a road is not a viaduct
 
 
 # ---- drafts into a plan ----------------------------------------------------

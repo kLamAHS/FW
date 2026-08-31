@@ -9,106 +9,7 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "The Greach",
-   "radius": 4.2,
-   "rank": "tower",
-   "role": "castle",
-   "shape": "tower",
-   "x": 718.1,
-   "y": 496.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Grey Sand",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 636.9,
-   "y": 404.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Grey St Point",
-   "radius": 6.0,
-   "rank": "castle",
-   "role": "castle",
-   "shape": "keep",
-   "x": 268.5,
-   "y": 517.7
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Greymarsh",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 664.0,
-   "y": 349.8
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Last Marsh",
-   "radius": 6.0,
-   "rank": "castle",
-   "role": "castle",
-   "shape": "keep",
-   "x": 555.6,
-   "y": 561.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Lastrand",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 268.5,
-   "y": 626.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Lastrands",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 252.3,
-   "y": 664.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middle Sand",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 306.5,
-   "y": 246.9
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middle Strand",
-   "radius": 6.0,
-   "rank": "castle",
-   "role": "castle",
-   "shape": "keep",
-   "x": 420.2,
-   "y": 447.3
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middlebank",
+   "name": "Greybridge",
    "radius": 4.2,
    "rank": "village",
    "role": "settlement",
@@ -119,271 +20,7 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "The Middleclose",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 571.7,
-   "y": 568.1
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middlefield",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 514.2,
-   "y": 660.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middlemoor",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 409.3,
-   "y": 689.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Middlevale",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 347.9,
-   "y": 724.0
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Nore",
-   "radius": 6.0,
-   "rank": "castle",
-   "role": "castle",
-   "shape": "keep",
-   "x": 349.8,
-   "y": 474.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Norey Shore",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 318.3,
-   "y": 646.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Norey Strand",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 241.5,
-   "y": 349.8
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The North Reach",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 236.0,
-   "y": 474.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northbank",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 666.0,
-   "y": 349.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northcombe",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 240.9,
-   "y": 348.3
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northfield",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 667.9,
-   "y": 398.8
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northford",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 178.1,
-   "y": 665.8
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northgate",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 513.0,
-   "y": 282.6
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northill",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 546.7,
-   "y": 361.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northmarsh",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 594.5,
-   "y": 636.1
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northmere",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 268.7,
-   "y": 301.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northmoor",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 631.0,
-   "y": 416.3
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northollow",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 315.2,
-   "y": 223.4
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northolt",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 213.3,
-   "y": 494.2
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northreach",
-   "radius": 7.0,
-   "rank": "city",
-   "role": "settlement",
-   "shape": "ring",
-   "x": 654.1,
-   "y": 749.9
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northstead",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 680.2,
-   "y": 564.7
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Norththorpe",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 242.5,
-   "y": 402.5
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northvale",
-   "radius": 4.2,
-   "rank": "village",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 560.8,
-   "y": 286.7
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Northwick",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 241.5,
-   "y": 662.6
-  },
-  {
-   "contested": false,
-   "holder_role": "",
-   "name": "The Salt Point",
+   "name": "Greyford",
    "radius": 6.0,
    "rank": "castle",
    "role": "castle",
@@ -394,18 +31,238 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "The Sand",
-   "radius": 5.0,
-   "rank": "keep",
-   "role": "castle",
-   "shape": "keep",
-   "x": 680.2,
-   "y": 490.6
+   "name": "Greywick",
+   "radius": 6.5,
+   "rank": "port",
+   "role": "settlement",
+   "shape": "anchor",
+   "x": 679.6,
+   "y": 564.4
   },
   {
    "contested": false,
    "holder_role": "",
-   "name": "The Sands",
+   "name": "Lastford",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 268.5,
+   "y": 517.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Middlebridge",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 544.8,
+   "y": 360.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Middlepass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 349.8,
+   "y": 474.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Northaven",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 658.5,
+   "y": 349.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Salt Ford",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 511.9,
+   "y": 656.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Saltford",
+   "radius": 7.0,
+   "rank": "city",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 651.0,
+   "y": 749.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Saltpass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 555.6,
+   "y": 561.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Shore Bridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 213.3,
+   "y": 494.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Shorewick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 240.9,
+   "y": 348.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "South Wick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 560.8,
+   "y": 286.7
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Southhaven",
+   "radius": 6.5,
+   "rank": "port",
+   "role": "settlement",
+   "shape": "anchor",
+   "x": 319.2,
+   "y": 223.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Southmarsh",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 306.5,
+   "y": 246.9
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Southpass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 420.2,
+   "y": 447.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "Strandford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 409.3,
+   "y": 689.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Grey Wick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 594.5,
+   "y": 636.1
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Greythorpe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 268.7,
+   "y": 301.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Lastbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 318.2,
+   "y": 648.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Lastwick",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 241.5,
+   "y": 349.8
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Middle Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 631.0,
+   "y": 416.3
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Middleford",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 274.0,
+   "y": 463.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Salt Haven",
    "radius": 6.0,
    "rank": "castle",
    "role": "castle",
@@ -416,35 +273,372 @@
   {
    "contested": false,
    "holder_role": "",
-   "name": "The South Sands",
-   "radius": 6.0,
-   "rank": "castle",
+   "name": "The Saltbridge",
+   "radius": 5.0,
+   "rank": "keep",
    "role": "castle",
    "shape": "keep",
-   "x": 274.0,
-   "y": 463.5
+   "x": 252.3,
+   "y": 664.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Sands Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 242.5,
+   "y": 402.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Sandsbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 240.3,
+   "y": 663.2
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Sandsford",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 680.2,
+   "y": 490.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Shorebridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 347.9,
+   "y": 724.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Shoreford",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 268.5,
+   "y": 626.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Shorehaven",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 718.1,
+   "y": 496.0
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Shorereach",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 236.0,
+   "y": 474.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The South Bridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 667.7,
+   "y": 400.5
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The South Ford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 546.7,
+   "y": 361.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Southbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 573.4,
+   "y": 566.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Strand Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 513.0,
+   "y": 282.6
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Strand Reach",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 666.0,
+   "y": 349.4
+  },
+  {
+   "contested": false,
+   "holder_role": "",
+   "name": "The Strandbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 178.1,
+   "y": 665.8
   }
  ],
  "labels": [
   {
-   "anchor": "end",
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Greybridge",
+   "tier": 2,
+   "x": 449.0,
+   "y": 664.5
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "Greywick",
+   "tier": 1,
+   "x": 690.6,
+   "y": 565.2
+  },
+  {
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
-   "text": "The Grey Sand",
+   "text": "Lastford",
    "tier": 2,
-   "x": 628.4,
-   "y": 404.6
+   "x": 278.0,
+   "y": 518.0
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Middlepass",
+   "tier": 2,
+   "x": 359.3,
+   "y": 474.7
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Northaven",
+   "tier": 2,
+   "x": 667.0,
+   "y": 341.9
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Salt Ford",
+   "tier": 1,
+   "x": 521.7,
+   "y": 657.4
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "Saltford",
+   "tier": 1,
+   "x": 662.5,
+   "y": 750.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     252.7,
+     344.0
+    ],
+    [
+     278.4,
+     318.0
+    ],
+    [
+     279.4,
+     315.3
+    ],
+    [
+     279.3,
+     313.0
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Salthaven",
+   "tier": 2,
+   "x": 279.4,
+   "y": 315.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Saltpass",
+   "tier": 2,
+   "x": 555.6,
+   "y": 549.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     514.9,
+     271.7
+    ],
+    [
+     522.4,
+     264.1
+    ],
+    [
+     525.2,
+     263.1
+    ],
+    [
+     542.8,
+     263.1
+    ],
+    [
+     546.8,
+     265.2
+    ],
+    [
+     557.6,
+     275.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Sandshaven",
+   "tier": 2,
+   "x": 542.8,
+   "y": 263.1
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "Shore Bridge",
+   "tier": 1,
+   "x": 223.1,
+   "y": 494.9
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "South Wick",
+   "tier": 2,
+   "x": 569.3,
+   "y": 287.3
+  },
+  {
+   "anchor": "start",
+   "kind": "city",
+   "role": "label",
+   "size": 13.0,
+   "text": "Southhaven",
+   "tier": 1,
+   "x": 330.2,
+   "y": 224.7
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "Southpass",
+   "tier": 2,
+   "x": 429.7,
+   "y": 447.6
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Strandford",
+   "tier": 2,
+   "x": 417.8,
+   "y": 690.0
   },
   {
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 6.5,
-   "text": "The Grey Sands",
+   "size": 8.91,
+   "text": "The Greach",
    "tier": 2,
-   "x": 702.1,
-   "y": 699.7
+   "x": 280.6,
+   "y": 363.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Grey Sand",
+   "tier": 2,
+   "x": 418.6,
+   "y": 369.8
   },
   {
    "anchor": "middle",
@@ -457,137 +651,11 @@
    "y": 567.4
   },
   {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Grey St Point",
-   "tier": 2,
-   "x": 278.0,
-   "y": 518.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.45,
-   "text": "The Grey Strand",
-   "tier": 1,
-   "x": 130.4,
-   "y": 303.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Greybank",
-   "tier": 2,
-   "x": 179.2,
-   "y": 769.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "The Greyclose",
-   "tier": 2,
-   "x": 120.1,
-   "y": 654.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Greyford",
-   "tier": 2,
-   "x": 387.7,
-   "y": 696.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Greygate",
-   "tier": 2,
-   "x": 485.4,
-   "y": 637.8
-  },
-  {
    "anchor": "middle",
    "kind": "feature",
    "path": [
     [
-     550.1,
-     797.3
-    ],
-    [
-     567.2,
-     797.3
-    ],
-    [
-     569.6,
-     798.7
-    ],
-    [
-     589.2,
-     798.7
-    ],
-    [
-     591.2,
-     800.0
-    ],
-    [
-     594.9,
-     800.1
-    ]
-   ],
-   "role": "label",
-   "size": 8.02,
-   "text": "The Greyhill",
-   "tier": 2,
-   "x": 589.2,
-   "y": 798.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Greyhollow",
-   "tier": 2,
-   "x": 418.6,
-   "y": 369.8
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Greymarsh",
-   "tier": 2,
-   "x": 672.5,
-   "y": 341.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "The Greymere",
-   "tier": 2,
-   "x": 782.6,
-   "y": 440.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     115.5,
+     113.1,
      592.3
     ],
     [
@@ -599,36 +667,66 @@
      582.8
     ],
     [
-     166.9,
+     169.3,
      582.8
     ]
    ],
    "role": "label",
-   "size": 8.02,
-   "text": "The Greymoor",
+   "size": 7.22,
+   "text": "The Grey St Point",
    "tier": 2,
    "x": 137.3,
    "y": 582.8
   },
   {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.0,
-   "text": "The Greyreach",
-   "tier": 1,
-   "x": 776.6,
-   "y": 230.6
-  },
-  {
    "anchor": "start",
-   "kind": "castle",
+   "kind": "village",
    "role": "label",
    "size": 10.0,
-   "text": "The Last Marsh",
+   "text": "The Grey Wick",
    "tier": 2,
-   "x": 565.1,
-   "y": 551.8
+   "x": 603.0,
+   "y": 636.7
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Greycombe",
+   "tier": 2,
+   "x": 595.8,
+   "y": 442.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 6.5,
+   "text": "The Greymarsh",
+   "tier": 2,
+   "x": 784.3,
+   "y": 440.8
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 11.0,
+   "text": "The Greystead",
+   "tier": 2,
+   "x": 179.2,
+   "y": 769.1
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Greythorpe",
+   "tier": 2,
+   "x": 260.2,
+   "y": 302.0
   },
   {
    "anchor": "middle",
@@ -651,156 +749,54 @@
    "y": 522.7
   },
   {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     631.5,
-     429.8
-    ],
-    [
-     631.5,
-     439.8
-    ],
-    [
-     626.0,
-     449.3
-    ],
-    [
-     626.0,
-     489.3
-    ]
-   ],
+   "anchor": "start",
+   "kind": "town",
    "role": "label",
-   "size": 9.5,
-   "text": "The Lastclose",
-   "tier": 2,
-   "x": 626.0,
-   "y": 449.3
+   "size": 11.5,
+   "text": "The Lastbridge",
+   "tier": 1,
+   "x": 328.0,
+   "y": 649.0
   },
   {
    "anchor": "middle",
    "kind": "feature",
    "role": "label",
-   "size": 11.0,
-   "text": "The Lastmarsh",
-   "tier": 2,
-   "x": 594.6,
-   "y": 442.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     251.9,
-     664.0
-    ],
-    [
-     282.8,
-     664.0
-    ],
-    [
-     286.8,
-     661.9
-    ],
-    [
-     299.0,
-     649.7
-    ],
-    [
-     301.7,
-     648.0
-    ],
-    [
-     307.8,
-     647.4
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Lastmere",
-   "tier": 2,
-   "x": 299.0,
-   "y": 649.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Lastrand",
-   "tier": 2,
-   "x": 277.0,
-   "y": 626.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
+   "size": 9.9,
    "text": "The Lastrands",
    "tier": 2,
-   "x": 252.3,
-   "y": 682.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     382.3,
-     324.1
-    ],
-    [
-     382.3,
-     303.1
-    ],
-    [
-     381.3,
-     300.4
-    ],
-    [
-     377.2,
-     294.9
-    ],
-    [
-     376.9,
-     286.8
-    ],
-    [
-     378.9,
-     282.8
-    ],
-    [
-     385.7,
-     276.0
-    ],
-    [
-     387.4,
-     273.3
-    ],
-    [
-     387.6,
-     256.3
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "The Lastreach",
-   "tier": 1,
-   "x": 376.9,
-   "y": 286.8
+   "x": 385.7,
+   "y": 696.1
   },
   {
    "anchor": "end",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
-   "text": "The Middle Sand",
+   "text": "The Lastwick",
    "tier": 2,
-   "x": 298.0,
-   "y": 247.5
+   "x": 233.0,
+   "y": 350.4
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Middle Bridge",
+   "tier": 2,
+   "x": 639.5,
+   "y": 416.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 7.0,
+   "text": "The Middle Sand",
+   "tier": 1,
+   "x": 776.6,
+   "y": 230.6
   },
   {
    "anchor": "middle",
@@ -823,118 +819,24 @@
    "y": 473.5
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
-   "text": "The Middle Strand",
+   "text": "The Middleford",
    "tier": 2,
-   "x": 410.7,
-   "y": 447.6
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Middlebank",
-   "tier": 2,
-   "x": 432.0,
-   "y": 664.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Middleclose",
-   "tier": 1,
-   "x": 581.5,
-   "y": 568.8
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Middlefield",
-   "tier": 1,
-   "x": 524.0,
-   "y": 660.7
+   "x": 283.5,
+   "y": 454.3
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     271.6,
-     325.1
-    ],
-    [
-     277.3,
-     319.3
-    ],
-    [
-     279.4,
-     315.3
-    ],
-    [
-     279.4,
-     303.1
-    ],
-    [
-     280.4,
-     300.4
-    ],
-    [
-     305.4,
-     274.6
-    ],
-    [
-     306.5,
-     271.9
-    ],
-    [
-     306.5,
-     261.5
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Middlemarsh",
-   "tier": 2,
-   "x": 280.4,
-   "y": 300.4
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Middlemoor",
-   "tier": 2,
-   "x": 417.8,
-   "y": 690.0
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Middlevale",
-   "tier": 1,
-   "x": 357.7,
-   "y": 724.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 16.46,
    "text": "The Nore",
-   "tier": 2,
-   "x": 359.3,
-   "y": 474.7
+   "tier": 1,
+   "x": 751.2,
+   "y": 595.5
   },
   {
    "anchor": "middle",
@@ -965,34 +867,14 @@
    "y": 544.5
   },
   {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Norey Shore",
-   "tier": 1,
-   "x": 328.1,
-   "y": 647.1
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Norey Strand",
-   "tier": 2,
-   "x": 250.0,
-   "y": 350.4
-  },
-  {
    "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 9.88,
+   "kind": "feature",
+   "role": "label",
+   "size": 10.37,
    "text": "The North Sand",
-   "tier": 1,
-   "x": 751.2,
-   "y": 595.5
+   "tier": 2,
+   "x": 485.4,
+   "y": 637.8
   },
   {
    "anchor": "middle",
@@ -1006,42 +888,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     513.0,
-     328.0
-    ],
-    [
-     512.6,
-     327.4
-    ],
-    [
-     512.3,
-     276.0
-    ],
-    [
-     514.3,
-     271.9
-    ],
-    [
-     523.8,
-     263.5
-    ],
-    [
-     526.8,
-     263.4
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The North Shore",
-   "tier": 2,
-   "x": 514.3,
-   "y": 271.9
-  },
-  {
-   "anchor": "middle",
    "kind": "region",
    "role": "label-region",
    "size": 22.0,
@@ -1049,146 +895,6 @@
    "tier": 0,
    "x": 362.6,
    "y": 410.1
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northbank",
-   "tier": 2,
-   "x": 657.5,
-   "y": 350.0
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northcombe",
-   "tier": 2,
-   "x": 232.4,
-   "y": 348.9
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Northfield",
-   "tier": 1,
-   "x": 677.7,
-   "y": 399.5
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northford",
-   "tier": 2,
-   "x": 169.6,
-   "y": 679.2
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northmarsh",
-   "tier": 2,
-   "x": 603.0,
-   "y": 636.7
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northmere",
-   "tier": 2,
-   "x": 260.2,
-   "y": 302.0
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northmoor",
-   "tier": 2,
-   "x": 639.5,
-   "y": 416.9
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Northollow",
-   "tier": 1,
-   "x": 325.0,
-   "y": 224.1
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Northolt",
-   "tier": 1,
-   "x": 223.1,
-   "y": 494.9
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "The Northreach",
-   "tier": 1,
-   "x": 665.6,
-   "y": 750.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Northstead",
-   "tier": 1,
-   "x": 690.0,
-   "y": 565.4
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Norththorpe",
-   "tier": 2,
-   "x": 234.0,
-   "y": 403.1
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Northvale",
-   "tier": 2,
-   "x": 569.3,
-   "y": 287.3
-  },
-  {
-   "anchor": "end",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Northwick",
-   "tier": 1,
-   "x": 231.7,
-   "y": 663.3
   },
   {
    "anchor": "middle",
@@ -1201,14 +907,210 @@
    "y": 136.9
   },
   {
+   "anchor": "middle",
+   "kind": "landmass",
+   "role": "label-region",
+   "size": 8.82,
+   "text": "The Salt Point",
+   "tier": 1,
+   "x": 130.4,
+   "y": 303.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Saltbridge",
+   "tier": 2,
+   "x": 252.3,
+   "y": 682.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "feature",
+   "role": "label",
+   "size": 9.9,
+   "text": "The Sands",
+   "tier": 2,
+   "x": 702.0,
+   "y": 699.7
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Sands Bridge",
+   "tier": 2,
+   "x": 234.0,
+   "y": 403.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     243.9,
+     663.5
+    ],
+    [
+     248.9,
+     664.0
+    ],
+    [
+     282.8,
+     664.0
+    ],
+    [
+     286.8,
+     661.9
+    ],
+    [
+     299.0,
+     649.7
+    ],
+    [
+     301.7,
+     648.0
+    ],
+    [
+     314.6,
+     648.2
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Sands Marsh",
+   "tier": 2,
+   "x": 286.8,
+   "y": 661.9
+  },
+  {
+   "anchor": "end",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Sandsbridge",
+   "tier": 1,
+   "x": 230.5,
+   "y": 663.9
+  },
+  {
    "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
-   "text": "The Sand",
+   "text": "The Sandsford",
    "tier": 2,
    "x": 688.7,
    "y": 491.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "river",
+   "path": [
+    [
+     382.3,
+     329.1
+    ],
+    [
+     382.3,
+     303.1
+    ],
+    [
+     381.3,
+     300.4
+    ],
+    [
+     377.2,
+     294.9
+    ],
+    [
+     376.9,
+     286.8
+    ],
+    [
+     378.9,
+     282.8
+    ],
+    [
+     385.7,
+     276.0
+    ],
+    [
+     387.4,
+     273.3
+    ],
+    [
+     387.7,
+     251.3
+    ]
+   ],
+   "role": "label-water",
+   "size": 11.0,
+   "text": "The Sandswater",
+   "tier": 1,
+   "x": 376.9,
+   "y": 286.8
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Shorebridge",
+   "tier": 1,
+   "x": 357.7,
+   "y": 724.7
+  },
+  {
+   "anchor": "start",
+   "kind": "castle",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Shoreford",
+   "tier": 2,
+   "x": 277.0,
+   "y": 626.6
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The South Bridge",
+   "tier": 1,
+   "x": 677.5,
+   "y": 401.2
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     626.1,
+     443.5
+    ],
+    [
+     626.4,
+     511.6
+    ],
+    [
+     628.1,
+     514.3
+    ],
+    [
+     628.9,
+     515.1
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The South Haven",
+   "tier": 2,
+   "x": 628.1,
+   "y": 514.3
   },
   {
    "anchor": "middle",
@@ -1221,24 +1123,48 @@
    "y": 369.1
   },
   {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The South Sands",
-   "tier": 2,
-   "x": 264.5,
-   "y": 454.3
-  },
-  {
    "anchor": "middle",
    "kind": "feature",
+   "path": [
+    [
+     548.2,
+     797.0
+    ],
+    [
+     548.9,
+     797.3
+    ],
+    [
+     567.2,
+     797.3
+    ],
+    [
+     569.6,
+     798.7
+    ],
+    [
+     589.2,
+     798.7
+    ],
+    [
+     591.2,
+     800.0
+    ],
+    [
+     596.0,
+     800.1
+    ],
+    [
+     596.8,
+     800.4
+    ]
+   ],
    "role": "label",
    "size": 6.5,
-   "text": "The South Strand",
+   "text": "The South Sands",
    "tier": 2,
-   "x": 282.7,
-   "y": 363.2
+   "x": 589.2,
+   "y": 798.7
   },
   {
    "anchor": "middle",
@@ -1249,6 +1175,58 @@
    "tier": 1,
    "x": 654.8,
    "y": 112.0
+  },
+  {
+   "anchor": "start",
+   "kind": "town",
+   "role": "label",
+   "size": 11.5,
+   "text": "The Southbridge",
+   "tier": 1,
+   "x": 583.2,
+   "y": 567.1
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     284.4,
+     295.7
+    ],
+    [
+     305.4,
+     274.6
+    ],
+    [
+     306.5,
+     271.9
+    ],
+    [
+     306.8,
+     236.7
+    ],
+    [
+     306.9,
+     236.5
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Southreach",
+   "tier": 2,
+   "x": 306.5,
+   "y": 271.9
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Strand Bridge",
+   "tier": 2,
+   "x": 504.5,
+   "y": 296.0
   }
  ],
  "legend": [
@@ -1257,6 +1235,12 @@
    "note": "",
    "role": "settlement",
    "swatch": "ring"
+  },
+  {
+   "label": "Port",
+   "note": "",
+   "role": "settlement",
+   "swatch": "anchor"
   },
   {
    "label": "Town",
@@ -1300,32 +1284,67 @@
   {
    "kind": "castle",
    "reason": "no room",
-   "text": "The Greach"
+   "text": "Greyford"
   },
   {
-   "kind": "feature",
+   "kind": "castle",
    "reason": "no room",
-   "text": "The Grey Shoreach"
+   "text": "Middlebridge"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "The Grey St Marsh"
+   "text": "Middlerush"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Grey Strands"
+   "text": "North Haven"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Northreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Shore Haven"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Shorerun"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Shorewick"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Southmarsh"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Strandhaven"
   },
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Greycombe"
+   "text": "The Grey Mere"
   },
   {
-   "kind": "feature",
+   "kind": "river",
    "reason": "no room",
-   "text": "The Greyfield"
+   "text": "The Greyflow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Greyhaven"
   },
   {
    "kind": "feature",
@@ -1335,122 +1354,52 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Greystead"
+   "text": "The Greyreach"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Last Flow"
   },
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Greythorpe"
+   "text": "The Last Marsh"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Last Reach"
   },
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Greyvale"
+   "text": "The Lastrand"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Lastreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Middle Haven"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Middle Marsh"
   },
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Greywick"
+   "text": "The Middle Strand"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Lastbank"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lastcombe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lastfield"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Lastford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lastgate"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lasthill"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lasthollow"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Lastholt"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lasthorpe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lastmoor"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Laststead"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lastvale"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Lastwick"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlecombe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middleford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlegate"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlehill"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlehollow"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middleholt"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlemere"
+   "text": "The Middlehaven"
   },
   {
    "kind": "road",
@@ -1458,54 +1407,19 @@
    "text": "The Middlereach"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlestead"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlethorpe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Middlewick"
-  },
-  {
    "kind": "feature",
    "reason": "no room",
    "text": "The Noreach"
   },
   {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Norey Sand"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "The Norey Strands"
-  },
-  {
-   "kind": "castle",
+   "kind": "feature",
    "reason": "no room",
    "text": "The North Reach"
   },
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The North Strands"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Northgate"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Northill"
+   "text": "The Northmere"
   },
   {
    "kind": "sea",
@@ -1513,22 +1427,57 @@
    "text": "The Open Sea"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Salt Marshore"
-  },
-  {
    "kind": "castle",
    "reason": "no room",
-   "text": "The Salt Point"
+   "text": "The Salt Haven"
   },
   {
-   "kind": "castle",
+   "kind": "feature",
    "reason": "no room",
-   "text": "The Sands"
+   "text": "The Saltmere"
   },
   {
    "kind": "landmass",
+   "reason": "no room",
+   "text": "The Sand"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Sands Haven"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Sandsflow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Sandsmarsh"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The Shorehaven"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Shoremarsh"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The Shorereach"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The South Ford"
+  },
+  {
+   "kind": "feature",
    "reason": "no room",
    "text": "The South Sand"
   },
@@ -1536,6 +1485,41 @@
    "kind": "feature",
    "reason": "no room",
    "text": "The South Shore"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The South Strand"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Southaven"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Strand Haven"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Strand Reach"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Strandbridge"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Strandreach"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Strandrush"
   }
  ]
 }

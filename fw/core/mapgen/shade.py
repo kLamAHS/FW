@@ -601,11 +601,11 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
                 shelf = int(depth * depth_step)
                 code = shore_codes[k] if shore_codes is not None else 0
                 if code:
-                    if (code == _CLIFF or code == _FJORD) and depth < HARD_FADE_DEPTH:
+                    if code in (_CLIFF, _FJORD) and depth < HARD_FADE_DEPTH:
                         # A wall into the water: no bright band at all.
                         shelf += int(HARD_SHORE_PUSH
                                      * (1.0 - depth / HARD_FADE_DEPTH))
-                    elif ((code == _ESTUARY or code == _SHELTERED)
+                    elif (code in (_ESTUARY, _SHELTERED)
                           and depth < CALM_FADE_DEPTH):
                         shelf -= int(CALM_SHORE_PULL
                                      * (1.0 - depth / CALM_FADE_DEPTH))

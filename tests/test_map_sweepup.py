@@ -85,7 +85,8 @@ class TestAnIslandIsReachable:
     def test_every_island_gets_a_crossing(self, renn):
         plan = plan_map(renn, MapBrief(invent_settlements=True))
         islands = {f.id for f in plan.features if f.kind == "island"}
-        lanes = [f for f in plan.features if f.kind == "lane"]
+        lanes = [f for f in plan.features if f.kind == "lane"
+                 and f.detail["tier"] == "sea"]
         assert lanes, "islands, and no way to any of them"
         assert {f.anchor_id for f in lanes} <= islands
 
@@ -139,15 +140,23 @@ class TestAnIslandIsReachable:
         """And the island is named this same run, so the name is filled in after."""
         plan = plan_map(renn, MapBrief(invent_settlements=True))
         islands = {f.id: f.name for f in plan.features if f.kind == "island"}
-        for lane in (f for f in plan.features if f.kind == "lane"):
+        for lane in (f for f in plan.features
+                     if f.kind == "lane" and f.detail["tier"] == "sea"):
             island = islands[lane.anchor_id]
             assert island.removeprefix("The ") in lane.name
             assert not lane.name.startswith("The The")
 
     def test_a_crossing_is_offered_rather_than_drawn(self, renn):
-        """§66: a shipping lane is a claim about the world, so the writer decides."""
+        """§66: an island crossing is a claim about the world, so the writer decides.
+
+        A coasting run between two settlements the writer *ranked as ports themselves*
+        is the other case: both ends are their own claim, so the lane explaining the
+        trade between them is accepted by default, like a road between their towns.
+        """
         plan = plan_map(renn, MapBrief(invent_settlements=True))
-        assert all(not f.default_accept for f in plan.features if f.kind == "lane")
+        for lane in (f for f in plan.features if f.kind == "lane"):
+            expected = lane.detail["tier"] == "coastal"
+            assert lane.default_accept == expected, lane.name
 
     def test_the_island_can_be_reached_once_the_crossing_is_accepted(self, renn):
         """The whole point. Before this the answer was "there is no way at all"."""
@@ -159,6 +168,52 @@ class TestAnIslandIsReachable:
         route = Router(renn).route(crossings[0].to_entity_id,
                                    crossings[0].from_entity_id, profile="ship")
         assert route is not None and route.days > 0
+
+
+class TestPortsTradeAlongTheCoast:
+    def test_two_ports_get_a_coasting_run_between_them(self):
+        """The V2 brief's cabotage case: writer-ranked harbours, joined by sea."""
+        import corpus
+
+        world = corpus.long_coast()
+        try:
+            plan = plan_map(world, MapBrief(invent_settlements=True))
+            runs = [f for f in plan.features
+                    if f.kind == "lane" and f.detail["tier"] == "coastal"]
+            assert runs, "two ports on one coast and no trade between them"
+            for run in runs:
+                assert run.default_accept, "their own ports, so accepted by default"
+                assert [s.medium for s in run.segments] == ["sea"]
+                assert "Greywick" in run.name and "Southhaven" in run.name
+        finally:
+            world.close()
+
+    def test_the_run_hugs_the_shore_rather_than_crossing_open_water(self):
+        """Exposure pricing is the mechanism; this is the visible consequence."""
+        import corpus
+
+        from fw.core.mapgen import pipeline
+        from fw.core.mapgen.generate import MapGenerator
+
+        world = corpus.long_coast()
+        try:
+            generator = MapGenerator(world)
+            generator.read_the_world()
+            generator.build_the_world()
+            placed = generator._site_settlements(propose=True)
+            lanes = pipeline._sea_lane_drafts(generator, placed)
+            runs = [d for d in lanes if d.detail["tier"] == "coastal"]
+            assert runs
+            offshore = pipeline._offshore(generator)
+            for run in runs:
+                line = run.shapes[0].coordinates
+                out = [offshore.get(generator._cell_of(x, y), 0)
+                       for x, y in line]
+                worst = max(edge for edge, _ in pipeline.EXPOSURE_BANDS)
+                assert max(out) <= worst, (
+                    f"a coasting run stands {max(out)} cells offshore")
+        finally:
+            world.close()
 
 
 class TestAGeneratedTownHasADateOrHonestlyHasNone:

@@ -135,8 +135,12 @@ def city_belt() -> World:
 
 
 def long_coast() -> World:
-    """Six coastal marches in a chain — bays, ports, and coast-class variety."""
-    return world_of([
+    """Six coastal marches in a chain — bays, ports, and coast-class variety.
+
+    The two ports are the cabotage case: writer-ranked harbours a coasting lane
+    should join, hugging the shore between them.
+    """
+    w = world_of([
         ("The North Strand", "coast and cliffs", "cold, heavy snow", "40000"),
         ("The Grey Shore", "coast and harbour", "temperate, rain", "90000"),
         ("The Middle Sands", "coast and dunes", "warm and humid", "30000"),
@@ -144,6 +148,10 @@ def long_coast() -> World:
         ("The South Reach", "coast and harbour", "hot, arid", "70000"),
         ("The Last Point", "coast, heath and cliffs", "temperate, rain", "10000"),
     ], name="Long Coast")
+    _, grey, _, _, reach, _ = region_ids(w)
+    town(w, "Greywick", "port", grey)
+    town(w, "Southhaven", "port", reach)
+    return w
 
 
 def civil_war() -> World:

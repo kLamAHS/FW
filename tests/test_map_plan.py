@@ -93,6 +93,34 @@ class TestPlanningIsPure:
             assert feature.because().endswith(".")
             assert feature.name in feature.because()
 
+    def test_a_region_s_borders_are_arcs_stroked_once_never_along_the_coast(
+            self, prose: World):
+        """C6 of the V2 brief: the polygon fills, the shared arcs stroke, the
+        coastline wins its own ground — and what each frontier follows is data."""
+        plan = full(prose)
+        regions = [f for f in plan.features if f.kind == "region"]
+        assert regions
+        seen: set = set()
+        stroked = 0
+        for region in regions:
+            outline = next(s for s in region.shapes if s.role == "outline")
+            assert outline.style.get("edge") == "none", region.name
+            for shape in region.shapes:
+                if shape.role != "border":
+                    continue
+                stroked += 1
+                key = tuple(tuple(p) for p in shape.coordinates)
+                assert key not in seen and tuple(reversed(key)) not in seen, \
+                    "one frontier drawn twice"
+                seen.add(key)
+        assert stroked, "no border arcs anywhere"
+        told = [f for f in regions if f.detail["frontiers"]]
+        assert told, "no region says what its borders follow"
+        for region in told:
+            for frontier in region.detail["frontiers"]:
+                assert frontier["kind"] in ("natural", "surveyed")
+                assert frontier["with"] and frontier["along"]
+
 
 class TestApplying:
     def test_a_whole_map_is_one_undoable_action(self, prose: World):

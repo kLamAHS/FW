@@ -696,36 +696,8 @@
    "kind": "road",
    "path": [
     [
-     474.4,
-     469.0
-    ],
-    [
-     494.0,
-     449.3
-    ],
-    [
-     495.7,
-     446.6
-    ],
-    [
-     495.9,
-     414.5
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Greyclose",
-   "tier": 2,
-   "x": 495.7,
-   "y": 446.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     360.2,
-     289.8
+     350.8,
+     280.2
     ],
     [
      385.7,
@@ -740,24 +712,16 @@
      327.4
     ],
     [
-     397.5,
-     338.3
-    ],
-    [
-     398.9,
-     343.7
-    ],
-    [
-     399.0,
-     343.9
+     392.5,
+     332.6
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Greycombe",
    "tier": 2,
-   "x": 388.0,
-   "y": 327.4
+   "x": 387.7,
+   "y": 319.3
   },
   {
    "anchor": "middle",
@@ -842,42 +806,6 @@
    "kind": "road",
    "path": [
     [
-     281.5,
-     636.9
-    ],
-    [
-     285.5,
-     637.9
-    ],
-    [
-     305.8,
-     657.2
-    ],
-    [
-     307.1,
-     657.2
-    ],
-    [
-     313.9,
-     653.1
-    ],
-    [
-     332.8,
-     652.6
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Greyford",
-   "tier": 2,
-   "x": 307.1,
-   "y": 657.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
      195.9,
      653.1
     ],
@@ -908,30 +836,6 @@
    "tier": 2,
    "x": 219.1,
    "y": 647.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     281.7,
-     151.2
-    ],
-    [
-     320.7,
-     190.7
-    ],
-    [
-     327.4,
-     195.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Greymere",
-   "tier": 2,
-   "x": 320.7,
-   "y": 190.7
   },
   {
    "anchor": "start",
@@ -968,14 +872,14 @@
    "y": 698.0
   },
   {
-   "anchor": "middle",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Kneelbank",
    "tier": 2,
-   "x": 330.0,
-   "y": 216.3
+   "x": 338.5,
+   "y": 198.4
   },
   {
    "anchor": "end",
@@ -998,6 +902,16 @@
    "y": 458.6
   },
   {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Kneelfield",
+   "tier": 2,
+   "x": 348.4,
+   "y": 686.8
+  },
+  {
    "anchor": "end",
    "kind": "city",
    "role": "label",
@@ -1006,16 +920,6 @@
    "tier": 1,
    "x": 267.8,
    "y": 149.5
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Kneelhill",
-   "tier": 2,
-   "x": 281.9,
-   "y": 663.9
   },
   {
    "anchor": "end",
@@ -1088,20 +992,20 @@
    "kind": "road",
    "path": [
     [
-     516.7,
-     489.4
+     530.4,
+     503.3
     ],
     [
-     563.3,
-     536.0
+     576.9,
+     549.9
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Kneelstead",
    "tier": 2,
-   "x": 563.3,
-   "y": 536.0
+   "x": 576.9,
+   "y": 549.9
   },
   {
    "anchor": "start",
@@ -1134,14 +1038,14 @@
    "y": 599.3
   },
   {
-   "anchor": "middle",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Teethstead",
    "tier": 2,
-   "x": 465.3,
-   "y": 505.7
+   "x": 473.8,
+   "y": 487.8
   },
   {
    "anchor": "start",
@@ -1244,14 +1148,14 @@
    "y": 783.7
   },
   {
-   "anchor": "middle",
+   "anchor": "end",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The White Below",
    "tier": 2,
-   "x": 339.0,
-   "y": 673.3
+   "x": 329.5,
+   "y": 667.6
   },
   {
    "anchor": "middle",
@@ -1284,13 +1188,13 @@
    "y": 393.4
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Whiteelow",
    "tier": 2,
-   "x": 475.7,
+   "x": 494.7,
    "y": 442.2
   },
   {
@@ -1434,6 +1338,11 @@
   {
    "kind": "road",
    "reason": "no room",
+   "text": "The Greyclose"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
    "text": "The Greygate"
   },
   {
@@ -1479,17 +1388,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Kneelcombe"
+   "text": "The Kneelford"
   },
   {
    "kind": "village",
    "reason": "no room",
-   "text": "The Kneelfield"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Kneelford"
+   "text": "The Kneelhill"
   },
   {
    "kind": "village",

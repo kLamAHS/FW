@@ -55,7 +55,7 @@ KIND_ORDER = ("coast", "island", "region", "range", "hills", "sea", "water", "la
 DETAIL_KEYS: dict[str, tuple[str, ...]] = {
     "coast": ("landmass", "area", "shore", "importance"),
     "island": ("landmass", "area", "shore", "importance"),
-    "region": ("share", "dominant", "importance"),
+    "region": ("share", "dominant", "frontiers", "importance"),
     "range": ("strike", "crest", "importance"),
     "hills": ("crest", "importance"),
     "sea": ("water_kind", "importance"),
@@ -65,9 +65,9 @@ DETAIL_KEYS: dict[str, tuple[str, ...]] = {
               "importance"),
     "natural": ("feature_kind", "area_cells", "importance"),
     "settlement": ("rank", "importance"),
-    "castle": ("rank", "importance"),
+    "castle": ("rank", "archetype", "watches", "importance"),
     "ruin": ("rank", "importance"),
-    "road": ("tier", "span", "importance"),
+    "road": ("grade", "traffic", "span", "importance"),
     "lane": ("tier", "span", "lands_at", "importance"),
 }
 
@@ -516,18 +516,21 @@ def _shape_of(raw) -> ShapeSpec:
 
 
 def _fact_dict(fact: FactSpec, *, redact: bool = False) -> dict:
-    reference = fact.object_ref
-    if redact and reference and not reference.startswith("@"):
-        reference = "<entity>"
-    return {"predicate_key": fact.predicate_key, "object_ref": reference,
-            "value": fact.value, "confidence": fact.confidence, "note": fact.note}
+    def hidden(ref: str | None) -> str | None:
+        if redact and ref and not ref.startswith("@"):
+            return "<entity>"
+        return ref
+    return {"predicate_key": fact.predicate_key, "object_ref": hidden(fact.object_ref),
+            "value": fact.value, "confidence": fact.confidence, "note": fact.note,
+            "subject_ref": hidden(fact.subject_ref)}
 
 
 def _fact_of(raw) -> FactSpec:
     return FactSpec(predicate_key=str(raw["predicate_key"]),
                     object_ref=raw.get("object_ref"), value=raw.get("value"),
                     confidence=str(raw.get("confidence") or "speculative"),
-                    note=str(raw.get("note") or ""))
+                    note=str(raw.get("note") or ""),
+                    subject_ref=raw.get("subject_ref"))
 
 
 def _segment_dict(segment: SegmentSpec, *, redact: bool = False) -> dict:
@@ -537,7 +540,8 @@ def _segment_dict(segment: SegmentSpec, *, redact: bool = False) -> dict:
     return {"from_ref": ref(segment.from_ref), "to_ref": ref(segment.to_ref),
             "length": segment.length, "medium": segment.medium,
             "quality": segment.quality, "terrain": segment.terrain,
-            "closed_seasons": list(segment.closed_seasons), "danger": segment.danger}
+            "closed_seasons": list(segment.closed_seasons), "danger": segment.danger,
+            "built_on": segment.built_on}
 
 
 def _segment_of(raw) -> SegmentSpec:
@@ -547,4 +551,5 @@ def _segment_of(raw) -> SegmentSpec:
                        quality=float(raw.get("quality", 0.8)),
                        terrain=str(raw.get("terrain") or "plain"),
                        closed_seasons=tuple(raw.get("closed_seasons") or ()),
-                       danger=str(raw.get("danger") or "low"))
+                       danger=str(raw.get("danger") or "low"),
+                       built_on=raw.get("built_on"))

@@ -30,8 +30,11 @@ LAYERS = ("land", "waters", "regions", "relief", "features", "waterways",
 # What a shape is *for*, which is how a regeneration recognises its own previous work
 # and how the client decides what to paint it with. An "arm" is a delta's
 # distributary: part of the river, but exempt from the course's own invariants —
-# it is narrower than the mouth it leaves, which no reach upstream may be.
-ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill", "arm")
+# it is narrower than the mouth it leaves, which no reach upstream may be. A "border"
+# is one shared frontier arc, stroked once for both of its regions — their outline
+# polygons carry the fill and no edge of their own.
+ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill", "arm",
+         "border")
 
 
 @dataclass(frozen=True)
@@ -92,6 +95,11 @@ class FactSpec:
     value: str | None = None
     confidence: str = "speculative"
     note: str = ""
+    # When the true sentence runs the other way. Only forward predicate keys are
+    # assertable — "occupies" is a predicate, "occupied_by" is display conjugation — so
+    # a keep that wants to say who holds it must let the house speak: subject_ref names
+    # the fact's subject, and the drafted feature's entity becomes its object.
+    subject_ref: str | None = None
 
 
 @dataclass(frozen=True)
@@ -109,6 +117,9 @@ class SegmentSpec:
     terrain: str = "plain"
     closed_seasons: tuple[str, ...] = ()
     danger: str = "low"
+    # The earliest day this way makes sense — a road is no older than the younger of
+    # the places it joins. None is honestly "it is just there", never a claim.
+    built_on: int | None = None
 
 
 @dataclass(frozen=True)

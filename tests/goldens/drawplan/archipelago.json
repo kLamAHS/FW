@@ -420,20 +420,20 @@
    "kind": "road",
    "path": [
     [
-     302.3,
-     593.7
+     328.0,
+     593.8
     ],
     [
-     347.8,
-     593.5
+     349.1,
+     593.9
     ],
     [
      351.8,
      595.6
     ],
     [
-     354.5,
-     598.3
+     372.7,
+     616.4
     ]
    ],
    "role": "label",
@@ -883,78 +883,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     257.7,
-     455.6
-    ],
-    [
-     257.7,
-     494.0
-    ],
-    [
-     261.1,
-     499.4
-    ],
-    [
-     263.8,
-     501.1
-    ],
-    [
-     269.2,
-     502.5
-    ],
-    [
-     272.9,
-     506.2
-    ],
-    [
-     274.0,
-     508.9
-    ],
-    [
-     274.1,
-     511.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Brokenhill",
-   "tier": 2,
-   "x": 269.2,
-   "y": 502.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     242.0,
-     619.7
-    ],
-    [
-     267.5,
-     594.2
-    ],
-    [
-     268.5,
-     591.5
-    ],
-    [
-     268.5,
-     550.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Brokenhollow",
-   "tier": 2,
-   "x": 268.5,
-   "y": 591.5
-  },
-  {
-   "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 11.0,
@@ -1102,13 +1030,13 @@
    "y": 480.8
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Islesmoor",
    "tier": 2,
-   "x": 203.8,
+   "x": 220.8,
    "y": 632.3
   },
   {
@@ -1381,6 +1309,16 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Brokenflow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Brokenhill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Brokenhollow"
   },
   {
    "kind": "river",

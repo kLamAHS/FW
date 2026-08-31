@@ -580,6 +580,25 @@ def outline(partition: Partition, key: str,
     return outlines(partition, sea).get(key, [])
 
 
+def drawn_arcs(partition: Partition, sea: list[list[bool]] | None = None
+               ) -> list[tuple[str | None, str | None, list[tuple[float, float]]]]:
+    """Every border arc as it is drawn, with its two sides named.
+
+    The same arcs `outlines` assembles into rings, kept apart so a border can be
+    *stroked* exactly once: a map that strokes each region's ring draws every internal
+    frontier twice, and draws the coastline once more on top of its own coast. A side
+    is None where the arc runs against the sea or the map edge — which is how a caller
+    tells a frontier from a shore without re-deriving either.
+    """
+    grid = partition.grid
+
+    def name_of(index: int) -> str | None:
+        return partition.keys[index] if index >= 0 else None
+
+    return [(name_of(arc.left), name_of(arc.right), grid.to_world(_drawn(arc)))
+            for arc in trace_arcs(partition, sea)]
+
+
 def _key(point: tuple[float, float]) -> tuple[float, float]:
     return (round(point[0], 4), round(point[1], 4))
 

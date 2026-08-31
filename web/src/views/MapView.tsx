@@ -307,7 +307,13 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                   d={polygonPath(f.coordinates as number[][][])}
                   fill={fillFor(f)}
                   fillOpacity={fillOpacityFor(f, selectedId === f.entity_id)}
-                  stroke={fillFor(f)}
+                  // A region polygon marked edge:none carries no stroke of its own:
+                  // its frontiers arrive as shared border arcs, each stroked once,
+                  // and its seaward side is the coastline itself. Stroking the ring
+                  // anyway drew every internal border twice and the coast three
+                  // times. Selection still gets its ring — emphasis, not geography.
+                  stroke={f.style.edge === 'none' && selectedId !== f.entity_id
+                    ? 'none' : fillFor(f)}
                   strokeWidth={selectedId === f.entity_id ? 3 : 1.5}
                   strokeDasharray={f.approximate ? '7 5' : undefined}
                   style={{ cursor: 'pointer' }}
@@ -333,7 +339,11 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 key={f.id}
                 d={linePath(f.coordinates as number[][])}
                 fill="none"
-                stroke={fillFor(f)}
+                // A border arc is drawn in border ink whoever holds the ground: in
+                // political mode the *fills* say who holds what, and a frontier that
+                // switched to its owner's colour would read as belonging to one side.
+                stroke={(f.style.role as string) === 'border'
+                  ? paint('border') : fillFor(f)}
                 strokeWidth={
                   // A river and a road both carry their own width: the generator works
                   // one out from how much water passes and the other from how much

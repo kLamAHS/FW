@@ -65,6 +65,71 @@ class TestACastleKnowsWhoseItIs:
         assert set(houses.values()) == {3}, houses
 
 
+class TestACastleSaysWhatItIsFor:
+    def test_every_keep_declares_an_archetype(self, plan):
+        from fw.core.mapgen.pipeline import ARCHETYPES
+
+        keeps = [f for f in plan.features if f.kind == "castle"]
+        assert keeps, "no castles"
+        for keep in keeps:
+            assert keep.detail["archetype"] == ARCHETYPES[keep.detail["watches"]], (
+                keep.name)
+
+    def test_an_invented_keep_says_whose_it_is_from_the_house_s_side(self, plan):
+        """The vocabulary has no `held_by`: "occupied by" is conjugation, `occupies`
+        is the predicate. So the keep's holding fact names the house as its subject —
+        under the same authority the house holds the country, no vaguer, no grander.
+        """
+        invented = [f for f in plan.features if f.kind == "castle"
+                    and f.subject is not None and f.subject.mode == "new"]
+        assert invented, "no invented castles"
+        housed = [spec for f in invented for spec in f.facts if spec.subject_ref]
+        assert housed, "no keep says whose it is"
+        for spec in housed:
+            assert spec.predicate_key in ("legally_owns", "administers", "occupies")
+            assert spec.object_ref is None, "the keep itself is the fact's object"
+
+    def test_accepting_a_keep_writes_the_house_fact_and_only_once(self):
+        from fw.core.mapgen.apply import apply_plan
+        from fw.core.mapgen.decide import DecisionSet
+        from fw.core.model.records import GENERATED_TAG
+
+        AUTHORITIES = ("legally_owns", "administers", "occupies")
+
+        def house_facts(world):
+            keeps = [e for e in world.entities("holding") if GENERATED_TAG in e.tags]
+            return sorted(
+                (keep.name, fact.predicate_key, fact.subject_id)
+                for keep in keeps for fact in world.facts_where(object_id=keep.id)
+                if fact.predicate_key in AUTHORITIES)
+
+        world = seed_renn()
+        try:
+            plan = plan_map(world, MapBrief(invent_settlements=True))
+            apply_plan(world, plan, DecisionSet.accept_all(plan))
+            held = house_facts(world)
+            assert held, "no accepted keep has a house fact"
+            for name, _, subject_id in held:
+                holder = world.get_entity(subject_id)
+                assert holder is not None and holder.type_key == "house", name
+            # Re-accepting must take the reversed fact back before saying it again —
+            # it hangs off the *house*, which is not the entity being re-drawn.
+            again = plan_map(world, MapBrief(invent_settlements=True))
+            apply_plan(world, again, DecisionSet.accept_all(again))
+            assert house_facts(world) == held
+        finally:
+            world.close()
+
+
+class TestTheMapDoesNotSecondGuessTheExampleWorld:
+    def test_the_plausibility_notes_are_silent_on_renn(self, plan):
+        """V2 §44's own gate: loud on rigged worlds, silent on a sound one. Every
+        check is tuned against this — a diagnostic that complains about the example
+        world is measuring its own thresholds, not the geography."""
+        said = [f.message for f in plan.findings if f.code == "implausible"]
+        assert said == [], said
+
+
 class TestTheWritersOwnRoadsAreLaidFirst:
     def test_a_road_the_writer_named_is_on_the_map_as_theirs(self, plan):
         said = reasons(plan, "road")

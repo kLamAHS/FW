@@ -243,10 +243,14 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
         fill = fill_for(f, mode, holders, css)
         opacity = 0.0 if ground and f["layer"] in REDUNDANT_OVER_GROUND else (
             0.12 if ground else 0.3)
+        # MapView: a polygon marked edge:none carries no stroke of its own — its
+        # borders arrive as shared arcs, each stroked once, and the coastline wins
+        # on its seaward side.
+        edge = "none" if (f.get("style") or {}).get("edge") == "none" else fill
         dash = ' stroke-dasharray="7 5"' if f.get("approximate") else ""
         d = _polygon_path(f["coordinates"])
         out.append(f'<path d="{d}" fill="{fill}" fill-opacity="{opacity}" '
-                   f'stroke="{fill}" stroke-width="1.5"{dash}/>')
+                   f'stroke="{edge}" stroke-width="1.5"{dash}/>')
         if (f.get("control") or {}).get("claims"):
             out.append(f'<path d="{d}" fill="url(#contested-hatch)" stroke="none"/>')
 
@@ -256,8 +260,11 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
         # Only an explicit dash in the style: MapView does not dash approximate
         # *lines* (a generated river is a guess about a real river, not a sketch).
         dash = ' stroke-dasharray="6 4"' if style.get("dash") else ""
+        # MapView: a border arc paints in border ink whoever holds either side.
+        stroke = (paint(css, "border") if style.get("role") == "border"
+                  else fill_for(f, mode, holders, css))
         out.append(f'<path d="{_line_path(f["coordinates"])}" fill="none" '
-                   f'stroke="{fill_for(f, mode, holders, css)}" '
+                   f'stroke="{stroke}" '
                    f'stroke-width="{wide}" stroke-linecap="round" '
                    f'stroke-linejoin="round"{dash}/>')
 

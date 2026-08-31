@@ -326,42 +326,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     482.1,
-     325.0
-    ],
-    [
-     488.6,
-     331.5
-    ],
-    [
-     498.1,
-     335.6
-    ],
-    [
-     515.7,
-     353.2
-    ],
-    [
-     518.4,
-     354.9
-    ],
-    [
-     522.8,
-     355.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Muchcombe",
-   "tier": 2,
-   "x": 515.7,
-   "y": 353.2
-  },
-  {
-   "anchor": "middle",
    "kind": "feature",
    "path": [
     [
@@ -421,20 +385,44 @@
    "kind": "road",
    "path": [
     [
-     328.0,
-     257.6
+     297.6,
+     194.9
     ],
     [
-     362.1,
-     291.7
+     300.0,
+     197.4
+    ],
+    [
+     301.0,
+     200.2
+    ],
+    [
+     301.0,
+     217.8
+    ],
+    [
+     306.1,
+     225.9
+    ],
+    [
+     306.5,
+     234.0
+    ],
+    [
+     308.5,
+     238.1
+    ],
+    [
+     309.9,
+     239.5
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "Muchreach",
    "tier": 2,
-   "x": 362.1,
-   "y": 291.7
+   "x": 306.1,
+   "y": 225.9
   },
   {
    "anchor": "middle",
@@ -479,82 +467,6 @@
    "tier": 1,
    "x": 452.7,
    "y": 594.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     394.9,
-     290.2
-    ],
-    [
-     423.6,
-     290.2
-    ],
-    [
-     433.1,
-     284.8
-    ],
-    [
-     444.6,
-     284.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Muchthorpe",
-   "tier": 2,
-   "x": 433.1,
-   "y": 284.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     555.8,
-     382.5
-    ],
-    [
-     559.0,
-     385.7
-    ],
-    [
-     560.7,
-     388.4
-    ],
-    [
-     562.1,
-     393.8
-    ],
-    [
-     566.1,
-     399.2
-    ],
-    [
-     567.5,
-     404.6
-    ],
-    [
-     576.3,
-     414.1
-    ],
-    [
-     577.6,
-     419.5
-    ],
-    [
-     578.1,
-     420.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Muchwick",
-   "tier": 2,
-   "x": 566.1,
-   "y": 399.2
   },
   {
    "anchor": "middle",
@@ -837,28 +749,64 @@
    "kind": "road",
    "path": [
     [
-     359.8,
-     442.7
+     335.1,
+     462.0
+    ],
+    [
+     347.8,
+     449.3
+    ],
+    [
+     357.2,
+     445.3
     ],
     [
      374.8,
      427.7
     ],
     [
-     378.9,
-     418.2
-    ],
-    [
-     399.3,
-     397.8
+     377.7,
+     420.9
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Muchgate",
    "tier": 2,
-   "x": 378.9,
-   "y": 418.2
+   "x": 357.2,
+   "y": 445.3
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     400.4,
+     289.9
+    ],
+    [
+     423.6,
+     290.2
+    ],
+    [
+     433.1,
+     284.8
+    ],
+    [
+     445.3,
+     284.8
+    ],
+    [
+     449.6,
+     287.3
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Muchill",
+   "tier": 2,
+   "x": 433.1,
+   "y": 284.8
   },
   {
    "anchor": "start",
@@ -902,6 +850,16 @@
   },
   {
    "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Nowhermere",
+   "tier": 2,
+   "x": 391.2,
+   "y": 329.3
+  },
+  {
+   "anchor": "start",
    "kind": "town",
    "role": "label",
    "size": 11.5,
@@ -909,6 +867,16 @@
    "tier": 1,
    "x": 739.5,
    "y": 482.3
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Nowherthorpe",
+   "tier": 2,
+   "x": 361.0,
+   "y": 290.1
   },
   {
    "anchor": "start",
@@ -978,6 +946,21 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Muchcombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Muchthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Muchwick"
+  },
+  {
    "kind": "town",
    "reason": "no room",
    "text": "Nowherbridge"
@@ -1023,11 +1006,6 @@
    "text": "The Muchbank"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Muchfield"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "The Muchflow"
@@ -1036,11 +1014,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Muchford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Muchill"
   },
   {
    "kind": "road",
@@ -1066,16 +1039,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Muchvale"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Nowhermere"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Nowherthorpe"
   },
   {
    "kind": "sea",

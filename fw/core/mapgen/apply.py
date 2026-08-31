@@ -277,9 +277,17 @@ class _Writer:
         target = self._resolve_ref(spec.object_ref) if spec.object_ref else None
         if spec.object_ref and target is None:
             return
+        subject = entity_id
+        if spec.subject_ref:
+            # The sentence runs the other way: the named subject speaks, and this
+            # feature's entity is what it speaks about.
+            subject = self._resolve_ref(spec.subject_ref)
+            if subject is None:
+                return
+            target = target or entity_id
         try:
             self.world.assert_fact(
-                entity_id, spec.predicate_key, target, value=spec.value,
+                subject, spec.predicate_key, target, value=spec.value,
                 confidence=spec.confidence, note=spec.note,
                 props=ledger_module.stamp(feature.id, "fact", "", "")
             )
@@ -300,6 +308,7 @@ class _Writer:
             origin, target, spec.length, medium=spec.medium, quality=spec.quality,
             terrain=spec.terrain, entity_id=self.entity_of.get(feature.id),
             closed_seasons=spec.closed_seasons, danger=spec.danger,
+            built_on=spec.built_on,
             props=ledger_module.stamp(feature.id, "segment", "", ""),
         )
         self.wrote = True

@@ -755,6 +755,50 @@
    "y": 281.1
   },
   {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     534.4,
+     318.3
+    ],
+    [
+     536.0,
+     319.3
+    ],
+    [
+     549.5,
+     332.5
+    ],
+    [
+     554.9,
+     333.9
+    ],
+    [
+     557.7,
+     335.6
+    ],
+    [
+     570.9,
+     349.1
+    ],
+    [
+     571.9,
+     351.8
+    ],
+    [
+     571.9,
+     363.1
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "Little Marchill",
+   "tier": 2,
+   "x": 557.7,
+   "y": 335.6
+  },
+  {
    "anchor": "start",
    "kind": "city",
    "role": "label",
@@ -871,8 +915,8 @@
    "kind": "road",
    "path": [
     [
-     551.2,
-     516.7
+     558.7,
+     509.2
     ],
     [
      559.0,
@@ -891,8 +935,12 @@
      445.3
     ],
     [
-     565.3,
-     442.8
+     571.5,
+     435.8
+    ],
+    [
+     571.5,
+     434.5
     ]
    ],
    "role": "label",
@@ -1407,16 +1455,6 @@
    "kind": "castle",
    "role": "label",
    "size": 10.0,
-   "text": "Marchstead",
-   "tier": 2,
-   "x": 569.5,
-   "y": 339.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
    "text": "Marchvale",
    "tier": 2,
    "x": 483.9,
@@ -1453,13 +1491,13 @@
    "y": 410.4
   },
   {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "New Marchbank",
    "tier": 2,
-   "x": 455.4,
+   "x": 438.4,
    "y": 327.4
   },
   {
@@ -1513,16 +1551,6 @@
    "y": 251.7
   },
   {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchmere",
-   "tier": 2,
-   "x": 313.7,
-   "y": 314.2
-  },
-  {
    "anchor": "start",
    "kind": "village",
    "role": "label",
@@ -1571,6 +1599,16 @@
    "tier": 2,
    "x": 391.5,
    "y": 388.9
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "New Marchwick",
+   "tier": 2,
+   "x": 230.5,
+   "y": 314.8
   },
   {
    "anchor": "start",
@@ -1891,11 +1929,6 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Great Marchclose"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "Great Marchcombe"
   },
   {
@@ -1961,11 +1994,6 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Great Marchvale"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "Great Marchwick"
   },
   {
@@ -2001,11 +2029,6 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Little Marchill"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "Little Marchmere"
   },
   {
@@ -2037,11 +2060,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Little Marchthorpe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Little Marchvale"
   },
   {
    "kind": "road",
@@ -2186,6 +2204,11 @@
   {
    "kind": "castle",
    "reason": "no room",
+   "text": "Marchstead"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
    "text": "Marchthorpe"
   },
   {
@@ -2211,6 +2234,11 @@
   {
    "kind": "village",
    "reason": "no room",
+   "text": "New Marchmere"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
    "text": "New Marcholt"
   },
   {
@@ -2222,11 +2250,6 @@
    "kind": "village",
    "reason": "no room",
    "text": "New Marchreach"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "New Marchwick"
   },
   {
    "kind": "village",
@@ -2247,16 +2270,6 @@
    "kind": "village",
    "reason": "no room",
    "text": "North Marchthorpe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Old Marchcombe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Old Marchford"
   },
   {
    "kind": "road",
@@ -2287,11 +2300,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Old Marcholt"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Old Marchreach"
   },
   {
    "kind": "road",

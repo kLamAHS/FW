@@ -500,33 +500,23 @@
    "y": 437.1
   },
   {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenshollow",
-   "tier": 2,
-   "x": 416.1,
-   "y": 604.7
-  },
-  {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Fensholt",
    "tier": 2,
-   "x": 395.5,
+   "x": 412.5,
    "y": 642.9
   },
   {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Fensmere",
    "tier": 2,
-   "x": 391.8,
+   "x": 372.8,
    "y": 577.6
   },
   {
@@ -540,13 +530,13 @@
    "y": 137.6
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "The Fensreach",
    "tier": 2,
-   "x": 233.0,
+   "x": 250.0,
    "y": 460.7
   },
   {
@@ -854,8 +844,8 @@
    "kind": "road",
    "path": [
     [
-     212.2,
-     185.2
+     207.7,
+     180.7
     ],
     [
      212.3,
@@ -866,12 +856,8 @@
      187.0
     ],
     [
-     271.9,
+     268.4,
      187.3
-    ],
-    [
-     274.6,
-     188.3
     ]
    ],
    "role": "label",
@@ -1050,112 +1036,106 @@
    "kind": "road",
    "path": [
     [
-     432.5,
-     611.1
+     408.4,
+     587.4
     ],
     [
-     446.6,
-     625.0
+     445.3,
+     624.0
     ],
     [
      449.3,
      626.0
     ],
     [
-     457.4,
-     626.4
-    ],
-    [
-     473.7,
-     641.3
-    ],
-    [
-     476.4,
-     642.3
-    ],
-    [
-     478.8,
-     642.3
+     451.0,
+     626.0
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Highford",
    "tier": 2,
-   "x": 457.4,
-   "y": 626.4
+   "x": 449.3,
+   "y": 626.0
   },
   {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     544.6,
-     754.7
+     473.7,
+     480.3
     ],
     [
-     544.8,
-     770.3
+     488.6,
+     465.6
     ],
     [
-     548.2,
-     775.7
+     498.1,
+     461.5
     ],
     [
-     552.2,
-     777.7
-    ],
-    [
-     587.7,
-     777.7
+     515.6,
+     444.0
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "The Highmoor",
+   "text": "The Highgate",
    "tier": 2,
-   "x": 548.2,
-   "y": 775.7
+   "x": 498.1,
+   "y": 461.5
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "role": "label",
+   "size": 9.5,
+   "text": "The Highill",
+   "tier": 2,
+   "x": 596.9,
+   "y": 777.7
   },
   {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     517.3,
-     268.0
+     507.3,
+     289.1
     ],
     [
-     517.0,
-     268.2
+     507.9,
+     290.9
     ],
     [
-     511.6,
-     269.6
+     531.9,
+     315.3
     ],
     [
-     507.2,
-     274.6
+     534.6,
+     317.0
     ],
     [
-     506.9,
-     288.2
+     538.7,
+     317.6
     ],
     [
-     508.9,
-     292.2
+     546.8,
+     322.7
     ],
     [
-     521.8,
-     305.2
+     556.5,
+     322.5
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "The Higholt",
+   "text": "The Highollow",
    "tier": 2,
-   "x": 507.2,
-   "y": 274.6
+   "x": 534.6,
+   "y": 317.0
   },
   {
    "anchor": "middle",
@@ -1196,50 +1176,56 @@
    "y": 511.4
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Siltclose",
    "tier": 2,
-   "x": 373.3,
-   "y": 577.8
+   "x": 390.3,
+   "y": 569.3
   },
   {
    "anchor": "middle",
    "kind": "road",
    "path": [
     [
-     259.3,
-     247.1
+     229.0,
+     268.3
     ],
     [
-     288.2,
-     246.9
+     231.3,
+     267.5
     ],
     [
-     290.9,
-     247.9
+     250.3,
+     248.9
     ],
     [
-     304.4,
-     261.1
+     253.0,
+     247.2
     ],
     [
-     305.1,
-     263.8
-    ],
-    [
-     304.8,
-     264.2
+     274.8,
+     247.0
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Siltford",
    "tier": 2,
-   "x": 304.4,
-   "y": 261.1
+   "x": 250.3,
+   "y": 248.9
+  },
+  {
+   "anchor": "start",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "The Siltgate",
+   "tier": 2,
+   "x": 552.8,
+   "y": 751.3
   },
   {
    "anchor": "end",
@@ -1249,7 +1235,7 @@
    "text": "The Silthill",
    "tier": 2,
    "x": 535.5,
-   "y": 789.8
+   "y": 777.0
   },
   {
    "anchor": "start",
@@ -1266,40 +1252,32 @@
    "kind": "road",
    "path": [
     [
-     286.6,
-     399.4
+     284.6,
+     369.6
+    ],
+    [
+     284.8,
+     396.5
     ],
     [
      289.9,
      404.6
     ],
     [
-     290.2,
-     412.8
+     290.5,
+     414.1
     ],
     [
-     291.2,
-     415.5
-    ],
-    [
-     300.7,
-     426.3
-    ],
-    [
-     301.4,
-     441.2
-    ],
-    [
-     309.6,
-     450.5
+     298.8,
+     424.0
     ]
    ],
    "role": "label",
    "size": 9.5,
    "text": "The Silthorpe",
    "tier": 2,
-   "x": 291.2,
-   "y": 415.5
+   "x": 289.9,
+   "y": 404.6
   },
   {
    "anchor": "start",
@@ -1322,42 +1300,14 @@
    "y": 687.2
   },
   {
-   "anchor": "middle",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Siltvale",
    "tier": 2,
-   "x": 602.3,
-   "y": 801.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     317.7,
-     501.0
-    ],
-    [
-     331.5,
-     487.2
-    ],
-    [
-     334.2,
-     486.6
-    ],
-    [
-     361.6,
-     513.4
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Siltwater",
-   "tier": 2,
-   "x": 334.2,
-   "y": 486.6
+   "x": 593.8,
+   "y": 796.1
   },
   {
    "anchor": "start",
@@ -1370,14 +1320,14 @@
    "y": 302.1
   },
   {
-   "anchor": "end",
+   "anchor": "middle",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Upper Fensgate",
    "tier": 2,
-   "x": 568.7,
-   "y": 322.7
+   "x": 577.2,
+   "y": 340.6
   },
   {
    "anchor": "start",
@@ -1523,6 +1473,11 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The Fenshollow"
+  },
+  {
    "kind": "feature",
    "reason": "no room",
    "text": "The Groundcombe"
@@ -1625,11 +1580,6 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Highclose"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "The Highcombe"
   },
   {
@@ -1640,32 +1590,22 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Highgate"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Highill"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "The Highmere"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Highollow"
+   "text": "The Highmoor"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Higholt"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The Highreach"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Highstead"
   },
   {
    "kind": "road",
@@ -1703,11 +1643,6 @@
    "text": "The Siltfield"
   },
   {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Siltgate"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Siltholt"
@@ -1721,6 +1656,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Siltstead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Siltwater"
   },
   {
    "kind": "road",

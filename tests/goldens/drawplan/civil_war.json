@@ -41,7 +41,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-0",
    "name": "Kingsgate",
    "radius": 5.0,
    "rank": "keep",
@@ -140,7 +140,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-1",
    "name": "Prizegate",
    "radius": 5.0,
    "rank": "keep",
@@ -184,7 +184,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-1",
    "name": "Rebel Gate",
    "radius": 6.0,
    "rank": "castle",
@@ -195,7 +195,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-0",
    "name": "Rebel Pass",
    "radius": 5.0,
    "rank": "keep",
@@ -327,7 +327,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-0",
    "name": "The Kingspass",
    "radius": 6.0,
    "rank": "castle",
@@ -360,7 +360,7 @@
   },
   {
    "contested": false,
-   "holder_role": "",
+   "holder_role": "holder-1",
    "name": "The Prize Gate",
    "radius": 5.0,
    "rank": "keep",
@@ -467,7 +467,7 @@
    "text": "Crown Ford",
    "tier": 2,
    "x": 207.3,
-   "y": 517.0
+   "y": 504.2
   },
   {
    "anchor": "middle",
@@ -481,34 +481,6 @@
   },
   {
    "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     390.4,
-     623.3
-    ],
-    [
-     401.9,
-     634.8
-    ],
-    [
-     406.0,
-     636.9
-    ],
-    [
-     432.8,
-     636.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Crownland",
-   "tier": 2,
-   "x": 406.0,
-   "y": 636.9
-  },
-  {
-   "anchor": "middle",
    "kind": "feature",
    "role": "label",
    "size": 6.5,
@@ -516,6 +488,26 @@
    "tier": 2,
    "x": 414.2,
    "y": 470.4
+  },
+  {
+   "anchor": "middle",
+   "kind": "road",
+   "role": "label",
+   "size": 9.5,
+   "text": "Crownwick",
+   "tier": 2,
+   "x": 221.8,
+   "y": 496.0
+  },
+  {
+   "anchor": "end",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Kings Ford",
+   "tier": 2,
+   "x": 671.9,
+   "y": 480.5
   },
   {
    "anchor": "middle",
@@ -600,14 +592,14 @@
    "y": 634.8
   },
   {
-   "anchor": "middle",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "Kingsmere",
    "tier": 2,
-   "x": 288.4,
-   "y": 527.3
+   "x": 296.9,
+   "y": 509.4
   },
   {
    "anchor": "start",
@@ -668,38 +660,6 @@
    "tier": 1,
    "x": 627.9,
    "y": 412.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     643.1,
-     491.0
-    ],
-    [
-     644.3,
-     488.6
-    ],
-    [
-     672.8,
-     460.2
-    ],
-    [
-     676.8,
-     458.1
-    ],
-    [
-     677.6,
-     458.1
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Prize Land",
-   "tier": 2,
-   "x": 672.8,
-   "y": 460.2
   },
   {
    "anchor": "start",
@@ -960,48 +920,56 @@
    "kind": "road",
    "path": [
     [
-     596.8,
-     380.4
+     648.9,
+     502.4
     ],
     [
-     602.3,
-     385.7
+     652.1,
+     506.2
     ],
     [
-     605.1,
-     386.4
+     654.1,
+     513.0
     ],
     [
-     629.4,
-     362.7
+     661.9,
+     521.1
     ],
     [
-     632.1,
-     361.0
+     666.0,
+     523.1
     ],
     [
-     637.6,
-     359.6
+     672.8,
+     523.1
     ],
     [
-     647.0,
-     350.8
+     675.5,
+     524.1
     ],
     [
-     649.7,
-     349.8
+     689.0,
+     537.3
     ],
     [
-     650.3,
-     349.8
+     690.4,
+     538.0
+    ],
+    [
+     693.1,
+     537.3
+    ],
+    [
+     699.0,
+     531.6
     ]
    ],
    "role": "label",
    "size": 9.5,
-   "text": "The Crownfield",
+   "text": "The Crownford",
    "tier": 2,
-   "x": 632.1,
-   "y": 361.0
+   "x": 672.8,
+   "y": 523.1
   },
   {
    "anchor": "middle",
@@ -1032,6 +1000,26 @@
    "y": 426.8
   },
   {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     766.9,
+     450.5
+    ],
+    [
+     766.9,
+     377.7
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Crownmere",
+   "tier": 2,
+   "x": 766.9,
+   "y": 377.7
+  },
+  {
    "anchor": "start",
    "kind": "castle",
    "role": "label",
@@ -1042,50 +1030,14 @@
    "y": 488.9
   },
   {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     217.3,
-     501.0
-    ],
-    [
-     219.4,
-     497.5
-    ],
-    [
-     221.8,
-     496.0
-    ],
-    [
-     277.3,
-     496.0
-    ],
-    [
-     282.8,
-     499.4
-    ],
-    [
-     286.8,
-     506.2
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Crownthorpe",
-   "tier": 2,
-   "x": 277.3,
-   "y": 496.0
-  },
-  {
-   "anchor": "start",
+   "anchor": "end",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Kings Bridge",
    "tier": 2,
-   "x": 351.6,
-   "y": 605.9
+   "x": 334.6,
+   "y": 618.7
   },
   {
    "anchor": "middle",
@@ -1126,30 +1078,6 @@
    "tier": 1,
    "x": 276.5,
    "y": 100.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     766.5,
-     451.4
-    ],
-    [
-     766.9,
-     450.7
-    ],
-    [
-     766.9,
-     379.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Kingsmarch",
-   "tier": 2,
-   "x": 766.9,
-   "y": 450.7
   },
   {
    "anchor": "middle",
@@ -1212,62 +1140,6 @@
    "y": 686.0
   },
   {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     650.0,
-     503.8
-    ],
-    [
-     652.1,
-     506.2
-    ],
-    [
-     654.1,
-     513.0
-    ],
-    [
-     661.9,
-     521.1
-    ],
-    [
-     666.0,
-     523.1
-    ],
-    [
-     672.8,
-     523.1
-    ],
-    [
-     675.5,
-     524.1
-    ],
-    [
-     689.0,
-     537.3
-    ],
-    [
-     690.4,
-     538.0
-    ],
-    [
-     693.1,
-     537.3
-    ],
-    [
-     697.7,
-     532.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Prize Port",
-   "tier": 2,
-   "x": 672.8,
-   "y": 523.1
-  },
-  {
    "anchor": "end",
    "kind": "village",
    "role": "label",
@@ -1288,13 +1160,13 @@
    "y": 137.6
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "The Prizeford",
    "tier": 2,
-   "x": 573.8,
+   "x": 590.8,
    "y": 372.4
   },
   {
@@ -1436,6 +1308,42 @@
    "y": 561.0
   },
   {
+   "anchor": "middle",
+   "kind": "road",
+   "path": [
+    [
+     381.3,
+     615.4
+    ],
+    [
+     381.6,
+     615.5
+    ],
+    [
+     384.3,
+     617.2
+    ],
+    [
+     401.9,
+     634.8
+    ],
+    [
+     406.0,
+     636.9
+    ],
+    [
+     444.8,
+     636.9
+    ]
+   ],
+   "role": "label",
+   "size": 9.5,
+   "text": "The Rebelmarch",
+   "tier": 2,
+   "x": 401.9,
+   "y": 634.8
+  },
+  {
    "anchor": "start",
    "kind": "town",
    "role": "label",
@@ -1525,12 +1433,22 @@
   {
    "kind": "road",
    "reason": "no room",
+   "text": "Crown Land"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
    "text": "Crown March"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crown Port"
+   "text": "Crownbank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownclose"
   },
   {
    "kind": "road",
@@ -1540,12 +1458,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crownhill"
+   "text": "Crowngate"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crownhollow"
+   "text": "Crownhill"
   },
   {
    "kind": "road",
@@ -1555,37 +1473,17 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crownreach"
+   "text": "Crownthorpe"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crownvale"
+   "text": "Kingsmarch"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Crownwick"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Kings Ford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Kings Port"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Kingsland"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Kingstead"
+   "text": "Prize Port"
   },
   {
    "kind": "feature",
@@ -1598,6 +1496,16 @@
    "text": "Prizegate"
   },
   {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Prizeland"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Prizeport"
+  },
+  {
    "kind": "river",
    "reason": "no room",
    "text": "Prizerun"
@@ -1605,22 +1513,17 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Rebeland"
+   "text": "Rebel Port"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "Rebelmarch"
+   "text": "Rebeland"
   },
   {
    "kind": "river",
    "reason": "no room",
    "text": "Rebelwater"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Crown Land"
   },
   {
    "kind": "feature",
@@ -1633,11 +1536,6 @@
    "text": "The Crown Weald"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Crownbank"
-  },
-  {
    "kind": "village",
    "reason": "no room",
    "text": "The Crownbridge"
@@ -1645,17 +1543,17 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Crownclose"
+   "text": "The Crownfield"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Crownford"
+   "text": "The Crownhollow"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Crowngate"
+   "text": "The Crownland"
   },
   {
    "kind": "road",
@@ -1665,12 +1563,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Crownmere"
+   "text": "The Crownport"
   },
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Crownport"
+   "text": "The Crownreach"
   },
   {
    "kind": "road",
@@ -1728,6 +1626,11 @@
    "text": "The Kingsrun"
   },
   {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kingstead"
+  },
+  {
    "kind": "sea",
    "reason": "no room",
    "text": "The Open Sea"
@@ -1740,7 +1643,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Prize March"
+   "text": "The Prize Land"
   },
   {
    "kind": "feature",
@@ -1755,22 +1658,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Prizeland"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "The Prizemarch"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Prizeport"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Rebel Port"
   },
   {
    "kind": "feature",

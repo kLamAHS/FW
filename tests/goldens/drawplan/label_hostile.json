@@ -335,7 +335,7 @@
    "text": "Great Srmarkford",
    "tier": 2,
    "x": 327.6,
-   "y": 237.8
+   "y": 225.0
   },
   {
    "anchor": "end",
@@ -368,13 +368,13 @@
    "y": 227.3
   },
   {
-   "anchor": "end",
+   "anchor": "start",
    "kind": "village",
    "role": "label",
    "size": 10.0,
    "text": "Little Srmarkfield",
    "tier": 2,
-   "x": 260.0,
+   "x": 277.0,
    "y": 189.4
   },
   {
@@ -396,6 +396,16 @@
    "tier": 1,
    "x": 233.5,
    "y": 501.0
+  },
+  {
+   "anchor": "middle",
+   "kind": "village",
+   "role": "label",
+   "size": 10.0,
+   "text": "Little Srmarkhollow",
+   "tier": 2,
+   "x": 567.2,
+   "y": 362.3
   },
   {
    "anchor": "start",
@@ -435,55 +445,17 @@
    "text": "Little Srmarkthorpe",
    "tier": 2,
    "x": 493.6,
-   "y": 638.0
+   "y": 646.5
   },
   {
    "anchor": "middle",
    "kind": "road",
-   "path": [
-    [
-     308.0,
-     625.8
-    ],
-    [
-     312.6,
-     627.1
-    ],
-    [
-     318.0,
-     631.1
-    ],
-    [
-     323.4,
-     632.5
-    ],
-    [
-     328.8,
-     636.5
-    ],
-    [
-     334.2,
-     637.9
-    ],
-    [
-     347.8,
-     651.1
-    ],
-    [
-     351.8,
-     653.1
-    ],
-    [
-     381.1,
-     653.1
-    ]
-   ],
    "role": "label",
    "size": 9.5,
    "text": "Little Srmarkwick",
    "tier": 2,
-   "x": 328.8,
-   "y": 636.5
+   "x": 351.8,
+   "y": 653.1
   },
   {
    "anchor": "start",
@@ -580,14 +552,14 @@
    "y": 752.7
   },
   {
-   "anchor": "start",
+   "anchor": "middle",
    "kind": "castle",
    "role": "label",
    "size": 10.0,
    "text": "Srmardhuponre",
    "tier": 2,
-   "x": 435.1,
-   "y": 653.4
+   "x": 425.6,
+   "y": 642.0
   },
   {
    "anchor": "middle",
@@ -748,64 +720,14 @@
    "y": 319.3
   },
   {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     298.2,
-     222.3
-    ],
-    [
-     301.7,
-     220.1
-    ],
-    [
-     315.3,
-     219.8
-    ],
-    [
-     319.3,
-     217.8
-    ],
-    [
-     336.9,
-     200.2
-    ],
-    [
-     338.6,
-     197.4
-    ],
-    [
-     340.0,
-     192.0
-    ],
-    [
-     354.2,
-     177.1
-    ],
-    [
-     356.2,
-     170.4
-    ],
-    [
-     360.3,
-     164.9
-    ],
-    [
-     360.6,
-     151.4
-    ],
-    [
-     362.6,
-     147.5
-    ]
-   ],
+   "anchor": "start",
+   "kind": "village",
    "role": "label",
-   "size": 9.5,
-   "text": "The Little Srmarkcombe",
+   "size": 10.0,
+   "text": "The Great Srmarkwick",
    "tier": 2,
-   "x": 340.0,
-   "y": 192.0
+   "x": 443.9,
+   "y": 294.3
   },
   {
    "anchor": "start",
@@ -822,23 +744,7 @@
    "kind": "road",
    "path": [
     [
-     313.5,
-     275.0
-    ],
-    [
-     316.3,
-     278.7
-    ],
-    [
-     317.6,
-     284.1
-    ],
-    [
-     320.7,
-     288.2
-    ],
-    [
-     324.7,
+     325.1,
      290.2
     ],
     [
@@ -862,7 +768,7 @@
      295.6
     ],
     [
-     406.5,
+     426.7,
      295.6
     ]
    ],
@@ -870,104 +776,8 @@
    "size": 9.5,
    "text": "The Lower Srmarkbank",
    "tier": 2,
-   "x": 349.1,
-   "y": 290.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     454.4,
-     283.3
-    ],
-    [
-     457.4,
-     280.4
-    ],
-    [
-     469.6,
-     278.4
-    ],
-    [
-     483.2,
-     265.2
-    ],
-    [
-     487.2,
-     263.1
-    ],
-    [
-     544.1,
-     263.5
-    ],
-    [
-     546.8,
-     265.2
-    ],
-    [
-     547.1,
-     265.5
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Lower Srmarkhill",
-   "tier": 2,
-   "x": 487.2,
-   "y": 263.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     519.1,
-     291.3
-    ],
-    [
-     548.2,
-     320.7
-    ],
-    [
-     549.9,
-     323.4
-    ],
-    [
-     551.2,
-     328.8
-    ],
-    [
-     560.0,
-     338.3
-    ],
-    [
-     562.1,
-     345.1
-    ],
-    [
-     570.9,
-     354.5
-    ],
-    [
-     572.2,
-     359.9
-    ],
-    [
-     573.9,
-     362.7
-    ],
-    [
-     582.9,
-     371.7
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Lower Srmarkvale",
-   "tier": 2,
-   "x": 562.1,
-   "y": 345.1
+   "x": 362.7,
+   "y": 301.0
   },
   {
    "anchor": "start",
@@ -1263,11 +1073,6 @@
    "text": "Little Srmarkford"
   },
   {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Little Srmarkhollow"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "Little Srmarkmarch"
@@ -1358,14 +1163,19 @@
    "text": "Srmarkmoor"
   },
   {
-   "kind": "village",
+   "kind": "road",
    "reason": "no room",
-   "text": "The Great Srmarkwick"
+   "text": "The Little Srmarkcombe"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The Little Srmarkholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Lower Srmarkhill"
   },
   {
    "kind": "road",
@@ -1386,6 +1196,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Lower Srmarkthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Lower Srmarkvale"
   },
   {
    "kind": "sea",

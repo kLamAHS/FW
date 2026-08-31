@@ -134,6 +134,13 @@ Targets by end of programme: tier-0/1 drop rate 0 at world band, ≥ 95% of name
 placed across bands, draw() ≤ 1.2 s for three bands uncached and < 5 ms cached,
 payload ≤ 300 KB on the `empire` corpus world.
 
+### Phase C re-measurement (accepted with everything)
+
+Human geography added lanes, shared border arcs and richer semantics; payload after:
+Renn 115 KB, `long_coast` 228 KB, `empire` 308 KB — the empire figure sits at the
+programme target and is Phase D's to bring down (band filtering trims what a
+viewport actually ships). Terrain blob now carries six fields (`develop` joined).
+
 ## Reference renders
 
 `docs/reference/relief-{renn,alps,delta,long_coast}.png` are the pinned Phase-A
