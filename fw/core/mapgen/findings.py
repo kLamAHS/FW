@@ -25,6 +25,8 @@ CODES = (
     "budget",              # something had to be cut to stay drawable
     "adjacency",           # a border that could not be realised on a plane
     "unplaced",            # something the map had nowhere to put
+    "implausible",         # geography a reader would question (V2 §44) — a note,
+                           # never an error: the writer may know exactly why
 )
 
 SEVERITIES = ("note", "warning")
