@@ -178,25 +178,38 @@ def _icon(icon: dict, css: dict[str, str]) -> str:
     return "".join(out)
 
 
+# The voice arrives on the wire since D1: a face key plus tracking, exactly what
+# MapView's FACE_CSS resolves. The family names here are the bundled faces embedded
+# by `_font_css` below — never a system stack, or the pixels stop matching the client.
+FACE_SVG = {
+    "serif": ("Alegreya", 400, "normal"),
+    "serif-italic": ("Alegreya", 400, "italic"),
+    "sc": ("Alegreya SC", 400, "normal"),
+    "sans": ("Alegreya Sans", 400, "normal"),
+    "sans-medium": ("Alegreya Sans", 500, "normal"),
+    "sans-bold": ("Alegreya Sans", 700, "normal"),
+}
+
+
 def _label(label: dict, css: dict[str, str], n: int) -> str:
     """One name, as `Name` in MapView draws it — halo, voice colours, curves."""
     role = str(label.get("role") or "label")
     fill = css.get(f"map-{role}", css.get("map-label", "#16181d"))
     halo = css.get("map-halo", "#f7f5f1")
     size = float(label["size"])
-    extra = ""
-    if role == "label-region":
-        extra = ' letter-spacing="0.14em" font-weight="500"'
-    elif role == "label-water":
-        extra = ' font-style="italic" letter-spacing="0.08em"'
-    elif role == "label-relief":
-        extra = ' letter-spacing="0.10em"'
+    family, weight, style = FACE_SVG.get(str(label.get("face") or "serif"),
+                                         FACE_SVG["serif"])
+    tracking = float(label.get("tracking") or 0.0)
+    extra = f' letter-spacing="{tracking}em"' if tracking else ""
+    if weight != 400:
+        extra += f' font-weight="{weight}"'
+    if style != "normal":
+        extra += f' font-style="{style}"'
     text = label["text"]
-    if role in ("label-region", "label-relief"):
-        text = text.upper()
+    weight_of_halo = float(label.get("halo") or LABEL_HALO_WIDTH)
     common = (f'font-size="{size:.1f}" fill="{fill}" stroke="{halo}" '
-              f'stroke-width="{LABEL_HALO_WIDTH}" stroke-linejoin="round" '
-              f'paint-order="stroke" font-family="Georgia, \'Times New Roman\', serif"'
+              f'stroke-width="{weight_of_halo}" stroke-linejoin="round" '
+              f'paint-order="stroke" font-family="{family}"'
               + extra)
     path = label.get("path")
     if path and len(path) > 1:
@@ -211,7 +224,7 @@ def _label(label: dict, css: dict[str, str], n: int) -> str:
 
 def render_svg(data: dict, relief: dict, png: bytes | None, *,
                css: dict[str, str], mode: str, width: int = 1400,
-               labels: bool = True) -> str:
+               labels: bool = True, band: str = "world") -> str:
     draw = data.get("draw") or {}
     bounds = draw.get("bounds") or {"x": 0, "y": 0, "width": 100, "height": 100}
     x0, y0 = float(bounds["x"]), float(bounds["y"])
@@ -268,12 +281,46 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
                    f'stroke-width="{wide}" stroke-linecap="round" '
                    f'stroke-linejoin="round"{dash}/>')
 
+    # Since D4 the composition is banded: MapView picks the band from its zoom, a
+    # still image picks it from the caller. Icons filter to the band; labels come
+    # already solved per band.
+    order = {"world": 0, "regional": 1, "local": 2}
+    depth = order.get(band, 0)
     for icon in draw.get("icons") or []:
-        out.append(_icon(icon, css))
+        if order.get(str(icon.get("band") or "world"), 0) <= depth:
+            out.append(_icon(icon, css))
     if labels:
-        for n, label in enumerate(draw.get("labels") or []):
+        named = draw.get("labels") or {}
+        shown = named.get(band, []) if isinstance(named, dict) else named
+        for n, label in enumerate(shown):
             out.append(_label(label, css, n))
     out.append("</svg>")
+    return "\n".join(out)
+
+
+def _font_css() -> str:
+    """The bundled faces, embedded as data URIs so the page needs no server.
+
+    The same files the client serves from /fonts and the width tables were measured
+    from — a substitute serif from fontconfig is exactly the drift the bundling
+    exists to end.
+    """
+    fonts = Path(__file__).resolve().parent.parent / "web" / "public" / "fonts"
+    faces = (("Alegreya", "Alegreya-var.ttf", "400 900", "normal"),
+             ("Alegreya", "Alegreya-Italic-var.ttf", "400 900", "italic"),
+             ("Alegreya SC", "AlegreyaSC-Regular.ttf", "400", "normal"),
+             ("Alegreya Sans", "AlegreyaSans-Regular.ttf", "400", "normal"),
+             ("Alegreya Sans", "AlegreyaSans-Medium.ttf", "500", "normal"),
+             ("Alegreya Sans", "AlegreyaSans-Bold.ttf", "700", "normal"))
+    out = []
+    for family, filename, weight, style in faces:
+        file = fonts / filename
+        if not file.exists():
+            continue
+        b64 = base64.b64encode(file.read_bytes()).decode()
+        out.append(f"@font-face {{ font-family: '{family}'; font-weight: {weight}; "
+                   f"font-style: {style}; "
+                   f"src: url(data:font/ttf;base64,{b64}); }}")
     return "\n".join(out)
 
 
@@ -291,7 +338,9 @@ def rasterise(svg: str, destination: Path, background: str) -> bool:
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=binary, args=["--no-sandbox"])
         page = browser.new_page()
-        page.set_content(f'<body style="margin:0;background:{background}">{svg}</body>')
+        page.set_content(f"<style>{_font_css()}</style>"
+                         f'<body style="margin:0;background:{background}">{svg}</body>')
+        page.evaluate("document.fonts.ready")
         page.locator("svg").screenshot(path=str(destination))
         browser.close()
     return True
@@ -310,6 +359,9 @@ def main() -> int:
     parser.add_argument("--scale", type=int, default=8, help="relief render scale")
     parser.add_argument("--dark", action="store_true", help="the night palette")
     parser.add_argument("--no-labels", action="store_true")
+    parser.add_argument("--band", default="world",
+                        choices=("world", "regional", "local"),
+                        help="which zoom band's composition to draw")
     parser.add_argument("--generate", action="store_true",
                         help="plan and accept a map into the world first")
     parser.add_argument("--seed", default="render")
@@ -335,7 +387,7 @@ def main() -> int:
 
     css = stylesheet_colours(dark=args.dark)
     svg = render_svg(data, relief, png, css=css, mode=args.mode, width=args.width,
-                     labels=not args.no_labels)
+                     labels=not args.no_labels, band=args.band)
 
     destination = Path(args.out)
     destination.parent.mkdir(parents=True, exist_ok=True)

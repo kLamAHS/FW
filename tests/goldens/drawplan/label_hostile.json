@@ -7,6 +7,7 @@
  },
  "icons": [
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Great Srmarkford",
@@ -18,6 +19,7 @@
    "y": 224.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Great Srmarkholt",
@@ -29,6 +31,7 @@
    "y": 135.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Great Srmarkmarch",
@@ -40,6 +43,7 @@
    "y": 288.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkbank",
@@ -51,6 +55,7 @@
    "y": 131.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkclose",
@@ -62,6 +67,7 @@
    "y": 226.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkfield",
@@ -73,6 +79,7 @@
    "y": 188.8
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkgate",
@@ -84,6 +91,7 @@
    "y": 448.8
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkhill",
@@ -95,6 +103,7 @@
    "y": 500.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkhollow",
@@ -106,6 +115,7 @@
    "y": 343.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkmere",
@@ -117,6 +127,7 @@
    "y": 307.8
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkmoor",
@@ -128,6 +139,7 @@
    "y": 521.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkreach",
@@ -139,6 +151,7 @@
    "y": 415.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Little Srmarkthorpe",
@@ -150,6 +163,7 @@
    "y": 645.9
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Llanfairpwll",
@@ -161,6 +175,7 @@
    "y": 447.3
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Llanfairpwllgwyngyllgogerychwyrndrobwll",
@@ -172,6 +187,7 @@
    "y": 751.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Llgwyng Mark",
@@ -183,6 +199,7 @@
    "y": 414.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Llgwyrndless",
@@ -194,6 +211,7 @@
    "y": 636.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Sgark",
@@ -205,6 +223,7 @@
    "y": 723.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Srmardhuponre",
@@ -216,6 +235,7 @@
    "y": 653.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Srmarkford",
@@ -227,6 +247,7 @@
    "y": 425.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Srmarkholt",
@@ -238,6 +259,7 @@
    "y": 398.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Srmarkmarch",
@@ -249,6 +271,7 @@
    "y": 523.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Great Srmarkcombe",
@@ -260,6 +283,7 @@
    "y": 283.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Great Srmarkstead",
@@ -271,6 +295,7 @@
    "y": 327.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Great Srmarkwick",
@@ -282,6 +307,7 @@
    "y": 293.7
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Little Srmarkvale",
@@ -293,6 +319,7 @@
    "y": 698.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Srmarkstead",
@@ -304,6 +331,7 @@
    "y": 496.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Unconre",
@@ -315,6 +343,7 @@
    "y": 512.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Unconscionre",
@@ -326,690 +355,1408 @@
    "y": 566.5
   }
  ],
- "labels": [
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Great Srmarkford",
-   "tier": 2,
-   "x": 327.6,
-   "y": 225.0
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Great Srmarkmarch",
-   "tier": 2,
-   "x": 276.7,
-   "y": 288.9
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkbank",
-   "tier": 2,
-   "x": 230.8,
-   "y": 132.5
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkclose",
-   "tier": 2,
-   "x": 263.4,
-   "y": 227.3
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkfield",
-   "tier": 2,
-   "x": 277.0,
-   "y": 189.4
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Little Srmarkgate",
-   "tier": 1,
-   "x": 723.4,
-   "y": 449.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Little Srmarkhill",
-   "tier": 1,
-   "x": 233.5,
-   "y": 501.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkhollow",
-   "tier": 2,
-   "x": 567.2,
-   "y": 362.3
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkmere",
-   "tier": 2,
-   "x": 568.3,
-   "y": 308.4
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Little Srmarkmoor",
-   "tier": 1,
-   "x": 316.2,
-   "y": 521.6
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkreach",
-   "tier": 2,
-   "x": 663.2,
-   "y": 415.8
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Little Srmarkthorpe",
-   "tier": 2,
-   "x": 493.6,
-   "y": 646.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "role": "label",
-   "size": 9.5,
-   "text": "Little Srmarkwick",
-   "tier": 2,
-   "x": 351.8,
-   "y": 653.1
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Llanfairpwll",
-   "tier": 2,
-   "x": 381.0,
-   "y": 447.6
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Llanfairpwllgwyngyllgogerychwyrndrobwll",
-   "tier": 1,
-   "x": 666.8,
-   "y": 751.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.0,
-   "text": "Llgogerndless",
-   "tier": 1,
-   "x": 776.6,
-   "y": 230.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Llgwyng Mark",
-   "tier": 2,
-   "x": 322.7,
-   "y": 433.3
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Llgwyrndless",
-   "tier": 2,
-   "x": 612.9,
-   "y": 637.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     539.2,
-     701.7
+ "labels": {
+  "local": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Great Srmarkford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 327.6,
+    "y": 225.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Great Srmarkholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 384.4,
+    "y": 153.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Great Srmarkmarch",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 293.7,
+    "y": 288.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 247.8,
+    "y": 132.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 263.4,
+    "y": 227.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 277.0,
+    "y": 189.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Little Srmarkgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 723.4,
+    "y": 449.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Little Srmarkhill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 213.9,
+    "y": 501.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkhollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 575.7,
+    "y": 344.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 568.3,
+    "y": 308.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Srmarkmoor",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 304.7,
+    "y": 507.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 663.2,
+    "y": 415.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Little Srmarkthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 493.6,
+    "y": 646.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Llanfairpwll",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 381.0,
+    "y": 447.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.1,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Llanfairpwllgwyngyllgogerychwyrndrobwll",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 666.8,
+    "y": 751.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Llgogerndless",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Llgwyng Mark",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 331.2,
+    "y": 415.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Llgwyrndless",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 612.9,
+    "y": 637.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      561.2,
+      739.3
+     ],
+     [
+      561.4,
+      749.9
+     ],
+     [
+      563.1,
+      752.7
+     ],
+     [
+      582.0,
+      771.3
+     ],
+     [
+      584.7,
+      772.3
+     ],
+     [
+      611.0,
+      772.1
+     ]
     ],
-    [
-     559.0,
-     721.5
+    "role": "label",
+    "size": 9.5,
+    "text": "Lower Srmarkclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 582.0,
+    "y": 771.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Sgark",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 569.5,
+    "y": 724.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmardhuponre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 416.1,
+    "y": 653.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.88,
+    "text": "Srmarkcombe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmarkford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 461.2,
+    "y": 426.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
+    "text": "Srmarkhill",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 736.4,
+    "y": 375.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmarkholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 510.0,
+    "y": 399.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "Srmarkmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 448.6,
+    "y": 782.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Srmarkvale",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 781.4,
+    "y": 513.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.18,
+    "text": "Srmarkwick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f6rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.5,
+    "y": 700.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "path": [
+     [
+      595.9,
+      444.1
+     ],
+     [
+      690.6,
+      444.1
+     ],
+     [
+      702.4,
+      437.5
+     ]
     ],
-    [
-     561.0,
-     725.6
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f8rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 690.6,
+    "y": 444.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Great Srmarkcombe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 571.4,
+    "y": 283.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Great Srmarkstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 302.2,
+    "y": 327.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Great Srmarkwick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 443.9,
+    "y": 294.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Little Srmarkvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 298.6,
+    "y": 699.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      573.1,
+      361.3
+     ],
+     [
+      573.9,
+      362.7
+     ],
+     [
+      607.8,
+      396.5
+     ],
+     [
+      611.8,
+      398.5
+     ],
+     [
+      636.2,
+      398.9
+     ],
+     [
+      638.7,
+      401.1
+     ]
     ],
-    [
-     561.4,
-     749.9
+    "role": "label",
+    "size": 9.5,
+    "text": "The Lower Srmarkvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 611.8,
+    "y": 398.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Srmarkstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 496.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Srmarkthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "The Uncong Mark",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 247.2,
+    "y": 425.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 15.39,
+    "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 382.0,
+    "y": 557.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.53,
+    "text": "Uncongyll",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Unconre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Unconscionre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 483.9,
+    "y": 581.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Srmarkcombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 397.1,
+    "y": 266.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "path": [
+     [
+      151.8,
+      682.4
+     ],
+     [
+      171.9,
+      692.5
+     ],
+     [
+      174.8,
+      695.1
+     ],
+     [
+      180.0,
+      697.4
+     ],
+     [
+      186.5,
+      701.8
+     ],
+     [
+      189.3,
+      702.0
+     ],
+     [
+      196.5,
+      705.1
+     ],
+     [
+      200.6,
+      705.2
+     ],
+     [
+      203.0,
+      706.7
+     ],
+     [
+      217.9,
+      706.7
+     ],
+     [
+      220.3,
+      708.2
+     ],
+     [
+      223.9,
+      708.3
+     ]
     ],
-    [
-     563.1,
-     752.7
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Srmarkgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 196.5,
+    "y": 705.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.92,
+    "text": "Upper Srmarkhollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 567.1,
+    "y": 797.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Srmarkmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 545.6,
+    "y": 187.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "Upper Srmarkreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 506.2,
+    "y": 782.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Srmarkwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 295.9,
+    "y": 202.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "\u00c5sgardh-upon-\u00d8re",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.9,
+    "y": 342.3
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Little Srmarkgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 723.4,
+    "y": 449.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Little Srmarkhill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 213.9,
+    "y": 501.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Srmarkmoor",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 304.7,
+    "y": 507.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      302.2,
+      451.9
+     ],
+     [
+      306.1,
+      446.6
+     ],
+     [
+      306.8,
+      437.1
+     ],
+     [
+      310.9,
+      431.7
+     ],
+     [
+      312.9,
+      424.9
+     ],
+     [
+      317.0,
+      419.5
+     ],
+     [
+      317.6,
+      410.1
+     ],
+     [
+      322.7,
+      401.9
+     ],
+     [
+      322.7,
+      390.0
+     ]
     ],
-    [
-     582.0,
-     771.3
+    "role": "label",
+    "size": 9.5,
+    "text": "Little Srmarkstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 312.9,
+    "y": 424.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      339.0,
+      642.5
+     ],
+     [
+      347.8,
+      651.1
+     ],
+     [
+      351.8,
+      653.1
+     ],
+     [
+      399.3,
+      653.1
+     ]
     ],
-    [
-     584.7,
-     772.3
+    "role": "label",
+    "size": 9.5,
+    "text": "Little Srmarkwick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 351.8,
+    "y": 653.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Llanfairpwll",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 381.0,
+    "y": 447.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.1,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Llanfairpwllgwyngyllgogerychwyrndrobwll",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 666.8,
+    "y": 751.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Llgogerndless",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      546.6,
+      709.1
+     ],
+     [
+      559.0,
+      721.5
+     ],
+     [
+      561.0,
+      725.6
+     ],
+     [
+      561.4,
+      749.9
+     ],
+     [
+      563.1,
+      752.7
+     ],
+     [
+      577.3,
+      766.7
+     ]
     ],
-    [
-     585.7,
-     772.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Lower Srmarkclose",
-   "tier": 2,
-   "x": 563.1,
-   "y": 752.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Srmardhuponre",
-   "tier": 2,
-   "x": 425.6,
-   "y": 642.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Srmarkclose",
-   "tier": 2,
-   "x": 344.1,
-   "y": 142.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 13.79,
-   "text": "Srmarkcombe",
-   "tier": 1,
-   "x": 429.7,
-   "y": 137.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Srmarkford",
-   "tier": 2,
-   "x": 461.2,
-   "y": 426.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "Srmarkhill",
-   "tier": 2,
-   "x": 705.3,
-   "y": 375.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.68,
-   "text": "Srmarkhollow",
-   "tier": 2,
-   "x": 627.3,
-   "y": 342.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Srmarkholt",
-   "tier": 2,
-   "x": 510.0,
-   "y": 399.1
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Srmarkmarch",
-   "tier": 2,
-   "x": 297.0,
-   "y": 523.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     580.2,
-     411.3
+    "role": "label",
+    "size": 9.5,
+    "text": "Lower Srmarkclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 561.4,
+    "y": 749.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmardhuponre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 435.1,
+    "y": 653.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.88,
+    "text": "Srmarkcombe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.18,
+    "text": "Srmarkwick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f6rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.5,
+    "y": 700.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "path": [
+     [
+      595.9,
+      444.1
+     ],
+     [
+      690.6,
+      444.1
+     ],
+     [
+      702.4,
+      437.5
+     ]
     ],
-    [
-     613.7,
-     411.3
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f8rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 690.6,
+    "y": 444.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      329.3,
+      207.8
+     ],
+     [
+      336.9,
+      200.2
+     ],
+     [
+      338.6,
+      197.4
+     ],
+     [
+      340.0,
+      192.0
+     ],
+     [
+      354.2,
+      177.1
+     ],
+     [
+      356.2,
+      170.4
+     ],
+     [
+      360.3,
+      164.9
+     ],
+     [
+      360.6,
+      151.4
+     ],
+     [
+      361.6,
+      148.7
+     ],
+     [
+      367.1,
+      143.3
+     ]
     ],
-    [
-     618.6,
-     407.0
+    "role": "label",
+    "size": 9.5,
+    "text": "The Little Srmarkholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 356.2,
+    "y": 170.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Little Srmarkvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 298.6,
+    "y": 699.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "road",
+    "path": [
+     [
+      512.3,
+      271.4
+     ],
+     [
+      512.3,
+      282.8
+     ],
+     [
+      513.3,
+      285.5
+     ],
+     [
+      548.2,
+      320.7
+     ],
+     [
+      549.9,
+      323.4
+     ],
+     [
+      551.2,
+      328.8
+     ],
+     [
+      560.0,
+      338.3
+     ],
+     [
+      560.3,
+      339.3
+     ]
     ],
-    [
-     619.4,
-     406.9
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "Srmarkreach",
-   "tier": 2,
-   "x": 618.6,
-   "y": 407.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Srmarkvale",
-   "tier": 2,
-   "x": 781.4,
-   "y": 513.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 9.56,
-   "text": "Srmarkwick",
-   "tier": 1,
-   "x": 130.4,
-   "y": 303.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 12.99,
-   "text": "S\u00f6rmark",
-   "tier": 0,
-   "x": 706.8,
-   "y": 700.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "S\u00f8rmark",
-   "tier": 0,
-   "x": 690.6,
-   "y": 444.1
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Great Srmarkcombe",
-   "tier": 2,
-   "x": 571.4,
-   "y": 283.6
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Great Srmarkstead",
-   "tier": 2,
-   "x": 302.2,
-   "y": 319.3
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Great Srmarkwick",
-   "tier": 2,
-   "x": 443.9,
-   "y": 294.3
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Little Srmarkvale",
-   "tier": 1,
-   "x": 298.6,
-   "y": 699.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     325.1,
-     290.2
+    "role": "label",
+    "size": 9.5,
+    "text": "The Lower Srmarkmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 549.9,
+    "y": 323.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Srmarkstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 496.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Srmarkthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 15.39,
+    "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 382.0,
+    "y": 557.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.53,
+    "text": "Uncongyll",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Unconre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Unconscionre",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 483.9,
+    "y": 581.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "\u00c5sgardh-upon-\u00d8re",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.9,
+    "y": 342.3
+   }
+  ],
+  "world": [
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Srmarkmoor",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 316.2,
+    "y": 521.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.1,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Llanfairpwllgwyngyllgogerychwyrndrobwll",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 666.8,
+    "y": 751.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Llgogerndless",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.88,
+    "text": "Srmarkcombe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.18,
+    "text": "Srmarkwick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f6rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.5,
+    "y": 700.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "path": [
+     [
+      595.9,
+      444.1
+     ],
+     [
+      690.6,
+      444.1
+     ],
+     [
+      702.4,
+      437.5
+     ]
     ],
-    [
-     349.1,
-     290.5
-    ],
-    [
-     358.6,
-     299.0
-    ],
-    [
-     362.7,
-     301.0
-    ],
-    [
-     370.8,
-     300.7
-    ],
-    [
-     378.9,
-     295.6
-    ],
-    [
-     426.7,
-     295.6
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Lower Srmarkbank",
-   "tier": 2,
-   "x": 362.7,
-   "y": 301.0
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Srmarkstead",
-   "tier": 2,
-   "x": 451.4,
-   "y": 496.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 8.15,
-   "text": "The Srmarkthorpe",
-   "tier": 1,
-   "x": 751.2,
-   "y": 595.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "The Uncong Mark",
-   "tier": 2,
-   "x": 247.2,
-   "y": 425.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 19.74,
-   "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
-   "tier": 0,
-   "x": 382.0,
-   "y": 557.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     258.5,
-     362.6
-    ],
-    [
-     293.2,
-     397.3
-    ],
-    [
-     298.5,
-     398.5
-    ],
-    [
-     312.7,
-     410.3
-    ],
-    [
-     320.6,
-     410.7
-    ],
-    [
-     324.3,
-     412.8
-    ],
-    [
-     344.3,
-     412.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.9,
-   "text": "The Upper Srmarkvale",
-   "tier": 2,
-   "x": 312.7,
-   "y": 410.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 16.27,
-   "text": "Uncongyll",
-   "tier": 1,
-   "x": 654.8,
-   "y": 112.0
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Unconre",
-   "tier": 2,
-   "x": 527.2,
-   "y": 512.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Unconscionre",
-   "tier": 2,
-   "x": 483.9,
-   "y": 581.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 9.17,
-   "text": "Upper Srmarkcombe",
-   "tier": 2,
-   "x": 397.1,
-   "y": 266.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     152.8,
-     682.9
-    ],
-    [
-     171.9,
-     692.5
-    ],
-    [
-     174.8,
-     695.1
-    ],
-    [
-     180.0,
-     697.4
-    ],
-    [
-     186.5,
-     701.8
-    ],
-    [
-     189.3,
-     702.0
-    ],
-    [
-     196.5,
-     705.1
-    ],
-    [
-     200.6,
-     705.2
-    ],
-    [
-     203.0,
-     706.7
-    ],
-    [
-     217.9,
-     706.7
-    ],
-    [
-     220.3,
-     708.2
-    ],
-    [
-     222.8,
-     708.3
-    ]
-   ],
-   "role": "label",
-   "size": 8.91,
-   "text": "Upper Srmarkgate",
-   "tier": 2,
-   "x": 196.5,
-   "y": 705.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.36,
-   "text": "Upper Srmarkhollow",
-   "tier": 2,
-   "x": 567.1,
-   "y": 797.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Upper Srmarkmere",
-   "tier": 2,
-   "x": 545.6,
-   "y": 187.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "Upper Srmarkreach",
-   "tier": 2,
-   "x": 506.2,
-   "y": 782.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 9.9,
-   "text": "Upper Srmarkwick",
-   "tier": 2,
-   "x": 300.2,
-   "y": 202.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 19.8,
-   "text": "\u00c5sgardh-upon-\u00d8re",
-   "tier": 0,
-   "x": 289.9,
-   "y": 342.3
-  }
- ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "S\u00f8rmark",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 690.6,
+    "y": 444.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Srmarkthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 15.39,
+    "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 382.0,
+    "y": 557.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.53,
+    "text": "Uncongyll",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "\u00c5sgardh-upon-\u00d8re",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.9,
+    "y": 342.3
+   }
+  ]
+ },
  "legend": [
   {
    "label": "City",
@@ -1063,11 +1810,6 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Great Srmarkholt"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "Little Srmarkford"
@@ -1076,11 +1818,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Little Srmarkmarch"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Little Srmarkstead"
   },
   {
    "kind": "feature",
@@ -1138,9 +1875,9 @@
    "text": "Sgarchwyngyll"
   },
   {
-   "kind": "castle",
+   "kind": "feature",
    "reason": "no room",
-   "text": "Sgark"
+   "text": "Srmarkclose"
   },
   {
    "kind": "feature",
@@ -1155,12 +1892,22 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "Srmarkmere"
+   "text": "Srmarkhollow"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Srmarkmarch"
   },
   {
    "kind": "feature",
    "reason": "no room",
    "text": "Srmarkmoor"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Srmarkreach"
   },
   {
    "kind": "road",
@@ -1170,7 +1917,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Little Srmarkholt"
+   "text": "The Lower Srmarkbank"
   },
   {
    "kind": "road",
@@ -1185,22 +1932,12 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Lower Srmarkmoor"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "The Lower Srmarkreach"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The Lower Srmarkthorpe"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Lower Srmarkvale"
   },
   {
    "kind": "sea",
@@ -1231,6 +1968,11 @@
    "kind": "feature",
    "reason": "no room",
    "text": "The Upper Srmarkthorpe"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Upper Srmarkvale"
   },
   {
    "kind": "river",

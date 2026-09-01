@@ -696,15 +696,37 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 "semantics": ledger.semantics(geometry),
             })
         layers = sorted({f["layer"] for f in features})
-        ground = holder.get().terrain()
+        # Both caches key on the revision head — a monotone O(1) cursor every write
+        # moves — because both of what they hold is expensive: unpacking the terrain
+        # blob is megabytes of decode to read four numbers of extent, and draw() now
+        # solves the labels three times, once per zoom band (V2 §18). Single-slot
+        # tuples on app.state, the same shape as relief_cache; unlocked on purpose,
+        # since the value is a pure function of its stamp and the last writer wins.
+        head = _map_head(world)
+        ground_stamp = (world.project_id, world.branch_id, head)
+        kept_ground = getattr(app.state, "ground_cache", None)
+        if kept_ground and kept_ground[0] == ground_stamp:
+            ground = kept_ground[1]
+        else:
+            ground = holder.get().terrain()
+            app.state.ground_cache = (ground_stamp, ground)
         extent = ([ground["origin_x"], ground["origin_y"],
                    ground["origin_x"] + ground["span"],
                    ground["origin_y"] + ground["span"]] if ground else None)
-        drawn = cartography.draw(features, mode=mode, ground=extent, label=labels,
-                                 world_name=world.name)
+        draw_stamp = (world.project_id, world.branch_id, head, at, mode,
+                      seen_as, labels, layer, world.name)
+        kept_draw = getattr(app.state, "draw_cache", None)
+        if kept_draw and kept_draw[0] == draw_stamp:
+            drawn = kept_draw[1]
+        else:
+            drawn = cartography.draw(features, mode=mode, ground=extent,
+                                     label=labels, world_name=world.name,
+                                     terrain=ground)
+            app.state.draw_cache = (draw_stamp, drawn)
         # `debug` carries the solver's scaffolding — label boxes, drop reasons — for
         # the overlay a person tunes the composition with (V2 §50). Not the default
-        # payload: every client on every day does not need the working.
+        # payload: every client on every day does not need the working. Kept out of
+        # the cache key: the cached DrawPlan serialises either way.
         return S.MapOut(day=at, layers=layers, features=features,
                         draw=drawn.as_dict(debug=debug),
                         seen_as=seen_as, seen_as_name=_name_of(world, seen_as))
@@ -1888,6 +1910,20 @@ def _checked_source(world: World, source_id: str | None) -> str | None:
     if source_id and world.get_source(source_id) is None:
         raise HTTPException(404, "there is no such source to cite")
     return source_id
+
+
+def _map_head(world: World) -> int:
+    """A monotone cursor over everything that could change the drawn map.
+
+    Every mutation — entities, facts, geometry, remembered state, undo markers —
+    passes through the revision log, whose id is an autoincrement primary key, so
+    MAX(id) is an O(1) B-tree probe that moves whenever the world does. Per project
+    rather than per branch (the log has no branch column), which only ever
+    over-invalidates — the safe direction for a cache.
+    """
+    row = world.db.one("SELECT MAX(id) AS n FROM revision WHERE project_id = ?",
+                       (world.project_id,))
+    return int(row["n"] or 0) if row else 0
 
 
 def _seen_by(world: World, observer_id: str | None, day: int) -> Perspective:

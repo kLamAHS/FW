@@ -7,6 +7,7 @@
  },
  "icons": [
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fenscombe",
@@ -18,6 +19,7 @@
    "y": 615.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fensford",
@@ -29,6 +31,7 @@
    "y": 577.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Fensgate",
@@ -40,6 +43,7 @@
    "y": 301.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fenshill",
@@ -51,6 +55,7 @@
    "y": 436.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Fenshollow",
@@ -62,6 +67,7 @@
    "y": 604.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fensholt",
@@ -73,6 +79,7 @@
    "y": 642.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Fensmere",
@@ -84,6 +91,7 @@
    "y": 577.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fensreach",
@@ -95,6 +103,7 @@
    "y": 447.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fenstead",
@@ -106,6 +115,7 @@
    "y": 534.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Fensthorpe",
@@ -117,6 +127,7 @@
    "y": 528.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fenswater",
@@ -128,6 +139,7 @@
    "y": 469.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Fenswick",
@@ -139,6 +151,7 @@
    "y": 588.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltbank",
@@ -150,6 +163,7 @@
    "y": 510.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltclose",
@@ -161,6 +175,7 @@
    "y": 577.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltfield",
@@ -172,6 +187,7 @@
    "y": 529.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltgate",
@@ -183,6 +199,7 @@
    "y": 737.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Silthill",
@@ -194,6 +211,7 @@
    "y": 776.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Silthollow",
@@ -205,6 +223,7 @@
    "y": 652.1
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "The Siltmere",
@@ -216,6 +235,7 @@
    "y": 524.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltmoor",
@@ -227,6 +247,7 @@
    "y": 776.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltreach",
@@ -238,6 +259,7 @@
    "y": 686.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Siltvale",
@@ -249,6 +271,7 @@
    "y": 782.7
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenscombe",
@@ -260,6 +283,7 @@
    "y": 131.7
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensford",
@@ -271,6 +295,7 @@
    "y": 301.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensgate",
@@ -282,6 +307,7 @@
    "y": 322.1
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenshill",
@@ -293,6 +319,7 @@
    "y": 348.6
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenshollow",
@@ -304,6 +331,7 @@
    "y": 178.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensholt",
@@ -315,6 +343,7 @@
    "y": 223.4
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensmere",
@@ -326,6 +355,7 @@
    "y": 284.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensreach",
@@ -337,6 +367,7 @@
    "y": 246.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenstead",
@@ -348,6 +379,7 @@
    "y": 272.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensthorpe",
@@ -359,6 +391,7 @@
    "y": 268.8
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fensvale",
@@ -370,6 +403,7 @@
    "y": 353.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenswater",
@@ -381,6 +415,7 @@
    "y": 156.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "The Upper Fenswick",
@@ -392,1034 +427,2101 @@
    "y": 224.3
   }
  ],
- "labels": [
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     605.6,
-     564.7
-    ],
-    [
-     648.7,
-     564.6
-    ],
-    [
-     655.2,
-     558.9
-    ],
-    [
-     665.9,
-     554.4
-    ],
-    [
-     674.9,
-     545.7
-    ],
-    [
-     691.6,
-     539.4
-    ]
-   ],
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The Fens",
-   "tier": 0,
-   "x": 665.9,
-   "y": 554.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 11.06,
-   "text": "The Fensbank",
-   "tier": 1,
-   "x": 751.2,
-   "y": 595.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.0,
-   "text": "The Fensclose",
-   "tier": 1,
-   "x": 776.6,
-   "y": 230.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenscombe",
-   "tier": 2,
-   "x": 602.0,
-   "y": 615.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 11.15,
-   "text": "The Fensfield",
-   "tier": 1,
-   "x": 654.8,
-   "y": 112.0
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensford",
-   "tier": 2,
-   "x": 579.6,
-   "y": 577.9
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensgate",
-   "tier": 2,
-   "x": 259.0,
-   "y": 301.3
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenshill",
-   "tier": 2,
-   "x": 270.9,
-   "y": 437.1
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensholt",
-   "tier": 2,
-   "x": 412.5,
-   "y": 642.9
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensmere",
-   "tier": 2,
-   "x": 372.8,
-   "y": 577.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 13.67,
-   "text": "The Fensmoor",
-   "tier": 1,
-   "x": 429.7,
-   "y": 137.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensreach",
-   "tier": 2,
-   "x": 250.0,
-   "y": 460.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenstead",
-   "tier": 2,
-   "x": 591.2,
-   "y": 534.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fensthorpe",
-   "tier": 2,
-   "x": 375.5,
-   "y": 519.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 9.28,
-   "text": "The Fensvale",
-   "tier": 1,
-   "x": 130.4,
-   "y": 303.5
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenswater",
-   "tier": 2,
-   "x": 732.0,
-   "y": 469.6
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Fenswick",
-   "tier": 2,
-   "x": 477.5,
-   "y": 601.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     736.7,
-     331.4
-    ],
-    [
-     737.8,
-     330.9
-    ],
-    [
-     742.6,
-     330.8
-    ],
-    [
-     751.7,
-     326.7
-    ],
-    [
-     779.9,
-     326.7
-    ],
-    [
-     782.7,
-     329.3
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "The Groundbank",
-   "tier": 2,
-   "x": 751.7,
-   "y": 326.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 9.9,
-   "text": "The Groundclose",
-   "tier": 2,
-   "x": 343.0,
-   "y": 142.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     638.1,
-     320.8
-    ],
-    [
-     638.9,
-     320.5
-    ],
-    [
-     642.4,
-     320.4
-    ],
-    [
-     643.9,
-     319.5
-    ],
-    [
-     671.7,
-     319.5
-    ],
-    [
-     673.1,
-     320.4
-    ],
-    [
-     674.9,
-     320.5
-    ],
-    [
-     678.1,
-     322.4
-    ],
-    [
-     680.6,
-     322.5
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "The Groundhill",
-   "tier": 2,
-   "x": 671.7,
-   "y": 319.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     630.7,
-     783.2
-    ],
-    [
-     639.7,
-     783.2
-    ],
-    [
-     668.6,
-     760.0
-    ],
-    [
-     698.9,
-     760.4
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "The Groundholt",
-   "tier": 2,
-   "x": 668.6,
-   "y": 760.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.91,
-   "text": "The Groundmere",
-   "tier": 2,
-   "x": 442.2,
-   "y": 423.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     253.3,
-     683.5
-    ],
-    [
-     258.1,
-     688.0
-    ],
-    [
-     263.5,
-     690.6
-    ],
-    [
-     332.1,
-     690.6
-    ]
-   ],
-   "role": "label",
-   "size": 9.9,
-   "text": "The Groundthorpe",
-   "tier": 2,
-   "x": 263.5,
-   "y": 690.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "The Groundvale",
-   "tier": 2,
-   "x": 782.4,
-   "y": 441.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     109.5,
-     622.0
-    ],
-    [
-     110.9,
-     623.0
-    ],
-    [
-     140.8,
-     622.5
-    ],
-    [
-     159.9,
-     606.5
-    ],
-    [
-     177.0,
-     604.4
-    ],
-    [
-     183.8,
-     597.8
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "The Groundwick",
-   "tier": 2,
-   "x": 159.9,
-   "y": 606.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     337.2,
-     205.1
-    ],
-    [
-     343.4,
-     198.8
-    ],
-    [
-     344.4,
-     196.1
-    ],
-    [
-     344.4,
-     183.9
-    ],
-    [
-     349.5,
-     175.8
-    ],
-    [
-     349.8,
-     167.7
-    ],
-    [
-     350.8,
-     164.9
-    ],
-    [
-     361.8,
-     153.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Headbank",
-   "tier": 2,
-   "x": 349.5,
-   "y": 175.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     207.7,
-     180.7
-    ],
-    [
-     212.3,
-     185.3
-    ],
-    [
-     215.1,
-     187.0
-    ],
-    [
-     268.4,
-     187.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Headclose",
-   "tier": 2,
-   "x": 215.1,
-   "y": 187.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "range",
-   "path": [
-    [
-     193.9,
-     676.5
-    ],
-    [
-     198.1,
-     669.4
-    ],
-    [
-     214.7,
-     656.4
-    ],
-    [
-     227.5,
-     647.3
-    ],
-    [
-     240.8,
-     615.2
-    ],
-    [
-     243.9,
-     593.6
-    ]
-   ],
-   "role": "label-relief",
-   "size": 14.0,
-   "text": "The Headcombe",
-   "tier": 1,
-   "x": 227.5,
-   "y": 647.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.25,
-   "text": "The Headford",
-   "tier": 2,
-   "x": 447.2,
-   "y": 793.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     474.8,
-     517.8
-    ],
-    [
-     495.4,
-     518.0
-    ],
-    [
-     500.8,
-     522.1
-    ],
-    [
-     506.2,
-     523.5
-    ],
-    [
-     508.9,
-     525.2
-    ],
-    [
-     516.7,
-     533.3
-    ],
-    [
-     518.7,
-     540.1
-    ],
-    [
-     522.4,
-     544.1
-    ],
-    [
-     524.2,
-     545.8
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "The Headhill",
-   "tier": 1,
-   "x": 508.9,
-   "y": 525.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     330.5,
-     397.9
-    ],
-    [
-     335.7,
-     399.4
-    ],
-    [
-     348.4,
-     408.6
-    ],
-    [
-     359.3,
-     408.5
-    ],
-    [
-     366.5,
-     401.8
-    ],
-    [
-     376.8,
-     396.7
-    ],
-    [
-     388.4,
-     396.6
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "The Headholt",
-   "tier": 2,
-   "x": 359.3,
-   "y": 408.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 17.82,
-   "text": "The Headwaters",
-   "tier": 0,
-   "x": 683.4,
-   "y": 722.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "The Headwick",
-   "tier": 2,
-   "x": 550.9,
-   "y": 360.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The High Ground",
-   "tier": 0,
-   "x": 425.4,
-   "y": 543.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     408.4,
-     587.4
-    ],
-    [
-     445.3,
-     624.0
-    ],
-    [
-     449.3,
-     626.0
-    ],
-    [
-     451.0,
-     626.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Highford",
-   "tier": 2,
-   "x": 449.3,
-   "y": 626.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     473.7,
-     480.3
-    ],
-    [
-     488.6,
-     465.6
-    ],
-    [
-     498.1,
-     461.5
-    ],
-    [
-     515.6,
-     444.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Highgate",
-   "tier": 2,
-   "x": 498.1,
-   "y": 461.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "role": "label",
-   "size": 9.5,
-   "text": "The Highill",
-   "tier": 2,
-   "x": 596.9,
-   "y": 777.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     507.3,
-     289.1
-    ],
-    [
-     507.9,
-     290.9
-    ],
-    [
-     531.9,
-     315.3
-    ],
-    [
-     534.6,
-     317.0
-    ],
-    [
-     538.7,
-     317.6
-    ],
-    [
-     546.8,
-     322.7
-    ],
-    [
-     556.5,
-     322.5
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Highollow",
-   "tier": 2,
-   "x": 534.6,
-   "y": 317.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     476.2,
-     379.2
-    ],
-    [
-     479.6,
-     380.8
-    ],
-    [
-     508.1,
-     403.8
-    ],
-    [
-     546.9,
-     403.8
-    ]
-   ],
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The Silt",
-   "tier": 0,
-   "x": 508.1,
-   "y": 403.8
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Siltbank",
-   "tier": 2,
-   "x": 292.7,
-   "y": 511.4
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Siltclose",
-   "tier": 2,
-   "x": 390.3,
-   "y": 569.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     229.0,
-     268.3
-    ],
-    [
-     231.3,
-     267.5
-    ],
-    [
-     250.3,
-     248.9
-    ],
-    [
-     253.0,
-     247.2
-    ],
-    [
-     274.8,
-     247.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Siltford",
-   "tier": 2,
-   "x": 250.3,
-   "y": 248.9
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Siltgate",
-   "tier": 2,
-   "x": 552.8,
-   "y": 751.3
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Silthill",
-   "tier": 2,
-   "x": 535.5,
-   "y": 777.0
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Silthollow",
-   "tier": 2,
-   "x": 456.6,
-   "y": 665.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     284.6,
-     369.6
-    ],
-    [
-     284.8,
-     396.5
-    ],
-    [
-     289.9,
-     404.6
-    ],
-    [
-     290.5,
-     414.1
-    ],
-    [
-     298.8,
-     424.0
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Silthorpe",
-   "tier": 2,
-   "x": 289.9,
-   "y": 404.6
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "The Siltmere",
-   "tier": 1,
-   "x": 741.3,
-   "y": 524.9
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Siltreach",
-   "tier": 2,
-   "x": 527.3,
-   "y": 687.2
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Siltvale",
-   "tier": 2,
-   "x": 593.8,
-   "y": 796.1
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Upper Fensford",
-   "tier": 1,
-   "x": 278.1,
-   "y": 302.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fensgate",
-   "tier": 2,
-   "x": 577.2,
-   "y": 340.6
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Upper Fenshill",
-   "tier": 1,
-   "x": 680.6,
-   "y": 349.3
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Upper Fenshollow",
-   "tier": 1,
-   "x": 571.2,
-   "y": 179.1
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fensholt",
-   "tier": 2,
-   "x": 283.8,
-   "y": 224.0
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Upper Fensmere",
-   "tier": 1,
-   "x": 569.9,
-   "y": 285.0
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fensreach",
-   "tier": 2,
-   "x": 576.4,
-   "y": 246.6
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fenstead",
-   "tier": 2,
-   "x": 206.0,
-   "y": 272.7
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fensthorpe",
-   "tier": 2,
-   "x": 489.0,
-   "y": 269.4
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "The Upper Fensvale",
-   "tier": 1,
-   "x": 760.2,
-   "y": 368.9
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "The Upper Fenswater",
-   "tier": 2,
-   "x": 171.9,
-   "y": 157.4
-  }
- ],
+ "labels": {
+  "local": [
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      596.3,
+      564.8
+     ],
+     [
+      648.7,
+      564.6
+     ],
+     [
+      655.2,
+      558.9
+     ],
+     [
+      665.9,
+      554.4
+     ],
+     [
+      674.9,
+      545.7
+     ],
+     [
+      695.4,
+      538.0
+     ],
+     [
+      699.1,
+      534.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Fens",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 665.9,
+    "y": 554.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.93,
+    "text": "The Fensbank",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Fensclose",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenscombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 602.0,
+    "y": 615.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.82,
+    "text": "The Fensfield",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 596.6,
+    "y": 590.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 278.0,
+    "y": 301.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenshill",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 287.9,
+    "y": 437.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenshollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 435.1,
+    "y": 604.7
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 395.5,
+    "y": 642.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 382.3,
+    "y": 597.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 233.0,
+    "y": 447.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 591.2,
+    "y": 534.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensthorpe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 366.0,
+    "y": 517.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.43,
+    "text": "The Fensvale",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenswater",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 732.0,
+    "y": 469.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenswick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 477.5,
+    "y": 588.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.5,
+    "kind": "feature",
+    "path": [
+     [
+      737.2,
+      331.2
+     ],
+     [
+      737.8,
+      330.9
+     ],
+     [
+      742.6,
+      330.8
+     ],
+     [
+      751.7,
+      326.7
+     ],
+     [
+      779.9,
+      326.7
+     ],
+     [
+      782.4,
+      329.0
+     ]
+    ],
+    "role": "label",
+    "size": 7.22,
+    "text": "The Groundbank",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 751.7,
+    "y": 326.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Groundclose",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 340.1,
+    "y": 142.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "path": [
+     [
+      464.9,
+      505.2
+     ],
+     [
+      502.1,
+      505.2
+     ],
+     [
+      504.0,
+      506.3
+     ],
+     [
+      506.5,
+      506.6
+     ],
+     [
+      509.7,
+      509.7
+     ]
+    ],
+    "role": "label",
+    "size": 6.5,
+    "text": "The Groundhollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 504.0,
+    "y": 506.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Groundholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 668.6,
+    "y": 760.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Groundmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 443.1,
+    "y": 423.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "path": [
+     [
+      254.7,
+      684.8
+     ],
+     [
+      258.1,
+      688.0
+     ],
+     [
+      263.5,
+      690.6
+     ],
+     [
+      330.3,
+      690.6
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Groundthorpe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 263.5,
+    "y": 690.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
+    "text": "The Groundvale",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 781.4,
+    "y": 441.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.5,
+    "kind": "feature",
+    "path": [
+     [
+      115.8,
+      623.0
+     ],
+     [
+      140.8,
+      622.5
+     ],
+     [
+      159.9,
+      606.5
+     ],
+     [
+      177.0,
+      604.4
+     ],
+     [
+      179.0,
+      602.4
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Groundwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 159.9,
+    "y": 606.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      339.3,
+      203.0
+     ],
+     [
+      343.4,
+      198.8
+     ],
+     [
+      344.4,
+      196.1
+     ],
+     [
+      344.4,
+      183.9
+     ],
+     [
+      349.5,
+      175.8
+     ],
+     [
+      349.8,
+      167.7
+     ],
+     [
+      350.8,
+      164.9
+     ],
+     [
+      359.7,
+      155.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Headbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 349.5,
+    "y": 175.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      210.8,
+      183.8
+     ],
+     [
+      212.3,
+      185.3
+     ],
+     [
+      215.1,
+      187.0
+     ],
+     [
+      264.0,
+      187.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Headclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 215.1,
+    "y": 187.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "range",
+    "path": [
+     [
+      189.7,
+      683.5
+     ],
+     [
+      198.1,
+      669.4
+     ],
+     [
+      214.7,
+      656.4
+     ],
+     [
+      227.5,
+      647.3
+     ],
+     [
+      240.8,
+      615.2
+     ],
+     [
+      245.0,
+      585.6
+     ]
+    ],
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "The Headcombe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 227.5,
+    "y": 647.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "path": [
+     [
+      424.5,
+      806.0
+     ],
+     [
+      432.8,
+      805.9
+     ],
+     [
+      442.4,
+      796.3
+     ],
+     [
+      447.2,
+      793.2
+     ],
+     [
+      450.7,
+      789.7
+     ],
+     [
+      451.9,
+      789.2
+     ],
+     [
+      452.2,
+      789.0
+     ]
+    ],
+    "role": "label",
+    "size": 6.5,
+    "text": "The Headford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 447.2,
+    "y": 793.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      478.3,
+      517.8
+     ],
+     [
+      495.4,
+      518.0
+     ],
+     [
+      500.8,
+      522.1
+     ],
+     [
+      506.2,
+      523.5
+     ],
+     [
+      508.9,
+      525.2
+     ],
+     [
+      516.7,
+      533.3
+     ],
+     [
+      518.7,
+      540.1
+     ],
+     [
+      521.7,
+      543.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Headhill",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 508.9,
+    "y": 525.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.8,
+    "kind": "feature",
+    "path": [
+     [
+      334.1,
+      398.9
+     ],
+     [
+      335.7,
+      399.4
+     ],
+     [
+      348.4,
+      408.6
+     ],
+     [
+      359.3,
+      408.5
+     ],
+     [
+      366.5,
+      401.8
+     ],
+     [
+      376.8,
+      396.7
+     ],
+     [
+      384.7,
+      396.6
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Headholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 359.3,
+    "y": 408.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "The Headwaters",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 684.5,
+    "y": 722.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      232.0,
+      545.9
+     ],
+     [
+      234.3,
+      543.8
+     ],
+     [
+      438.9,
+      543.8
+     ],
+     [
+      450.2,
+      537.3
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The High Ground",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 438.9,
+    "y": 543.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      739.8,
+      448.0
+     ],
+     [
+      739.8,
+      397.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 739.8,
+    "y": 397.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      475.7,
+      478.2
+     ],
+     [
+      488.6,
+      465.6
+     ],
+     [
+      498.1,
+      461.5
+     ],
+     [
+      513.6,
+      446.0
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 498.1,
+    "y": 461.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "road",
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highill",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 594.7,
+    "y": 777.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      509.5,
+      292.5
+     ],
+     [
+      531.9,
+      315.3
+     ],
+     [
+      534.6,
+      317.0
+     ],
+     [
+      538.7,
+      317.6
+     ],
+     [
+      546.8,
+      322.7
+     ],
+     [
+      552.3,
+      322.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 538.7,
+    "y": 317.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      682.1,
+      351.9
+     ],
+     [
+      689.0,
+      358.6
+     ],
+     [
+      693.1,
+      360.6
+     ],
+     [
+      733.2,
+      360.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 693.1,
+    "y": 360.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      464.5,
+      373.5
+     ],
+     [
+      479.6,
+      380.8
+     ],
+     [
+      508.1,
+      403.8
+     ],
+     [
+      559.8,
+      403.8
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Silt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 508.1,
+    "y": 403.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 292.7,
+    "y": 511.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 390.3,
+    "y": 577.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 552.8,
+    "y": 751.3
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Silthill",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 535.5,
+    "y": 777.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Silthollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 456.6,
+    "y": 652.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      284.6,
+      374.2
+     ],
+     [
+      284.8,
+      396.5
+     ],
+     [
+      289.9,
+      404.6
+     ],
+     [
+      290.5,
+      414.1
+     ],
+     [
+      295.8,
+      420.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Silthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 289.9,
+    "y": 404.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "The Siltmere",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 741.3,
+    "y": 524.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 638.0,
+    "y": 777.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 527.3,
+    "y": 687.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Siltvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 610.8,
+    "y": 796.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenscombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 390.4,
+    "y": 132.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 268.3,
+    "y": 322.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fensgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 585.7,
+    "y": 322.7
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 661.0,
+    "y": 349.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenshollow",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 571.2,
+    "y": 179.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fensholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 266.8,
+    "y": 224.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensmere",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 569.9,
+    "y": 285.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fensreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 576.4,
+    "y": 246.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fenstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 223.0,
+    "y": 272.7
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fensthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 489.0,
+    "y": 269.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 760.2,
+    "y": 354.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fenswater",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 188.9,
+    "y": 157.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Upper Fenswick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 323.9,
+    "y": 224.9
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      596.3,
+      564.8
+     ],
+     [
+      648.7,
+      564.6
+     ],
+     [
+      655.2,
+      558.9
+     ],
+     [
+      665.9,
+      554.4
+     ],
+     [
+      674.9,
+      545.7
+     ],
+     [
+      695.4,
+      538.0
+     ],
+     [
+      699.1,
+      534.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Fens",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 665.9,
+    "y": 554.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.93,
+    "text": "The Fensbank",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Fensclose",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.82,
+    "text": "The Fensfield",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 278.0,
+    "y": 301.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fenshollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 435.1,
+    "y": 604.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 391.8,
+    "y": 577.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Fensthorpe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 356.5,
+    "y": 519.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.43,
+    "text": "The Fensvale",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      339.3,
+      203.0
+     ],
+     [
+      343.4,
+      198.8
+     ],
+     [
+      344.4,
+      196.1
+     ],
+     [
+      344.4,
+      183.9
+     ],
+     [
+      349.5,
+      175.8
+     ],
+     [
+      349.8,
+      167.7
+     ],
+     [
+      350.8,
+      164.9
+     ],
+     [
+      359.7,
+      155.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Headbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 349.5,
+    "y": 175.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "range",
+    "path": [
+     [
+      189.7,
+      683.5
+     ],
+     [
+      198.1,
+      669.4
+     ],
+     [
+      214.7,
+      656.4
+     ],
+     [
+      227.5,
+      647.3
+     ],
+     [
+      240.8,
+      615.2
+     ],
+     [
+      245.0,
+      585.6
+     ]
+    ],
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "The Headcombe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 227.5,
+    "y": 647.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      478.3,
+      517.8
+     ],
+     [
+      495.4,
+      518.0
+     ],
+     [
+      500.8,
+      522.1
+     ],
+     [
+      506.2,
+      523.5
+     ],
+     [
+      508.9,
+      525.2
+     ],
+     [
+      516.7,
+      533.3
+     ],
+     [
+      518.7,
+      540.1
+     ],
+     [
+      521.7,
+      543.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Headhill",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 508.9,
+    "y": 525.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "The Headwaters",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 684.5,
+    "y": 722.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      232.0,
+      545.9
+     ],
+     [
+      234.3,
+      543.8
+     ],
+     [
+      438.9,
+      543.8
+     ],
+     [
+      450.2,
+      537.3
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The High Ground",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 438.9,
+    "y": 543.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      724.9,
+      467.6
+     ],
+     [
+      737.8,
+      454.7
+     ],
+     [
+      739.8,
+      450.7
+     ],
+     [
+      739.8,
+      422.7
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 739.8,
+    "y": 450.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      475.7,
+      478.2
+     ],
+     [
+      488.6,
+      465.6
+     ],
+     [
+      498.1,
+      461.5
+     ],
+     [
+      513.6,
+      446.0
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 498.1,
+    "y": 461.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "road",
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highill",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 594.7,
+    "y": 777.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      509.5,
+      292.5
+     ],
+     [
+      531.9,
+      315.3
+     ],
+     [
+      534.6,
+      317.0
+     ],
+     [
+      538.7,
+      317.6
+     ],
+     [
+      546.8,
+      322.7
+     ],
+     [
+      552.3,
+      322.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 538.7,
+    "y": 317.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      682.1,
+      351.9
+     ],
+     [
+      689.0,
+      358.6
+     ],
+     [
+      693.1,
+      360.6
+     ],
+     [
+      733.2,
+      360.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Highreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 693.1,
+    "y": 360.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      464.5,
+      373.5
+     ],
+     [
+      479.6,
+      380.8
+     ],
+     [
+      508.1,
+      403.8
+     ],
+     [
+      559.8,
+      403.8
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Silt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 508.1,
+    "y": 403.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      233.4,
+      265.4
+     ],
+     [
+      250.3,
+      248.9
+     ],
+     [
+      253.0,
+      247.2
+     ],
+     [
+      269.4,
+      247.1
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Siltford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 253.0,
+    "y": 247.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      284.6,
+      374.2
+     ],
+     [
+      284.8,
+      396.5
+     ],
+     [
+      289.9,
+      404.6
+     ],
+     [
+      290.5,
+      414.1
+     ],
+     [
+      295.8,
+      420.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Silthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 289.9,
+    "y": 404.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "The Siltmere",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 741.3,
+    "y": 524.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenscombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 390.4,
+    "y": 132.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 268.3,
+    "y": 322.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 661.0,
+    "y": 349.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fenshollow",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 571.2,
+    "y": 179.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensmere",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 569.9,
+    "y": 285.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Upper Fensvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 760.2,
+    "y": 354.2
+   }
+  ],
+  "world": [
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      596.3,
+      564.8
+     ],
+     [
+      648.7,
+      564.6
+     ],
+     [
+      655.2,
+      558.9
+     ],
+     [
+      665.9,
+      554.4
+     ],
+     [
+      674.9,
+      545.7
+     ],
+     [
+      695.4,
+      538.0
+     ],
+     [
+      699.1,
+      534.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Fens",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 665.9,
+    "y": 554.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.93,
+    "text": "The Fensbank",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Fensclose",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.82,
+    "text": "The Fensfield",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.41,
+    "text": "The Fensmoor",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.43,
+    "text": "The Fensvale",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "range",
+    "path": [
+     [
+      189.7,
+      683.5
+     ],
+     [
+      198.1,
+      669.4
+     ],
+     [
+      214.7,
+      656.4
+     ],
+     [
+      227.5,
+      647.3
+     ],
+     [
+      240.8,
+      615.2
+     ],
+     [
+      245.0,
+      585.6
+     ]
+    ],
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "The Headcombe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 227.5,
+    "y": 647.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "The Headwaters",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 684.5,
+    "y": 722.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      464.5,
+      373.5
+     ],
+     [
+      479.6,
+      380.8
+     ],
+     [
+      508.1,
+      403.8
+     ],
+     [
+      559.8,
+      403.8
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Silt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 508.1,
+    "y": 403.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "The Siltmere",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 741.3,
+    "y": 524.9
+   }
+  ]
+ },
  "legend": [
   {
    "label": "City",
@@ -1473,11 +2575,6 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "The Fenshollow"
-  },
-  {
    "kind": "feature",
    "reason": "no room",
    "text": "The Groundcombe"
@@ -1500,7 +2597,7 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "The Groundhollow"
+   "text": "The Groundhill"
   },
   {
    "kind": "feature",
@@ -1573,6 +2670,11 @@
    "text": "The Headwater"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Headwick"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Highbank"
@@ -1585,7 +2687,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Highfield"
+   "text": "The Highford"
   },
   {
    "kind": "road",
@@ -1601,11 +2703,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Higholt"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Highreach"
   },
   {
    "kind": "road",
@@ -1648,11 +2745,6 @@
    "text": "The Siltholt"
   },
   {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Siltmoor"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Siltstead"
@@ -1666,16 +2758,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Siltwick"
-  },
-  {
-   "kind": "town",
-   "reason": "no room",
-   "text": "The Upper Fenscombe"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "The Upper Fenswick"
   }
  ]
 }

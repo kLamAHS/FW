@@ -103,22 +103,43 @@ export function usePanZoom(initialScale = 1) {
   const [view, setView] = useState({ x: 0, y: 0, k: initialScale })
   const dragging = useRef<{ x: number; y: number } | null>(null)
 
+  // How many CSS pixels one user unit currently covers. The transform lives in the
+  // SVG's own viewBox units, but pointer events arrive in pixels; with
+  // preserveAspectRatio "meet" they differ by the fitted scale, and mixing them
+  // made drags lag the cursor and put the wheel's "fixed point" slightly off —
+  // exactly the arithmetic a fit-to-feature camera cannot survive.
+  const pixelsPerUnit = (el: SVGSVGElement): number => {
+    const vb = el.viewBox?.baseVal
+    if (!vb || !vb.width || !vb.height) return 1
+    const rect = el.getBoundingClientRect()
+    return Math.min(rect.width / vb.width, rect.height / vb.height) || 1
+  }
+
   const onPointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
-    dragging.current = { x: e.clientX - view.x, y: e.clientY - view.y }
+    const s = pixelsPerUnit(e.currentTarget)
+    dragging.current = { x: e.clientX / s - view.x, y: e.clientY / s - view.y }
     e.currentTarget.setPointerCapture(e.pointerId)
   }
   const onPointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
     if (!dragging.current) return
-    setView((v) => ({ ...v, x: e.clientX - dragging.current!.x, y: e.clientY - dragging.current!.y }))
+    const s = pixelsPerUnit(e.currentTarget)
+    setView((v) => ({ ...v, x: e.clientX / s - dragging.current!.x,
+                      y: e.clientY / s - dragging.current!.y }))
   }
   const onPointerUp = (e: React.PointerEvent<SVGSVGElement>) => {
     dragging.current = null
     e.currentTarget.releasePointerCapture(e.pointerId)
   }
   const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const px = e.clientX - rect.left
-    const py = e.clientY - rect.top
+    const el = e.currentTarget
+    const rect = el.getBoundingClientRect()
+    const s = pixelsPerUnit(el)
+    const vb = el.viewBox?.baseVal
+    // The cursor, in viewBox units — including the letterboxing "meet" centres.
+    const dx = vb && vb.width ? (rect.width - vb.width * s) / 2 : 0
+    const dy = vb && vb.height ? (rect.height - vb.height * s) / 2 : 0
+    const px = (e.clientX - rect.left - dx) / s + (vb ? vb.x : 0)
+    const py = (e.clientY - rect.top - dy) / s + (vb ? vb.y : 0)
     setView((v) => {
       const k = Math.min(6, Math.max(0.08, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)))
       // Keep the point under the cursor fixed while zooming.

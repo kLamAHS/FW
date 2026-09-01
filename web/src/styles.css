@@ -9,6 +9,56 @@
  * holding a spatial or temporal relationship in their head.
  */
 
+/* The map's own type (V2 §15). Bundled OFL faces, not system stacks: committed em
+   tables in the generator measure exactly these files, and a label solved against one
+   OS's Palatino and rendered in another's Georgia is a label whose collision boxes are
+   fiction. Alegreya (serif, true italics), Alegreya SC (real small caps — a lowercase
+   name renders as caps-and-small-caps, the cartographic voice for regions and ranges),
+   and Alegreya Sans (the matching humanist sans, for settlements): one family by one
+   designer, licensed OFL — see web/public/fonts/OFL-*.txt. */
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-var.ttf") format("truetype-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-Italic-var.ttf") format("truetype-variations");
+  font-weight: 400 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya SC";
+  src: url("/fonts/AlegreyaSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --ink: #16181d;
   --ink-soft: #4a5058;
@@ -92,7 +142,12 @@
   --shadow: 0 1px 2px rgba(20, 18, 15, 0.06), 0 4px 14px rgba(20, 18, 15, 0.05);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --serif: Iowan Old Style, "Palatino Linotype", Palatino, Georgia, serif;
+  --serif: "Alegreya", Iowan Old Style, "Palatino Linotype", Palatino, Georgia, serif;
+  /* The map's three voices, by face. The generator's width tables are measured from
+     exactly these files, so a label class must never swap family per-OS. */
+  --map-serif: "Alegreya", Georgia, serif;
+  --map-sc: "Alegreya SC", "Alegreya", Georgia, serif;
+  --map-sans: "Alegreya Sans", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -392,19 +447,23 @@ ul.clean li:last-child { border-bottom: none; }
   max-height: calc(100% - 20px); overflow: auto;
 }
 .map-controls label { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
-/* Labels. The server decides *where* each name goes and how big it is set; the
-   stylesheet decides what it looks like. Every one is drawn with a halo of the paper
-   behind it — `paint-order: stroke` — because a name over lit relief without one is
-   unreadable exactly where the map is most interesting. */
+/* Labels. The server decides *where* each name goes, how big it is set, AND the
+   voice it speaks in — face, weight, style, tracking arrive on the wire, because the
+   solver's collision boxes are measured from exactly those choices. The stylesheet
+   keeps only what the solver cannot feel: colour, and the halo of paper behind every
+   name — `paint-order: stroke` — without which a name over lit relief is unreadable
+   exactly where the map is most interesting. A text-transform or letter-spacing here
+   would un-measure every box; the old region class did precisely that. */
 .map-label { fill: var(--map-label); paint-order: stroke; stroke: var(--map-halo);
              stroke-width: 3px; stroke-linejoin: round; pointer-events: none;
-             font-family: var(--serif); }
-.map-label-region { fill: var(--map-label-region); letter-spacing: 0.14em;
-                    text-transform: uppercase; font-weight: 500; }
-.map-label-water { fill: var(--map-label-water); font-style: italic;
-                   letter-spacing: 0.08em; }
-.map-label-relief { fill: var(--map-label-relief); letter-spacing: 0.10em;
-                    text-transform: uppercase; font-size: 0.9em; }
+             font-family: var(--map-serif); }
+.map-label-region { fill: var(--map-label-region); }
+.map-label-water { fill: var(--map-label-water); }
+.map-label-relief { fill: var(--map-label-relief); }
+
+/* Zoom bands crossfade rather than pop (V2 §18): 150ms, opacity only — the terrain
+   never animates, and a hidden band's labels are pointer-transparent already. */
+.map-band { transition: opacity 150ms ease; }
 
 /* The key. A shape as well as a colour on every line — §69 does not allow colour to be
    the only thing carrying a distinction. */

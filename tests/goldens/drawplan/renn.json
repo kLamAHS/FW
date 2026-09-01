@@ -7,6 +7,7 @@
  },
  "icons": [
   {
+   "band": "local",
    "contested": false,
    "holder_role": "holder-0",
    "name": "Black Gate",
@@ -18,6 +19,7 @@
    "y": 636.9
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Blackcombe",
@@ -29,6 +31,7 @@
    "y": 368.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "holder-1",
    "name": "Blackford",
@@ -40,6 +43,7 @@
    "y": 236.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Blackgate",
@@ -51,17 +55,7 @@
    "y": 502.3
   },
   {
-   "contested": false,
-   "holder_role": "holder-1",
-   "name": "Blackmere",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 700.0,
-   "y": 210.0
-  },
-  {
+   "band": "world",
    "contested": false,
    "holder_role": "holder-1",
    "name": "Blackmere",
@@ -73,6 +67,7 @@
    "y": 210.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-3",
    "name": "Blackpass",
@@ -84,6 +79,7 @@
    "y": 458.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Blackstead",
@@ -95,6 +91,7 @@
    "y": 371.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Blackwatch",
@@ -106,6 +103,7 @@
    "y": 286.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Blackwick",
@@ -117,6 +115,7 @@
    "y": 360.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "holder-1",
    "name": "Grey Gate",
@@ -128,6 +127,7 @@
    "y": 322.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Greyford",
@@ -139,6 +139,7 @@
    "y": 139.0
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Greygate",
@@ -150,17 +151,7 @@
    "y": 510.9
   },
   {
-   "contested": true,
-   "holder_role": "holder-0",
-   "name": "Greyhaven",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 120.0,
-   "y": 640.0
-  },
-  {
+   "band": "world",
    "contested": true,
    "holder_role": "holder-0",
    "name": "Greyhaven",
@@ -172,6 +163,7 @@
    "y": 640.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Greypass",
@@ -183,6 +175,7 @@
    "y": 481.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Mill Ford",
@@ -194,17 +187,7 @@
    "y": 150.0
   },
   {
-   "contested": false,
-   "holder_role": "holder-3",
-   "name": "Millbrook",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 330.0,
-   "y": 350.0
-  },
-  {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-3",
    "name": "Millbrook",
@@ -216,6 +199,7 @@
    "y": 350.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-0",
    "name": "Millgate",
@@ -227,6 +211,7 @@
    "y": 626.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Millpass",
@@ -238,6 +223,7 @@
    "y": 460.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Ford",
@@ -249,6 +235,7 @@
    "y": 372.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "holder-1",
    "name": "Northford",
@@ -260,6 +247,7 @@
    "y": 268.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-3",
    "name": "Northpass",
@@ -271,17 +259,7 @@
    "y": 479.8
   },
   {
-   "contested": false,
-   "holder_role": "",
-   "name": "Northwatch",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 300.0,
-   "y": 620.0
-  },
-  {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Northwatch",
@@ -293,6 +271,7 @@
    "y": 620.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Red Ford",
@@ -304,17 +283,7 @@
    "y": 430.0
   },
   {
-   "contested": false,
-   "holder_role": "",
-   "name": "Red Ford",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 250.0,
-   "y": 430.0
-  },
-  {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-0",
    "name": "Redgate",
@@ -326,6 +295,7 @@
    "y": 523.1
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Renn Ford",
@@ -337,17 +307,7 @@
    "y": 288.5
   },
   {
-   "contested": false,
-   "holder_role": "holder-2",
-   "name": "Rennford",
-   "radius": 5.5,
-   "rank": "town",
-   "role": "settlement",
-   "shape": "disc",
-   "x": 430.0,
-   "y": 300.0
-  },
-  {
+   "band": "world",
    "contested": false,
    "holder_role": "holder-2",
    "name": "Rennford",
@@ -359,6 +319,7 @@
    "y": 300.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "holder-3",
    "name": "Renngate",
@@ -370,616 +331,1506 @@
    "y": 501.5
   }
  ],
- "labels": [
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     209.0,
-     539.6
+ "labels": {
+  "local": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Blackcombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 552.5,
+    "y": 368.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 499.1,
+    "y": 236.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 444.0,
+    "y": 520.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Blackmere",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 711.0,
+    "y": 210.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 436.5,
+    "y": 447.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 366.7,
+    "y": 384.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackwatch",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 323.6,
+    "y": 287.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackwick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 474.1,
+    "y": 360.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Grey Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 580.4,
+    "y": 323.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Greyford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 748.2,
+    "y": 139.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greygate",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 546.3,
+    "y": 511.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greyhaven",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 131.1,
+    "y": 640.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Greyholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 390.7,
+    "y": 703.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "Greymere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 196.0,
+    "y": 431.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Greypass",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 342.5,
+    "y": 502.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "river",
+    "path": [
+     [
+      185.7,
+      773.9
+     ],
+     [
+      201.5,
+      758.1
+     ],
+     [
+      203.2,
+      755.4
+     ],
+     [
+      203.4,
+      739.8
+     ]
     ],
-    [
-     209.0,
-     519.7
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Iron Flow",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 203.2,
+    "y": 755.4
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Mill Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 677.0,
+    "y": 150.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Millbrook",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 341.1,
+    "y": 350.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      692.9,
+      142.1
+     ],
+     [
+      694.4,
+      140.6
+     ],
+     [
+      698.5,
+      138.5
+     ],
+     [
+      728.9,
+      138.9
+     ]
     ],
-    [
-     211.0,
-     515.7
+    "role": "label",
+    "size": 9.5,
+    "text": "Millhaven",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 698.5,
+    "y": 138.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Millpass",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 438.0,
+    "y": 481.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "North Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 421.4,
+    "y": 386.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Northford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 575.0,
+    "y": 269.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Northpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 344.4,
+    "y": 468.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Northwatch",
+    "tier": 0,
+    "tracking": 0.0,
+    "x": 310.5,
+    "y": 609.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      361.4,
+      479.8
+     ],
+     [
+      374.8,
+      479.8
+     ],
+     [
+      378.9,
+      477.8
+     ],
+     [
+      388.4,
+      469.3
+     ],
+     [
+      395.7,
+      469.2
+     ]
     ],
-    [
-     231.4,
-     495.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Black Haven",
-   "tier": 2,
-   "x": 211.0,
-   "y": 515.7
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Blackcombe",
-   "tier": 1,
-   "x": 552.5,
-   "y": 368.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Blackford",
-   "tier": 2,
-   "x": 499.1,
-   "y": 236.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Blackgate",
-   "tier": 2,
-   "x": 444.0,
-   "y": 520.8
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Blackmere",
-   "tier": 0,
-   "x": 709.8,
-   "y": 200.9
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Blackpass",
-   "tier": 2,
-   "x": 427.0,
-   "y": 458.4
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Blackwatch",
-   "tier": 2,
-   "x": 323.6,
-   "y": 300.3
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Grey Gate",
-   "tier": 2,
-   "x": 580.4,
-   "y": 323.3
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Greyford",
-   "tier": 2,
-   "x": 748.2,
-   "y": 139.6
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Greygate",
-   "tier": 1,
-   "x": 546.3,
-   "y": 511.5
-  },
-  {
-   "anchor": "end",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Greyhaven",
-   "tier": 0,
-   "x": 110.2,
-   "y": 640.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Greyholt",
-   "tier": 2,
-   "x": 393.4,
-   "y": 703.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "Greymere",
-   "tier": 2,
-   "x": 196.0,
-   "y": 431.0
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Greypass",
-   "tier": 1,
-   "x": 352.3,
-   "y": 482.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Ironwood",
-   "tier": 2,
-   "x": 315.2,
-   "y": 277.2
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Mill Ford",
-   "tier": 2,
-   "x": 677.0,
-   "y": 150.6
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Millbrook",
-   "tier": 0,
-   "x": 339.8,
-   "y": 340.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     300.5,
-     415.4
+    "role": "label",
+    "size": 9.5,
+    "text": "Red Brook",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 378.9,
+    "y": 477.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Red Ford",
+    "tier": 0,
+    "tracking": 0.0,
+    "x": 259.8,
+    "y": 430.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Redgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 364.7,
+    "y": 523.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "river",
+    "path": [
+     [
+      403.3,
+      300.2
+     ],
+     [
+      404.3,
+      296.3
+     ],
+     [
+      408.4,
+      290.9
+     ],
+     [
+      409.7,
+      285.5
+     ],
+     [
+      413.8,
+      280.1
+     ],
+     [
+      414.8,
+      277.3
+     ],
+     [
+      413.8,
+      273.3
+     ],
+     [
+      413.1,
+      272.4
+     ]
     ],
-    [
-     326.7,
-     389.2
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Millford",
-   "tier": 2,
-   "x": 326.7,
-   "y": 389.2
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Millgate",
-   "tier": 2,
-   "x": 291.5,
-   "y": 616.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     691.3,
-     143.9
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Redrun",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 413.8,
+    "y": 280.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Renn Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 597.1,
+    "y": 289.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 18.55,
+    "text": "Renncoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 658.6,
+    "y": 714.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.4,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Rennford",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 443.8,
+    "y": 300.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Renngate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 408.0,
+    "y": 501.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Rennweald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 519.9,
+    "y": 663.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      488.8,
+      432.9
+     ],
+     [
+      511.8,
+      409.9
+     ]
     ],
-    [
-     694.4,
-     140.6
+    "role": "label",
+    "size": 9.5,
+    "text": "Salt Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 511.8,
+    "y": 409.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      308.7,
+      293.4
+     ],
+     [
+      308.5,
+      293.6
+     ],
+     [
+      306.5,
+      297.7
+     ],
+     [
+      306.5,
+      326.1
+     ],
+     [
+      308.5,
+      330.2
+     ],
+     [
+      322.1,
+      343.7
+     ],
+     [
+      322.9,
+      344.3
+     ]
     ],
-    [
-     698.5,
-     138.5
+    "role": "label",
+    "size": 9.5,
+    "text": "The Blackhaven",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 306.5,
+    "y": 326.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "road",
+    "role": "label",
+    "size": 9.5,
+    "text": "The Iron Brook",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 231.8,
+    "y": 604.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      283.4,
+      396.6
+     ],
+     [
+      319.9,
+      360.1
+     ]
     ],
-    [
-     731.3,
-     138.9
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Millhaven",
-   "tier": 2,
-   "x": 698.5,
-   "y": 138.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Millpass",
-   "tier": 1,
-   "x": 447.8,
-   "y": 460.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "North Ford",
-   "tier": 2,
-   "x": 412.9,
-   "y": 391.2
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Northford",
-   "tier": 2,
-   "x": 575.0,
-   "y": 269.1
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Northpass",
-   "tier": 2,
-   "x": 334.9,
-   "y": 480.1
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Northwatch",
-   "tier": 0,
-   "x": 309.8,
-   "y": 610.9
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Redgate",
-   "tier": 2,
-   "x": 364.7,
-   "y": 523.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     402.4,
-     302.3
+    "role": "label",
+    "size": 9.5,
+    "text": "The Iron Road",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 319.9,
+    "y": 360.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 16.32,
+    "text": "The Ironcape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 555.6,
+    "y": 776.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      685.5,
+      161.8
+     ],
+     [
+      685.6,
+      196.1
+     ],
+     [
+      687.7,
+      200.2
+     ],
+     [
+      692.9,
+      205.4
+     ]
     ],
-    [
-     402.9,
-     301.7
+    "role": "label",
+    "size": 9.5,
+    "text": "The Ironford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 687.7,
+    "y": 200.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.3,
+    "text": "The Millcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 175.1,
+    "y": 169.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.18,
+    "text": "The North Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 742.1,
+    "y": 432.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Northmarch",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 337.0,
+    "y": 639.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      479.9,
+      479.7
+     ],
+     [
+      499.4,
+      479.8
+     ],
+     [
+      502.1,
+      480.8
+     ],
+     [
+      518.7,
+      497.1
+     ]
     ],
-    [
-     404.3,
-     296.3
+    "role": "label",
+    "size": 9.5,
+    "text": "The Redford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 502.1,
+    "y": 480.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "path": [
+     [
+      626.8,
+      407.5
+     ],
+     [
+      627.6,
+      407.5
+     ],
+     [
+      669.0,
+      448.5
+     ]
     ],
-    [
-     408.4,
-     290.9
+    "role": "label",
+    "size": 11.0,
+    "text": "The Redweald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 627.6,
+    "y": 407.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "river",
+    "path": [
+     [
+      190.6,
+      540.4
+     ],
+     [
+      221.3,
+      483.2
+     ]
     ],
-    [
-     409.7,
-     285.5
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The River Renn",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 221.3,
+    "y": 483.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      544.0,
+      269.4
+     ],
+     [
+      575.3,
+      238.1
+     ],
+     [
+      577.1,
+      237.0
+     ]
     ],
-    [
-     413.8,
-     280.1
+    "role": "label",
+    "size": 9.5,
+    "text": "The Salt Run",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 575.3,
+    "y": 238.1
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Blackcombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 552.5,
+    "y": 368.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Blackmere",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 711.0,
+    "y": 210.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Blackpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 436.5,
+    "y": 447.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greygate",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 546.3,
+    "y": 511.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greyhaven",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 131.1,
+    "y": 640.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Greypass",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 342.5,
+    "y": 502.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "river",
+    "path": [
+     [
+      185.7,
+      773.9
+     ],
+     [
+      201.5,
+      758.1
+     ],
+     [
+      203.2,
+      755.4
+     ],
+     [
+      203.4,
+      739.8
+     ]
     ],
-    [
-     414.8,
-     277.3
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Iron Flow",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 203.2,
+    "y": 755.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Millbrook",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 341.1,
+    "y": 350.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      303.0,
+      412.9
+     ],
+     [
+      324.3,
+      391.6
+     ]
     ],
-    [
-     413.8,
-     273.3
+    "role": "label",
+    "size": 9.5,
+    "text": "Millford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 324.3,
+    "y": 391.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Millpass",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 438.0,
+    "y": 481.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Northpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 344.4,
+    "y": 468.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Northwatch",
+    "tier": 0,
+    "tracking": 0.0,
+    "x": 310.5,
+    "y": 609.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      361.4,
+      479.8
+     ],
+     [
+      374.8,
+      479.8
+     ],
+     [
+      378.9,
+      477.8
+     ],
+     [
+      388.4,
+      469.3
+     ],
+     [
+      395.7,
+      469.2
+     ]
     ],
-    [
-     411.6,
-     270.6
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "Redrun",
-   "tier": 1,
-   "x": 409.7,
-   "y": 285.5
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Renn Ford",
-   "tier": 1,
-   "x": 597.1,
-   "y": 289.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 24.0,
-   "text": "Renncoast",
-   "tier": 1,
-   "x": 658.6,
-   "y": 714.3
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Rennford",
-   "tier": 0,
-   "x": 439.8,
-   "y": 300.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Renngate",
-   "tier": 2,
-   "x": 408.0,
-   "y": 501.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Rennweald",
-   "tier": 2,
-   "x": 519.9,
-   "y": 663.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     485.7,
-     436.0
+    "role": "label",
+    "size": 9.5,
+    "text": "Red Brook",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 378.9,
+    "y": 477.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Red Ford",
+    "tier": 0,
+    "tracking": 0.0,
+    "x": 259.8,
+    "y": 430.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Redgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 364.7,
+    "y": 523.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "river",
+    "path": [
+     [
+      403.3,
+      300.2
+     ],
+     [
+      404.3,
+      296.3
+     ],
+     [
+      408.4,
+      290.9
+     ],
+     [
+      409.7,
+      285.5
+     ],
+     [
+      413.8,
+      280.1
+     ],
+     [
+      414.8,
+      277.3
+     ],
+     [
+      413.8,
+      273.3
+     ],
+     [
+      413.1,
+      272.4
+     ]
     ],
-    [
-     514.9,
-     406.8
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Salt Ford",
-   "tier": 2,
-   "x": 514.9,
-   "y": 406.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "role": "label",
-   "size": 9.5,
-   "text": "The Iron Brook",
-   "tier": 2,
-   "x": 173.1,
-   "y": 604.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 21.06,
-   "text": "The Ironcape",
-   "tier": 1,
-   "x": 555.6,
-   "y": 776.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 13.78,
-   "text": "The Millcoast",
-   "tier": 1,
-   "x": 175.1,
-   "y": 169.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "The North Mere",
-   "tier": 2,
-   "x": 476.1,
-   "y": 637.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 9.4,
-   "text": "The North Wick",
-   "tier": 1,
-   "x": 742.1,
-   "y": 432.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The Northmarch",
-   "tier": 0,
-   "x": 313.2,
-   "y": 639.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     460.9,
-     479.5
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Redrun",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 413.8,
+    "y": 280.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Renn Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 597.1,
+    "y": 289.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 18.55,
+    "text": "Renncoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 658.6,
+    "y": 714.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.4,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Rennford",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 443.8,
+    "y": 300.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Renngate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 408.0,
+    "y": 501.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "road",
+    "role": "label",
+    "size": 9.5,
+    "text": "The Iron Brook",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 231.8,
+    "y": 604.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 16.32,
+    "text": "The Ironcape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 555.6,
+    "y": 776.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.3,
+    "text": "The Millcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 175.1,
+    "y": 169.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.18,
+    "text": "The North Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 742.1,
+    "y": 432.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Northmarch",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 337.0,
+    "y": 639.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      479.9,
+      479.7
+     ],
+     [
+      499.4,
+      479.8
+     ],
+     [
+      502.1,
+      480.8
+     ],
+     [
+      518.7,
+      497.1
+     ]
     ],
-    [
-     499.4,
-     479.8
+    "role": "label",
+    "size": 9.5,
+    "text": "The Redford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 502.1,
+    "y": 480.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "river",
+    "path": [
+     [
+      190.6,
+      540.4
+     ],
+     [
+      221.3,
+      483.2
+     ]
     ],
-    [
-     502.1,
-     480.8
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The River Renn",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 221.3,
+    "y": 483.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      544.0,
+      269.4
+     ],
+     [
+      575.3,
+      238.1
+     ],
+     [
+      577.1,
+      237.0
+     ]
     ],
-    [
-     512.0,
-     490.6
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Redford",
-   "tier": 2,
-   "x": 502.1,
-   "y": 480.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     620.5,
-     407.3
+    "role": "label",
+    "size": 9.5,
+    "text": "The Salt Run",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 575.3,
+    "y": 238.1
+   }
+  ],
+  "world": [
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Blackmere",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 711.0,
+    "y": 210.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greygate",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 546.3,
+    "y": 511.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Greyhaven",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 131.1,
+    "y": 640.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 18.55,
+    "text": "Renncoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 658.6,
+    "y": 714.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.4,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Rennford",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 443.8,
+    "y": 300.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 16.32,
+    "text": "The Ironcape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 555.6,
+    "y": 776.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.3,
+    "text": "The Millcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 175.1,
+    "y": 169.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.18,
+    "text": "The North Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 742.1,
+    "y": 432.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Northmarch",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 337.0,
+    "y": 639.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      465.7,
+      479.6
+     ],
+     [
+      499.4,
+      479.8
+     ],
+     [
+      502.1,
+      480.8
+     ],
+     [
+      508.6,
+      487.2
+     ]
     ],
-    [
-     627.6,
-     407.5
+    "role": "label",
+    "size": 9.5,
+    "text": "The Redford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 502.1,
+    "y": 480.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.5,
+    "kind": "river",
+    "path": [
+     [
+      229.2,
+      468.6
+     ],
+     [
+      250.0,
+      430.0
+     ],
+     [
+      264.9,
+      415.1
+     ]
     ],
-    [
-     673.5,
-     452.9
-    ]
-   ],
-   "role": "label",
-   "size": 11.0,
-   "text": "The Redweald",
-   "tier": 2,
-   "x": 627.6,
-   "y": 407.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "river",
-   "path": [
-    [
-     226.1,
-     474.4
-    ],
-    [
-     250.0,
-     430.0
-    ],
-    [
-     269.6,
-     410.4
-    ]
-   ],
-   "role": "label-water",
-   "size": 11.0,
-   "text": "The River Renn",
-   "tier": 0,
-   "x": 250.0,
-   "y": 430.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The Salt Reach",
-   "tier": 0,
-   "x": 761.0,
-   "y": 224.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     540.7,
-     272.6
-    ],
-    [
-     575.3,
-     238.1
-    ],
-    [
-     578.0,
-     236.4
-    ],
-    [
-     581.5,
-     236.3
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "The Salt Run",
-   "tier": 2,
-   "x": 578.0,
-   "y": 236.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "The Vale of Renn",
-   "tier": 0,
-   "x": 460.5,
-   "y": 365.9
-  }
- ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The River Renn",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 250.0,
+    "y": 430.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Vale of Renn",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 483.1,
+    "y": 365.9
+   }
+  ]
+ },
  "legend": [
   {
    "label": "Capital",
@@ -1086,14 +1937,9 @@
    "text": "Black Gate"
   },
   {
-   "kind": "village",
+   "kind": "road",
    "reason": "no room",
-   "text": "Blackstead"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Blackwick"
+   "text": "Black Haven"
   },
   {
    "kind": "road",
@@ -1106,9 +1952,14 @@
    "text": "Grey Haven"
   },
   {
-   "kind": "river",
+   "kind": "feature",
    "reason": "no room",
-   "text": "Iron Flow"
+   "text": "Ironwood"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Millgate"
   },
   {
    "kind": "road",
@@ -1119,16 +1970,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "Northwater"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "Red Brook"
-  },
-  {
-   "kind": "town",
-   "reason": "no room",
-   "text": "Red Ford"
   },
   {
    "kind": "range",
@@ -1156,11 +1997,6 @@
    "text": "The Blackbrook"
   },
   {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Blackhaven"
-  },
-  {
    "kind": "feature",
    "reason": "no room",
    "text": "The Blackholt"
@@ -1173,17 +2009,7 @@
   {
    "kind": "road",
    "reason": "no room",
-   "text": "The Iron Road"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
    "text": "The Ironbrook"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Ironford"
   },
   {
    "kind": "feature",
@@ -1194,6 +2020,11 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Millflow"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The North Mere"
   },
   {
    "kind": "feature",
@@ -1224,6 +2055,11 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Renn Water"
+  },
+  {
+   "kind": "region",
+   "reason": "no room",
+   "text": "The Salt Reach"
   }
  ]
 }

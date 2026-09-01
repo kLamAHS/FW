@@ -32,22 +32,10 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import shapes
+from fw.core.mapgen import shapes, typefaces
 
 Point = tuple[float, float]
 Box = tuple[float, float, float, float]      # x0, y0, x1, y1
-
-# How wide each character is, as a fraction of the type size, for a serif face. Not
-# measured from a font file — the client picks its own — but the shape of the table is
-# what matters: an "i" is not an "m", and a label boxed as though it were reserves half
-# the map. Anything not listed is an ordinary lower-case letter.
-NARROW = "ijlt.,;:'`!|()[]{}I "
-WIDE = "mwMW@%"
-CAPS = "ABCDEFGHJKLNOPQRSTUVXYZ0123456789"
-NARROW_EM = 0.30
-WIDE_EM = 0.92
-CAPS_EM = 0.68
-ORDINARY_EM = 0.52
 
 # A label sits a little clear of what it names and of its neighbours. In world units at
 # type size 1; scaled with the label.
@@ -105,14 +93,34 @@ class Wanted:
     line: tuple[Point, ...] = ()
     clearance: float = 0.0          # the icon's radius, for a point label
     weight: float = 0.0             # bigger is placed first inside a tier
+    # The voice this name is set in (V2 §15): a key of `typefaces.EM`, so the width
+    # the solver reserves is measured from the exact file the client renders with,
+    # and the letter-spacing in em — added after every glyph including the last,
+    # which is CSS semantics, verified against the same canvas.
+    face: str = "serif"
+    tracking: float = 0.0
+    # The widest zoom band this name belongs to (V2 §18) — the caller solves per
+    # band; the solver itself never reads it.
+    band: str = "world"
+    # Whose name this is, for the icon knockouts' self-exemption. The ENTITY, not
+    # the shape: a settlement the writer positioned and the map also sited carries
+    # two point geometries, and a label exempt from only one of its own two dots
+    # could never place at all.
+    owner: str = ""
 
     def order(self) -> tuple:
         """The order labels are considered in — from what they are, never from when.
 
         A solver whose output depends on the order its input arrived in is a map whose
-        names move when a row is added to a table.
+        names move when a row is added to a table. Within a tier, the least flexible
+        go first: a town's name has eight fixed seats beside its dot, a river has a
+        few windows along its reach, and an area name can shrink, curve, or fall
+        back to its pole — so the area flows around the town, the way a
+        cartographer works, not the other way round.
         """
-        return (self.tier, -self.weight, -self.size, self.kind, self.text, self.key)
+        anchored = 0 if self.point is not None else (1 if self.line else 2)
+        return (self.tier, anchored, -self.weight, -self.size, self.kind,
+                self.text, self.key)
 
 
 @dataclass(frozen=True)
@@ -133,13 +141,18 @@ class Placed:
     # does, and a rotation cannot do that.
     path: tuple[Point, ...] = ()
     boxes: tuple[Box, ...] = ()
+    face: str = "serif"             # which of the bundled faces sets it
+    tracking: float = 0.0           # letter-spacing in em, the client applies it
+    halo: float = 3.0               # halo stroke weight — heavier over busy relief
 
     def as_dict(self, *, debug: bool = False) -> dict:
         out: dict = {"key": self.key, "text": self.text, "kind": self.kind,
                      "tier": self.tier, "role": self.role,
                      "size": round(self.size, 2),
                      "x": round(self.x, 1), "y": round(self.y, 1),
-                     "anchor": self.anchor}
+                     "anchor": self.anchor,
+                     "face": self.face, "tracking": round(self.tracking, 3),
+                     "halo": round(self.halo, 1)}
         if self.path:
             out["path"] = [[round(x, 1), round(y, 1)] for x, y in self.path]
         if debug:
@@ -162,7 +175,9 @@ class Dropped:
     text: str
     kind: str
     tier: int
-    reason: str          # "no room" | "nothing to hang it on"
+    # "no room" | "nothing to hang it on" | "left for air" — the last from the
+    # composition pass: there WAS room, and the map chose the air instead (V2 §30).
+    reason: str
 
     def as_dict(self) -> dict:
         return {"key": self.key, "text": self.text, "kind": self.kind,
@@ -199,22 +214,84 @@ class Reserved:
                 yield (i, j)
 
 
+@dataclass
+class Knockouts:
+    """The icons' own ground, keyed by whose icon each box is (V2 §16).
+
+    A name must never sit on an icon — that was a third of all drops AND the ugliest
+    surviving collisions, because the solver simply could not see them. Keyed,
+    because a point label necessarily works close to its *own* icon: the eight
+    offsets clear its radius but their boxes can graze its clearance box, and a
+    label vetoed by its own dot would never place at all.
+    """
+
+    cell: float = 40.0
+    buckets: dict[tuple[int, int], list[tuple[str, Box]]] = field(
+        default_factory=dict)
+
+    @classmethod
+    def of(cls, marked: list[tuple[str, Box]] | None) -> Knockouts:
+        made = cls()
+        for key, box in sorted(marked or ()):
+            for cell in made._keys(box):
+                made.buckets.setdefault(cell, []).append((key, box))
+        return made
+
+    def clear(self, box: Box, *, but: str = "") -> bool:
+        return self.crossed(box, but=but) == 0
+
+    def crossed(self, box: Box, *, but: str = "") -> int:
+        """How many icons this box would sit on. A count, not a verdict: the
+        scorer prefers zero, but a name hemmed in on all eight sides takes the
+        least-covered seat rather than vanishing from every zoom of the map."""
+        hit: set = set()
+        for cell in self._keys(box):
+            for key, other in self.buckets.get(cell, ()):
+                if key == but or (key, other) in hit:
+                    continue
+                if (box[0] < other[2] and other[0] < box[2]
+                        and box[1] < other[3] and other[1] < box[3]):
+                    hit.add((key, other))
+        return len(hit)
+
+    def _keys(self, box: Box):
+        for j in range(int(box[1] // self.cell), int(box[3] // self.cell) + 1):
+            for i in range(int(box[0] // self.cell), int(box[2] // self.cell) + 1):
+                yield (i, j)
+
+
+# How a point label's candidates are scored: its position in the cartographer's
+# order of preference, plus this much for leaving the frame, plus this much per
+# icon the box would sit on. Small integers, exact comparisons, stated tie-break —
+# a float-scored solver whose ties fell to chance would redraw the map's names
+# between two identical runs. Icons are a penalty rather than a veto: any
+# icon-free seat beats any covered one, and a name hemmed in on all eight sides
+# still appears somewhere rather than nowhere.
+EDGE_COST = 20
+ICON_COST = 40
+
+
 def solve(wanted: list[Wanted], *, reserved: Reserved | None = None,
+          icons: list[tuple[str, Box]] | None = None, frame: Box | None = None,
           ) -> tuple[tuple[Placed, ...], tuple[Dropped, ...]]:
     """Place what fits, in a stated order, and say what did not — and why not.
 
-    Greedy: every label is offered its candidate positions in a cartographer's order of
-    preference and takes the first that is clear. Greedy is the right shape here because
-    the alternative — a global optimisation over label positions — is NP-hard, takes
-    orders of magnitude longer, and produces an arrangement nobody can predict from the
-    map. What matters far more than optimality is that the *same* map always labels the
-    same way, which is what `Wanted.order` is for.
+    Greedy per label, scored per candidate: every label generates its candidate
+    positions, each is scored (preference order, leaving the frame), and the best
+    clear one wins. Global optimisation over all labels together is explicitly not
+    attempted — NP-hard, orders of magnitude slower, and an arrangement nobody can
+    predict from the map. What matters far more is that the *same* map always
+    labels the same way, which is what `Wanted.order` and the stated tie-breaks
+    are for. `icons` are keyed knockout boxes no label may sit on (except the one
+    whose own icon it is); `frame` is the view, which a label is charged for
+    leaving.
     """
     taken = reserved if reserved is not None else Reserved()
+    around = Knockouts.of(icons)
     placed: list[Placed] = []
     dropped: list[Dropped] = []
     for want in sorted(wanted, key=Wanted.order):
-        got = _place(want, taken)
+        got = _place(want, taken, around, frame)
         if got is None:
             shapeless = want.point is None and not want.ring and not want.line
             dropped.append(Dropped(
@@ -227,9 +304,15 @@ def solve(wanted: list[Wanted], *, reserved: Reserved | None = None,
     return tuple(placed), tuple(dropped)
 
 
-def _place(want: Wanted, taken: Reserved) -> Placed | None:
+def _place(want: Wanted, taken: Reserved, around: Knockouts,
+           frame: Box | None) -> Placed | None:
+    # Only point labels answer to the icon knockouts. A settlement's name beside a
+    # NEIGHBOURING town's dot was the collision this exists for; an area or reach
+    # name is a different plane of the map — big, tracked, curved — and every atlas
+    # lets it overprint symbols, because a region whose spine must dodge each of
+    # its own towns' dots is a region that can never be named at all.
     if want.point is not None:
-        return _beside(want, taken)
+        return _beside(want, taken, around, frame)
     if want.ring:
         return _across(want, taken)
     if want.line:
@@ -239,20 +322,42 @@ def _place(want: Wanted, taken: Reserved) -> Placed | None:
 
 # ---- a name beside a place -------------------------------------------------
 
-def _beside(want: Wanted, taken: Reserved) -> Placed | None:
-    """A settlement's name, offered the eight positions around its icon."""
+def _beside(want: Wanted, taken: Reserved, around: Knockouts,
+            frame: Box | None) -> Placed | None:
+    """A settlement's name, its eight positions scored rather than first-fit.
+
+    The score is the cartographer's preference order plus a charge for leaving the
+    frame — so a town at the map's edge takes its second-choice position inside the
+    view instead of hanging its first choice off the paper. Ties cannot happen:
+    the preference index is part of the score.
+    """
     x, y = want.point or (0.0, 0.0)
-    width = width_of(want.text, want.size)
+    width = _width(want, want.size)
     gap = max(want.clearance, want.size * 0.5) + want.size * 0.35
-    for dx, dy, anchor in OFFSETS:
+    best: tuple[int, int] | None = None
+    chosen = None
+    for rank, (dx, dy, anchor) in enumerate(OFFSETS):
         cx = x + dx * gap
         cy = y + dy * gap + want.size * CAP_HEIGHT * 0.5
         box = _box(cx, cy, width, want.size, anchor)
-        if taken.free(box):
-            return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
-                          role=want.role, size=want.size, x=round(cx, 1),
-                          y=round(cy, 1), anchor=anchor, boxes=(box,))
-    return None
+        if not taken.free(box):
+            continue                 # a label on a label is never a candidate
+        covered = around.crossed(box, but=want.owner or want.key)
+        outside = frame is not None and (
+            box[0] < frame[0] or box[1] < frame[1]
+            or box[2] > frame[2] or box[3] > frame[3])
+        score = (rank + (EDGE_COST if outside else 0) + ICON_COST * covered,
+                 rank)
+        if best is None or score < best:
+            best = score
+            chosen = (cx, cy, anchor, box)
+    if chosen is None:
+        return None
+    cx, cy, anchor, box = chosen
+    return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
+                  role=want.role, size=want.size, x=round(cx, 1),
+                  y=round(cy, 1), anchor=anchor, boxes=(box,),
+                  face=want.face, tracking=want.tracking)
 
 
 # ---- a name across an area -------------------------------------------------
@@ -264,12 +369,12 @@ def _across(want: Wanted, taken: Reserved) -> Placed | None:
         return _at_the_pole(want, taken)
     length = _length(path)
     size = want.size
-    width = width_of(want.text, size)
+    width = _width(want, size)
     # Shrink to fit rather than refuse: a name too big for its country is the map
     # shouting, and a name a little small still tells the reader whose ground this is.
     while width > length * 0.92 and size > want.size * SHRINK_TO:
         size *= 0.9
-        width = width_of(want.text, size)
+        width = _width(want, size)
     if width > length * 0.98:
         # Too long for the shape at any readable size. A crescent is the ordinary case:
         # its spine is the horizontal band through its fattest part, and the arms curl
@@ -289,12 +394,13 @@ def _across(want: Wanted, taken: Reserved) -> Placed | None:
             return None
         return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
                       role=want.role, size=size, x=round(mid[0], 1),
-                      y=round(mid[1], 1), anchor="middle", boxes=(flat,))
+                      y=round(mid[1], 1), anchor="middle", boxes=(flat,),
+                      face=want.face, tracking=want.tracking)
     mid = trimmed[len(trimmed) // 2]
     return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
                   role=want.role, size=size, x=round(mid[0], 1), y=round(mid[1], 1),
                   anchor="middle", path=_curve_or_nothing(trimmed, size),
-                  boxes=tuple(boxes))
+                  boxes=tuple(boxes), face=want.face, tracking=want.tracking)
 
 
 def _at_the_pole(want: Wanted, taken: Reserved,
@@ -309,32 +415,33 @@ def _at_the_pole(want: Wanted, taken: Reserved,
     where = mid or pole(want.ring)
     if where is None:
         return None
-    size = _fitted(want.text, want.size, want.ring)
-    width = width_of(want.text, size)
+    size = _fitted(want)
+    width = _width(want, size)
     box = _box(where[0], where[1], width, size, "middle")
     if not taken.free(box):
         return None
     return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
                   role=want.role, size=size, x=round(where[0], 1),
-                  y=round(where[1], 1), anchor="middle", boxes=(box,))
+                  y=round(where[1], 1), anchor="middle", boxes=(box,),
+                  face=want.face, tracking=want.tracking)
 
 
-def _fitted(text: str, size: float, ring: tuple[Point, ...]) -> float:
+def _fitted(want: Wanted) -> float:
     """The largest type that keeps a name in proportion to the thing it names.
 
     A name may overhang a small country a little — an atlas does that — but not by
     multiples of its width, and never below the size at which it stops being readable.
     """
-    if not ring:
-        return size
-    across = max(p[0] for p in ring) - min(p[0] for p in ring)
+    if not want.ring:
+        return want.size
+    across = max(p[0] for p in want.ring) - min(p[0] for p in want.ring)
     if across <= 0:
-        return size
+        return want.size
     room = across * OVERHANG
-    natural = width_of(text, size)
+    natural = _width(want, want.size)
     if natural <= room:
-        return size
-    return max(LEGIBLE, size * room / natural)
+        return want.size
+    return max(LEGIBLE, want.size * room / natural)
 
 
 def _midpoint(path: tuple[Point, ...] | list[Point]) -> Point:
@@ -502,6 +609,12 @@ def _ridge(far: list[int], wide: int, tall: int, start: int, step: int,
 
 # ---- a name along a reach --------------------------------------------------
 
+# Where along a reach a name is tried: the middle first, then a window towards
+# either end. The order is the score — a centred name reads best, but a river whose
+# middle runs under a region's name still deserves its own.
+WINDOWS = (0.5, 0.3, 0.7)
+
+
 def _along(want: Wanted, taken: Reserved) -> Placed | None:
     """A river's or a road's name, following it, and never upside down."""
     line = list(want.line)
@@ -511,35 +624,44 @@ def _along(want: Wanted, taken: Reserved) -> Placed | None:
     # backwards. Reversing the *path* is the whole fix, and it is invisible to a reader.
     if line[-1][0] < line[0][0]:
         line.reverse()
-    width = width_of(want.text, want.size)
+    width = _width(want, want.size)
     if _length(line) < width * 1.05:
         return None
-    trimmed = _centred(line, width)
-    boxes = _boxes_along(trimmed, want.size)
-    if not all(taken.free(box) for box in boxes):
-        return None
-    mid = trimmed[len(trimmed) // 2]
-    return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
-                  role=want.role, size=want.size, x=round(mid[0], 1),
-                  y=round(mid[1], 1), anchor="middle",
-                  path=_curve_or_nothing(trimmed, want.size), boxes=tuple(boxes))
+    for share in WINDOWS:
+        trimmed = _window(line, width, share)
+        boxes = _boxes_along(trimmed, want.size)
+        if not all(taken.free(box) for box in boxes):
+            continue
+        mid = trimmed[len(trimmed) // 2]
+        return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
+                      role=want.role, size=want.size, x=round(mid[0], 1),
+                      y=round(mid[1], 1), anchor="middle",
+                      path=_curve_or_nothing(trimmed, want.size), boxes=tuple(boxes),
+                      face=want.face, tracking=want.tracking)
+    return None
 
 
 # ---- geometry and metrics --------------------------------------------------
 
-def width_of(text: str, size: float) -> float:
-    """How wide a piece of text will be, near enough to reserve room for it."""
-    total = 0.0
-    for ch in text:
-        if ch in NARROW:
-            total += NARROW_EM
-        elif ch in WIDE:
-            total += WIDE_EM
-        elif ch in CAPS:
-            total += CAPS_EM
-        else:
-            total += ORDINARY_EM
-    return total * size
+def width_of(text: str, size: float, face: str = "serif",
+             tracking: float = 0.0) -> float:
+    """How wide a piece of text will be, measured — not guessed.
+
+    Summed from `typefaces.EM`, which scripts/measure_type.py measured from the
+    exact font files the client renders with; a character the table has never seen
+    falls back to the face's own lowercase-x advance. Kerning is knowingly ignored
+    (a per-character table cannot see pairs; BREATHING_ROOM absorbs the worst of
+    it). Tracking is added after every glyph including the last — CSS semantics,
+    verified against the same canvas that measured the table.
+    """
+    table = typefaces.EM.get(face) or typefaces.EM["serif"]
+    fallback = typefaces.FALLBACK.get(face, 0.5)
+    ems = sum(table.get(ch, fallback) for ch in text)
+    return (ems + tracking * len(text)) * size
+
+
+def _width(want: Wanted, size: float) -> float:
+    return width_of(want.text, size, want.face, want.tracking)
 
 
 def _box(x: float, y: float, width: float, size: float, anchor: str) -> Box:
@@ -605,11 +727,19 @@ def _length(points: list[Point] | tuple[Point, ...]) -> float:
 
 def _centred(points: list[Point] | tuple[Point, ...], width: float) -> list[Point]:
     """The middle `width` of a path, so the text sits in the middle of what it names."""
+    return _window(points, width, 0.5)
+
+
+def _window(points: list[Point] | tuple[Point, ...], width: float,
+            share: float) -> list[Point]:
+    """A `width` of the path with its slack split at `share` — 0.5 is the middle,
+    smaller slides the window towards the start. How a river's name gets more than
+    one place to try when something already owns the middle of the reach."""
     pts = list(points)
     total = _length(pts)
     if total <= width:
         return pts
-    skip = (total - width) / 2
+    skip = (total - width) * share
     out: list[Point] = []
     walked = 0.0
     for (ax, ay), (bx, by) in zip(pts, pts[1:], strict=False):

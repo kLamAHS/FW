@@ -160,6 +160,12 @@ export interface MapLabel {
   x: number
   y: number
   anchor: 'start' | 'middle' | 'end'
+  /** The voice: which bundled face sets this name, and its letter-spacing in em.
+      Decided server-side — the collision boxes were measured for exactly this. */
+  face?: string
+  tracking?: number
+  /** Halo stroke weight — heavier where the relief under the name is busy. */
+  halo?: number
   /** Set only when the name really bends; then the text runs along this path. */
   path?: number[][]
   /** The reserved boxes, present only when the map was asked with ?debug=1. */
@@ -188,6 +194,8 @@ export interface MapIcon {
   holder_role: string
   holder_name: string
   contested: boolean
+  /** The widest zoom band this icon appears at: world | regional | local. */
+  band: string
 }
 
 export interface MapLegendEntry {
@@ -202,7 +210,9 @@ export interface MapLegendEntry {
 export interface DrawPlan {
   bounds: { x: number; y: number; width: number; height: number }
   mode: string
-  labels: MapLabel[]
+  /** Solved once per zoom band — world, regional, local — so what the world view
+      drops genuinely appears when the reader leans in (V2 §18). */
+  labels: Record<string, MapLabel[]>
   icons: MapIcon[]
   legend: MapLegendEntry[]
   holders: Record<string, string>

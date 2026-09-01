@@ -234,7 +234,7 @@ class TestTheDrawPlan:
                                          [float(n * 100 + 90), 60.0]])
                     for n in range(4)]
         plan = cartography.draw(segments)
-        assert [label.text for label in plan.labels] == ["The River Renn"]
+        assert [label.text for label in plan.labels["local"]] == ["The River Renn"]
 
     def test_the_legend_lists_only_what_is_on_this_map(self):
         plan = cartography.draw([feature(name="Redwater", style={"rank": "hamlet"})])
@@ -273,8 +273,9 @@ class TestTheDrawPlan:
         land = feature(id="l", entity_id="land", name="The Kingdom of Renn",
                        kind="polygon", layer="land", type_key="terrain_feature",
                        coordinates=[[list(p) for p in SQUARE]])
-        assert not cartography.draw([land], world_name="The Kingdom of Renn").labels
-        assert cartography.draw([land], world_name="Elsewhere").labels
+        assert not cartography.draw([land],
+                                    world_name="The Kingdom of Renn").labels["local"]
+        assert cartography.draw([land], world_name="Elsewhere").labels["local"]
 
     def test_a_thing_the_writer_drew_is_labelled_before_one_the_map_made(self):
         theirs = feature(id="a", entity_id="road-a", name="The Iron Road", kind="line",
@@ -284,13 +285,13 @@ class TestTheDrawPlan:
                        layer="roads", generated=True,
                        coordinates=[[0.0, 0.0], [400.0, 0.0]])
         plan = cartography.draw([ours, theirs])
-        assert plan.labels[0].text == "The Iron Road"
+        assert plan.labels["local"][0].text == "The Iron Road"
 
     def test_a_brook_on_the_features_layer_is_not_called_a_road(self):
         plan = cartography.draw([feature(
             id="a", entity_id="b", name="The Blackbrook", kind="line",
             layer="features", coordinates=[[0.0, 0.0], [400.0, 0.0]])])
-        assert plan.labels[0].kind == "feature"
+        assert plan.labels["local"][0].kind == "feature"
 
     def test_every_role_it_emits_is_one_the_stylesheet_knows(self):
         plan = cartography.draw([
@@ -300,7 +301,7 @@ class TestTheDrawPlan:
         ])
         used = {icon.role for icon in plan.icons}
         used |= {entry.role for entry in plan.legend}
-        used |= {label.role for label in plan.labels}
+        used |= {label.role for band in plan.labels.values() for label in band}
         assert used <= set(cartography.ROLES), used - set(cartography.ROLES)
 
 
@@ -324,3 +325,92 @@ class TestTheWorkingIsAvailableOnAsk:
         assert missed[0].text.startswith("The Longest")
         assert missed[0].reason == "no room"
         assert missed[0].as_dict()["reason"] == "no room"
+
+
+class TestIconsAreGroundTheSolverSees:
+    def test_a_name_steps_around_a_neighbouring_icon(self):
+        want = labels.Wanted(key="t", text="Rennford", kind="town", tier=1,
+                             role="label", size=11.0, point=(100.0, 100.0),
+                             clearance=4.0, owner="me")
+        alone, _ = labels.solve([want])
+        # A foreign icon parked exactly on the first-choice seat.
+        box = (alone[0].boxes[0][0] - 1, alone[0].boxes[0][1] - 1,
+               alone[0].boxes[0][2] + 1, alone[0].boxes[0][3] + 1)
+        moved, _ = labels.solve([want], icons=[("them", box)])
+        assert moved, "a blocked first choice must not drop the name"
+        assert (moved[0].x, moved[0].y, moved[0].anchor) != (
+            alone[0].x, alone[0].y, alone[0].anchor)
+
+    def test_its_own_icons_never_veto_it(self):
+        want = labels.Wanted(key="t", text="Rennford", kind="town", tier=1,
+                             role="label", size=11.0, point=(100.0, 100.0),
+                             clearance=4.0, owner="me")
+        r = 30.0
+        own = ("me", (100.0 - r, 100.0 - r, 100.0 + r, 100.0 + r))
+        placed, _ = labels.solve([want], icons=[own])
+        assert placed, "hemmed in by its own two dots and dropped"
+
+    def test_hemmed_in_on_all_sides_it_takes_the_least_covered_seat(self):
+        """A penalty, not a veto: a capital in a crowd appears somewhere."""
+        want = labels.Wanted(key="t", text="Rennford", kind="capital", tier=0,
+                             role="label", size=15.0, point=(100.0, 100.0),
+                             clearance=6.0, owner="me")
+        wall = [(f"i{n}", (40.0 + 15 * n, 60.0, 52.0 + 15 * n, 140.0))
+                for n in range(9)]
+        placed, _ = labels.solve([want], icons=wall)
+        assert placed, "an icon wall must never erase a capital's name"
+
+
+class TestAReachOffersMoreThanItsMiddle:
+    def test_a_river_with_a_blocked_middle_slides_its_name(self):
+        line = tuple((float(x), 100.0) for x in range(0, 401, 20))
+        want = labels.Wanted(key="r", text="The Renn", kind="river", tier=1,
+                             role="label-water", size=11.0, line=line)
+        clear, _ = labels.solve([want])
+        taken = labels.Reserved()
+        taken.take((170.0, 80.0, 230.0, 120.0))     # something owns the middle
+        moved, _ = labels.solve([want], reserved=taken)
+        assert moved, "a blocked middle window must not drop the reach's name"
+        assert moved[0].x != clear[0].x
+
+
+class TestTheCompositionBreathes:
+    def test_a_full_neighbourhood_leaves_names_for_air(self):
+        from fw.core.mapgen import cartography
+
+        stacked = tuple(
+            labels.Placed(key=f"p{n}", text=f"Town {n}", kind="town", tier=2,
+                          role="label", size=10.0, x=50.0 + n, y=50.0 + n)
+            for n in range(10))
+        kept, calmed = cartography._budgeted(stacked, None, "world")
+        assert len(kept) == 6 and len(calmed) == 4
+        assert all(gone.reason == "left for air" for gone in calmed)
+
+    def test_the_local_band_answers_the_reader_s_own_request_for_detail(self):
+        from fw.core.mapgen import cartography
+
+        stacked = tuple(
+            labels.Placed(key=f"p{n}", text=f"Town {n}", kind="town", tier=2,
+                          role="label", size=10.0, x=50.0 + n, y=50.0 + n)
+            for n in range(10))
+        kept, calmed = cartography._budgeted(stacked, None, "local")
+        assert len(kept) == 10 and not calmed
+
+
+class TestTheHaloAnswersTheGround:
+    def test_a_name_over_broken_country_gets_a_heavier_halo(self):
+        from fw.core.mapgen import cartography
+
+        size = 16
+        rough = [[0.5] * size for _ in range(size)]
+        for j in range(size):
+            rough[j][10] = 0.9                      # a scarp under one label
+        terrain = {"size": size, "span": 160.0, "origin_x": 0.0, "origin_y": 0.0,
+                   "fields": {"elevation": rough}}
+        calm = labels.Placed(key="a", text="Calm", kind="town", tier=1,
+                             role="label", size=10.0, x=25.0, y=25.0)
+        wild = labels.Placed(key="b", text="Wild", kind="town", tier=1,
+                             role="label", size=10.0, x=105.0, y=25.0)
+        first, second = cartography._haloed((calm, wild), terrain)
+        assert second.halo > first.halo
+        assert first.halo >= cartography.HALO_CALM

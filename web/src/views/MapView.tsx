@@ -111,6 +111,11 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
     // timeline slider.
   }, [version, report])
   const pan = usePanZoom(1)
+  // Which of the three server-solved compositions the zoom is in (V2 §18). The
+  // thresholds are the art direction's: world under 1.8, regional to 3.5, local
+  // past that. Band picking is purely client-side — no refetch on zoom.
+  const band = pan.view.k < 1.8 ? 'world' : pan.view.k <= 3.5 ? 'regional' : 'local'
+  const depth = BAND_ORDER[band]
 
   // Propose first (§66). The map is worked out and shown; nothing is written until
   // the writer says which of it they want.
@@ -366,24 +371,43 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             {/* Places, each drawn as what it is. A hamlet, a city and a castle were
                 all the same dot until now: the generator has known the difference for
                 three phases and the picture was throwing it away. */}
-            {draw.icons.filter((icon) => !hiddenIcon(icon, hidden, byId)).map((icon) => (
-              <Place
-                key={icon.key}
-                icon={icon}
-                fill={icon.holder_role ? paint(icon.holder_role)
-                                       : paint(icon.role)}
-                selected={selectedId === icon.entity_id}
-                onSelect={() => onSelect(icon.entity_id)}
-                title={describeControl(byId.get(icon.key))}
-              />
+            {/* Icons arrive with the widest band each belongs to; groups fade over
+                150ms as the zoom crosses a threshold, so leaning in reveals the
+                villages rather than popping them. A hidden group must not catch
+                clicks meant for the map under it. */}
+            {BANDS.map((b) => (
+              <g key={`icons-${b}`} className="map-band"
+                 style={{ opacity: BAND_ORDER[b] <= depth ? 1 : 0 }}
+                 pointerEvents={BAND_ORDER[b] <= depth ? undefined : 'none'}>
+                {draw.icons
+                  .filter((icon) => (icon.band ?? 'world') === b)
+                  .filter((icon) => !hiddenIcon(icon, hidden, byId)).map((icon) => (
+                    <Place
+                      key={icon.key}
+                      icon={icon}
+                      fill={icon.holder_role ? paint(icon.holder_role)
+                                             : paint(icon.role)}
+                      selected={selectedId === icon.entity_id}
+                      onSelect={() => onSelect(icon.entity_id)}
+                      title={describeControl(byId.get(icon.key))}
+                    />
+                  ))}
+              </g>
             ))}
 
             {/* Names, placed by the server: on the spine of a country, along a river
-                the right way up, and never on top of one another. */}
-            {showLabels && draw.labels.map((label) => (
-              <Name key={label.key} label={label} />
+                the right way up, and never on top of one another — solved once per
+                zoom band, and only the band the zoom is in shows (V2 §18). */}
+            {showLabels && BANDS.map((b) => (
+              <g key={`names-${b}`} className="map-band"
+                 style={{ opacity: b === band ? 1 : 0 }} pointerEvents="none">
+                {(draw.labels[b] ?? []).map((label) => (
+                  <Name key={label.key} label={label} />
+                ))}
+              </g>
             ))}
-            {debug && draw.labels.map((label) => (label.boxes ?? []).map((b, i) => (
+            {debug && (draw.labels[band] ?? []).map((label) =>
+              (label.boxes ?? []).map((b, i) => (
               <rect key={`${label.key}-box-${i}`} x={b[0]} y={b[1]}
                     width={b[2] - b[0]} height={b[3] - b[1]} fill="none"
                     stroke="var(--map-contested)" strokeWidth={0.8}
@@ -431,7 +455,43 @@ missing name was dropped">
                    onChange={() => setDebug((v) => !v)} />
             label debug
           </label>
-          <button onClick={pan.reset} style={{ marginTop: 4 }}>Reset view</button>
+          <button onClick={pan.reset} style={{ marginTop: 4 }}>Fit the map</button>
+          <button disabled={!selectedId} title="Zoom to what is selected"
+                  onClick={() => {
+                    // Fit the selected thing with breathing room (V2 §35). The
+                    // transform maps a content point p to x + k·p in viewBox
+                    // units, so centring is one line of algebra per axis.
+                    if (!selectedId) return
+                    const xs: number[] = []
+                    const ys: number[] = []
+                    const gather = (node: unknown) => {
+                      if (!Array.isArray(node)) return
+                      if (node.length === 2 && typeof node[0] === 'number'
+                          && typeof node[1] === 'number') {
+                        xs.push(node[0])
+                        ys.push(node[1])
+                        return
+                      }
+                      for (const child of node) gather(child)
+                    }
+                    data.features.filter((f) => f.entity_id === selectedId)
+                      .forEach((f) => gather(f.coordinates))
+                    if (!xs.length) return
+                    const pad = 60
+                    const x0 = Math.min(...xs) - pad
+                    const x1 = Math.max(...xs) + pad
+                    const y0 = Math.min(...ys) - pad
+                    const y1 = Math.max(...ys) + pad
+                    const k = Math.min(6, Math.max(0.08, Math.min(
+                      frame.width / (x1 - x0), frame.height / (y1 - y0))))
+                    pan.setView({
+                      k,
+                      x: frame.x + frame.width / 2 - (k * (x0 + x1)) / 2,
+                      y: frame.y + frame.height / 2 - (k * (y0 + y1)) / 2,
+                    })
+                  }}>
+            Centre on selection
+          </button>
         </div>
       </div>
 
@@ -683,6 +743,10 @@ function InProgress({ drawing }: { drawing: Drawing }) {
 /** The deep end of the relief renderer's own sea ramp, so the two meet without a seam. */
 const OPEN_WATER = 'var(--map-sea)'
 
+/** The three views of one map, widest first — the server solves labels per band. */
+const BANDS = ['world', 'regional', 'local'] as const
+const BAND_ORDER: Record<string, number> = { world: 0, regional: 1, local: 2 }
+
 /**
  * A colour role, resolved through the stylesheet.
  *
@@ -774,9 +838,30 @@ function starPath(x: number, y: number, r: number): string {
  * server never emits an angle — a `textPath` needs none, and computing one would put
  * trigonometry in the deterministic half of the generator.
  */
+// The server decides each label's voice — face, weight, style, tracking — because its
+// collision boxes are measured from exactly those choices against the bundled fonts.
+// The stylesheet keeps only what the solver cannot feel: colour and halo. A face key
+// maps here to the family the em tables were measured from.
+const FACE_CSS: Record<string, { family: string; weight: number; style: string }> = {
+  serif: { family: 'var(--map-serif)', weight: 400, style: 'normal' },
+  'serif-italic': { family: 'var(--map-serif)', weight: 400, style: 'italic' },
+  sc: { family: 'var(--map-sc)', weight: 400, style: 'normal' },
+  sans: { family: 'var(--map-sans)', weight: 400, style: 'normal' },
+  'sans-medium': { family: 'var(--map-sans)', weight: 500, style: 'normal' },
+  'sans-bold': { family: 'var(--map-sans)', weight: 700, style: 'normal' },
+}
+
 function Name({ label }: { label: MapLabel }) {
   const className = `map-label${label.role.startsWith('label-')
     ? ` map-${label.role}` : ''}`
+  const face = FACE_CSS[label.face ?? 'serif'] ?? FACE_CSS.serif
+  const voice = {
+    fontFamily: face.family,
+    fontWeight: face.weight,
+    fontStyle: face.style,
+    letterSpacing: `${label.tracking ?? 0}em`,
+    strokeWidth: `${label.halo ?? 3}px`,
+  }
   if (label.path && label.path.length > 1) {
     const id = `lp-${label.key}`
     return (
@@ -785,7 +870,7 @@ function Name({ label }: { label: MapLabel }) {
           <path id={id} d={linePath(label.path)} />
         </defs>
         <text className={className} fontSize={label.size} textAnchor="middle"
-              dy={label.size * 0.34}>
+              dy={label.size * 0.34} style={voice}>
           <textPath href={`#${id}`} startOffset="50%">{label.text}</textPath>
         </text>
       </>
@@ -793,7 +878,7 @@ function Name({ label }: { label: MapLabel }) {
   }
   return (
     <text className={className} x={label.x} y={label.y} fontSize={label.size}
-          textAnchor={label.anchor}>
+          textAnchor={label.anchor} style={voice}>
       {label.text}
     </text>
   )

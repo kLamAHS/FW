@@ -50,20 +50,27 @@ def drawplan_snapshot(world: World) -> dict:
     from fw.api.app import create_app
 
     drawn = TestClient(create_app(world)).get("/api/map").json()["draw"]
+
+    def named(name: dict) -> dict:
+        return {"text": name["text"], "kind": name["kind"], "tier": name["tier"],
+                "role": name["role"], "size": name["size"], "x": name["x"],
+                "y": name["y"], "anchor": name["anchor"],
+                "face": name["face"], "tracking": name["tracking"],
+                "halo": name["halo"],
+                **({"path": name["path"]} if name.get("path") else {})}
+
     return {
         "bounds": drawn["bounds"],
         "mode": drawn["mode"],
-        "labels": sorted(
-            ({"text": name["text"], "kind": name["kind"], "tier": name["tier"],
-              "role": name["role"], "size": name["size"], "x": name["x"],
-              "y": name["y"], "anchor": name["anchor"],
-              **({"path": name["path"]} if name.get("path") else {})}
-             for name in drawn["labels"]),
-            key=lambda name: (name["text"], name["x"], name["y"])),
+        # Banded since D4: one solved composition per zoom band.
+        "labels": {band: sorted((named(n) for n in shown),
+                                key=lambda n: (n["text"], n["x"], n["y"]))
+                   for band, shown in sorted(drawn["labels"].items())},
         "icons": sorted(
             ({"name": i["name"], "shape": i["shape"], "rank": i["rank"],
               "x": i["x"], "y": i["y"], "radius": i["radius"], "role": i["role"],
-              "holder_role": i["holder_role"], "contested": i["contested"]}
+              "holder_role": i["holder_role"], "contested": i["contested"],
+              "band": i["band"]}
              for i in drawn["icons"]),
             key=lambda i: (i["name"], i["x"], i["y"])),
         "legend": [{"label": e["label"], "role": e["role"], "swatch": e["swatch"],

@@ -7,6 +7,7 @@
  },
  "icons": [
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Great Marchbridge",
@@ -18,6 +19,7 @@
    "y": 657.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Great Marchpass",
@@ -29,6 +31,7 @@
    "y": 505.0
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Little Marchbridge",
@@ -40,6 +43,7 @@
    "y": 292.0
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Little Marchpass",
@@ -51,6 +55,7 @@
    "y": 523.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Lower Marchbridge",
@@ -62,6 +67,7 @@
    "y": 588.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Lower Marchpass",
@@ -73,6 +79,7 @@
    "y": 410.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchbank",
@@ -84,6 +91,7 @@
    "y": 544.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchbridge",
@@ -95,6 +103,7 @@
    "y": 486.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchclose",
@@ -106,6 +115,7 @@
    "y": 653.1
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchcombe",
@@ -117,6 +127,7 @@
    "y": 523.1
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchfield",
@@ -128,6 +139,7 @@
    "y": 615.2
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchford",
@@ -139,6 +151,7 @@
    "y": 447.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchgate",
@@ -150,6 +163,7 @@
    "y": 398.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchill",
@@ -161,6 +175,7 @@
    "y": 555.6
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchmere",
@@ -172,6 +187,7 @@
    "y": 490.6
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchmoor",
@@ -183,6 +199,7 @@
    "y": 599.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchollow",
@@ -194,6 +211,7 @@
    "y": 593.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marcholt",
@@ -205,6 +223,7 @@
    "y": 485.2
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchpass",
@@ -216,6 +235,7 @@
    "y": 409.4
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchreach",
@@ -227,6 +247,7 @@
    "y": 523.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchstead",
@@ -238,6 +259,7 @@
    "y": 339.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchthorpe",
@@ -249,6 +271,7 @@
    "y": 561.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Marchvale",
@@ -260,6 +283,7 @@
    "y": 506.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Marchwick",
@@ -271,6 +295,7 @@
    "y": 517.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchbank",
@@ -282,6 +307,7 @@
    "y": 335.3
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "New Marchbridge",
@@ -293,6 +319,7 @@
    "y": 170.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchclose",
@@ -304,6 +331,7 @@
    "y": 229.6
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "New Marchcombe",
@@ -315,6 +343,7 @@
    "y": 273.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchfield",
@@ -326,6 +355,7 @@
    "y": 291.4
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "New Marchford",
@@ -337,6 +367,7 @@
    "y": 652.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchgate",
@@ -348,6 +379,7 @@
    "y": 277.4
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchill",
@@ -359,6 +391,7 @@
    "y": 259.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchmere",
@@ -370,6 +403,7 @@
    "y": 295.7
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchmoor",
@@ -381,6 +415,7 @@
    "y": 371.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchollow",
@@ -392,6 +427,7 @@
    "y": 271.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marcholt",
@@ -403,6 +439,7 @@
    "y": 651.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchpass",
@@ -414,6 +451,7 @@
    "y": 463.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchreach",
@@ -425,6 +463,7 @@
    "y": 280.6
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "New Marchstead",
@@ -436,6 +475,7 @@
    "y": 528.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchthorpe",
@@ -447,6 +487,7 @@
    "y": 230.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchvale",
@@ -458,6 +499,7 @@
    "y": 396.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "New Marchwick",
@@ -469,6 +511,7 @@
    "y": 296.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchcombe",
@@ -480,6 +523,7 @@
    "y": 393.9
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchford",
@@ -491,6 +535,7 @@
    "y": 177.3
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchmere",
@@ -502,6 +547,7 @@
    "y": 351.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "North Marchollow",
@@ -513,6 +559,7 @@
    "y": 345.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marcholt",
@@ -524,6 +571,7 @@
    "y": 227.1
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchreach",
@@ -535,6 +583,7 @@
    "y": 430.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchstead",
@@ -546,6 +595,7 @@
    "y": 251.0
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "North Marchthorpe",
@@ -557,6 +607,7 @@
    "y": 366.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "North Marchwick",
@@ -568,6 +619,7 @@
    "y": 262.1
   },
   {
+   "band": "world",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchbank",
@@ -579,6 +631,7 @@
    "y": 761.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchbridge",
@@ -590,6 +643,7 @@
    "y": 403.2
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchclose",
@@ -601,6 +655,7 @@
    "y": 631.9
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchfield",
@@ -612,6 +667,7 @@
    "y": 771.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchmoor",
@@ -623,6 +679,7 @@
    "y": 546.6
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchpass",
@@ -634,6 +691,7 @@
    "y": 613.4
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Old Marchvale",
@@ -645,6 +703,7 @@
    "y": 481.5
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchbridge",
@@ -656,6 +715,7 @@
    "y": 598.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchcombe",
@@ -667,6 +727,7 @@
    "y": 404.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchford",
@@ -678,6 +739,7 @@
    "y": 469.0
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchgate",
@@ -689,6 +751,7 @@
    "y": 420.2
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marcholt",
@@ -700,6 +763,7 @@
    "y": 252.3
   },
   {
+   "band": "regional",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchpass",
@@ -711,6 +775,7 @@
    "y": 463.5
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchstead",
@@ -722,6 +787,7 @@
    "y": 349.8
   },
   {
+   "band": "local",
    "contested": false,
    "holder_role": "",
    "name": "Upper Marchwick",
@@ -733,1142 +799,2405 @@
    "y": 246.9
   }
  ],
- "labels": [
-  {
-   "anchor": "end",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Great Marchbridge",
-   "tier": 1,
-   "x": 167.9,
-   "y": 658.0
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Little Marchbridge",
-   "tier": 1,
-   "x": 509.2,
-   "y": 281.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     534.4,
-     318.3
+ "labels": {
+  "local": [
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Great Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 167.9,
+    "y": 658.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Marchpass",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 713.5,
+    "y": 512.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Lower Marchbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 498.7,
+    "y": 581.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "range",
+    "path": [
+     [
+      569.6,
+      599.5
+     ],
+     [
+      592.1,
+      617.4
+     ],
+     [
+      618.1,
+      628.0
+     ],
+     [
+      641.0,
+      646.5
+     ],
+     [
+      645.4,
+      660.6
+     ],
+     [
+      657.9,
+      675.7
+     ],
+     [
+      670.1,
+      681.8
+     ],
+     [
+      684.4,
+      695.1
+     ],
+     [
+      685.1,
+      696.4
+     ]
     ],
-    [
-     536.0,
-     319.3
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "Lower Marchthorpe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 645.4,
+    "y": 660.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 10.5,
+    "text": "Lower Marchwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 551.3,
+    "y": 141.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 1",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 587.3,
+    "y": 411.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 17.82,
+    "text": "March 10",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.6,
+    "y": 461.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      654.1,
+      527.7
+     ],
+     [
+      661.3,
+      534.3
+     ],
+     [
+      710.7,
+      534.3
+     ],
+     [
+      715.6,
+      530.0
+     ]
     ],
-    [
-     549.5,
-     332.5
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 11",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 710.7,
+    "y": 534.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 12",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 655.8,
+    "y": 565.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      513.9,
+      539.5
+     ],
+     [
+      520.4,
+      534.0
+     ],
+     [
+      578.6,
+      534.0
+     ]
     ],
-    [
-     554.9,
-     333.9
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 13",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 520.4,
+    "y": 534.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      614.5,
+      782.2
+     ],
+     [
+      617.0,
+      783.6
+     ],
+     [
+      640.6,
+      783.6
+     ],
+     [
+      667.7,
+      761.9
+     ],
+     [
+      713.0,
+      761.9
+     ],
+     [
+      718.9,
+      766.2
+     ]
     ],
-    [
-     557.7,
-     335.6
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 14",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 667.7,
+    "y": 761.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      403.2,
+      525.1
+     ],
+     [
+      407.1,
+      528.4
+     ],
+     [
+      468.8,
+      528.4
+     ]
     ],
-    [
-     570.9,
-     349.1
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 15",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 407.1,
+    "y": 528.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      434.4,
+      615.0
+     ],
+     [
+      465.1,
+      615.1
+     ],
+     [
+      478.0,
+      627.5
+     ],
+     [
+      482.6,
+      629.7
+     ],
+     [
+      489.0,
+      629.8
+     ],
+     [
+      498.6,
+      635.1
+     ],
+     [
+      502.3,
+      635.1
+     ]
     ],
-    [
-     571.9,
-     351.8
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 16",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 482.6,
+    "y": 629.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 387.4,
+    "y": 586.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.65,
+    "text": "March 18",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.0,
+    "y": 657.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 19",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 230.3,
+    "y": 569.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 2",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 520.2,
+    "y": 300.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 20",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 161.4,
+    "y": 628.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 21",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 293.7,
+    "y": 420.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 10.98,
+    "text": "March 22",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 215.6,
+    "y": 293.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 23",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 402.5,
+    "y": 90.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 24",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 328.1,
+    "y": 120.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 3",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 446.0,
+    "y": 348.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 4",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 477.2,
+    "y": 248.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 5",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 586.4,
+    "y": 211.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 21.99,
+    "text": "March 7",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 662.5,
+    "y": 402.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 8",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 755.1,
+    "y": 364.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchbank",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 277.0,
+    "y": 545.4
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 683.6,
+    "y": 487.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.09,
+    "text": "Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchcombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 692.4,
+    "y": 513.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchfield",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 321.4,
+    "y": 629.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 641.0,
+    "y": 438.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 543.5,
+    "y": 389.3
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchill",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 460.5,
+    "y": 556.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 490.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 497.4,
+    "y": 599.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marcholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 699.5,
+    "y": 485.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 573.2,
+    "y": 513.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 569.5,
+    "y": 339.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchvale",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 464.9,
+    "y": 507.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 455.4,
+    "y": 327.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "New Marchbridge",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 292.4,
+    "y": 170.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "New Marchcombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 223.8,
+    "y": 274.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 443.0,
+    "y": 304.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchgate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 388.4,
+    "y": 278.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchill",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 390.7,
+    "y": 260.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 313.7,
+    "y": 314.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 445.4,
+    "y": 384.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 350.4,
+    "y": 294.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "New Marchstead",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 193.8,
+    "y": 528.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 302.4,
+    "y": 231.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 408.5,
+    "y": 410.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "New Marchwick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 230.5,
+    "y": 314.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "North Marchford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 576.6,
+    "y": 177.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "North Marchmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 720.2,
+    "y": 343.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "North Marchollow",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 776.4,
+    "y": 345.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "North Marchreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 785.7,
+    "y": 431.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "North Marchwick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 585.3,
+    "y": 262.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans-medium",
+    "halo": 2.9,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Old Marchbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 513.0,
+    "y": 762.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 241.8,
+    "y": 392.2
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchclose",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 449.3,
+    "y": 647.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchfield",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 722.4,
+    "y": 792.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Old Marchmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 528.9,
+    "y": 565.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Old Marchpass",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 320.3,
+    "y": 614.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 788.9,
+    "y": 482.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 10.15,
+    "text": "Upper Marchbank",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 264.8,
+    "y": 443.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Upper Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 653.1,
+    "y": 599.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.59,
+    "text": "Upper Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
+    "text": "Upper Marchdowns",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 325.0,
+    "y": 338.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "path": [
+     [
+      520.1,
+      727.0
+     ],
+     [
+      541.1,
+      727.0
+     ],
+     [
+      553.5,
+      719.9
+     ],
+     [
+      567.4,
+      719.9
+     ]
     ],
-    [
-     571.9,
-     363.1
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Little Marchill",
-   "tier": 2,
-   "x": 557.7,
-   "y": 335.6
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Little Marchpass",
-   "tier": 1,
-   "x": 713.5,
-   "y": 512.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Lower Marchbridge",
-   "tier": 2,
-   "x": 490.2,
-   "y": 579.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     382.1,
-     298.9
+    "role": "label",
+    "size": 7.22,
+    "text": "Upper Marchfield",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 553.5,
+    "y": 719.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 337.6,
+    "y": 469.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marcholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 501.5,
+    "y": 270.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 463.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "Upper Marchreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 340.9,
+    "y": 148.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 10.43,
+    "text": "Upper Marchshaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 684.5,
+    "y": 625.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 260.0,
+    "y": 350.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 6.5,
+    "text": "Upper Marchvale",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 557.3,
+    "y": 318.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "path": [
+     [
+      738.3,
+      329.9
+     ],
+     [
+      742.8,
+      329.9
+     ],
+     [
+      744.6,
+      328.8
+     ],
+     [
+      746.8,
+      328.7
+     ],
+     [
+      749.8,
+      327.1
+     ],
+     [
+      754.6,
+      322.7
+     ],
+     [
+      777.9,
+      322.7
+     ],
+     [
+      782.4,
+      326.8
+     ]
     ],
-    [
-     427.7,
-     298.9
+    "role": "label",
+    "size": 6.5,
+    "text": "Upper Marchweald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 749.8,
+    "y": 327.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 580.4,
+    "y": 239.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Marchwood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 430.7,
+    "y": 720.2
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Great Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 167.9,
+    "y": 658.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Marchpass",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 713.5,
+    "y": 512.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "range",
+    "path": [
+     [
+      569.6,
+      599.5
+     ],
+     [
+      592.1,
+      617.4
+     ],
+     [
+      618.1,
+      628.0
+     ],
+     [
+      641.0,
+      646.5
+     ],
+     [
+      645.4,
+      660.6
+     ],
+     [
+      657.9,
+      675.7
+     ],
+     [
+      670.1,
+      681.8
+     ],
+     [
+      684.4,
+      695.1
+     ],
+     [
+      685.1,
+      696.4
+     ]
     ],
-    [
-     437.8,
-     291.6
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "Lower Marchshaw",
-   "tier": 2,
-   "x": 427.7,
-   "y": 298.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     243.4,
-     361.2
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "Lower Marchthorpe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 645.4,
+    "y": 660.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 1",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 587.3,
+    "y": 411.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 17.82,
+    "text": "March 10",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.6,
+    "y": 461.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 12",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 655.8,
+    "y": 565.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      513.9,
+      539.5
+     ],
+     [
+      520.4,
+      534.0
+     ],
+     [
+      578.6,
+      534.0
+     ]
     ],
-    [
-     257.2,
-     348.9
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 13",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 520.4,
+    "y": 534.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      614.5,
+      782.2
+     ],
+     [
+      617.0,
+      783.6
+     ],
+     [
+      640.6,
+      783.6
+     ],
+     [
+      667.7,
+      761.9
+     ],
+     [
+      713.0,
+      761.9
+     ],
+     [
+      718.9,
+      766.2
+     ]
     ],
-    [
-     317.5,
-     348.9
-    ]
-   ],
-   "role": "label",
-   "size": 8.91,
-   "text": "Lower Marchstead",
-   "tier": 2,
-   "x": 257.2,
-   "y": 348.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "range",
-   "path": [
-    [
-     579.1,
-     607.0
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 14",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 667.7,
+    "y": 761.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      434.4,
+      615.0
+     ],
+     [
+      465.1,
+      615.1
+     ],
+     [
+      478.0,
+      627.5
+     ],
+     [
+      482.6,
+      629.7
+     ],
+     [
+      489.0,
+      629.8
+     ],
+     [
+      498.6,
+      635.1
+     ],
+     [
+      502.3,
+      635.1
+     ]
     ],
-    [
-     592.1,
-     617.4
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 16",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 482.6,
+    "y": 629.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 387.4,
+    "y": 586.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.65,
+    "text": "March 18",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.0,
+    "y": 657.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 19",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 230.3,
+    "y": 569.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 20",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 161.4,
+    "y": 628.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 10.98,
+    "text": "March 22",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 215.6,
+    "y": 293.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 23",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 402.5,
+    "y": 90.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 24",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 328.1,
+    "y": 120.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 3",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 446.0,
+    "y": 348.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 5",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 586.4,
+    "y": 211.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 8",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 755.1,
+    "y": 364.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.09,
+    "text": "Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchcombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 692.4,
+    "y": 513.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchfield",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 321.4,
+    "y": 615.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 641.0,
+    "y": 438.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 543.5,
+    "y": 389.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 490.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 497.4,
+    "y": 599.3
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 573.2,
+    "y": 513.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchvale",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 464.9,
+    "y": 507.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "New Marchbridge",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 292.4,
+    "y": 170.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "New Marchcombe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 223.8,
+    "y": 274.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "New Marchstead",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 193.8,
+    "y": 528.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "North Marchollow",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 776.4,
+    "y": 345.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "North Marchwick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 585.3,
+    "y": 262.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans-medium",
+    "halo": 2.9,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Old Marchbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 513.0,
+    "y": 762.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 241.8,
+    "y": 392.2
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchclose",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 449.3,
+    "y": 647.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchfield",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 722.4,
+    "y": 792.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Old Marchvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 788.9,
+    "y": 482.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Upper Marchbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 653.1,
+    "y": 599.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.59,
+    "text": "Upper Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 337.6,
+    "y": 469.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 463.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   }
+  ],
+  "world": [
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.4,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Little Marchpass",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 713.5,
+    "y": 512.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "range",
+    "path": [
+     [
+      569.6,
+      599.5
+     ],
+     [
+      592.1,
+      617.4
+     ],
+     [
+      618.1,
+      628.0
+     ],
+     [
+      641.0,
+      646.5
+     ],
+     [
+      645.4,
+      660.6
+     ],
+     [
+      657.9,
+      675.7
+     ],
+     [
+      670.1,
+      681.8
+     ],
+     [
+      684.4,
+      695.1
+     ],
+     [
+      685.1,
+      696.4
+     ]
     ],
-    [
-     618.1,
-     628.0
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "Lower Marchthorpe",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 645.4,
+    "y": 660.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "range",
+    "path": [
+     [
+      237.9,
+      542.5
+     ],
+     [
+      239.0,
+      527.7
+     ],
+     [
+      243.3,
+      502.3
+     ],
+     [
+      247.5,
+      488.5
+     ],
+     [
+      257.2,
+      474.9
+     ],
+     [
+      265.8,
+      470.7
+     ],
+     [
+      279.4,
+      465.9
+     ],
+     [
+      288.9,
+      463.6
+     ],
+     [
+      304.3,
+      463.0
+     ],
+     [
+      315.5,
+      464.4
+     ],
+     [
+      324.0,
+      461.0
+     ]
     ],
-    [
-     641.0,
-     646.5
+    "role": "label-relief",
+    "size": 14.0,
+    "text": "Lower Marchwold",
+    "tier": 1,
+    "tracking": 0.1,
+    "x": 265.8,
+    "y": 470.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 17.82,
+    "text": "March 10",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 708.6,
+    "y": 461.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      513.9,
+      539.5
+     ],
+     [
+      520.4,
+      534.0
+     ],
+     [
+      578.6,
+      534.0
+     ]
     ],
-    [
-     645.4,
-     660.6
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 13",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 520.4,
+    "y": 534.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      614.5,
+      782.2
+     ],
+     [
+      617.0,
+      783.6
+     ],
+     [
+      640.6,
+      783.6
+     ],
+     [
+      667.7,
+      761.9
+     ],
+     [
+      713.0,
+      761.9
+     ],
+     [
+      718.9,
+      766.2
+     ]
     ],
-    [
-     657.9,
-     675.7
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 14",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 667.7,
+    "y": 761.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      434.4,
+      615.0
+     ],
+     [
+      465.1,
+      615.1
+     ],
+     [
+      478.0,
+      627.5
+     ],
+     [
+      482.6,
+      629.7
+     ],
+     [
+      489.0,
+      629.8
+     ],
+     [
+      498.6,
+      635.1
+     ],
+     [
+      502.3,
+      635.1
+     ]
     ],
-    [
-     670.1,
-     681.8
-    ],
-    [
-     676.6,
-     687.8
-    ]
-   ],
-   "role": "label-relief",
-   "size": 14.0,
-   "text": "Lower Marchthorpe",
-   "tier": 1,
-   "x": 645.4,
-   "y": 660.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "road",
-   "path": [
-    [
-     558.7,
-     509.2
-    ],
-    [
-     559.0,
-     508.9
-    ],
-    [
-     560.7,
-     506.2
-    ],
-    [
-     561.0,
-     449.3
-    ],
-    [
-     563.1,
-     445.3
-    ],
-    [
-     571.5,
-     435.8
-    ],
-    [
-     571.5,
-     434.5
-    ]
-   ],
-   "role": "label",
-   "size": 9.5,
-   "text": "Lower Marchvale",
-   "tier": 2,
-   "x": 561.0,
-   "y": 449.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.26,
-   "text": "Lower Marchwick",
-   "tier": 2,
-   "x": 551.3,
-   "y": 141.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "range",
-   "path": [
-    [
-     237.3,
-     549.0
-    ],
-    [
-     237.5,
-     547.7
-    ],
-    [
-     239.0,
-     527.7
-    ],
-    [
-     243.3,
-     502.3
-    ],
-    [
-     247.5,
-     488.5
-    ],
-    [
-     257.2,
-     474.9
-    ],
-    [
-     265.8,
-     470.7
-    ],
-    [
-     279.4,
-     465.9
-    ],
-    [
-     288.9,
-     463.6
-    ],
-    [
-     299.0,
-     463.2
-    ]
-   ],
-   "role": "label-relief",
-   "size": 14.0,
-   "text": "Lower Marchwold",
-   "tier": 1,
-   "x": 257.2,
-   "y": 474.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 19.8,
-   "text": "March 1",
-   "tier": 0,
-   "x": 587.3,
-   "y": 411.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 19.8,
-   "text": "March 10",
-   "tier": 0,
-   "x": 708.0,
-   "y": 461.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 14.43,
-   "text": "March 11",
-   "tier": 0,
-   "x": 710.7,
-   "y": 534.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 12",
-   "tier": 0,
-   "x": 655.8,
-   "y": 565.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     513.7,
-     539.7
-    ],
-    [
-     520.4,
-     534.0
-    ],
-    [
-     578.9,
-     534.0
-    ]
-   ],
-   "role": "label-region",
-   "size": 14.43,
-   "text": "March 13",
-   "tier": 0,
-   "x": 520.4,
-   "y": 534.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     619.8,
-     783.6
-    ],
-    [
-     640.6,
-     783.6
-    ],
-    [
-     667.7,
-     761.9
-    ],
-    [
-     713.0,
-     761.9
-    ],
-    [
-     714.4,
-     762.9
-    ]
-   ],
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 14",
-   "tier": 0,
-   "x": 667.7,
-   "y": 761.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     403.0,
-     525.0
-    ],
-    [
-     407.1,
-     528.4
-    ],
-    [
-     469.0,
-     528.4
-    ]
-   ],
-   "role": "label-region",
-   "size": 14.43,
-   "text": "March 15",
-   "tier": 0,
-   "x": 407.1,
-   "y": 528.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     434.4,
-     615.0
-    ],
-    [
-     465.1,
-     615.1
-    ],
-    [
-     478.0,
-     627.5
-    ],
-    [
-     482.6,
-     629.7
-    ],
-    [
-     489.0,
-     629.8
-    ],
-    [
-     498.6,
-     635.1
-    ],
-    [
-     502.3,
-     635.1
-    ]
-   ],
-   "role": "label-region",
-   "size": 16.04,
-   "text": "March 16",
-   "tier": 0,
-   "x": 482.6,
-   "y": 629.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 17.82,
-   "text": "March 17",
-   "tier": 0,
-   "x": 387.8,
-   "y": 586.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 14.12,
-   "text": "March 18",
-   "tier": 0,
-   "x": 289.0,
-   "y": 657.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 14.43,
-   "text": "March 19",
-   "tier": 0,
-   "x": 230.4,
-   "y": 569.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "path": [
-    [
-     483.9,
-     297.0
-    ],
-    [
-     511.5,
-     297.0
-    ],
-    [
-     520.2,
-     300.7
-    ],
-    [
-     534.9,
-     300.7
-    ]
-   ],
-   "role": "label-region",
-   "size": 12.99,
-   "text": "March 2",
-   "tier": 0,
-   "x": 520.2,
-   "y": 300.7
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 20",
-   "tier": 0,
-   "x": 161.4,
-   "y": 628.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 21",
-   "tier": 0,
-   "x": 293.7,
-   "y": 420.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 12.55,
-   "text": "March 22",
-   "tier": 0,
-   "x": 215.6,
-   "y": 293.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 23",
-   "tier": 0,
-   "x": 402.5,
-   "y": 90.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 14.43,
-   "text": "March 24",
-   "tier": 0,
-   "x": 327.3,
-   "y": 120.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 3",
-   "tier": 0,
-   "x": 441.1,
-   "y": 348.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 12.99,
-   "text": "March 4",
-   "tier": 0,
-   "x": 529.3,
-   "y": 248.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 5",
-   "tier": 0,
-   "x": 586.4,
-   "y": 211.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 22.0,
-   "text": "March 7",
-   "tier": 0,
-   "x": 662.5,
-   "y": 402.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 16.04,
-   "text": "March 8",
-   "tier": 0,
-   "x": 752.9,
-   "y": 364.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "region",
-   "role": "label-region",
-   "size": 12.99,
-   "text": "March 9",
-   "tier": 0,
-   "x": 784.6,
-   "y": 428.0
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchbank",
-   "tier": 2,
-   "x": 277.0,
-   "y": 545.4
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchbridge",
-   "tier": 2,
-   "x": 683.6,
-   "y": 487.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 13.8,
-   "text": "Marchcape",
-   "tier": 1,
-   "x": 751.2,
-   "y": 595.5
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 10.56,
-   "text": "Marchcoast",
-   "tier": 1,
-   "x": 130.4,
-   "y": 303.5
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchcombe",
-   "tier": 2,
-   "x": 692.4,
-   "y": 513.9
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchfield",
-   "tier": 2,
-   "x": 321.4,
-   "y": 615.5
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchgate",
-   "tier": 2,
-   "x": 543.5,
-   "y": 389.3
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchill",
-   "tier": 2,
-   "x": 460.5,
-   "y": 556.2
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchmere",
-   "tier": 2,
-   "x": 508.2,
-   "y": 490.9
-  },
-  {
-   "anchor": "end",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchmoor",
-   "tier": 2,
-   "x": 497.4,
-   "y": 599.3
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marcholt",
-   "tier": 2,
-   "x": 699.5,
-   "y": 485.8
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchvale",
-   "tier": 2,
-   "x": 483.9,
-   "y": 507.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.22,
-   "text": "Marchweald",
-   "tier": 2,
-   "x": 665.1,
-   "y": 442.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Marchwick",
-   "tier": 2,
-   "x": 631.5,
-   "y": 536.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 11.0,
-   "text": "Marchwold",
-   "tier": 2,
-   "x": 447.2,
-   "y": 410.4
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchbank",
-   "tier": 2,
-   "x": 438.4,
-   "y": 327.4
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "New Marchbridge",
-   "tier": 1,
-   "x": 292.4,
-   "y": 170.8
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchclose",
-   "tier": 2,
-   "x": 488.7,
-   "y": 230.2
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "New Marchcombe",
-   "tier": 1,
-   "x": 223.8,
-   "y": 274.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchfield",
-   "tier": 2,
-   "x": 451.5,
-   "y": 281.8
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchill",
-   "tier": 2,
-   "x": 390.7,
-   "y": 251.7
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchmoor",
-   "tier": 2,
-   "x": 445.4,
-   "y": 384.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchollow",
-   "tier": 2,
-   "x": 321.5,
-   "y": 290.4
-  },
-  {
-   "anchor": "end",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "New Marchstead",
-   "tier": 1,
-   "x": 174.2,
-   "y": 528.9
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchthorpe",
-   "tier": 2,
-   "x": 302.4,
-   "y": 231.2
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchvale",
-   "tier": 2,
-   "x": 391.5,
-   "y": 388.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "New Marchwick",
-   "tier": 2,
-   "x": 230.5,
-   "y": 314.8
-  },
-  {
-   "anchor": "start",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "North Marchford",
-   "tier": 2,
-   "x": 576.6,
-   "y": 177.9
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "North Marchmere",
-   "tier": 2,
-   "x": 720.2,
-   "y": 343.6
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "North Marchollow",
-   "tier": 1,
-   "x": 776.4,
-   "y": 345.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "North Marchreach",
-   "tier": 2,
-   "x": 777.2,
-   "y": 449.1
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "North Marchwick",
-   "tier": 1,
-   "x": 585.3,
-   "y": 253.0
-  },
-  {
-   "anchor": "start",
-   "kind": "city",
-   "role": "label",
-   "size": 13.0,
-   "text": "Old Marchbank",
-   "tier": 1,
-   "x": 536.0,
-   "y": 762.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Old Marchbridge",
-   "tier": 1,
-   "x": 241.8,
-   "y": 392.2
-  },
-  {
-   "anchor": "end",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Old Marchclose",
-   "tier": 1,
-   "x": 449.3,
-   "y": 647.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Old Marchfield",
-   "tier": 1,
-   "x": 722.4,
-   "y": 792.8
-  },
-  {
-   "anchor": "end",
-   "kind": "village",
-   "role": "label",
-   "size": 10.0,
-   "text": "Old Marchpass",
-   "tier": 2,
-   "x": 303.3,
-   "y": 614.0
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Old Marchvale",
-   "tier": 1,
-   "x": 788.9,
-   "y": 482.2
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 8.81,
-   "text": "Upper Marchbank",
-   "tier": 2,
-   "x": 264.8,
-   "y": 443.4
-  },
-  {
-   "anchor": "start",
-   "kind": "town",
-   "role": "label",
-   "size": 11.5,
-   "text": "Upper Marchbridge",
-   "tier": 1,
-   "x": 653.1,
-   "y": 613.9
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 10.92,
-   "text": "Upper Marchcoast",
-   "tier": 1,
-   "x": 429.7,
-   "y": 137.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "Upper Marchdowns",
-   "tier": 2,
-   "x": 327.0,
-   "y": 338.4
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "path": [
-    [
-     518.0,
-     727.0
-    ],
-    [
-     541.1,
-     727.0
-    ],
-    [
-     553.5,
-     719.9
-    ],
-    [
-     569.5,
-     719.9
-    ]
-   ],
-   "role": "label",
-   "size": 6.5,
-   "text": "Upper Marchfield",
-   "tier": 2,
-   "x": 553.5,
-   "y": 719.9
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Upper Marchford",
-   "tier": 2,
-   "x": 337.6,
-   "y": 469.3
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.0,
-   "text": "Upper Marchmere",
-   "tier": 1,
-   "x": 776.6,
-   "y": 230.6
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 6.5,
-   "text": "Upper Marchmoor",
-   "tier": 2,
-   "x": 706.5,
-   "y": 707.7
-  },
-  {
-   "anchor": "start",
-   "kind": "castle",
-   "role": "label",
-   "size": 10.0,
-   "text": "Upper Marchpass",
-   "tier": 2,
-   "x": 451.4,
-   "y": 463.8
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 7.0,
-   "text": "Upper Marchreach",
-   "tier": 2,
-   "x": 340.9,
-   "y": 148.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "landmass",
-   "role": "label-region",
-   "size": 7.99,
-   "text": "Upper Marchthorpe",
-   "tier": 1,
-   "x": 654.8,
-   "y": 112.0
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.34,
-   "text": "Upper Marchweald",
-   "tier": 2,
-   "x": 749.8,
-   "y": 327.1
-  },
-  {
-   "anchor": "middle",
-   "kind": "feature",
-   "role": "label",
-   "size": 10.68,
-   "text": "Upper Marchwood",
-   "tier": 2,
-   "x": 430.7,
-   "y": 720.2
-  }
- ],
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 16",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 482.6,
+    "y": 629.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 387.4,
+    "y": 586.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.65,
+    "text": "March 18",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 289.0,
+    "y": 657.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 20",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 161.4,
+    "y": 628.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 10.98,
+    "text": "March 22",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 215.6,
+    "y": 293.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 23",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 402.5,
+    "y": 90.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 24",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 328.1,
+    "y": 120.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 3",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 446.0,
+    "y": 348.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.5,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 8",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 755.1,
+    "y": 364.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.05,
+    "text": "Marchcape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 751.2,
+    "y": 595.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.09,
+    "text": "Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 130.4,
+    "y": 303.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.0,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "New Marchbridge",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 292.4,
+    "y": 170.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans-medium",
+    "halo": 2.9,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Old Marchbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 513.0,
+    "y": 762.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.59,
+    "text": "Upper Marchcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 429.7,
+    "y": 137.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 776.6,
+    "y": 230.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Upper Marchthorpe",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 654.8,
+    "y": 112.0
+   }
+  ]
+ },
  "legend": [
   {
    "label": "City",
@@ -2002,6 +3331,11 @@
    "text": "Little Marchbank"
   },
   {
+   "kind": "city",
+   "reason": "no room",
+   "text": "Little Marchbridge"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "Little Marchclose"
@@ -2025,6 +3359,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "Little Marchgate"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Little Marchill"
   },
   {
    "kind": "road",
@@ -2139,12 +3478,32 @@
   {
    "kind": "feature",
    "reason": "no room",
+   "text": "Lower Marchshaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Lower Marchstead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Lower Marchvale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
    "text": "Lower Marchwood"
   },
   {
    "kind": "region",
    "reason": "no room",
    "text": "March 6"
+  },
+  {
+   "kind": "region",
+   "reason": "no room",
+   "text": "March 9"
   },
   {
    "kind": "castle",
@@ -2169,22 +3528,12 @@
   {
    "kind": "castle",
    "reason": "no room",
-   "text": "Marchford"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
    "text": "Marchollow"
   },
   {
    "kind": "castle",
    "reason": "no room",
    "text": "Marchpass"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Marchreach"
   },
   {
    "kind": "river",
@@ -2204,11 +3553,6 @@
   {
    "kind": "castle",
    "reason": "no room",
-   "text": "Marchstead"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
    "text": "Marchthorpe"
   },
   {
@@ -2219,7 +3563,27 @@
   {
    "kind": "feature",
    "reason": "no room",
+   "text": "Marchweald"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Marchwick"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Marchwold"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
    "text": "Marchwood"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "New Marchclose"
   },
   {
    "kind": "town",
@@ -2229,12 +3593,7 @@
   {
    "kind": "village",
    "reason": "no room",
-   "text": "New Marchgate"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "New Marchmere"
+   "text": "New Marchollow"
   },
   {
    "kind": "village",
@@ -2245,11 +3604,6 @@
    "kind": "village",
    "reason": "no room",
    "text": "New Marchpass"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "New Marchreach"
   },
   {
    "kind": "village",
@@ -2285,11 +3639,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Old Marchmere"
-  },
-  {
-   "kind": "village",
-   "reason": "no room",
-   "text": "Old Marchmoor"
   },
   {
    "kind": "road",
@@ -2349,12 +3698,12 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "Upper Marchollow"
+   "text": "Upper Marchmoor"
   },
   {
-   "kind": "castle",
+   "kind": "feature",
    "reason": "no room",
-   "text": "Upper Marcholt"
+   "text": "Upper Marchollow"
   },
   {
    "kind": "river",
@@ -2362,29 +3711,9 @@
    "text": "Upper Marchrush"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Upper Marchshaw"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Upper Marchstead"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Upper Marchvale"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "Upper Marchwater"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Upper Marchwick"
   },
   {
    "kind": "feature",
