@@ -492,15 +492,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.6,
+    "halo": 3.3,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Greyholt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 390.7,
-    "y": 703.3
+    "x": 393.4,
+    "y": 706.0
    },
    {
     "anchor": "middle",
@@ -512,8 +512,8 @@
     "text": "Greymere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 196.0,
-    "y": 431.0
+    "x": 198.7,
+    "y": 433.7
    },
    {
     "anchor": "middle",
@@ -812,8 +812,8 @@
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 658.6,
-    "y": 714.3
+    "x": 661.3,
+    "y": 717.0
    },
    {
     "anchor": "start",
@@ -844,15 +844,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Rennweald",
     "tier": 2,
     "tracking": 0.02,
-    "x": 519.9,
-    "y": 663.3
+    "x": 522.6,
+    "y": 666.0
    },
    {
     "anchor": "middle",
@@ -959,15 +959,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 16.32,
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 555.6,
-    "y": 776.1
+    "x": 558.4,
+    "y": 778.8
    },
    {
     "anchor": "middle",
@@ -1010,21 +1010,21 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 175.1,
-    "y": 169.4
+    "x": 177.8,
+    "y": 172.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.5,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.18,
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 742.1,
-    "y": 432.1
+    "x": 744.8,
+    "y": 434.8
    },
    {
     "anchor": "middle",
@@ -1073,20 +1073,20 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "feature",
     "path": [
      [
-      626.8,
-      407.5
+      629.5,
+      410.2
      ],
      [
-      627.6,
-      407.5
+      630.4,
+      410.2
      ],
      [
-      669.0,
-      448.5
+      671.7,
+      451.2
      ]
     ],
     "role": "label",
@@ -1094,8 +1094,8 @@
     "text": "The Redweald",
     "tier": 2,
     "tracking": 0.02,
-    "x": 627.6,
-    "y": 407.5
+    "x": 630.4,
+    "y": 410.2
    },
    {
     "anchor": "middle",
@@ -1464,8 +1464,8 @@
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 658.6,
-    "y": 714.3
+    "x": 661.3,
+    "y": 717.0
    },
    {
     "anchor": "start",
@@ -1509,15 +1509,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 16.32,
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 555.6,
-    "y": 776.1
+    "x": 558.4,
+    "y": 778.8
    },
    {
     "anchor": "middle",
@@ -1529,21 +1529,21 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 175.1,
-    "y": 169.4
+    "x": 177.8,
+    "y": 172.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.5,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.18,
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 742.1,
-    "y": 432.1
+    "x": 744.8,
+    "y": 434.8
    },
    {
     "anchor": "middle",
@@ -1690,8 +1690,8 @@
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 658.6,
-    "y": 714.3
+    "x": 661.3,
+    "y": 717.0
    },
    {
     "anchor": "start",
@@ -1709,15 +1709,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 16.32,
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 555.6,
-    "y": 776.1
+    "x": 558.4,
+    "y": 778.8
    },
    {
     "anchor": "middle",
@@ -1729,21 +1729,21 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 175.1,
-    "y": 169.4
+    "x": 177.8,
+    "y": 172.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.5,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.18,
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 742.1,
-    "y": 432.1
+    "x": 744.8,
+    "y": 434.8
    },
    {
     "anchor": "middle",

@@ -235,6 +235,22 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   const frame = draw.bounds
   const viewBox = `${frame.x} ${frame.y} ${frame.width} ${frame.height}`
   const holderOf = (f: MapFeature) => f.control[mode]?.[0] ?? null
+  // What a selection's kin are, from what the client already has (V2 §34): the thing
+  // itself, and — when a house is selected — everything that house holds under the
+  // authority the map is currently coloured by. No request, no re-solve: the names
+  // are already placed, and quieting the rest is a matter of opacity.
+  const kin = useMemo(() => {
+    if (!selectedId) return null
+    const own = new Set<string>([selectedId])
+    for (const f of data.features) {
+      if (f.entity_id === selectedId) own.add(f.entity_id)
+      for (const holder of f.control[mode] ?? []) {
+        if (holder.id === selectedId) own.add(f.entity_id)
+      }
+    }
+    return own
+  }, [selectedId, data.features, mode])
+  const isKin = (entityId: string) => !kin || kin.has(entityId)
   const fillFor = (f: MapFeature) => {
     const holder = holderOf(f)
     if (holder) return holderColours.get(holder.id) ?? 'var(--ink-faint)'
@@ -293,7 +309,8 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                     stroke="var(--map-contested)" strokeWidth="1.6" />
             </pattern>
           </defs>
-          <g ref={surface} transform={pan.transform}>
+          <g ref={surface} transform={pan.transform}
+             className={kin ? 'map-focus--on' : undefined}>
             {/* The ground first of all. Everything else is drawn over it, which is the
                 whole point: a coastline that is a stroke on a flat fill reads as a
                 diagram, and the same stroke over lit relief reads as a coast. */}
@@ -307,7 +324,8 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             )}
             {/* polygons first, then lines, then points: painter's order */}
             {visible.filter((f) => f.kind === 'polygon').map((f) => (
-              <g key={f.id}>
+              <g key={f.id}
+                 className={`map-quiet${isKin(f.entity_id) ? ' map-kin' : ''}`}>
                 <path
                   d={polygonPath(f.coordinates as number[][][])}
                   fill={fillFor(f)}
@@ -319,8 +337,15 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                   // times. Selection still gets its ring — emphasis, not geography.
                   stroke={f.style.edge === 'none' && selectedId !== f.entity_id
                     ? 'none' : fillFor(f)}
-                  strokeWidth={selectedId === f.entity_id ? 3 : 1.5}
-                  strokeDasharray={f.approximate ? '7 5' : undefined}
+                  strokeWidth={selectedId === f.entity_id ? 3
+                    : f.layer === 'waters' ? 1 : 1.5}
+                  // Water is not a proposal. The dashed edge says "the map guessed
+                  // this line and you may move it", which is true of a border and
+                  // false of a lake: the shore of standing water is where the ground
+                  // stops, and drawing it dashed over the rendered mere below it
+                  // made one lake look like two disagreeing ones.
+                  strokeDasharray={f.approximate && f.layer !== 'waters'
+                    ? '7 5' : undefined}
                   style={{ cursor: 'pointer' }}
                   onClick={() => onSelect(f.entity_id)}
                 >
@@ -342,13 +367,17 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
             {visible.filter((f) => f.kind === 'line').map((f) => (
               <path
                 key={f.id}
+                className={`map-quiet${isKin(f.entity_id) ? ' map-kin' : ''}`}
                 d={linePath(f.coordinates as number[][])}
                 fill="none"
                 // A border arc is drawn in border ink whoever holds the ground: in
                 // political mode the *fills* say who holds what, and a frontier that
                 // switched to its owner's colour would read as belonging to one side.
-                stroke={(f.style.role as string) === 'border'
-                  ? paint('border') : fillFor(f)}
+                // A shore run is coastline ink for the same reason — it is the edge
+                // of the land itself, not of whoever currently holds it.
+                stroke={(f.style.role as string) === 'border' ? paint('border')
+                  : (f.style.role as string) === 'coastline' ? paint('coastline')
+                  : fillFor(f)}
                 strokeWidth={
                   // A river and a road both carry their own width: the generator works
                   // one out from how much water passes and the other from how much

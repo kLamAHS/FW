@@ -371,19 +371,6 @@
     "y": 225.0
    },
    {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Great Srmarkholt",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 384.4,
-    "y": 153.6
-   },
-   {
     "anchor": "start",
     "face": "sans",
     "halo": 3.2,
@@ -434,19 +421,6 @@
     "tracking": 0.0,
     "x": 277.0,
     "y": 189.4
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "town",
-    "role": "label",
-    "size": 11.5,
-    "text": "Little Srmarkgate",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 723.4,
-    "y": 449.5
    },
    {
     "anchor": "end",
@@ -562,8 +536,8 @@
     "text": "Llgogerndless",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "start",
@@ -658,6 +632,19 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Srmarkclose",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 339.7,
+    "y": 145.0
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
     "halo": 3.2,
     "kind": "landmass",
@@ -666,8 +653,8 @@
     "text": "Srmarkcombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "start",
@@ -685,15 +672,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 7.22,
     "text": "Srmarkhill",
     "tier": 2,
     "tracking": 0.02,
-    "x": 736.4,
-    "y": 375.9
+    "x": 739.1,
+    "y": 378.7
    },
    {
     "anchor": "start",
@@ -709,6 +696,19 @@
     "y": 399.1
    },
    {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmarkmarch",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 316.0,
+    "y": 537.6
+   },
+   {
     "anchor": "middle",
     "face": "serif-italic",
     "halo": 3.0,
@@ -718,8 +718,48 @@
     "text": "Srmarkmere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 448.6,
-    "y": 782.4
+    "x": 451.4,
+    "y": 785.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Srmarkmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 764.9,
+    "y": 446.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "path": [
+     [
+      585.1,
+      414.0
+     ],
+     [
+      616.4,
+      414.0
+     ],
+     [
+      620.3,
+      410.6
+     ]
+    ],
+    "role": "label",
+    "size": 7.22,
+    "text": "Srmarkreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 616.4,
+    "y": 414.0
    },
    {
     "anchor": "middle",
@@ -731,52 +771,52 @@
     "text": "Srmarkvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 781.4,
-    "y": 513.2
+    "x": 784.1,
+    "y": 515.9
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.18,
     "text": "Srmarkwick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
+    "halo": 2.9,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "S\u00f6rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.5,
-    "y": 700.3
+    "x": 711.2,
+    "y": 703.0
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.6,
+    "halo": 3.5,
     "kind": "region",
     "path": [
      [
-      595.9,
-      444.1
+      598.6,
+      446.8
      ],
      [
-      690.6,
-      444.1
+      693.3,
+      446.8
      ],
      [
-      702.4,
-      437.5
+      705.1,
+      440.2
      ]
     ],
     "role": "label-region",
@@ -784,8 +824,8 @@
     "text": "S\u00f8rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 690.6,
-    "y": 444.1
+    "x": 693.3,
+    "y": 446.8
    },
    {
     "anchor": "start",
@@ -894,15 +934,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Srmarkthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -914,34 +954,34 @@
     "text": "The Uncong Mark",
     "tier": 2,
     "tracking": 0.02,
-    "x": 247.2,
-    "y": 425.7
+    "x": 249.9,
+    "y": 428.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 15.39,
     "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
     "tier": 0,
     "tracking": 0.14,
-    "x": 382.0,
-    "y": 557.7
+    "x": 384.7,
+    "y": 560.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 11.53,
     "text": "Uncongyll",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -979,8 +1019,8 @@
     "text": "Upper Srmarkcombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 397.1,
-    "y": 266.2
+    "x": 399.8,
+    "y": 268.9
    },
    {
     "anchor": "middle",
@@ -989,52 +1029,52 @@
     "kind": "feature",
     "path": [
      [
-      151.8,
-      682.4
+      154.5,
+      685.2
      ],
      [
-      171.9,
-      692.5
+      174.6,
+      695.2
      ],
      [
-      174.8,
-      695.1
+      177.5,
+      697.8
      ],
      [
-      180.0,
-      697.4
+      182.7,
+      700.1
      ],
      [
-      186.5,
-      701.8
+      189.2,
+      704.5
      ],
      [
-      189.3,
-      702.0
+      192.0,
+      704.7
      ],
      [
-      196.5,
-      705.1
+      199.2,
+      707.8
      ],
      [
-      200.6,
-      705.2
+      203.3,
+      707.9
      ],
      [
-      203.0,
-      706.7
+      205.7,
+      709.4
      ],
      [
-      217.9,
-      706.7
+      220.6,
+      709.4
      ],
      [
-      220.3,
-      708.2
+      223.0,
+      710.9
      ],
      [
-      223.9,
-      708.3
+      226.6,
+      711.0
      ]
     ],
     "role": "label",
@@ -1042,8 +1082,8 @@
     "text": "Upper Srmarkgate",
     "tier": 2,
     "tracking": 0.02,
-    "x": 196.5,
-    "y": 705.1
+    "x": 199.2,
+    "y": 707.8
    },
    {
     "anchor": "middle",
@@ -1055,8 +1095,8 @@
     "text": "Upper Srmarkhollow",
     "tier": 2,
     "tracking": 0.02,
-    "x": 567.1,
-    "y": 797.2
+    "x": 569.8,
+    "y": 799.9
    },
    {
     "anchor": "middle",
@@ -1068,8 +1108,8 @@
     "text": "Upper Srmarkmere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 545.6,
-    "y": 187.7
+    "x": 548.3,
+    "y": 190.4
    },
    {
     "anchor": "middle",
@@ -1081,21 +1121,21 @@
     "text": "Upper Srmarkreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 506.2,
-    "y": 782.8
+    "x": 508.9,
+    "y": 785.5
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Upper Srmarkwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 295.9,
-    "y": 202.3
+    "x": 298.6,
+    "y": 205.0
    },
    {
     "anchor": "middle",
@@ -1107,24 +1147,11 @@
     "text": "\u00c5sgardh-upon-\u00d8re",
     "tier": 0,
     "tracking": 0.14,
-    "x": 289.9,
-    "y": 342.3
+    "x": 292.6,
+    "y": 345.0
    }
   ],
   "regional": [
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "town",
-    "role": "label",
-    "size": 11.5,
-    "text": "Little Srmarkgate",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 723.4,
-    "y": 449.5
-   },
    {
     "anchor": "end",
     "face": "sans",
@@ -1269,8 +1296,8 @@
     "text": "Llgogerndless",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -1334,52 +1361,65 @@
     "text": "Srmarkcombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Srmarkmarch",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 316.0,
+    "y": 537.6
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.18,
     "text": "Srmarkwick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
+    "halo": 2.9,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "S\u00f6rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.5,
-    "y": 700.3
+    "x": 711.2,
+    "y": 703.0
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.6,
+    "halo": 3.5,
     "kind": "region",
     "path": [
      [
-      595.9,
-      444.1
+      598.6,
+      446.8
      ],
      [
-      690.6,
-      444.1
+      693.3,
+      446.8
      ],
      [
-      702.4,
-      437.5
+      705.1,
+      440.2
      ]
     ],
     "role": "label-region",
@@ -1387,8 +1427,8 @@
     "text": "S\u00f8rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 690.6,
-    "y": 444.1
+    "x": 693.3,
+    "y": 446.8
    },
    {
     "anchor": "middle",
@@ -1521,41 +1561,41 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Srmarkthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 15.39,
     "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
     "tier": 0,
     "tracking": 0.14,
-    "x": 382.0,
-    "y": 557.7
+    "x": 384.7,
+    "y": 560.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 11.53,
     "text": "Uncongyll",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1593,8 +1633,8 @@
     "text": "\u00c5sgardh-upon-\u00d8re",
     "tier": 0,
     "tracking": 0.14,
-    "x": 289.9,
-    "y": 342.3
+    "x": 292.6,
+    "y": 345.0
    }
   ],
   "world": [
@@ -1634,8 +1674,8 @@
     "text": "Llgogerndless",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -1647,52 +1687,52 @@
     "text": "Srmarkcombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.18,
     "text": "Srmarkwick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
+    "halo": 2.9,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "S\u00f6rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.5,
-    "y": 700.3
+    "x": 711.2,
+    "y": 703.0
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.6,
+    "halo": 3.5,
     "kind": "region",
     "path": [
      [
-      595.9,
-      444.1
+      598.6,
+      446.8
      ],
      [
-      690.6,
-      444.1
+      693.3,
+      446.8
      ],
      [
-      702.4,
-      437.5
+      705.1,
+      440.2
      ]
     ],
     "role": "label-region",
@@ -1700,47 +1740,47 @@
     "text": "S\u00f8rmark",
     "tier": 0,
     "tracking": 0.14,
-    "x": 690.6,
-    "y": 444.1
+    "x": 693.3,
+    "y": 446.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Srmarkthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 15.39,
     "text": "The Unconscionably Long March of the Endless Eastern Emptiness",
     "tier": 0,
     "tracking": 0.14,
-    "x": 382.0,
-    "y": 557.7
+    "x": 384.7,
+    "y": 560.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 11.53,
     "text": "Uncongyll",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -1752,8 +1792,8 @@
     "text": "\u00c5sgardh-upon-\u00d8re",
     "tier": 0,
     "tracking": 0.14,
-    "x": 289.9,
-    "y": 342.3
+    "x": 292.6,
+    "y": 345.0
    }
   ]
  },
@@ -1810,9 +1850,19 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Great Srmarkholt"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "Little Srmarkford"
+  },
+  {
+   "kind": "town",
+   "reason": "no room",
+   "text": "Little Srmarkgate"
   },
   {
    "kind": "road",
@@ -1877,11 +1927,6 @@
   {
    "kind": "feature",
    "reason": "no room",
-   "text": "Srmarkclose"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
    "text": "Srmarkfield"
   },
   {
@@ -1893,21 +1938,6 @@
    "kind": "feature",
    "reason": "no room",
    "text": "Srmarkhollow"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Srmarkmarch"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Srmarkmoor"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Srmarkreach"
   },
   {
    "kind": "road",

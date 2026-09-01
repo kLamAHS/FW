@@ -63,7 +63,7 @@ ROLES = (
     "cover-ice",
     # Holders are numbered rather than named: a house has no colour of its own, it has
     # a place in the map's palette, and which place has to be the same on every layer.
-    *(f"holder-{n}" for n in range(8)),
+    *(f"holder-{n}" for n in range(12)),
 )
 
 TERRAIN_ROLES = {
@@ -79,7 +79,10 @@ COVER_ROLES = {"forest": "cover-forest", "marsh": "cover-marsh",
                "downs": "cover-downs", "moor": "cover-moor",
                "waste": "cover-waste", "ice": "cover-ice"}
 
-HOLDER_ROLES = tuple(f"holder-{n}" for n in range(8))
+# Twelve slots, not eight: with eight the ninth house wore the first's
+# colour and the legend named that colour twice. A map with more holders
+# than slots still wraps — but twelve covers every world the corpus has.
+HOLDER_ROLES = tuple(f"holder-{n}" for n in range(12))
 
 # What a place of each rank is drawn as, and how big. A city is not a hamlet and a
 # castle is not a small town; the generator has known the difference for two phases and
@@ -543,6 +546,30 @@ def _holder_of(feature: Mapping[str, Any], mode: str) -> Mapping[str, Any] | Non
     return holders[0] if holders else None
 
 
+def _contested(feature: Mapping[str, Any], mode: str) -> bool:
+    """Whether somebody disputes what this map is currently colouring by.
+
+    A claim is only a dispute *against* an authority. Reading "claims" whatever the
+    mode meant the ring stayed on a town while the map was coloured by the very
+    authority the claimant already holds — the map contradicting its own fill. On
+    the claims map itself the question is inverted: what is contested there is
+    ground claimed by somebody who does not hold it.
+    """
+    control = feature.get("control") or {}
+    claims = [str(who.get("id")) for who in (control.get("claims") or [])]
+    if not claims:
+        return False
+    if mode == "claims":
+        held = {str(who.get("id"))
+                for word in ("legally_owns", "administers", "occupies", "taxes")
+                for who in (control.get(word) or [])}
+        return any(who not in held for who in claims)
+    holder = _holder_of(feature, mode)
+    if holder is None:
+        return True
+    return any(who != str(holder.get("id")) for who in claims)
+
+
 # ---- what each place is drawn as -------------------------------------------
 
 def _icons(features: Sequence[Mapping[str, Any]], mode: str,
@@ -568,7 +595,7 @@ def _icons(features: Sequence[Mapping[str, Any]], mode: str,
             role="castle" if _is_castle(feature) else "settlement",
             holder_role=holders.get(str(holder.get("id")), "") if holder else "",
             holder_name=str(holder.get("name")) if holder else "",
-            contested=bool((feature.get("control") or {}).get("claims")),
+            contested=_contested(feature, mode),
             band=_icon_band(rank, _importance(feature)),
             ranked=bool(told),
         ))

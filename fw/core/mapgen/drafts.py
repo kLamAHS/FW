@@ -34,7 +34,7 @@ LAYERS = ("land", "waters", "regions", "relief", "features", "waterways",
 # is one shared frontier arc, stroked once for both of its regions — their outline
 # polygons carry the fill and no edge of their own.
 ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill", "arm",
-         "border")
+         "border", "shore")
 
 
 @dataclass(frozen=True)

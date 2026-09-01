@@ -388,8 +388,16 @@
     "kind": "range",
     "path": [
      [
-      503.1,
-      320.0
+      471.0,
+      333.4
+     ],
+     [
+      480.0,
+      330.6
+     ],
+     [
+      491.9,
+      327.9
      ],
      [
       506.6,
@@ -408,12 +416,8 @@
       256.2
      ],
      [
-      560.3,
-      229.4
-     ],
-     [
-      563.8,
-      223.8
+      545.6,
+      254.1
      ]
     ],
     "role": "label-relief",
@@ -421,8 +425,8 @@
     "text": "The Belowbank",
     "tier": 1,
     "tracking": 0.1,
-    "x": 528.5,
-    "y": 268.5
+    "x": 514.2,
+    "y": 306.7
    },
    {
     "anchor": "start",
@@ -491,15 +495,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Belowgate",
     "tier": 2,
     "tracking": 0.02,
-    "x": 762.2,
-    "y": 443.8
+    "x": 764.9,
+    "y": 446.5
    },
    {
     "anchor": "middle",
@@ -511,8 +515,8 @@
     "text": "The Belowhollow",
     "tier": 2,
     "tracking": 0.02,
-    "x": 573.9,
-    "y": 288.3
+    "x": 576.6,
+    "y": 291.0
    },
    {
     "anchor": "middle",
@@ -524,35 +528,8 @@
     "text": "The Belowholt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 814.8,
-    "y": 565.3
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 2.9,
-    "kind": "feature",
-    "path": [
-     [
-      281.8,
-      369.0
-     ],
-     [
-      327.2,
-      369.4
-     ],
-     [
-      334.7,
-      376.5
-     ]
-    ],
-    "role": "label",
-    "size": 11.0,
-    "text": "The Belowick",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 327.2,
-    "y": 369.4
+    "x": 817.5,
+    "y": 568.0
    },
    {
     "anchor": "middle",
@@ -604,28 +581,28 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.4,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 6.5,
     "text": "The Belowood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 308.0,
-    "y": 705.9
+    "x": 310.7,
+    "y": 708.6
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Belowreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 718.0,
-    "y": 379.0
+    "x": 720.7,
+    "y": 381.7
    },
    {
     "anchor": "middle",
@@ -637,72 +614,21 @@
     "text": "The Belowthorpe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 467.1,
-    "y": 783.9
+    "x": 469.8,
+    "y": 786.6
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
-    "kind": "range",
-    "path": [
-     [
-      648.7,
-      380.4
-     ],
-     [
-      648.7,
-      381.3
-     ],
-     [
-      656.3,
-      393.1
-     ],
-     [
-      663.5,
-      412.0
-     ],
-     [
-      665.5,
-      425.3
-     ],
-     [
-      665.3,
-      446.2
-     ],
-     [
-      663.0,
-      460.7
-     ],
-     [
-      668.2,
-      480.1
-     ],
-     [
-      674.0,
-      487.1
-     ]
-    ],
-    "role": "label-relief",
-    "size": 14.0,
-    "text": "The Belowvale",
-    "tier": 1,
-    "tracking": 0.1,
-    "x": 665.5,
-    "y": 425.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Grey Wale Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -714,8 +640,8 @@
     "text": "The Grey Wall",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.4,
-    "y": 520.3
+    "x": 711.1,
+    "y": 523.1
    },
    {
     "anchor": "end",
@@ -899,8 +825,8 @@
     "text": "The Kneel",
     "tier": 0,
     "tracking": 0.14,
-    "x": 702.0,
-    "y": 698.0
+    "x": 704.7,
+    "y": 700.7
    },
    {
     "anchor": "start",
@@ -1055,19 +981,6 @@
     "y": 393.9
    },
    {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.8,
-    "kind": "castle",
-    "role": "label",
-    "size": 10.0,
-    "text": "The Kneelow",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 465.9,
-    "y": 331.1
-   },
-   {
     "anchor": "middle",
     "face": "sans",
     "halo": 3.8,
@@ -1191,8 +1104,8 @@
     "text": "The Vale Below",
     "tier": 0,
     "tracking": 0.14,
-    "x": 483.6,
-    "y": 532.0
+    "x": 486.3,
+    "y": 534.8
    },
    {
     "anchor": "middle",
@@ -1204,8 +1117,8 @@
     "text": "The Vale Te Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "end",
@@ -1223,15 +1136,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Te Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1243,34 +1156,34 @@
     "text": "The Vale Teel",
     "tier": 2,
     "tracking": 0.02,
-    "x": 254.2,
-    "y": 421.6
+    "x": 256.9,
+    "y": 424.3
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.6,
+    "halo": 3.5,
     "kind": "feature",
     "role": "label",
     "size": 10.1,
     "text": "The Vale Teelow",
     "tier": 2,
     "tracking": 0.02,
-    "x": 718.2,
-    "y": 414.6
+    "x": 720.9,
+    "y": 417.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -1308,8 +1221,21 @@
     "text": "The White Teel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The White Teelow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 677.9,
+    "y": 469.6
    },
    {
     "anchor": "middle",
@@ -1318,24 +1244,24 @@
     "kind": "region",
     "path": [
      [
-      443.1,
-      359.4
+      445.8,
+      362.1
      ],
      [
-      449.9,
-      355.3
+      452.6,
+      358.1
      ],
      [
-      631.1,
-      355.3
+      633.8,
+      358.1
      ],
      [
-      651.4,
-      344.1
+      654.1,
+      346.8
      ],
      [
-      653.3,
-      344.1
+      656.0,
+      346.8
      ]
     ],
     "role": "label-region",
@@ -1343,8 +1269,8 @@
     "text": "The White Teeth",
     "tier": 0,
     "tracking": 0.14,
-    "x": 631.1,
-    "y": 355.3
+    "x": 633.8,
+    "y": 358.1
    },
    {
     "anchor": "middle",
@@ -1394,8 +1320,16 @@
     "kind": "range",
     "path": [
      [
-      503.1,
-      320.0
+      471.0,
+      333.4
+     ],
+     [
+      480.0,
+      330.6
+     ],
+     [
+      491.9,
+      327.9
      ],
      [
       506.6,
@@ -1414,12 +1348,8 @@
       256.2
      ],
      [
-      560.3,
-      229.4
-     ],
-     [
-      563.8,
-      223.8
+      545.6,
+      254.1
      ]
     ],
     "role": "label-relief",
@@ -1427,8 +1357,8 @@
     "text": "The Belowbank",
     "tier": 1,
     "tracking": 0.1,
-    "x": 528.5,
-    "y": 268.5
+    "x": 514.2,
+    "y": 306.7
    },
    {
     "anchor": "middle",
@@ -1531,66 +1461,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
-    "kind": "range",
-    "path": [
-     [
-      648.7,
-      380.4
-     ],
-     [
-      648.7,
-      381.3
-     ],
-     [
-      656.3,
-      393.1
-     ],
-     [
-      663.5,
-      412.0
-     ],
-     [
-      665.5,
-      425.3
-     ],
-     [
-      665.3,
-      446.2
-     ],
-     [
-      663.0,
-      460.7
-     ],
-     [
-      668.2,
-      480.1
-     ],
-     [
-      674.0,
-      487.1
-     ]
-    ],
-    "role": "label-relief",
-    "size": 14.0,
-    "text": "The Belowvale",
-    "tier": 1,
-    "tracking": 0.1,
-    "x": 665.5,
-    "y": 425.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Grey Wale Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -1602,8 +1481,8 @@
     "text": "The Grey Wall",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.4,
-    "y": 520.3
+    "x": 711.1,
+    "y": 523.1
    },
    {
     "anchor": "start",
@@ -1752,8 +1631,8 @@
     "text": "The Kneel",
     "tier": 0,
     "tracking": 0.14,
-    "x": 702.0,
-    "y": 698.0
+    "x": 704.7,
+    "y": 700.7
    },
    {
     "anchor": "start",
@@ -1865,8 +1744,8 @@
     "text": "The Vale Below",
     "tier": 0,
     "tracking": 0.14,
-    "x": 483.6,
-    "y": 532.0
+    "x": 486.3,
+    "y": 534.8
    },
    {
     "anchor": "middle",
@@ -1878,34 +1757,34 @@
     "text": "The Vale Te Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Te Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -1930,8 +1809,8 @@
     "text": "The White Teel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -1940,24 +1819,24 @@
     "kind": "region",
     "path": [
      [
-      443.1,
-      359.4
+      445.8,
+      362.1
      ],
      [
-      449.9,
-      355.3
+      452.6,
+      358.1
      ],
      [
-      631.1,
-      355.3
+      633.8,
+      358.1
      ],
      [
-      651.4,
-      344.1
+      654.1,
+      346.8
      ],
      [
-      653.3,
-      344.1
+      656.0,
+      346.8
      ]
     ],
     "role": "label-region",
@@ -1965,8 +1844,8 @@
     "text": "The White Teeth",
     "tier": 0,
     "tracking": 0.14,
-    "x": 631.1,
-    "y": 355.3
+    "x": 633.8,
+    "y": 358.1
    },
    {
     "anchor": "end",
@@ -2003,8 +1882,16 @@
     "kind": "range",
     "path": [
      [
-      503.1,
-      320.0
+      471.0,
+      333.4
+     ],
+     [
+      480.0,
+      330.6
+     ],
+     [
+      491.9,
+      327.9
      ],
      [
       506.6,
@@ -2023,12 +1910,8 @@
       256.2
      ],
      [
-      560.3,
-      229.4
-     ],
-     [
-      563.8,
-      223.8
+      545.6,
+      254.1
      ]
     ],
     "role": "label-relief",
@@ -2036,8 +1919,8 @@
     "text": "The Belowbank",
     "tier": 1,
     "tracking": 0.1,
-    "x": 528.5,
-    "y": 268.5
+    "x": 514.2,
+    "y": 306.7
    },
    {
     "anchor": "middle",
@@ -2089,66 +1972,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
-    "kind": "range",
-    "path": [
-     [
-      648.7,
-      380.4
-     ],
-     [
-      648.7,
-      381.3
-     ],
-     [
-      656.3,
-      393.1
-     ],
-     [
-      663.5,
-      412.0
-     ],
-     [
-      665.5,
-      425.3
-     ],
-     [
-      665.3,
-      446.2
-     ],
-     [
-      663.0,
-      460.7
-     ],
-     [
-      668.2,
-      480.1
-     ],
-     [
-      674.0,
-      487.1
-     ]
-    ],
-    "role": "label-relief",
-    "size": 14.0,
-    "text": "The Belowvale",
-    "tier": 1,
-    "tracking": 0.1,
-    "x": 665.5,
-    "y": 425.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Grey Wale Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -2160,8 +1992,8 @@
     "text": "The Grey Wall",
     "tier": 0,
     "tracking": 0.14,
-    "x": 708.4,
-    "y": 520.3
+    "x": 711.1,
+    "y": 523.1
    },
    {
     "anchor": "middle",
@@ -2204,8 +2036,8 @@
     "text": "The Kneel",
     "tier": 0,
     "tracking": 0.14,
-    "x": 702.0,
-    "y": 698.0
+    "x": 704.7,
+    "y": 700.7
    },
    {
     "anchor": "start",
@@ -2230,8 +2062,8 @@
     "text": "The Vale Below",
     "tier": 0,
     "tracking": 0.14,
-    "x": 483.6,
-    "y": 532.0
+    "x": 486.3,
+    "y": 534.8
    },
    {
     "anchor": "middle",
@@ -2243,34 +2075,34 @@
     "text": "The Vale Te Bel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.7,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Te Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.5,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Vale Teeth",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -2282,8 +2114,8 @@
     "text": "The White Teel",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -2292,24 +2124,24 @@
     "kind": "region",
     "path": [
      [
-      443.1,
-      359.4
+      445.8,
+      362.1
      ],
      [
-      449.9,
-      355.3
+      452.6,
+      358.1
      ],
      [
-      631.1,
-      355.3
+      633.8,
+      358.1
      ],
      [
-      651.4,
-      344.1
+      654.1,
+      346.8
      ],
      [
-      653.3,
-      344.1
+      656.0,
+      346.8
      ]
     ],
     "role": "label-region",
@@ -2317,8 +2149,8 @@
     "text": "The White Teeth",
     "tier": 0,
     "tracking": 0.14,
-    "x": 631.1,
-    "y": 355.3
+    "x": 633.8,
+    "y": 358.1
    }
   ]
  },
@@ -2412,6 +2244,11 @@
   {
    "kind": "feature",
    "reason": "no room",
+   "text": "The Belowick"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
    "text": "The Belowmarch"
   },
   {
@@ -2453,6 +2290,11 @@
    "kind": "feature",
    "reason": "no room",
    "text": "The Belowstead"
+  },
+  {
+   "kind": "range",
+   "reason": "no room",
+   "text": "The Belowvale"
   },
   {
    "kind": "road",
@@ -2510,6 +2352,11 @@
    "text": "The Kneelford"
   },
   {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "The Kneelow"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "The Kneelwick"
@@ -2543,11 +2390,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The White Te Teel"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "The White Teelow"
   }
  ]
 }

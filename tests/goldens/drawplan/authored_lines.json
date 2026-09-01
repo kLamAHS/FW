@@ -384,19 +384,6 @@
     "y": 542.6
    },
    {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 2.9,
-    "kind": "feature",
-    "role": "label",
-    "size": 11.0,
-    "text": "Endfen",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 478.6,
-    "y": 643.6
-   },
-   {
     "anchor": "end",
     "face": "sans",
     "halo": 3.2,
@@ -572,8 +559,8 @@
     "text": "Opencoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -629,8 +616,8 @@
     "text": "Pennwood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 700.1,
-    "y": 698.2
+    "x": 702.8,
+    "y": 700.9
    },
    {
     "anchor": "start",
@@ -795,8 +782,8 @@
     "text": "The Inkcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
@@ -824,15 +811,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Open Vale",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.2,
-    "y": 462.0
+    "x": 672.9,
+    "y": 464.7
    },
    {
     "anchor": "middle",
@@ -841,20 +828,20 @@
     "kind": "feature",
     "path": [
      [
-      501.0,
-      247.8
+      503.7,
+      250.5
      ],
      [
-      542.6,
-      247.8
+      545.3,
+      250.5
      ],
      [
-      558.4,
-      239.3
+      561.2,
+      242.0
      ],
      [
-      566.2,
-      239.3
+      568.9,
+      242.0
      ]
     ],
     "role": "label",
@@ -862,8 +849,8 @@
     "text": "The Open Wood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 558.4,
-    "y": 239.3
+    "x": 561.2,
+    "y": 242.0
    },
    {
     "anchor": "middle",
@@ -875,8 +862,8 @@
     "text": "The Openmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 458.5,
-    "y": 783.5
+    "x": 461.2,
+    "y": 786.2
    },
    {
     "anchor": "start",
@@ -1054,20 +1041,20 @@
     "kind": "region",
     "path": [
      [
-      141.9,
-      613.0
+      144.6,
+      615.7
      ],
      [
-      181.6,
-      602.2
+      184.3,
+      604.9
      ],
      [
-      201.9,
-      589.5
+      204.6,
+      592.2
      ],
      [
-      305.4,
-      589.5
+      308.1,
+      592.2
      ]
     ],
     "role": "label-region",
@@ -1075,88 +1062,88 @@
     "text": "The Penwood",
     "tier": 0,
     "tracking": 0.14,
-    "x": 201.9,
-    "y": 589.5
+    "x": 204.6,
+    "y": 592.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer's Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer'scape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "path": [
      [
-      159.4,
-      685.5
+      162.1,
+      688.2
      ],
      [
-      165.3,
-      689.9
+      168.0,
+      692.7
      ],
      [
-      184.5,
-      699.6
+      187.2,
+      702.3
      ],
      [
-      187.3,
-      699.8
+      190.0,
+      702.5
      ],
      [
-      194.4,
-      702.8
+      197.1,
+      705.5
      ],
      [
-      198.3,
-      702.9
+      201.0,
+      705.6
      ],
      [
-      200.6,
-      704.4
+      203.4,
+      707.1
      ],
      [
-      204.6,
-      704.5
+      207.3,
+      707.2
      ],
      [
-      206.9,
-      706.0
+      209.6,
+      708.7
      ],
      [
-      212.0,
-      706.0
+      214.7,
+      708.7
      ],
      [
-      214.8,
-      707.5
+      217.5,
+      710.2
      ],
      [
-      219.3,
-      707.5
+      222.0,
+      710.2
      ]
     ],
     "role": "label",
@@ -1164,21 +1151,8 @@
     "text": "The Writer'sfen",
     "tier": 2,
     "tracking": 0.02,
-    "x": 200.6,
-    "y": 704.4
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 3.0,
-    "kind": "feature",
-    "role": "label",
-    "size": 11.0,
-    "text": "The Writer'swood",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 729.2,
-    "y": 386.4
+    "x": 203.4,
+    "y": 707.1
    },
    {
     "anchor": "start",
@@ -1226,8 +1200,8 @@
     "text": "Writer'scoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -1420,8 +1394,8 @@
     "text": "Opencoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -1485,8 +1459,8 @@
     "text": "The Inkcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
@@ -1514,15 +1488,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Open Vale",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.2,
-    "y": 462.0
+    "x": 672.9,
+    "y": 464.7
    },
    {
     "anchor": "start",
@@ -1587,20 +1561,20 @@
     "kind": "region",
     "path": [
      [
-      141.9,
-      613.0
+      144.6,
+      615.7
      ],
      [
-      181.6,
-      602.2
+      184.3,
+      604.9
      ],
      [
-      201.9,
-      589.5
+      204.6,
+      592.2
      ],
      [
-      305.4,
-      589.5
+      308.1,
+      592.2
      ]
     ],
     "role": "label-region",
@@ -1608,8 +1582,8 @@
     "text": "The Penwood",
     "tier": 0,
     "tracking": 0.14,
-    "x": 201.9,
-    "y": 589.5
+    "x": 204.6,
+    "y": 592.2
    },
    {
     "anchor": "middle",
@@ -1653,28 +1627,28 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer's Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer'scape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "start",
@@ -1722,8 +1696,8 @@
     "text": "Writer'scoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    }
   ],
   "world": [
@@ -1776,8 +1750,8 @@
     "text": "Opencoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -1789,8 +1763,8 @@
     "text": "The Inkcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
@@ -1818,15 +1792,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Open Vale",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.2,
-    "y": 462.0
+    "x": 672.9,
+    "y": 464.7
    },
    {
     "anchor": "middle",
@@ -1835,20 +1809,20 @@
     "kind": "region",
     "path": [
      [
-      141.9,
-      613.0
+      144.6,
+      615.7
      ],
      [
-      181.6,
-      602.2
+      184.3,
+      604.9
      ],
      [
-      201.9,
-      589.5
+      204.6,
+      592.2
      ],
      [
-      305.4,
-      589.5
+      308.1,
+      592.2
      ]
     ],
     "role": "label-region",
@@ -1856,34 +1830,34 @@
     "text": "The Penwood",
     "tier": 0,
     "tracking": 0.14,
-    "x": 201.9,
-    "y": 589.5
+    "x": 204.6,
+    "y": 592.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer's Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Writer'scape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1895,8 +1869,8 @@
     "text": "Writer'scoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    }
   ]
  },
@@ -1950,6 +1924,11 @@
    "kind": "feature",
    "reason": "no room",
    "text": "Endbridge"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Endfen"
   },
   {
    "kind": "road",
@@ -2055,6 +2034,11 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Writer'swater"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Writer'swood"
   }
  ]
 }

@@ -67,6 +67,40 @@ SHALLOW = 0.02            # height above the waterline over which detail fades i
 LIGHT = (-0.5906, -0.5906, 0.5499)
 FILL_LIGHT = (0.4082, 0.4082, 0.8165)     # weak, from the opposite side
 FILL_SHARE = 0.30
+# A second key, low from the north-east (V2 §19). One light and a fill leaves every
+# slope facing north-east reading the same flat value, so a range running NW-SE — the
+# commonest strike this generator makes — has one modelled flank and one dead one.
+# Weak and cross-lit, it separates those faces without turning the picture into two
+# suns: the combined vector is renormalised below, so adding it changes the modelling,
+# never the overall exposure.
+CROSS_LIGHT = (0.6559, -0.6559, 0.3746)
+CROSS_SHARE = 0.16
+
+# How deeply a hollow shades itself, and how brightly a crest catches the light —
+# from the curvature of the ground, which is what tells a valley from a plain when
+# both face the same way (V2 §19, §20).
+#
+# Measured across CURVE_REACH of a lattice cell, NOT across one pixel. A second
+# difference taken pixel to pixel measures the Catmull-Rom interpolant's own bending
+# between samples, not the land's: it drew the lattice as a crosshatch over every
+# flat, which is the interpolation seam made visible and exactly the artefact the
+# Catmull-Rom was chosen to avoid. Sampled over a fixed fraction of a cell the term
+# reads the landform, and needs no scale correction — the distance is the same
+# distance at every resolution.
+VALLEY_SHADE = 5.2
+RIDGE_LIGHT = 3.4
+CURVE_REACH = 0.75
+# The most either may move the shading, as a share of the whole range. Curvature is
+# noisy at the top end and an unclamped term draws the fbm grain, not the landform.
+CURVE_LIMIT = 0.16
+
+# Distance haze (V2 §20): the high ground is seen through more air, so it loses a
+# little contrast toward the paper. Baked into the blend table, which is indexed by
+# height already, so it costs nothing per pixel. Kept low — this is a map, and a map
+# whose mountains disappear is a map that has forgotten what it is for.
+HAZE = 0.10
+HAZE_FROM = 0.55          # the share of the height range where haze starts
+HAZE_TINT = (0.902, 0.894, 0.871)
 
 # How much the shading darkens and lightens the tint. Relief shading that runs to black
 # looks like a photograph of a model; a printed map holds a narrow band.
@@ -135,6 +169,11 @@ ROUGH_FULL = 0.045           # local relief at which detail runs at full strengt
 LAKE_MARSH = 0.22
 LAKE_FULL = 0.30
 LAKE_TINT = (0.478, 0.565, 0.604)     # the sea ramp's own shore colour
+# How completely open water covers the ground under it. Near enough to one that the
+# hillshade stops showing through: every other body of water on the map is flat
+# colour (the sea branch never touches the blend table), and a lake that alone kept
+# its hillshade read as a hollow in the ground rather than as water lying in one.
+LAKE_DEEPEST = 0.96
 
 # The coast's character in the shallows (V2 §4), keyed by the shoreline field's
 # class codes (shore.CODE). What breaks the uniform halo: a beach gets a sand line,
@@ -549,11 +588,29 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
            relief_gain: float, cover: tuple[array, array] | None = None,
            shore_codes: bytearray | None = None) -> Relief:
     """Shade and tint the surface, one pass, through a precomputed blend table."""
-    lx, ly, lz = LIGHT
+    # The three lights are summed into one vector before the loop, and that vector is
+    # renormalised: shading is linear in the light, so a key, a fill and a cross key
+    # dotted separately and added is exactly one dot product against their sum — three
+    # times the arithmetic for the same picture. Renormalising is what keeps the
+    # exposure where the ramp was measured; without it, adding a light just makes the
+    # map brighter and the shade table's top rows unreachable.
+    cx, cy, cz = CROSS_LIGHT
     fx, fy, fz = FILL_LIGHT
+    lx, ly, lz = LIGHT
     fill = FILL_SHARE
-    keep = 1.0 - fill
+    cross = CROSS_SHARE
+    keep = 1.0 - fill - cross
+    sx = lx * keep + fx * fill + cx * cross
+    sy = ly * keep + fy * fill + cy * cross
+    sz = lz * keep + fz * fill + cz * cross
+    sun = math.sqrt(sx * sx + sy * sy + sz * sz)
+    sx, sy, sz = sx / sun, sy / sun, sz / sun
     gain = relief_gain * scale       # the normal is per pixel, so the run is a pixel wide
+    # Curvature is read across a fixed fraction of a lattice cell, so its gain is a
+    # plain constant — the reach carries the resolution instead.
+    reach = int(CURVE_REACH * scale) or 1
+    hollow = VALLEY_SHADE
+    crest = RIDGE_LIGHT
 
     highest = max(surface)
     span = highest - sea_level
@@ -592,6 +649,11 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
         base = py * width
         above = (base - width) if py else base
         below = (base + width) if py < last else base
+        # The curvature's own rows, a fixed fraction of a cell away.
+        over = (py - reach) if py >= reach else 0
+        under = (py + reach) if py + reach <= last else last
+        over *= width
+        under *= width
         out = base * 3
         for px in range(width):
             k = base + px
@@ -641,14 +703,30 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
             land[k] = 1
             left = surface[k - 1] if px else height
             right = surface[k + 1] if px < last else height
+            up = surface[above + px]
+            down = surface[below + px]
             # The normal of the surface, unnormalised: (-dz/dx, -dz/dy, 1) with the
             # height exaggerated. No trigonometry — a normal is a vector, a light is a
             # vector, and shading is their dot product.
             nx = (left - right) * gain
-            ny = (surface[above + px] - surface[below + px]) * gain
+            ny = (up - down) * gain
             inverse = 1.0 / root(nx * nx + ny * ny + 1.0)
-            level = ((nx * lx + ny * ly + lz) * keep
-                     + (nx * fx + ny * fy + fz) * fill) * inverse
+            level = (nx * sx + ny * sy + sz) * inverse
+            # How the ground bends, read across a fraction of a cell. A slope tells
+            # the light where it faces; only the curvature tells a valley floor from
+            # an open plain tilted the same way, and it is the valleys this map most
+            # needs to show. Positive is a hollow — the pixel lies below the mean of
+            # the ground around it — and darkens; negative is a crest, and catches.
+            west = surface[base + (px - reach if px >= reach else 0)]
+            east = surface[base + (px + reach if px + reach <= last else last)]
+            bend = ((west + east + surface[over + px] + surface[under + px]) * 0.25
+                    - height)
+            if bend > 0.0:
+                lit = bend * hollow
+                level -= lit if lit < CURVE_LIMIT else CURVE_LIMIT
+            else:
+                lit = -bend * crest
+                level += lit if lit < CURVE_LIMIT else CURVE_LIMIT
             if level < 0.0:
                 level = 0.0
             shade = int(level * top_shade)
@@ -672,10 +750,17 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
                         # The deep core of a broad fen is open water — the same
                         # reading hydrology draws its meres from, so the raster
                         # and the lake rings agree about where the water stands.
+                        #
+                        # Standing water takes the sea's own shallow colour and the
+                        # sea's flatness with it: the pull runs toward the LIT lake
+                        # tint, so the hillshade under it is cancelled rather than
+                        # showing through. A lake was the only water on the map that
+                        # was hillshaded, and a shaded pond in a lit valley reads as
+                        # a dent in the ground rather than as water lying in it.
                         t = (fen - LAKE_MARSH) / (LAKE_FULL - LAKE_MARSH)
                         if t > 1.0:
                             t = 1.0
-                        wet = t * t * (3.0 - 2.0 * t) * 0.85
+                        wet = t * t * (3.0 - 2.0 * t) * LAKE_DEEPEST
                         red += int((lake_r - red) * wet)
                         green += int((lake_g - green) * wet)
                         blue += int((lake_b - blue) * wet)
@@ -730,7 +815,19 @@ def _blend_table() -> bytes:
     tints = _ramp(LAND_RAMP, _TINT_STEPS)
     out = bytearray(_TINT_STEPS * _SHADE_STEPS * 3)
     n = 0
-    for r, g, b in tints:
+    top = _TINT_STEPS - 1
+    hz = HAZE_TINT
+    for index, (r, g, b) in enumerate(tints):
+        # The high ground is seen through more air. The table is indexed by height, so
+        # the haze is applied here rather than per pixel — the whole term costs 256
+        # lerps once instead of two million in the loop. It fades in above HAZE_FROM
+        # so the lowlands, which is most of every map, are untouched.
+        share = index / top
+        if share > HAZE_FROM:
+            veil = HAZE * (share - HAZE_FROM) / (1.0 - HAZE_FROM)
+            r += (hz[0] - r) * veil
+            g += (hz[1] - g) * veil
+            b += (hz[2] - b) * veil
         for step in range(_SHADE_STEPS):
             level = step / (_SHADE_STEPS - 1)
             factor = SHADE_FLOOR + (SHADE_CEILING - SHADE_FLOOR) * level

@@ -520,6 +520,19 @@
    {
     "anchor": "start",
     "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Middlebridge",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 553.3,
+    "y": 352.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
     "halo": 3.2,
     "kind": "castle",
     "role": "label",
@@ -531,7 +544,7 @@
     "y": 474.7
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
     "halo": 2.9,
     "kind": "castle",
@@ -540,8 +553,8 @@
     "text": "Northaven",
     "tier": 2,
     "tracking": 0.02,
-    "x": 650.0,
-    "y": 341.9
+    "x": 667.0,
+    "y": 350.4
    },
    {
     "anchor": "middle",
@@ -603,6 +616,19 @@
     "tracking": 0.01,
     "x": 662.5,
     "y": 750.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Saltpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 555.6,
+    "y": 549.9
    },
    {
     "anchor": "middle",
@@ -768,37 +794,37 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Grey Shore",
     "tier": 0,
     "tracking": 0.14,
-    "x": 532.7,
-    "y": 567.4
+    "x": 535.4,
+    "y": 570.1
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "feature",
     "path": [
      [
-      115.4,
-      592.3
+      118.1,
+      595.0
      ],
      [
-      121.8,
-      592.2
+      124.5,
+      594.9
      ],
      [
-      137.3,
-      582.8
+      140.0,
+      585.6
      ],
      [
-      167.1,
-      582.8
+      169.8,
+      585.6
      ]
     ],
     "role": "label",
@@ -806,8 +832,8 @@
     "text": "The Grey St Point",
     "tier": 2,
     "tracking": 0.02,
-    "x": 137.3,
-    "y": 582.8
+    "x": 140.0,
+    "y": 585.6
    },
    {
     "anchor": "start",
@@ -825,15 +851,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Greycombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 588.3,
-    "y": 442.3
+    "x": 591.0,
+    "y": 445.0
    },
    {
     "anchor": "middle",
@@ -885,15 +911,28 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "feature",
     "role": "label",
     "size": 8.02,
     "text": "The Greymarsh",
     "tier": 2,
     "tracking": 0.02,
-    "x": 784.6,
-    "y": 440.8
+    "x": 787.3,
+    "y": 443.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Greyreach",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 382.6,
+    "y": 364.7
    },
    {
     "anchor": "middle",
@@ -902,24 +941,11 @@
     "kind": "feature",
     "role": "label",
     "size": 11.0,
-    "text": "The Greyreach",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 379.9,
-    "y": 362.0
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 3.2,
-    "kind": "feature",
-    "role": "label",
-    "size": 11.0,
     "text": "The Greystead",
     "tier": 2,
     "tracking": 0.02,
-    "x": 179.2,
-    "y": 769.1
+    "x": 181.9,
+    "y": 771.8
    },
    {
     "anchor": "start",
@@ -944,8 +970,8 @@
     "text": "The Last Marsh",
     "tier": 2,
     "tracking": 0.02,
-    "x": 191.1,
-    "y": 605.7
+    "x": 193.8,
+    "y": 608.4
    },
    {
     "anchor": "middle",
@@ -957,8 +983,8 @@
     "text": "The Last Marshore",
     "tier": 2,
     "tracking": 0.02,
-    "x": 501.8,
-    "y": 784.1
+    "x": 504.5,
+    "y": 786.8
    },
    {
     "anchor": "middle",
@@ -970,8 +996,8 @@
     "text": "The Last Point",
     "tier": 0,
     "tracking": 0.14,
-    "x": 716.2,
-    "y": 522.7
+    "x": 718.9,
+    "y": 525.4
    },
    {
     "anchor": "start",
@@ -1053,21 +1079,21 @@
     "text": "The Middle Sand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 12.99,
     "text": "The Middle Sands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 243.8,
-    "y": 619.9
+    "x": 246.5,
+    "y": 622.6
    },
    {
     "anchor": "start",
@@ -1132,37 +1158,37 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 13.1,
     "text": "The Nore",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "path": [
      [
-      359.7,
-      536.4
+      362.4,
+      539.1
      ],
      [
-      385.1,
-      536.4
+      387.8,
+      539.1
      ],
      [
-      400.9,
-      544.5
+      403.6,
+      547.2
      ],
      [
-      422.2,
-      544.5
+      424.9,
+      547.2
      ]
     ],
     "role": "label",
@@ -1170,8 +1196,8 @@
     "text": "The Norey Sands",
     "tier": 2,
     "tracking": 0.02,
-    "x": 400.9,
-    "y": 544.5
+    "x": 403.6,
+    "y": 547.2
    },
    {
     "anchor": "middle",
@@ -1183,21 +1209,21 @@
     "text": "The North Sands",
     "tier": 2,
     "tracking": 0.02,
-    "x": 405.8,
-    "y": 743.9
+    "x": 408.5,
+    "y": 746.6
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The North Strand",
     "tier": 0,
     "tracking": 0.14,
-    "x": 362.6,
-    "y": 410.1
+    "x": 365.3,
+    "y": 412.8
    },
    {
     "anchor": "middle",
@@ -1209,21 +1235,21 @@
     "text": "The Salt Marsh",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.4,
-    "y": 136.9
+    "x": 350.1,
+    "y": 139.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Salt Point",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "end",
@@ -1248,8 +1274,8 @@
     "text": "The Sands",
     "tier": 2,
     "tracking": 0.02,
-    "x": 700.3,
-    "y": 699.7
+    "x": 703.0,
+    "y": 702.4
    },
    {
     "anchor": "middle",
@@ -1381,35 +1407,35 @@
     "y": 475.0
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "town",
     "role": "label",
     "size": 11.5,
     "text": "The South Bridge",
     "tier": 1,
     "tracking": 0.0,
-    "x": 677.5,
+    "x": 657.9,
     "y": 401.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "region",
     "path": [
      [
-      473.3,
-      369.1
+      476.0,
+      371.9
      ],
      [
-      675.6,
-      369.1
+      678.3,
+      371.9
      ],
      [
-      687.0,
-      375.7
+      689.7,
+      378.4
      ]
     ],
     "role": "label-region",
@@ -1417,8 +1443,8 @@
     "text": "The South Reach",
     "tier": 0,
     "tracking": 0.14,
-    "x": 675.6,
-    "y": 369.1
+    "x": 678.3,
+    "y": 371.9
    },
    {
     "anchor": "middle",
@@ -1427,28 +1453,28 @@
     "kind": "feature",
     "path": [
      [
-      549.6,
-      797.3
-     ],
-     [
-      567.2,
-      797.3
-     ],
-     [
-      569.6,
-      798.7
-     ],
-     [
-      589.2,
-      798.7
-     ],
-     [
-      591.2,
+      552.3,
       800.0
      ],
      [
-      595.4,
-      800.1
+      569.9,
+      800.0
+     ],
+     [
+      572.3,
+      801.4
+     ],
+     [
+      591.9,
+      801.4
+     ],
+     [
+      593.9,
+      802.7
+     ],
+     [
+      598.1,
+      802.8
      ]
     ],
     "role": "label",
@@ -1456,21 +1482,21 @@
     "text": "The South Sands",
     "tier": 2,
     "tracking": 0.02,
-    "x": 589.2,
-    "y": 798.7
+    "x": 591.9,
+    "y": 801.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The South Strands",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1497,19 +1523,6 @@
     "tracking": 0.0,
     "x": 504.5,
     "y": 283.2
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 2.9,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "The Strand Reach",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 674.5,
-    "y": 350.0
    },
    {
     "anchor": "end",
@@ -1670,6 +1683,19 @@
     "anchor": "middle",
     "face": "sans",
     "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Saltpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 555.6,
+    "y": 549.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
     "kind": "road",
     "path": [
      [
@@ -1778,15 +1804,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Grey Shore",
     "tier": 0,
     "tracking": 0.14,
-    "x": 532.7,
-    "y": 567.4
+    "x": 535.4,
+    "y": 570.1
    },
    {
     "anchor": "middle",
@@ -1845,8 +1871,8 @@
     "text": "The Last Point",
     "tier": 0,
     "tracking": 0.14,
-    "x": 716.2,
-    "y": 522.7
+    "x": 718.9,
+    "y": 525.4
    },
    {
     "anchor": "start",
@@ -1902,21 +1928,21 @@
     "text": "The Middle Sand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 12.99,
     "text": "The Middle Sands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 243.8,
-    "y": 619.9
+    "x": 246.5,
+    "y": 622.6
    },
    {
     "anchor": "end",
@@ -1981,28 +2007,28 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 13.1,
     "text": "The Nore",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The North Strand",
     "tier": 0,
     "tracking": 0.14,
-    "x": 362.6,
-    "y": 410.1
+    "x": 365.3,
+    "y": 412.8
    },
    {
     "anchor": "middle",
@@ -2014,21 +2040,21 @@
     "text": "The Salt Marsh",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.4,
-    "y": 136.9
+    "x": 350.1,
+    "y": 139.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Salt Point",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -2155,16 +2181,16 @@
     "y": 724.7
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "town",
     "role": "label",
     "size": 11.5,
     "text": "The South Bridge",
     "tier": 1,
     "tracking": 0.0,
-    "x": 677.5,
+    "x": 657.9,
     "y": 401.2
    },
    {
@@ -2193,20 +2219,20 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "region",
     "path": [
      [
-      473.3,
-      369.1
+      476.0,
+      371.9
      ],
      [
-      675.6,
-      369.1
+      678.3,
+      371.9
      ],
      [
-      687.0,
-      375.7
+      689.7,
+      378.4
      ]
     ],
     "role": "label-region",
@@ -2214,21 +2240,21 @@
     "text": "The South Reach",
     "tier": 0,
     "tracking": 0.14,
-    "x": 675.6,
-    "y": 369.1
+    "x": 678.3,
+    "y": 371.9
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The South Strands",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -2318,15 +2344,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Grey Shore",
     "tier": 0,
     "tracking": 0.14,
-    "x": 532.7,
-    "y": 567.4
+    "x": 535.4,
+    "y": 570.1
    },
    {
     "anchor": "middle",
@@ -2338,8 +2364,8 @@
     "text": "The Last Point",
     "tier": 0,
     "tracking": 0.14,
-    "x": 716.2,
-    "y": 522.7
+    "x": 718.9,
+    "y": 525.4
    },
    {
     "anchor": "middle",
@@ -2382,47 +2408,47 @@
     "text": "The Middle Sand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 12.99,
     "text": "The Middle Sands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 243.8,
-    "y": 619.9
+    "x": 246.5,
+    "y": 622.6
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 13.1,
     "text": "The Nore",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The North Strand",
     "tier": 0,
     "tracking": 0.14,
-    "x": 362.6,
-    "y": 410.1
+    "x": 365.3,
+    "y": 412.8
    },
    {
     "anchor": "middle",
@@ -2434,8 +2460,48 @@
     "text": "The Salt Marsh",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.4,
-    "y": 136.9
+    "x": 350.1,
+    "y": 139.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Salt Point",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "region",
+    "path": [
+     [
+      476.0,
+      371.9
+     ],
+     [
+      678.3,
+      371.9
+     ],
+     [
+      689.7,
+      378.4
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The South Reach",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 678.3,
+    "y": 371.9
    },
    {
     "anchor": "middle",
@@ -2444,51 +2510,11 @@
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
-    "text": "The Salt Point",
-    "tier": 1,
-    "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.4,
-    "kind": "region",
-    "path": [
-     [
-      473.3,
-      369.1
-     ],
-     [
-      675.6,
-      369.1
-     ],
-     [
-      687.0,
-      375.7
-     ]
-    ],
-    "role": "label-region",
-    "size": 22.0,
-    "text": "The South Reach",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 675.6,
-    "y": 369.1
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 2.9,
-    "kind": "landmass",
-    "role": "label-region",
-    "size": 7.0,
     "text": "The South Strands",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -2576,11 +2602,6 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Middlebridge"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "Middlerush"
@@ -2589,11 +2610,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "North Haven"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Saltpass"
   },
   {
    "kind": "river",
@@ -2769,6 +2785,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Strand Haven"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Strand Reach"
   },
   {
    "kind": "road",

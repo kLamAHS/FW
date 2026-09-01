@@ -252,6 +252,7 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
         points = shapes.closed(grid.to_world(ring))
         area = shapes.area(ring)
         mainland = ordinal == 0
+        runs = _shore_runs(generator, points)
         out.append(FeatureDraft(
             kind="coast" if mainland else "island",
             key_parts=("landmass", ordinal),
@@ -264,6 +265,19 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
             shapes=(
                 (ShapeSpec(role="outline", kind="polygon", coordinates=[points],
                            layer="land", style={"role": "land"}, approximate=True),)
+                # The coast in its own ink, drawn as a set of runs rather than one
+                # even stroke (V2 §4): a cliff coast is a hard dark line, a marsh
+                # coast is broken and soft, a beach is light. The land polygon still
+                # carries the fill; these carry the character, which the shore
+                # classifier has known since Phase B and nothing has drawn.
+                + tuple(ShapeSpec(role="shore", kind="line", coordinates=run,
+                                  layer="land",
+                                  style={"role": "coastline", "shore": kind,
+                                         "stroke-width": SHORE_INK[kind][0],
+                                         **({"dash": True} if SHORE_INK[kind][1]
+                                            else {})},
+                                  approximate=True)
+                        for kind, run in _shore_lines(points, runs))
                 # The inland waters belong to the mainland: they are holes in it, and
                 # drawing them anywhere else would leave lakes floating in the sea.
                 + (tuple(ShapeSpec(role="hole", kind="polygon",
@@ -281,8 +295,45 @@ def _coast_drafts(generator) -> list[FeatureDraft]:
                 key=name_key("island", ("landmass",), ordinal),
                 kind="region", hint="coast"),
             detail={"landmass": ordinal, "area": round(area, 1),
-                    "shore": _shore_runs(generator, points)},
+                    "shore": runs},
         ))
+    return out
+
+
+# How each coast class is inked: stroke width, and whether the line is broken.
+# A cliff is where the land ends abruptly and the line says so; a marsh coast is a
+# argument between land and water and is drawn as one; a beach barely commits.
+SHORE_INK: dict[str, tuple[float, bool]] = {
+    "cliff": (2.4, False),
+    "fjord": (2.2, False),
+    "rocky": (1.7, False),
+    "delta": (1.0, True),
+    "estuary": (1.2, False),
+    "marsh": (1.0, True),
+    "sheltered": (1.3, False),
+    "beach": (1.1, False),
+    "open": (1.3, False),
+}
+
+
+def _shore_lines(ring: list, runs: list[list]) -> list[tuple[str, list]]:
+    """The ring cut into the runs the classifier found, each as its own line.
+
+    Consecutive runs share their boundary vertex, so the strokes meet exactly
+    rather than leaving a gap of paper between two characters of coast.
+    """
+    out: list[tuple[str, list]] = []
+    at = 0
+    for kind, count in runs:
+        if kind not in SHORE_INK:
+            at += int(count)
+            continue
+        end = min(len(ring) - 1, at + int(count))
+        if end - at >= 1:
+            out.append((kind, [list(p) for p in ring[at:end + 1]]))
+        at = end
+        if at >= len(ring) - 1:
+            break
     return out
 
 

@@ -480,15 +480,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 6.5,
     "text": "Beltfield",
     "tier": 2,
     "tracking": 0.02,
-    "x": 242.9,
-    "y": 481.2
+    "x": 245.6,
+    "y": 483.9
    },
    {
     "anchor": "middle",
@@ -500,8 +500,8 @@
     "text": "Belthorpe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 500.9,
-    "y": 453.0
+    "x": 503.6,
+    "y": 455.7
    },
    {
     "anchor": "middle",
@@ -513,8 +513,8 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -526,8 +526,8 @@
     "text": "Beltreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 698.6,
-    "y": 698.7
+    "x": 701.3,
+    "y": 701.4
    },
    {
     "anchor": "middle",
@@ -539,26 +539,26 @@
     "text": "Beltvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 583.0,
-    "y": 245.6
+    "x": 585.7,
+    "y": 248.3
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.3,
+    "halo": 3.5,
     "kind": "feature",
     "path": [
      [
-      392.4,
-      92.3
+      395.1,
+      95.0
      ],
      [
-      407.6,
-      92.3
+      410.3,
+      95.0
      ],
      [
-      412.2,
-      88.0
+      414.9,
+      90.7
      ]
     ],
     "role": "label",
@@ -566,8 +566,8 @@
     "text": "Beltwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 407.6,
-    "y": 92.3
+    "x": 410.3,
+    "y": 95.0
    },
    {
     "anchor": "start",
@@ -671,8 +671,8 @@
     "text": "Capitaland",
     "tier": 2,
     "tracking": 0.02,
-    "x": 543.4,
-    "y": 481.4
+    "x": 546.1,
+    "y": 484.1
    },
    {
     "anchor": "end",
@@ -1078,34 +1078,34 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "path": [
      [
-      620.0,
-      112.9
+      622.7,
+      115.6
      ],
      [
-      653.4,
-      112.9
+      656.1,
+      115.6
      ],
      [
-      654.8,
-      112.0
+      657.5,
+      114.7
      ],
      [
-      656.5,
-      111.9
+      659.2,
+      114.6
      ],
      [
-      662.1,
-      108.8
+      664.8,
+      111.5
      ]
     ],
     "role": "label-region",
@@ -1113,8 +1113,8 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1145,24 +1145,24 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.3,
+    "halo": 3.5,
     "kind": "feature",
     "path": [
      [
-      451.7,
-      521.7
+      454.4,
+      524.4
      ],
      [
-      454.8,
-      524.3
-     ],
-     [
-      492.5,
-      524.3
+      457.5,
+      527.0
      ],
      [
       495.2,
-      525.4
+      527.0
+     ],
+     [
+      497.9,
+      528.1
      ]
     ],
     "role": "label",
@@ -1170,8 +1170,21 @@
     "text": "The Beltcombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 492.5,
-    "y": 524.3
+    "x": 495.2,
+    "y": 527.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Belthollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 732.4,
+    "y": 499.5
    },
    {
     "anchor": "middle",
@@ -1183,8 +1196,8 @@
     "text": "The Beltstead",
     "tier": 2,
     "tracking": 0.02,
-    "x": 418.5,
-    "y": 468.5
+    "x": 421.2,
+    "y": 471.2
    },
    {
     "anchor": "middle",
@@ -1196,8 +1209,8 @@
     "text": "The Capitacombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 443.6,
-    "y": 795.9
+    "x": 446.3,
+    "y": 798.6
    },
    {
     "anchor": "middle",
@@ -1206,20 +1219,20 @@
     "kind": "region",
     "path": [
      [
-      175.4,
-      602.3
+      178.1,
+      605.1
      ],
      [
-      188.6,
-      589.8
+      191.3,
+      592.5
      ],
      [
-      211.1,
-      579.1
+      213.8,
+      581.8
      ],
      [
-      361.4,
-      579.1
+      364.1,
+      581.8
      ]
     ],
     "role": "label-region",
@@ -1227,21 +1240,21 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 211.1,
-    "y": 579.1
+    "x": 213.8,
+    "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1304,16 +1317,16 @@
     "kind": "region",
     "path": [
      [
-      287.1,
-      323.0
+      289.9,
+      325.7
      ],
      [
-      296.8,
-      316.0
+      299.5,
+      318.7
      ],
      [
-      404.5,
-      316.0
+      407.2,
+      318.7
      ]
     ],
     "role": "label-region",
@@ -1321,8 +1334,8 @@
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 296.8,
-    "y": 316.0
+    "x": 299.5,
+    "y": 318.7
    },
    {
     "anchor": "start",
@@ -1600,15 +1613,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 12.59,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    }
   ],
   "regional": [
@@ -1622,8 +1635,8 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "start",
@@ -1873,34 +1886,34 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "path": [
      [
-      620.0,
-      112.9
+      622.7,
+      115.6
      ],
      [
-      653.4,
-      112.9
+      656.1,
+      115.6
      ],
      [
-      654.8,
-      112.0
+      657.5,
+      114.7
      ],
      [
-      656.5,
-      111.9
+      659.2,
+      114.6
      ],
      [
-      662.1,
-      108.8
+      664.8,
+      111.5
      ]
     ],
     "role": "label-region",
@@ -1908,8 +1921,8 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1944,20 +1957,20 @@
     "kind": "region",
     "path": [
      [
-      175.4,
-      602.3
+      178.1,
+      605.1
      ],
      [
-      188.6,
-      589.8
+      191.3,
+      592.5
      ],
      [
-      211.1,
-      579.1
+      213.8,
+      581.8
      ],
      [
-      361.4,
-      579.1
+      364.1,
+      581.8
      ]
     ],
     "role": "label-region",
@@ -1965,21 +1978,21 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 211.1,
-    "y": 579.1
+    "x": 213.8,
+    "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -2042,16 +2055,16 @@
     "kind": "region",
     "path": [
      [
-      287.1,
-      323.0
+      289.9,
+      325.7
      ],
      [
-      296.8,
-      316.0
+      299.5,
+      318.7
      ],
      [
-      404.5,
-      316.0
+      407.2,
+      318.7
      ]
     ],
     "role": "label-region",
@@ -2059,8 +2072,8 @@
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 296.8,
-    "y": 316.0
+    "x": 299.5,
+    "y": 318.7
    },
    {
     "anchor": "start",
@@ -2130,15 +2143,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 12.59,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    }
   ],
   "world": [
@@ -2152,8 +2165,8 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "start",
@@ -2204,34 +2217,34 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "path": [
      [
-      620.0,
-      112.9
+      622.7,
+      115.6
      ],
      [
-      653.4,
-      112.9
+      656.1,
+      115.6
      ],
      [
-      654.8,
-      112.0
+      657.5,
+      114.7
      ],
      [
-      656.5,
-      111.9
+      659.2,
+      114.6
      ],
      [
-      662.1,
-      108.8
+      664.8,
+      111.5
      ]
     ],
     "role": "label-region",
@@ -2239,8 +2252,8 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -2249,20 +2262,20 @@
     "kind": "region",
     "path": [
      [
-      175.4,
-      602.3
+      178.1,
+      605.1
      ],
      [
-      188.6,
-      589.8
+      191.3,
+      592.5
      ],
      [
-      211.1,
-      579.1
+      213.8,
+      581.8
      ],
      [
-      361.4,
-      579.1
+      364.1,
+      581.8
      ]
     ],
     "role": "label-region",
@@ -2270,21 +2283,21 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 211.1,
-    "y": 579.1
+    "x": 213.8,
+    "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -2293,16 +2306,16 @@
     "kind": "region",
     "path": [
      [
-      287.1,
-      323.0
+      289.9,
+      325.7
      ],
      [
-      296.8,
-      316.0
+      299.5,
+      318.7
      ],
      [
-      404.5,
-      316.0
+      407.2,
+      318.7
      ]
     ],
     "role": "label-region",
@@ -2310,21 +2323,21 @@
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 296.8,
-    "y": 316.0
+    "x": 299.5,
+    "y": 318.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 12.59,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    }
   ]
  },
@@ -2551,11 +2564,6 @@
    "kind": "feature",
    "reason": "no room",
    "text": "The Beltford"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Belthollow"
   },
   {
    "kind": "road",

@@ -260,10 +260,14 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
         # borders arrive as shared arcs, each stroked once, and the coastline wins
         # on its seaward side.
         edge = "none" if (f.get("style") or {}).get("edge") == "none" else fill
-        dash = ' stroke-dasharray="7 5"' if f.get("approximate") else ""
+        # MapView: water's edge is where the ground stops, not a guess to be moved.
+        waters = f["layer"] == "waters"
+        dash = ('' if waters else
+                ' stroke-dasharray="7 5"' if f.get("approximate") else "")
+        wide = 1.0 if waters else 1.5
         d = _polygon_path(f["coordinates"])
         out.append(f'<path d="{d}" fill="{fill}" fill-opacity="{opacity}" '
-                   f'stroke="{edge}" stroke-width="1.5"{dash}/>')
+                   f'stroke="{edge}" stroke-width="{wide}"{dash}/>')
         if (f.get("control") or {}).get("claims"):
             out.append(f'<path d="{d}" fill="url(#contested-hatch)" stroke="none"/>')
 
@@ -273,8 +277,12 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
         # Only an explicit dash in the style: MapView does not dash approximate
         # *lines* (a generated river is a guess about a real river, not a sketch).
         dash = ' stroke-dasharray="6 4"' if style.get("dash") else ""
-        # MapView: a border arc paints in border ink whoever holds either side.
-        stroke = (paint(css, "border") if style.get("role") == "border"
+        # MapView: a border arc paints in border ink whoever holds either side, and
+        # a shore run in coastline ink — both are edges of the ground, not of a
+        # holding.
+        role_of = style.get("role")
+        stroke = (paint(css, "border") if role_of == "border"
+                  else paint(css, "coastline") if role_of == "coastline"
                   else fill_for(f, mode, holders, css))
         out.append(f'<path d="{_line_path(f["coordinates"])}" fill="none" '
                    f'stroke="{stroke}" '

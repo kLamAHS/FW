@@ -577,6 +577,19 @@
     "y": 640.3
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
+    "text": "Crownmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 415.0,
+    "y": 473.2
+   },
+   {
     "anchor": "end",
     "face": "sans",
     "halo": 3.1,
@@ -605,15 +618,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.68,
     "text": "Kingscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -622,24 +635,24 @@
     "kind": "feature",
     "path": [
      [
-      238.1,
-      434.2
+      240.8,
+      436.9
      ],
      [
-      259.4,
-      434.2
+      262.1,
+      436.9
      ],
      [
-      267.2,
-      440.6
+      269.9,
+      443.3
      ],
      [
-      275.7,
-      442.7
+      278.4,
+      445.4
      ],
      [
-      277.0,
-      443.6
+      279.7,
+      446.3
      ]
     ],
     "role": "label",
@@ -647,8 +660,8 @@
     "text": "Kingsfells",
     "tier": 2,
     "tracking": 0.02,
-    "x": 267.2,
-    "y": 440.6
+    "x": 269.9,
+    "y": 443.3
    },
    {
     "anchor": "start",
@@ -744,7 +757,7 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -752,7 +765,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 647.5,
-    "y": 412.7
+    "y": 422.5
    },
    {
     "anchor": "start",
@@ -783,15 +796,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Prizeholt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 536.6,
-    "y": 475.5
+    "x": 539.3,
+    "y": 478.2
    },
    {
     "anchor": "start",
@@ -826,20 +839,20 @@
     "kind": "feature",
     "path": [
      [
-      390.7,
-      92.3
+      393.4,
+      95.0
      ],
      [
-      407.6,
-      92.3
+      410.3,
+      95.0
      ],
      [
-      412.9,
-      87.3
+      415.6,
+      90.0
      ],
      [
-      413.6,
-      87.1
+      416.3,
+      89.8
      ]
     ],
     "role": "label",
@@ -847,8 +860,8 @@
     "text": "Prizewold",
     "tier": 2,
     "tracking": 0.02,
-    "x": 412.9,
-    "y": 87.3
+    "x": 415.6,
+    "y": 90.0
    },
    {
     "anchor": "start",
@@ -947,8 +960,8 @@
     "text": "Rebelcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -957,24 +970,24 @@
     "kind": "feature",
     "path": [
      [
-      425.6,
-      806.0
+      428.3,
+      808.7
      ],
      [
-      432.8,
-      805.9
+      435.5,
+      808.6
      ],
      [
-      442.4,
-      796.3
+      445.1,
+      799.1
      ],
      [
-      443.6,
-      795.9
+      446.3,
+      798.6
      ],
      [
-      449.4,
-      790.9
+      452.1,
+      793.6
      ]
     ],
     "role": "label",
@@ -982,8 +995,8 @@
     "text": "Rebelmarsh",
     "tier": 2,
     "tracking": 0.02,
-    "x": 442.4,
-    "y": 796.3
+    "x": 445.1,
+    "y": 799.1
    },
    {
     "anchor": "middle",
@@ -995,8 +1008,8 @@
     "text": "Rebelmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 190.2,
-    "y": 703.0
+    "x": 192.9,
+    "y": 705.7
    },
    {
     "anchor": "middle",
@@ -1008,8 +1021,8 @@
     "text": "Rebelshaw",
     "tier": 2,
     "tracking": 0.02,
-    "x": 358.6,
-    "y": 723.4
+    "x": 361.3,
+    "y": 726.1
    },
    {
     "anchor": "start",
@@ -1040,15 +1053,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.89,
     "text": "The Crowncape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1057,20 +1070,20 @@
     "kind": "region",
     "path": [
      [
-      568.7,
-      436.9
+      571.4,
+      439.6
      ],
      [
-      704.7,
-      436.9
+      707.4,
+      439.6
      ],
      [
-      722.3,
-      426.8
+      725.0,
+      429.5
      ],
      [
-      737.5,
-      426.8
+      740.2,
+      429.5
      ]
     ],
     "role": "label-region",
@@ -1078,8 +1091,8 @@
     "text": "The Crownlands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 722.3,
-    "y": 426.8
+    "x": 725.0,
+    "y": 429.5
    },
    {
     "anchor": "middle",
@@ -1156,15 +1169,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.99,
     "text": "The Kings Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1267,8 +1280,8 @@
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 329.0,
-    "y": 588.2
+    "x": 331.7,
+    "y": 590.9
    },
    {
     "anchor": "end",
@@ -1319,8 +1332,8 @@
     "text": "The Prizecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "end",
@@ -1345,8 +1358,8 @@
     "text": "The Prizemoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 581.5,
-    "y": 765.4
+    "x": 584.2,
+    "y": 768.1
    },
    {
     "anchor": "start",
@@ -1371,8 +1384,8 @@
     "text": "The Rebel Fells",
     "tier": 2,
     "tracking": 0.02,
-    "x": 700.0,
-    "y": 701.3
+    "x": 702.7,
+    "y": 704.0
    },
    {
     "anchor": "start",
@@ -1390,20 +1403,20 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      281.5,
-      363.4
+      284.2,
+      366.1
      ],
      [
-      290.1,
-      357.2
+      292.8,
+      359.9
      ],
      [
-      407.2,
-      357.2
+      410.0,
+      359.9
      ]
     ],
     "role": "label-region",
@@ -1411,8 +1424,8 @@
     "text": "The Rebel March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 290.1,
-    "y": 357.2
+    "x": 292.8,
+    "y": 359.9
    },
    {
     "anchor": "middle",
@@ -1421,28 +1434,28 @@
     "kind": "feature",
     "path": [
      [
-      451.3,
-      525.5
-     ],
-     [
-      452.5,
-      526.0
-     ],
-     [
-      463.9,
-      526.0
-     ],
-     [
-      467.6,
+      454.0,
       528.2
      ],
      [
-      496.3,
-      528.2
-     ],
-     [
-      497.5,
+      455.2,
       528.7
+     ],
+     [
+      466.6,
+      528.7
+     ],
+     [
+      470.4,
+      530.9
+     ],
+     [
+      499.0,
+      530.9
+     ],
+     [
+      500.2,
+      531.4
      ]
     ],
     "role": "label",
@@ -1450,8 +1463,8 @@
     "text": "The Rebelfells",
     "tier": 2,
     "tracking": 0.02,
-    "x": 467.6,
-    "y": 528.2
+    "x": 470.4,
+    "y": 530.9
    },
    {
     "anchor": "start",
@@ -1585,15 +1598,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.68,
     "text": "Kingscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -1637,7 +1650,7 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -1645,7 +1658,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 647.5,
-    "y": 412.7
+    "y": 422.5
    },
    {
     "anchor": "end",
@@ -1749,21 +1762,21 @@
     "text": "Rebelcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.89,
     "text": "The Crowncape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1827,20 +1840,20 @@
     "kind": "region",
     "path": [
      [
-      568.7,
-      436.9
+      571.4,
+      439.6
      ],
      [
-      704.7,
-      436.9
+      707.4,
+      439.6
      ],
      [
-      722.3,
-      426.8
+      725.0,
+      429.5
      ],
      [
-      737.5,
-      426.8
+      740.2,
+      429.5
      ]
     ],
     "role": "label-region",
@@ -1848,8 +1861,8 @@
     "text": "The Crownlands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 722.3,
-    "y": 426.8
+    "x": 725.0,
+    "y": 429.5
    },
    {
     "anchor": "middle",
@@ -1890,15 +1903,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.99,
     "text": "The Kings Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1949,8 +1962,8 @@
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 329.0,
-    "y": 588.2
+    "x": 331.7,
+    "y": 590.9
    },
    {
     "anchor": "middle",
@@ -1962,8 +1975,8 @@
     "text": "The Prizecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "start",
@@ -1994,20 +2007,20 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      281.5,
-      363.4
+      284.2,
+      366.1
      ],
      [
-      290.1,
-      357.2
+      292.8,
+      359.9
      ],
      [
-      407.2,
-      357.2
+      410.0,
+      359.9
      ]
     ],
     "role": "label-region",
@@ -2015,8 +2028,8 @@
     "text": "The Rebel March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 290.1,
-    "y": 357.2
+    "x": 292.8,
+    "y": 359.9
    },
    {
     "anchor": "start",
@@ -2075,15 +2088,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.4,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.68,
     "text": "Kingscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -2108,21 +2121,21 @@
     "text": "Rebelcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.89,
     "text": "The Crowncape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -2131,20 +2144,20 @@
     "kind": "region",
     "path": [
      [
-      568.7,
-      436.9
+      571.4,
+      439.6
      ],
      [
-      704.7,
-      436.9
+      707.4,
+      439.6
      ],
      [
-      722.3,
-      426.8
+      725.0,
+      429.5
      ],
      [
-      737.5,
-      426.8
+      740.2,
+      429.5
      ]
     ],
     "role": "label-region",
@@ -2152,21 +2165,21 @@
     "text": "The Crownlands",
     "tier": 0,
     "tracking": 0.14,
-    "x": 722.3,
-    "y": 426.8
+    "x": 725.0,
+    "y": 429.5
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.99,
     "text": "The Kings Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -2178,8 +2191,8 @@
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 329.0,
-    "y": 588.2
+    "x": 331.7,
+    "y": 590.9
    },
    {
     "anchor": "middle",
@@ -2191,26 +2204,26 @@
     "text": "The Prizecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      281.5,
-      363.4
+      284.2,
+      366.1
      ],
      [
-      290.1,
-      357.2
+      292.8,
+      359.9
      ],
      [
-      407.2,
-      357.2
+      410.0,
+      359.9
      ]
     ],
     "role": "label-region",
@@ -2218,8 +2231,8 @@
     "text": "The Rebel March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 290.1,
-    "y": 357.2
+    "x": 292.8,
+    "y": 359.9
    }
   ]
  },
@@ -2328,11 +2341,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "Crownhill"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Crownmoor"
   },
   {
    "kind": "road",

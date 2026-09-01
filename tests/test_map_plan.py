@@ -523,10 +523,13 @@ class TestAnIslandCanBeTakenBack:
             assert "island" in retired_kinds, (
                 "eight islands left this map; retirement must offer them")
             apply_plan(w, sparse, DecisionSet.defaults(sparse))
-            drawn = sum(1 for g in w.geometries()
-                        if (ledger_module.provenance(g).get("feature") or "")
-                        .startswith("isl_"))
-            wanted = sum(1 for f in sparse.features if f.kind == "island")
+            # Counted by FEATURE, not by shape: since the coast carries its
+            # character an island is an outline plus a stroke per run of shore,
+            # and "one geometry per island" stopped being true of a correct map.
+            drawn = {feature for g in w.geometries()
+                     if (feature := ledger_module.provenance(g).get("feature")
+                         or "").startswith("isl_")}
+            wanted = {f.id for f in sparse.features if f.kind == "island"}
             assert drawn == wanted
         finally:
             w.close()

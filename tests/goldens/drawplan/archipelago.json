@@ -356,8 +356,8 @@
     "text": "Banksclose",
     "tier": 2,
     "tracking": 0.02,
-    "x": 347.3,
-    "y": 179.8
+    "x": 350.0,
+    "y": 182.5
    },
    {
     "anchor": "middle",
@@ -369,8 +369,8 @@
     "text": "Bankscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -382,34 +382,21 @@
     "text": "Banksdowns",
     "tier": 2,
     "tracking": 0.02,
-    "x": 126.8,
-    "y": 319.9
+    "x": 129.5,
+    "y": 322.6
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
-    "kind": "feature",
-    "role": "label",
-    "size": 11.0,
-    "text": "Bankshill",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 371.5,
-    "y": 403.3
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 3.2,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Banksmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 522.1,
-    "y": 313.7
+    "x": 524.8,
+    "y": 316.4
    },
    {
     "anchor": "middle",
@@ -527,20 +514,20 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "feature",
     "path": [
      [
-      181.9,
-      787.6
+      184.6,
+      790.3
      ],
      [
-      226.2,
-      787.6
+      228.9,
+      790.3
      ],
      [
-      234.2,
-      780.1
+      236.9,
+      782.8
      ]
     ],
     "role": "label",
@@ -548,8 +535,8 @@
     "text": "Brokenweald",
     "tier": 2,
     "tracking": 0.02,
-    "x": 226.2,
-    "y": 787.6
+    "x": 228.9,
+    "y": 790.3
    },
    {
     "anchor": "middle",
@@ -665,21 +652,21 @@
     "text": "The Banksbank",
     "tier": 2,
     "tracking": 0.02,
-    "x": 173.8,
-    "y": 160.1
+    "x": 176.5,
+    "y": 162.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.29,
     "text": "The Bankscape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "end",
@@ -704,8 +691,8 @@
     "text": "The Banksfield",
     "tier": 2,
     "tracking": 0.02,
-    "x": 315.0,
-    "y": 102.5
+    "x": 317.7,
+    "y": 105.2
    },
    {
     "anchor": "start",
@@ -756,8 +743,8 @@
     "text": "The Bankshollow",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "start",
@@ -779,48 +766,48 @@
     "kind": "feature",
     "path": [
      [
-      154.4,
-      685.2
+      157.1,
+      687.9
      ],
      [
-      165.9,
-      690.9
+      168.6,
+      693.6
      ],
      [
-      168.9,
-      691.1
+      171.6,
+      693.8
      ],
      [
-      176.3,
-      694.8
+      179.0,
+      697.5
      ],
      [
-      179.3,
-      697.6
+      182.0,
+      700.3
      ],
      [
-      190.2,
-      703.0
+      192.9,
+      705.7
      ],
      [
-      193.2,
-      703.3
+      196.0,
+      706.0
      ],
      [
-      201.1,
-      706.6
+      203.8,
+      709.3
      ],
      [
-      213.7,
-      706.6
+      216.4,
+      709.3
      ],
      [
-      216.7,
-      708.4
+      219.4,
+      711.1
      ],
      [
-      220.2,
-      708.4
+      222.9,
+      711.1
      ]
     ],
     "role": "label",
@@ -828,21 +815,21 @@
     "text": "The Banksmarsh",
     "tier": 2,
     "tracking": 0.02,
-    "x": 190.2,
-    "y": 703.0
+    "x": 192.9,
+    "y": 705.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.24,
     "text": "The Banksmere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -860,7 +847,7 @@
    {
     "anchor": "end",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
@@ -868,7 +855,7 @@
     "tier": 2,
     "tracking": 0.02,
     "x": 428.0,
-    "y": 650.6
+    "y": 659.1
    },
    {
     "anchor": "middle",
@@ -920,24 +907,24 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 2.9,
     "kind": "region",
     "path": [
      [
-      503.4,
-      420.8
+      506.1,
+      423.5
      ],
      [
-      534.1,
-      448.9
+      536.9,
+      451.6
      ],
      [
-      681.0,
-      448.9
+      683.7,
+      451.6
      ],
      [
-      704.8,
-      430.5
+      707.5,
+      433.2
      ]
     ],
     "role": "label-region",
@@ -945,8 +932,8 @@
     "text": "The Broken Isles",
     "tier": 0,
     "tracking": 0.14,
-    "x": 681.0,
-    "y": 448.9
+    "x": 683.7,
+    "y": 451.6
    },
    {
     "anchor": "middle",
@@ -1010,8 +997,21 @@
     "text": "The Brokenholt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 565.5,
-    "y": 248.7
+    "x": 568.2,
+    "y": 251.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 9.65,
+    "text": "The Brokenmarsh",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 380.1,
+    "y": 410.4
    },
    {
     "anchor": "middle",
@@ -1023,8 +1023,8 @@
     "text": "The Brokenmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 471.4,
-    "y": 782.7
+    "x": 474.1,
+    "y": 785.4
    },
    {
     "anchor": "start",
@@ -1046,16 +1046,16 @@
     "kind": "feature",
     "path": [
      [
-      253.9,
-      367.8
+      256.6,
+      370.5
      ],
      [
-      317.7,
-      367.8
+      320.4,
+      370.5
      ],
      [
-      322.5,
-      371.8
+      325.2,
+      374.5
      ]
     ],
     "role": "label",
@@ -1063,8 +1063,8 @@
     "text": "The Brokenstead",
     "tier": 2,
     "tracking": 0.02,
-    "x": 317.7,
-    "y": 367.8
+    "x": 320.4,
+    "y": 370.5
    },
    {
     "anchor": "middle",
@@ -1076,8 +1076,8 @@
     "text": "The Brokenthorpe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 232.4,
-    "y": 427.1
+    "x": 235.1,
+    "y": 429.8
    },
    {
     "anchor": "middle",
@@ -1089,8 +1089,8 @@
     "text": "The Brokenwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 412.5,
-    "y": 263.0
+    "x": 415.2,
+    "y": 265.7
    },
    {
     "anchor": "end",
@@ -1224,8 +1224,8 @@
     "text": "The Outer Banks",
     "tier": 0,
     "tracking": 0.14,
-    "x": 324.2,
-    "y": 683.4
+    "x": 326.9,
+    "y": 686.2
    },
    {
     "anchor": "start",
@@ -1282,15 +1282,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Sound",
     "tier": 0,
     "tracking": 0.14,
-    "x": 414.0,
-    "y": 486.5
+    "x": 416.7,
+    "y": 489.2
    },
    {
     "anchor": "start",
@@ -1315,8 +1315,8 @@
     "text": "Wrackholm",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.7,
-    "y": 137.0
+    "x": 350.4,
+    "y": 139.7
    }
   ],
   "regional": [
@@ -1330,8 +1330,8 @@
     "text": "Bankscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -1540,15 +1540,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.29,
     "text": "The Bankscape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "start",
@@ -1586,8 +1586,8 @@
     "text": "The Bankshollow",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "start",
@@ -1605,15 +1605,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.24,
     "text": "The Banksmere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "start",
@@ -1678,24 +1678,24 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 2.9,
     "kind": "region",
     "path": [
      [
-      503.4,
-      420.8
+      506.1,
+      423.5
      ],
      [
-      534.1,
-      448.9
+      536.9,
+      451.6
      ],
      [
-      681.0,
-      448.9
+      683.7,
+      451.6
      ],
      [
-      704.8,
-      430.5
+      707.5,
+      433.2
      ]
     ],
     "role": "label-region",
@@ -1703,8 +1703,8 @@
     "text": "The Broken Isles",
     "tier": 0,
     "tracking": 0.14,
-    "x": 681.0,
-    "y": 448.9
+    "x": 683.7,
+    "y": 451.6
    },
    {
     "anchor": "middle",
@@ -1908,21 +1908,21 @@
     "text": "The Outer Banks",
     "tier": 0,
     "tracking": 0.14,
-    "x": 324.2,
-    "y": 683.4
+    "x": 326.9,
+    "y": 686.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Sound",
     "tier": 0,
     "tracking": 0.14,
-    "x": 414.0,
-    "y": 486.5
+    "x": 416.7,
+    "y": 489.2
    },
    {
     "anchor": "middle",
@@ -1934,8 +1934,8 @@
     "text": "Wrackholm",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.7,
-    "y": 137.0
+    "x": 350.4,
+    "y": 139.7
    }
   ],
   "world": [
@@ -1949,21 +1949,21 @@
     "text": "Bankscoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.29,
     "text": "The Bankscape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1975,43 +1975,43 @@
     "text": "The Bankshollow",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.24,
     "text": "The Banksmere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 2.9,
     "kind": "region",
     "path": [
      [
-      503.4,
-      420.8
+      506.1,
+      423.5
      ],
      [
-      534.1,
-      448.9
+      536.9,
+      451.6
      ],
      [
-      681.0,
-      448.9
+      683.7,
+      451.6
      ],
      [
-      704.8,
-      430.5
+      707.5,
+      433.2
      ]
     ],
     "role": "label-region",
@@ -2019,8 +2019,8 @@
     "text": "The Broken Isles",
     "tier": 0,
     "tracking": 0.14,
-    "x": 681.0,
-    "y": 448.9
+    "x": 683.7,
+    "y": 451.6
    },
    {
     "anchor": "middle",
@@ -2032,21 +2032,21 @@
     "text": "The Outer Banks",
     "tier": 0,
     "tracking": 0.14,
-    "x": 324.2,
-    "y": 683.4
+    "x": 326.9,
+    "y": 686.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Sound",
     "tier": 0,
     "tracking": 0.14,
-    "x": 414.0,
-    "y": 486.5
+    "x": 416.7,
+    "y": 489.2
    },
    {
     "anchor": "middle",
@@ -2058,8 +2058,8 @@
     "text": "Wrackholm",
     "tier": 0,
     "tracking": 0.14,
-    "x": 347.7,
-    "y": 137.0
+    "x": 350.4,
+    "y": 139.7
    }
   ]
  },
@@ -2107,6 +2107,11 @@
    "kind": "feature",
    "reason": "no room",
    "text": "Banksfells"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Bankshill"
   },
   {
    "kind": "road",
@@ -2197,11 +2202,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Brokenhill"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Brokenmarsh"
   },
   {
    "kind": "river",

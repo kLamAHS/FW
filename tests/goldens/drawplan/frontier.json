@@ -256,28 +256,28 @@
     "kind": "feature",
     "path": [
      [
-      377.1,
-      260.1
+      379.8,
+      262.8
      ],
      [
-      401.4,
-      260.1
+      404.1,
+      262.8
      ],
      [
-      405.5,
-      257.8
+      408.2,
+      260.6
      ],
      [
-      407.5,
-      257.7
+      410.2,
+      260.4
      ],
      [
-      409.3,
-      256.6
+      412.0,
+      259.3
      ],
      [
-      410.5,
-      256.6
+      413.2,
+      259.3
      ]
     ],
     "role": "label",
@@ -285,21 +285,21 @@
     "text": "Edgebank",
     "tier": 2,
     "tracking": 0.02,
-    "x": 407.5,
-    "y": 257.7
+    "x": 410.2,
+    "y": 260.4
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.34,
     "text": "Edgecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "start",
@@ -317,15 +317,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Edgemarsh",
     "tier": 2,
     "tracking": 0.02,
-    "x": 458.5,
-    "y": 783.5
+    "x": 461.2,
+    "y": 786.2
    },
    {
     "anchor": "middle",
@@ -337,21 +337,21 @@
     "text": "Edgemere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 6.5,
     "text": "Edgereach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 766.9,
-    "y": 385.8
+    "x": 769.6,
+    "y": 388.5
    },
    {
     "anchor": "start",
@@ -510,20 +510,20 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      539.4,
-      457.6
+      542.2,
+      460.3
      ],
      [
-      543.9,
-      454.3
+      546.6,
+      457.0
      ],
      [
-      678.8,
-      454.3
+      681.5,
+      457.0
      ]
     ],
     "role": "label-region",
@@ -531,8 +531,8 @@
     "text": "Nowhere Much",
     "tier": 0,
     "tracking": 0.14,
-    "x": 543.9,
-    "y": 454.3
+    "x": 546.6,
+    "y": 457.0
    },
    {
     "anchor": "start",
@@ -570,8 +570,8 @@
     "text": "The Edge",
     "tier": 0,
     "tracking": 0.14,
-    "x": 375.6,
-    "y": 590.0
+    "x": 378.3,
+    "y": 592.7
    },
    {
     "anchor": "start",
@@ -589,15 +589,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.92,
     "text": "The Edgecape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -609,8 +609,8 @@
     "text": "The Edgeclose",
     "tier": 2,
     "tracking": 0.02,
-    "x": 575.4,
-    "y": 177.5
+    "x": 578.1,
+    "y": 180.2
    },
    {
     "anchor": "middle",
@@ -622,8 +622,8 @@
     "text": "The Edgecombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "start",
@@ -658,20 +658,20 @@
     "kind": "feature",
     "path": [
      [
-      256.5,
-      409.8
+      259.2,
+      412.5
      ],
      [
-      257.2,
-      409.2
+      259.9,
+      411.9
      ],
      [
-      260.9,
-      407.4
+      263.6,
+      410.1
      ],
      [
-      316.4,
-      407.4
+      319.2,
+      410.1
      ]
     ],
     "role": "label",
@@ -679,8 +679,8 @@
     "text": "The Edgemoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 260.9,
-    "y": 407.4
+    "x": 263.6,
+    "y": 410.1
    },
    {
     "anchor": "start",
@@ -711,15 +711,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.68,
     "text": "The Edgethorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
@@ -728,20 +728,20 @@
     "kind": "feature",
     "path": [
      [
-      271.8,
-      310.4
+      274.5,
+      313.1
      ],
      [
-      273.5,
-      309.2
+      276.2,
+      311.9
      ],
      [
-      320.0,
-      309.2
+      322.7,
+      311.9
      ],
      [
-      321.6,
-      308.0
+      324.3,
+      310.8
      ]
     ],
     "role": "label",
@@ -749,8 +749,8 @@
     "text": "The Edgevale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 320.0,
-    "y": 309.2
+    "x": 322.7,
+    "y": 311.9
    },
    {
     "anchor": "end",
@@ -768,15 +768,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
     "size": 8.91,
     "text": "The Edgewood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 703.6,
-    "y": 698.4
+    "x": 706.3,
+    "y": 701.1
    },
    {
     "anchor": "end",
@@ -860,41 +860,6 @@
     "tracking": 0.0,
     "x": 433.1,
     "y": 284.8
-   },
-   {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "road",
-    "path": [
-     [
-      286.9,
-      612.3
-     ],
-     [
-      300.0,
-      625.4
-     ],
-     [
-      301.0,
-      628.1
-     ],
-     [
-      301.4,
-      652.4
-     ],
-     [
-      304.9,
-      657.2
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "The Muchvale",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 301.0,
-    "y": 628.1
    },
    {
     "anchor": "start",
@@ -1003,30 +968,30 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 16.04,
     "text": "The Out-Marches",
     "tier": 0,
     "tracking": 0.14,
-    "x": 448.7,
-    "y": 359.7
+    "x": 451.5,
+    "y": 362.4
    }
   ],
   "regional": [
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.34,
     "text": "Edgecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -1038,8 +1003,8 @@
     "text": "Edgemere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
@@ -1103,20 +1068,20 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      539.4,
-      457.6
+      542.2,
+      460.3
      ],
      [
-      543.9,
-      454.3
+      546.6,
+      457.0
      ],
      [
-      678.8,
-      454.3
+      681.5,
+      457.0
      ]
     ],
     "role": "label-region",
@@ -1124,8 +1089,8 @@
     "text": "Nowhere Much",
     "tier": 0,
     "tracking": 0.14,
-    "x": 543.9,
-    "y": 454.3
+    "x": 546.6,
+    "y": 457.0
    },
    {
     "anchor": "middle",
@@ -1137,21 +1102,21 @@
     "text": "The Edge",
     "tier": 0,
     "tracking": 0.14,
-    "x": 375.6,
-    "y": 590.0
+    "x": 378.3,
+    "y": 592.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.92,
     "text": "The Edgecape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1163,8 +1128,8 @@
     "text": "The Edgecombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "start",
@@ -1221,15 +1186,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.68,
     "text": "The Edgethorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "end",
@@ -1354,41 +1319,6 @@
     "y": 492.7
    },
    {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "road",
-    "path": [
-     [
-      286.9,
-      612.3
-     ],
-     [
-      300.0,
-      625.4
-     ],
-     [
-      301.0,
-      628.1
-     ],
-     [
-      301.4,
-      652.4
-     ],
-     [
-      304.9,
-      657.2
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "The Muchvale",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 301.0,
-    "y": 628.1
-   },
-   {
     "anchor": "start",
     "face": "sans",
     "halo": 2.9,
@@ -1404,30 +1334,30 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 16.04,
     "text": "The Out-Marches",
     "tier": 0,
     "tracking": 0.14,
-    "x": 448.7,
-    "y": 359.7
+    "x": 451.5,
+    "y": 362.4
    }
   ],
   "world": [
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.3,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.34,
     "text": "Edgecoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 130.4,
-    "y": 303.5
+    "x": 133.1,
+    "y": 306.3
    },
    {
     "anchor": "middle",
@@ -1439,26 +1369,26 @@
     "text": "Edgemere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 776.6,
-    "y": 230.6
+    "x": 779.3,
+    "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "region",
     "path": [
      [
-      539.4,
-      457.6
+      542.2,
+      460.3
      ],
      [
-      543.9,
-      454.3
+      546.6,
+      457.0
      ],
      [
-      678.8,
-      454.3
+      681.5,
+      457.0
      ]
     ],
     "role": "label-region",
@@ -1466,8 +1396,8 @@
     "text": "Nowhere Much",
     "tier": 0,
     "tracking": 0.14,
-    "x": 543.9,
-    "y": 454.3
+    "x": 546.6,
+    "y": 457.0
    },
    {
     "anchor": "middle",
@@ -1479,21 +1409,21 @@
     "text": "The Edge",
     "tier": 0,
     "tracking": 0.14,
-    "x": 375.6,
-    "y": 590.0
+    "x": 378.3,
+    "y": 592.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.92,
     "text": "The Edgecape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.2,
-    "y": 595.5
+    "x": 753.9,
+    "y": 598.2
    },
    {
     "anchor": "middle",
@@ -1505,34 +1435,34 @@
     "text": "The Edgecombe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 429.7,
-    "y": 137.6
+    "x": 432.4,
+    "y": 140.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.68,
     "text": "The Edgethorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 654.8,
-    "y": 112.0
+    "x": 657.5,
+    "y": 114.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 16.04,
     "text": "The Out-Marches",
     "tier": 0,
     "tracking": 0.14,
-    "x": 448.7,
-    "y": 359.7
+    "x": 451.5,
+    "y": 362.4
    }
   ]
  },
@@ -1666,6 +1596,11 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Muchstead"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Muchvale"
   },
   {
    "kind": "sea",

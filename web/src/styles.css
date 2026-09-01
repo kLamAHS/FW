@@ -127,8 +127,11 @@
   --map-cover-ice: #dde5e8;
 
   /* Holders get a slot in a palette rather than a colour of their own, so the same
-     house reads the same on every layer and at every date. Eight, chosen to stay
-     distinguishable for the commonest kinds of colour blindness. */
+     house reads the same on every layer and at every date. Twelve, not eight: the
+     ninth house used to take the first one's colour, so on a map with nine claimants
+     two of them were the same brown and the legend said so twice. Chosen to stay
+     distinguishable for the commonest kinds of colour blindness — the four added
+     slots hold to the same hue spacing and avoid the red/green confusion lines. */
   --map-holder-0: #7a5c3e;
   --map-holder-1: #2f5d8a;
   --map-holder-2: #3f6b52;
@@ -137,6 +140,10 @@
   --map-holder-5: #8a6113;
   --map-holder-6: #557a8a;
   --map-holder-7: #a2456a;
+  --map-holder-8: #4a6a3a;
+  --map-holder-9: #7a4a2c;
+  --map-holder-10: #3d5f6b;
+  --map-holder-11: #6b5a8a;
 
   --radius: 6px;
   --shadow: 0 1px 2px rgba(20, 18, 15, 0.06), 0 4px 14px rgba(20, 18, 15, 0.05);
@@ -222,6 +229,10 @@
     --map-holder-5: #dcb464;
     --map-holder-6: #8fb6c4;
     --map-holder-7: #dd93ac;
+    --map-holder-8: #9dc48a;
+    --map-holder-9: #d2a184;
+    --map-holder-10: #86aab8;
+    --map-holder-11: #b0a3d4;
   }
 }
 
@@ -464,6 +475,18 @@ ul.clean li:last-child { border-bottom: none; }
 /* Zoom bands crossfade rather than pop (V2 §18): 150ms, opacity only — the terrain
    never animates, and a hidden band's labels are pointer-transparent already. */
 .map-band { transition: opacity 150ms ease; }
+
+/* Selection (V2 §34). Choosing a place quiets everything that is not it rather than
+   shouting about what is: the map stays a map, and the eye is led by contrast rather
+   than by a colour nothing else on the page uses. The terrain never dims — the ground
+   is not part of the selection, and a relief that faded would read as a different
+   world. Transitions only on opacity and stroke, so nothing reflows. */
+.map-quiet { transition: opacity 150ms ease; }
+.map-focus--on .map-quiet { opacity: 0.35; }
+.map-focus--on .map-quiet.map-kin { opacity: 1; }
+.map-label { transition: opacity 150ms ease; }
+.map-focus--on .map-label { opacity: 0.4; }
+.map-focus--on .map-label.map-kin { opacity: 1; }
 
 /* The key. A shape as well as a colour on every line — §69 does not allow colour to be
    the only thing carrying a distinction. */
