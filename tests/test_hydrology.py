@@ -119,24 +119,29 @@ class TestLakesAreBudgeted:
         assert len(_lakes(size, sea, marsh, level, down)) == MOST_LAKES
 
 
+# Module-scoped rather than a class fixture on `self`: pytest is retiring
+# class-scoped fixtures defined as instance methods, and the escalated warning
+# errored every test in the class.
+@pytest.fixture(scope="module")
+def studied():
+    import corpus
+
+    from fw.core.mapgen.generate import (
+        MapGenerator,
+    )
+
+    world = corpus.delta()
+    try:
+        g = MapGenerator(world, seed="golden")
+        g.regions_of_the_world()
+        g.read_the_world()
+        g.build_the_world()
+        yield g.hydrology
+    finally:
+        world.close()
+
+
 class TestOnRealGround:
-    @pytest.fixture(scope="class")
-    def studied(self):
-        import corpus
-
-        from fw.core.mapgen.generate import (
-            MapGenerator,
-        )
-
-        world = corpus.delta()
-        try:
-            g = MapGenerator(world, seed="golden")
-            g.regions_of_the_world()
-            g.read_the_world()
-            g.build_the_world()
-            yield g.hydrology
-        finally:
-            world.close()
 
     def test_systems_do_not_share_a_mainstem_cell(self, studied):
         seen: set = set()
