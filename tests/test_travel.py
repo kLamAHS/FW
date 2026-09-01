@@ -95,6 +95,31 @@ class TestDangerCosts:
         assert not missing, f"the generator writes {missing} and the router prices it free"
 
 
+class TestTheTwoTotalsAgree:
+    """`Route.days` is the Dijkstra cost and `sum(leg.days)` is what the journey
+    reads as, and for a long time they were computed by two different expressions.
+    The gap only opened for parties over five hundred, so nobody met it. Pricing
+    danger opened it on every sea voyage on every map — the generator marks every
+    lane "moderate" — and both numbers are served by the API, with `explain()`
+    printing them in the same paragraph. A journey that shows a reader two different
+    totals is worse than one that shows a wrong total.
+    """
+
+    def test_a_dangerous_journey_adds_up(self):
+        segments = [_segment("one", "a", "b", danger="high", length=60.0),
+                    _segment("two", "b", "c", danger="extreme", length=40.0)]
+        route = Router(_Segments(segments)).route("a", "c")
+        assert route.days == pytest.approx(sum(leg.days for leg in route.legs))
+
+    def test_a_large_party_adds_up_too(self):
+        segments = [_segment("one", "a", "b", length=60.0),
+                    _segment("two", "b", "c", danger="moderate", length=40.0)]
+        route = Router(_Segments(segments)).route("a", "c", party_size=5000)
+        assert route.days == pytest.approx(sum(leg.days for leg in route.legs))
+        plain = Router(_Segments(segments)).route("a", "c")
+        assert route.days > plain.days, "the party penalty stopped counting"
+
+
 class TestTheRouterStillReadsTheRest:
     def test_a_closed_season_takes_the_stretch_out_of_the_graph(self):
         shut = RouteSegment(id="s", from_entity_id="a", to_entity_id="b", length=10.0,

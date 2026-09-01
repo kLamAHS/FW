@@ -136,6 +136,39 @@ class Route:
 DANGER_COST = {"low": 1.0, "moderate": 1.35, "high": 1.8, "extreme": 2.5}
 
 
+def _stretch_days(segment: RouteSegment, transport: TransportProfile,
+                  party_size: int | None) -> float | None:
+    """What one stretch costs this traveller, in days. `None` if impassable.
+
+    ONE definition, used both to choose the route and to report it. They were two —
+    the Dijkstra weight carried the party-size penalty and the reported leg carried
+    only `length / speed` — so `Route.days` and `sum(leg.days)` disagreed whenever a
+    large party travelled, which was rare enough to go unnoticed. Pricing danger made
+    it every sea voyage on every map, because the generator marks every lane
+    "moderate"; and the API serves both numbers, with `explain()` printing them in the
+    same paragraph. A journey that shows a reader two different totals is worse than
+    one that shows a wrong total.
+    """
+    speed = transport.speed_on(segment.terrain, segment.quality)
+    if speed <= 0:
+        return None
+    days = segment.length / speed
+    # A dangerous road is not a slower road, but it costs a traveller the same way:
+    # you go in company, you wait for one, you take the long way round the wood. The
+    # generator has been SAYING the router does this since sea lanes were drawn —
+    # `pipeline.LANE_DANGER` sets "moderate" under a comment claiming the router
+    # "models through quality and danger" — and the router did not. A comment
+    # asserting a behaviour the code lacks is worth less than nothing: it stops
+    # anyone checking.
+    days *= DANGER_COST.get(segment.danger, 1.0)
+    if party_size and party_size > 500:
+        # A large body of people moves slower than its own marching speed: forage,
+        # water and column length all bite. A rough, honest penalty beats a
+        # precise-looking model the writer cannot check.
+        days *= 1.0 + min(party_size / 10_000, 0.6)
+    return days
+
+
 class Router:
     def __init__(self, world: World) -> None:
         self.world = world
@@ -170,23 +203,9 @@ class Router:
                 continue
             if transport.water != (segment.medium in SAILED):
                 continue
-            speed = transport.speed_on(segment.terrain, segment.quality)
-            if speed <= 0:
+            days = _stretch_days(segment, transport, party_size)
+            if days is None:
                 continue
-            days = segment.length / speed
-            # A dangerous road is not a slower road, but it costs a traveller the
-            # same way: you go in company, you wait for one, you take the long way
-            # round the wood. The generator has been SAYING so since sea lanes were
-            # drawn — `pipeline.LANE_DANGER` sets "moderate" under a comment claiming
-            # "the router models through quality and danger" — and the router did not.
-            # A comment asserting a behaviour the code does not have is worth more
-            # than the behaviour, because it stops anyone checking.
-            days *= DANGER_COST.get(segment.danger, 1.0)
-            if party_size and party_size > 500:
-                # A large body of people moves slower than its own marching speed: forage,
-                # water and column length all bite. A rough, honest penalty beats a
-                # precise-looking model the writer cannot check.
-                days *= 1.0 + min(party_size / 10_000, 0.6)
             adjacency.setdefault(segment.from_entity_id, []).append(
                 (segment.to_entity_id, days, segment))
             adjacency.setdefault(segment.to_entity_id, []).append(
@@ -218,11 +237,10 @@ class Router:
         cursor = destination_id
         while cursor != origin_id:
             prior, segment = previous[cursor]
-            speed = transport.speed_on(segment.terrain, segment.quality)
             legs.append(Leg(
                 from_id=prior, to_id=cursor, segment_id=segment.id,
                 medium=segment.medium, length=segment.length,
-                days=segment.length / speed if speed else float("inf"),
+                days=_stretch_days(segment, transport, party_size) or float("inf"),
             ))
             cursor = prior
         legs.reverse()
