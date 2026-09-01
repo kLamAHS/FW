@@ -414,3 +414,71 @@ class TestTheHaloAnswersTheGround:
         first, second = cartography._haloed((calm, wild), terrain)
         assert second.halo > first.halo
         assert first.halo >= cartography.HALO_CALM
+
+
+class TestARepeatedNameIsStillOneName:
+    """The review's own repros, kept: a river whose name repeats must not lose
+    its first half to an unevenly-clicked polyline, nor be reported missing
+    while it is plainly on the map."""
+
+    @staticmethod
+    def sparse_river():
+        # A writer's river: clicked five times near the source, twice after.
+        return feature(id="riv", entity_id="renn", name="The Iron Flow",
+                       kind="line", layer="waterways", generated=False,
+                       coordinates=[[0.0, 0.0], [10.0, 0.0], [20.0, 0.0],
+                                    [30.0, 0.0], [40.0, 0.0], [500.0, 0.0],
+                                    [1030.0, 0.0]])
+
+    def test_the_halves_are_halves_of_the_LENGTH_not_of_the_clicks(self):
+        plan = cartography.draw([self.sparse_river()])
+        names = plan.labels["local"]
+        assert len(names) == 2, "a river this long carries its name twice"
+        upstream, downstream = sorted(names, key=lambda n: n.x)
+        # Split by vertex count the seam fell at x=30 of 1030 and the upstream
+        # name had nowhere to sit at all.
+        assert upstream.x < 515 < downstream.x
+        assert upstream.text == downstream.text == "The Iron Flow"
+
+    def test_a_blocked_repeat_is_not_reported_as_a_missing_name(self):
+        blocked = cartography.draw([
+            self.sparse_river(),
+            # A country's name straight across the river's second half.
+            feature(id="reg", entity_id="march", name="The Northmarch",
+                    kind="polygon", layer="regions",
+                    coordinates=[[[520.0, -140.0], [1040.0, -140.0],
+                                  [1040.0, 140.0], [520.0, 140.0],
+                                  [520.0, -140.0]]]),
+        ])
+        placed = {n.text for n in blocked.labels["local"]}
+        missing = {gone.text for gone in blocked.unlabelled}
+        assert "The Iron Flow" in placed
+        assert "The Iron Flow" not in missing, (
+            "the map says a name is missing that the reader can see")
+
+
+class TestOneDotPerPlaceAndItKnowsWhatItIs:
+    def test_the_ranked_dot_speaks_for_the_place_not_the_anonymous_one(self):
+        """A settlement the writer positioned and the map also sited: the shape
+        that carries a rank wins, whatever the sizes. Sorting on size alone let
+        the guessed 'town' (5.5) redraw a hamlet (3.4) as a town."""
+        plan = cartography.draw([
+            feature(id="a", entity_id="e1", name="Redwater",
+                    style={"rank": "hamlet"}, coordinates=[100.0, 100.0]),
+            feature(id="b", entity_id="e1", name="Redwater", generated=False,
+                    style={}, coordinates=[100.0, 100.0]),
+        ])
+        assert len(plan.icons) == 1, "one place, one dot"
+        assert plan.icons[0].rank == "hamlet" and plan.icons[0].shape == "dot"
+        named = plan.labels["local"][0]
+        assert named.kind == "village", "the hamlet's name in a town's voice"
+
+    def test_a_harbour_is_an_anchor_and_speaks_like_a_port(self):
+        """Three tables disagreed about whether the rank exists; the writer's
+        own word for it must mean the same thing in all of them."""
+        plan = cartography.draw([feature(
+            id="h", entity_id="e9", name="Blackmere", style={"rank": "harbour"},
+            coordinates=[200.0, 200.0])])
+        assert plan.icons[0].shape == "anchor"
+        assert plan.icons[0].band == "world"
+        assert plan.labels["world"][0].kind == "city"

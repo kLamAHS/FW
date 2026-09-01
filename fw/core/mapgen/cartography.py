@@ -90,6 +90,11 @@ RANKS: dict[str, tuple[str, float]] = {
     "capital": ("star", 8.5),
     "city": ("ring", 7.0),
     "port": ("anchor", 6.5),
+    # The writer's own word for it, whichever spelling they use: every other rank
+    # table in the generator takes all three, and a harbour drawn as a nameless
+    # disc was this one disagreeing with them.
+    "harbour": ("anchor", 6.5),
+    "harbor": ("anchor", 6.5),
     "market town": ("ring", 6.0),
     "town": ("disc", 5.5),
     "fortress": ("keep", 6.5),
@@ -168,8 +173,11 @@ LINE_ROLES = {"river": "label-water", "range": "label-relief", "road": "label",
 MARGIN = 70.0
 
 # The share of the map's span a river or range must run before its name repeats —
-# the art-direction budget: one repeat, never more.
+# the art-direction budget: one repeat, never more. The suffix marks the second
+# label's key; both halves carry the river's own key as their `owner`, which is
+# what the honest remainder counts by.
 REPEAT_REACH = 0.55
+REPEAT_SUFFIX = "+2"
 
 # Clear ground around every icon that no label may enter, in world units — the
 # art-direction budget: label boxes never overlap an icon plus two units.
@@ -205,6 +213,9 @@ class Icon:
     holder_name: str = ""
     contested: bool = False
     band: str = "world"         # the widest view this icon appears at (V2 §18)
+    # Whether the rank was told to us or guessed. Never serialised — it decides
+    # only which of a place's two dots survives the dedupe.
+    ranked: bool = False
 
     def as_dict(self) -> dict:
         return {"key": self.key, "entity_id": self.entity_id, "name": self.name,
@@ -344,15 +355,21 @@ def draw(features: Sequence[Mapping[str, Any]], *, mode: str = "legally_owns",
             placed, calmed = _budgeted(placed, terrain, band)
             solved[band] = _haloed(placed, terrain)
             if band == BANDS[-1]:
-                # The honest remainder is what NO band placed. Every name competes
-                # in the local solve (bands are cumulative), so its drop list is
-                # complete — but a region set at the world view and crowded out of
-                # the village-dense local one is not "unlabelled", it is on the
-                # map; only a name that appears at no zoom at all is.
-                everywhere = {name.key for shown in solved.values()
-                              for name in shown}
-                missed = tuple(gone for gone in dropped + calmed
-                               if gone.key not in everywhere)
+                # The honest remainder is what NO band placed — counted by what
+                # each label SPEAKS FOR, not by its own key. Every name competes in
+                # the local solve (bands are cumulative), so the drop list is
+                # complete; but a region set at the world view and crowded out of
+                # the village-dense local one is on the map, and so is a river
+                # whose repeat found no window while its first half sits on the
+                # water. Only a thing named at no zoom at all is unlabelled — the
+                # panel that says "would not fit" must not name something the
+                # reader can plainly see.
+                speaks_for = {w.key: (w.owner or w.key) for w in wanted}
+                everywhere = {speaks_for.get(name.key, name.key)
+                              for shown in solved.values() for name in shown}
+                missed = tuple(
+                    gone for gone in dropped + calmed
+                    if speaks_for.get(gone.key, gone.key) not in everywhere)
     return DrawPlan(bounds=bounds, mode=mode, labels=solved, icons=tuple(icons),
                     legend=_legend(features, icons, mode, holders), holders=holders,
                     unlabelled=missed)
@@ -538,7 +555,8 @@ def _icons(features: Sequence[Mapping[str, Any]], mode: str,
         if len(coordinates) < 2:
             continue
         style = feature.get("style") or {}
-        rank = str(style.get("rank") or _rank_of(feature))
+        told = str(style.get("rank") or "")
+        rank = told or _rank_of(feature)
         shape, radius = RANKS.get(rank.lower(), DEFAULT_RANK)
         holder = _holder_of(feature, mode)
         out.append(Icon(
@@ -552,17 +570,24 @@ def _icons(features: Sequence[Mapping[str, Any]], mode: str,
             holder_name=str(holder.get("name")) if holder else "",
             contested=bool((feature.get("control") or {}).get("claims")),
             band=_icon_band(rank, _importance(feature)),
+            ranked=bool(told),
         ))
     # One icon per PLACE. A settlement the writer positioned and the map also sited
     # carries two point geometries on the same spot; drawn twice they were merely
     # invisible, but banded they split the place's identity — the capital's star at
-    # the world view, its name riding the anonymous twin down at regional. The
-    # better-ranked dot (the one that knows what it is) speaks for the place.
+    # the world view, its name riding the anonymous twin down at regional.
+    #
+    # The dot that KNOWS what it is speaks for the place: a shape carrying an
+    # explicit rank beats one that had to be guessed, whatever their sizes. Sorting
+    # on size alone let the guess win, because the guess is "town" (5.5) and a
+    # hamlet is 3.4 — so a writer's unranked point silently redrew their hamlet as
+    # a town, promoted it a zoom band, and set its name in the wrong voice.
     best: dict[str, Icon] = {}
     for icon in out:
         mine = icon.entity_id or icon.key
         held = best.get(mine)
-        if held is None or (icon.radius, icon.key) > (held.radius, held.key):
+        if held is None or ((icon.ranked, icon.radius, icon.key)
+                            > (held.ranked, held.radius, held.key)):
             best[mine] = icon
     return sorted(best.values(), key=lambda icon: (icon.name, icon.key))
 
@@ -700,11 +725,19 @@ def _wanted(features: Sequence[Mapping[str, Any]], icons: Sequence[Icon],
             # middle to learn what it is. One repeat, and only for the reaches that
             # earn it — each half solves as its own label, so a blocked repeat
             # simply does not happen rather than crowding something else out.
+            #
+            # Halved by LENGTH, never by vertex count. The gate is a length and the
+            # halves must answer to it: a writer's own river is sampled where they
+            # clicked, so a vertex-count split put the seam at 3% of one measured
+            # reach and handed the upstream name a stub too short to sit on — the
+            # name then vanished from the whole first half of the river it was
+            # repeated to serve.
             span = max(bounds.width, bounds.height)
+            reach = labels._length(line)
             repeats = (style_kind in ("river", "range")
-                       and labels._length(line) >= REPEAT_REACH * span)
-            half = len(line) // 2
-            parts = ((("", line[:half + 1]), ("+2", line[half:])) if repeats
+                       and reach >= REPEAT_REACH * span)
+            parts = ((("", labels.upstream_half(line)),
+                      (REPEAT_SUFFIX, labels.downstream_half(line))) if repeats
                      else (("", line),))
             tier = _tier(voice.tier, feature)
             for suffix, part in parts:
@@ -716,7 +749,11 @@ def _wanted(features: Sequence[Mapping[str, Any]], icons: Sequence[Icon],
                     role=LINE_ROLES.get(style_kind, "label"),
                     size=voice.size, line=part, weight=labels._length(part),
                     face=voice.table, tracking=voice.tracking,
-                    band=_label_band(style_kind, feature)))
+                    band=_label_band(style_kind, feature),
+                    # Both halves speak for one river, which is what the honest
+                    # remainder counts by: a repeat that finds no window is not a
+                    # missing name when the other half is on the map.
+                    owner=key))
         elif kind == "point":
             # The entity's ONE surviving icon, whichever of its shapes this is —
             # icons are deduped per place, and the name must ride the dot that is
@@ -798,7 +835,7 @@ def _label_kind(rank: str) -> str:
     plain = rank.lower()
     if plain == "capital":
         return "capital"
-    if plain in ("city", "port", "market town"):
+    if plain in ("city", "port", "harbour", "harbor", "market town"):
         return "city"
     if plain in ("town", "fortress"):
         return "town"

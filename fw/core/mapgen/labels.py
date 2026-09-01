@@ -730,6 +730,19 @@ def _centred(points: list[Point] | tuple[Point, ...], width: float) -> list[Poin
     return _window(points, width, 0.5)
 
 
+def upstream_half(points: tuple[Point, ...]) -> tuple[Point, ...]:
+    """The first half of a reach BY LENGTH, for a name that repeats along it."""
+    return tuple(_window(points, _length(points) / 2.0, 0.0))
+
+
+def downstream_half(points: tuple[Point, ...]) -> tuple[Point, ...]:
+    """The second half of a reach by length. Together with `upstream_half` these
+    cover the whole line: halving by vertex count instead put the seam wherever
+    the writer happened to click, and handed one half a stub no name could sit
+    on."""
+    return tuple(_window(points, _length(points) / 2.0, 1.0))
+
+
 def _window(points: list[Point] | tuple[Point, ...], width: float,
             share: float) -> list[Point]:
     """A `width` of the path with its slack split at `share` — 0.5 is the middle,
