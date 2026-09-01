@@ -120,6 +120,22 @@ class Route:
         return head + "\n" + "\n".join(steps)
 
 
+# What danger costs a traveller, as a multiplier on the days a stretch takes.
+#
+# Two of these four are all the system produces today: the column defaults to "low"
+# and the generator writes "moderate" on sea lanes and nothing else. The other two are
+# here for a writer, because `danger` is a free text column with no scale behind it
+# and no editor — a writer who types "high" on the road through the pass should not be
+# told their word is not a word. Anything unrecognised is priced as safe, which is the
+# conservative direction: an invented penalty is a lie about the world, where a missing
+# one is only a road that is no worse than it looks.
+#
+# `test_travel.py` asserts every value the GENERATOR can write is in here, because the
+# silent 1.0 that makes an unknown word safe is exactly how a danger system dies
+# quietly.
+DANGER_COST = {"low": 1.0, "moderate": 1.35, "high": 1.8, "extreme": 2.5}
+
+
 class Router:
     def __init__(self, world: World) -> None:
         self.world = world
@@ -158,8 +174,14 @@ class Router:
             if speed <= 0:
                 continue
             days = segment.length / speed
-            days *= {"low": 1.0, "moderate": 1.35, "high": 1.8,
-                     "extreme": 2.5}.get(segment.danger, 1.0)
+            # A dangerous road is not a slower road, but it costs a traveller the
+            # same way: you go in company, you wait for one, you take the long way
+            # round the wood. The generator has been SAYING so since sea lanes were
+            # drawn — `pipeline.LANE_DANGER` sets "moderate" under a comment claiming
+            # "the router models through quality and danger" — and the router did not.
+            # A comment asserting a behaviour the code does not have is worth more
+            # than the behaviour, because it stops anyone checking.
+            days *= DANGER_COST.get(segment.danger, 1.0)
             if party_size and party_size > 500:
                 # A large body of people moves slower than its own marching speed: forage,
                 # water and column length all bite. A rough, honest penalty beats a
