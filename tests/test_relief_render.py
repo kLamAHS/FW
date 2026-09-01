@@ -15,6 +15,7 @@ renders differently on two machines is not a world file.
 
 from __future__ import annotations
 
+import pathlib
 import struct
 import zlib
 
@@ -193,6 +194,66 @@ class TestTheShadingMeansSomething:
         apart = sum(abs(a - b) for a, b in zip(high, low, strict=True))
         assert apart > 0.04, (
             f"the hypsometric tint is not varying with height ({apart:.4f} apart)")
+
+
+class TestTheNightPlate:
+    """The relief is the one part of the map painted from Python rather than from a
+    CSS role, so the stylesheet's "every role has a dark value" guard cannot see it.
+    For a phase it did not have one: a dark theme darkened the sea, the paper and the
+    type and left a brightly lit daytime continent lying in the middle of them.
+    """
+
+    def test_the_night_sea_meets_the_colour_the_client_paints_beyond_it(self):
+        """The seam that pins the whole night transform.
+
+        The client fills everything outside the raster with `--map-sea`, so the deep
+        end of the sea ramp has to BE that colour or the map ends in a visible
+        rectangle. That is true by day and has to stay true by night, and it is the
+        reason the night transform is anchored on the sea rather than chosen: these
+        three numbers are `--map-sea`'s dark value over its light one.
+        """
+        import re
+
+        sheet = (pathlib.Path(__file__).resolve().parent.parent
+                 / "web" / "src" / "styles.css").read_text()
+        night_block = sheet.split("prefers-color-scheme: dark", 1)[1]
+        wanted = re.search(r"--map-sea:\s*#([0-9a-fA-F]{6})", night_block).group(1)
+        deep = shade.SEA_RAMP[-1][1:]
+        got = "".join(f"{int(c * n * 255.0 + 0.5):02x}"
+                      for c, n in zip(deep, shade.NIGHT, strict=True))
+        assert got == wanted.lower(), (
+            f"the night sea ramp ends at #{got} and the stylesheet paints "
+            f"#{wanted} beyond it — the map would end in a visible rectangle")
+
+    def test_the_night_plate_is_darker_but_still_reads_as_a_map(self):
+        grid, height = ridge_world()
+        day = shade.render(grid, elevation=height, seed="s", scale=4, sea_level=0.0)
+        night = shade.render(grid, elevation=height, seed="s", scale=4,
+                             sea_level=0.0, night=True)
+
+        def mean(image, want_land):
+            total = count = 0
+            for k in range(image.width * image.height):
+                if bool(image.land[k]) is want_land:
+                    total += sum(image.pixels[k * 3:k * 3 + 3])
+                    count += 1
+            return total / (3 * max(count, 1))
+
+        assert mean(night, True) < mean(day, True) * 0.6, "the night plate still glares"
+        # The coast is legible because the land is lighter than the water. Scaling
+        # each ramp by its OWN role's light-to-dark ratio inverted exactly this —
+        # the stylesheet darkens land and sea by different amounts — and the night
+        # shore came out brighter than the night lowland.
+        assert mean(night, True) > mean(night, False), (
+            "the night sea is brighter than the night land, so the coast inverts")
+
+    def test_the_night_plate_is_byte_identical_twice(self):
+        grid, height = ridge_world()
+        one = shade.render(grid, elevation=height, seed="s", scale=3,
+                           sea_level=0.0, night=True)
+        two = shade.render(grid, elevation=height, seed="s", scale=3,
+                           sea_level=0.0, night=True)
+        assert one.pixels == two.pixels
 
 
 class TestNothingDependsOnLuck:

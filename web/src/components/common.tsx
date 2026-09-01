@@ -99,6 +99,30 @@ export function useDebounced<T>(value: T, delay = 220): T {
  * views to stay usable and transforming one group is far cheaper than moving thousands of
  * nodes.
  */
+/** Whether the reader is on the night theme, as a value React can re-render on.
+ *
+ * The theme is otherwise entirely CSS — `prefers-color-scheme` picks a palette and no
+ * component has ever needed to know. The relief raster is the exception and cannot be
+ * anything else: it is painted from Python, so the server has to be TOLD which plate
+ * to draw, and only the browser knows. Listening rather than reading once, because a
+ * reader who flips their system theme should not be left with the other map. */
+export function useDarkMode(): boolean {
+  const query = '(prefers-color-scheme: dark)'
+  const [dark, setDark] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia
+      ? window.matchMedia(query).matches : false,
+  )
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const media = window.matchMedia(query)
+    const listen = (e: MediaQueryListEvent) => setDark(e.matches)
+    media.addEventListener('change', listen)
+    setDark(media.matches)
+    return () => media.removeEventListener('change', listen)
+  }, [])
+  return dark
+}
+
 export function usePanZoom(initialScale = 1) {
   const [view, setView] = useState({ x: 0, y: 0, k: initialScale })
   const dragging = useRef<{ x: number; y: number } | null>(null)

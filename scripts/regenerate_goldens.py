@@ -51,7 +51,7 @@ def _draw_map(world, label: str, band: str, dark: bool) -> None:
     import render_map
 
     data, relief, png = render_map.the_map(
-        world, day=None, mode="legally_owns", seen_as=None, scale=6)
+        world, day=None, mode="legally_owns", seen_as=None, scale=6, night=dark)
     css = render_map.stylesheet_colours(dark=dark)
     svg = render_map.render_svg(data, relief, png, css=css, mode="legally_owns",
                                 width=1500, band=band)

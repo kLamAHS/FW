@@ -28,7 +28,8 @@ import {
 import type { Drawable, Drawing } from './map/drawing'
 import { EntityPicker } from '../components/forms'
 import {
-  Badge, ErrorBox, Loading, Panel, categoryColour, usePanZoom, useAsync,
+  Badge, ErrorBox, Loading, Panel, categoryColour, useDarkMode, usePanZoom,
+  useAsync,
 } from '../components/common'
 
 const CONTROL_MODES = [
@@ -82,6 +83,7 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // 'auto' is not a third way of drawing the map — it is "whichever of the two suits
   // the ground underneath", re-read every time the ground is toggled.
   const [presentation, setPresentation] = useState<Presentation>('auto')
+  const night = useDarkMode()
   // Drawing on the map yourself (§66). `null` is the ordinary state — the tool is a
   // mode a writer enters deliberately, because a map that places a town wherever you
   // happened to click is a map you cannot pan.
@@ -220,6 +222,18 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
     return map
   }, [data])
 
+  const kin = useMemo(() => {
+    if (!selectedId) return null
+    const own = new Set<string>([selectedId])
+    for (const f of (data?.features ?? [])) {
+      if (f.entity_id === selectedId) own.add(f.entity_id)
+      for (const holder of f.control[mode] ?? []) {
+        if (holder.id === selectedId) own.add(f.entity_id)
+      }
+    }
+    return own
+  }, [selectedId, data, mode])
+
   if (loading && !data) return <Loading what="Drawing the map" />
   if (error) return <ErrorBox error={error} />
   if (!data) return null
@@ -242,17 +256,6 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // itself, and — when a house is selected — everything that house holds under the
   // authority the map is currently coloured by. No request, no re-solve: the names
   // are already placed, and quieting the rest is a matter of opacity.
-  const kin = useMemo(() => {
-    if (!selectedId) return null
-    const own = new Set<string>([selectedId])
-    for (const f of data.features) {
-      if (f.entity_id === selectedId) own.add(f.entity_id)
-      for (const holder of f.control[mode] ?? []) {
-        if (holder.id === selectedId) own.add(f.entity_id)
-      }
-    }
-    return own
-  }, [selectedId, data.features, mode])
   const isKin = (entityId: string) => !kin || kin.has(entityId)
   const fillFor = (f: MapFeature) => {
     const holder = holderOf(f)
@@ -339,7 +342,12 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                 diagram, and the same stroke over lit relief reads as a coast. */}
             {relief && showRelief && (
               <image
-                href={`/api/map/relief.png?scale=8&v=${encodeURIComponent(relief.updated_at)}`}
+                // The theme goes in the URL: the relief is the only part of this
+                // map painted from Python rather than from a CSS role, so it cannot
+                // follow `prefers-color-scheme` by itself. Without this the night
+                // map came back with a daylit continent lying on a night sea.
+                href={`/api/map/relief.png?scale=8&night=${night}`
+                      + `&v=${encodeURIComponent(relief.updated_at)}`}
                 x={relief.x} y={relief.y} width={relief.width} height={relief.height}
                 preserveAspectRatio="none"
                 style={{ imageRendering: 'auto' }}

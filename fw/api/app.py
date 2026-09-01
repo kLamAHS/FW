@@ -815,7 +815,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
         return report.as_dict()
 
     @app.get("/api/map/relief.png")
-    def the_relief(scale: int = 6) -> Response:
+    def the_relief(scale: int = 6, night: bool = False) -> Response:
         """The ground itself, lit — the picture the vector map is drawn over.
 
         Everything else this endpoint's neighbours return is geometry, and the client
@@ -837,7 +837,13 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 detail="no map has been accepted yet, so there is no ground to draw")
 
         scale = max(2, min(14, scale))
-        stamp = (world.project_id, world.branch_id, ground["updated_at"], scale)
+        # The theme is part of the picture, so it is part of the key. The relief is
+        # the one part of this map that is painted from Python rather than from a CSS
+        # role, so without this the night map came back with a daylit continent on it
+        # — and with the theme in the stamp but not the cache, worse: whichever theme
+        # asked first would have been served to the other.
+        stamp = (world.project_id, world.branch_id, ground["updated_at"], scale,
+                 bool(night))
         cached = getattr(app.state, "relief_cache", None)
         if cached and cached[0] == stamp:
             return Response(content=cached[1], media_type="image/png",
@@ -853,7 +859,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
             elevation=fields["elevation"], seed=ground["seed"], scale=scale,
             sea_level=ground["sea_level"], canopy=fields.get("canopy"),
             marsh=fields.get("marsh"), flow=fields.get("flow"),
-            shoreline=fields.get("shoreline"))
+            shoreline=fields.get("shoreline"), night=bool(night))
         png = raster.encode(picture.width, picture.height, picture.pixels)
         app.state.relief_cache = (stamp, png)
         return Response(content=png, media_type="image/png",

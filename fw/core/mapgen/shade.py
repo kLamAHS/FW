@@ -139,6 +139,26 @@ SEA_RAMP = (
     (1.000, 0.290, 0.396, 0.494),      # deep
 )
 
+# The night plate (§69, and the hard rule that every part of this map has a dark
+# value). The relief is the one thing on the map that had no night version at all:
+# `shade.py` paints pixels from these ramps rather than from CSS roles, so a dark
+# theme darkened the sea, the paper and the type and left a brightly lit daytime
+# continent sitting in the middle of it. The stylesheet's own guard could not see it,
+# because a raster is not a role.
+#
+# One transform carries the whole plate, and it is anchored rather than chosen: the
+# sea ramp's deep end IS `--map-sea`, which is the colour the client paints beyond the
+# edge of the raster, so the two have to meet exactly or the map ends in a visible
+# rectangle. These three numbers are `--map-sea`'s dark value divided by its light
+# one, and `test_relief_render.py` checks that the seam still closes if either moves.
+#
+# Anchoring on the sea rather than scaling each ramp by its own role's ratio is
+# deliberate: the stylesheet darkens land and sea by different amounts, and applying
+# those separately inverted the one relationship the coast depends on — measured, the
+# night shore came out brighter than the night lowland, so the water read as the land
+# and the land as the water.
+NIGHT = (0.39217, 0.42583, 0.42866)
+
 # The depth, below sea level in the same units as the height field, at which the sea
 # ramp bottoms out. This IS the bathymetry's own depth — `generate` imports it — and
 # for a phase it was not: the model built a shelf 0.22 deep while the ramp saturated
@@ -266,7 +286,7 @@ def render(grid: Grid, *, elevation: Field, seed: str, scale: int = SCALE,
            sea_level: float = 0.0, detail: float = DETAIL,
            relief_gain: float = RELIEF_GAIN, canopy: Field | None = None,
            marsh: Field | None = None, flow: Field | None = None,
-           shoreline: Field | None = None) -> Relief:
+           shoreline: Field | None = None, night: bool = False) -> Relief:
     """Shade a height field into an image several times the lattice's resolution.
 
     `elevation` is one continuous field over the whole map, sea floor included, and
@@ -286,7 +306,7 @@ def render(grid: Grid, *, elevation: Field, seed: str, scale: int = SCALE,
     cover = _cover(grid, canopy, marsh, seed, scale, width)
     grain = _grain(seed, width * width)
     return _paint(surface, width, scale, sea_level, relief_gain, grain, cover,
-                  shore_codes)
+                  shore_codes, night)
 
 
 def _cover(grid: Grid, canopy: Field | None, marsh: Field | None, seed: str,
@@ -617,7 +637,7 @@ def _detail_field(size: int, seed: str) -> tuple[list[float], int]:
 def _paint(surface: array, width: int, scale: int, sea_level: float,
            relief_gain: float, grain: bytes,
            cover: tuple[array, array] | None = None,
-           shore_codes: bytearray | None = None) -> Relief:
+           shore_codes: bytearray | None = None, night: bool = False) -> Relief:
     """Shade and tint the surface, one pass, through a precomputed blend table."""
     # The three lights are summed into one vector before the loop, and that vector is
     # renormalised: shading is linear in the light, so a key, a fill and a cross key
@@ -650,25 +670,18 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
     tint_step = (_TINT_STEPS - 1) / span
     depth_step = (_TINT_STEPS - 1) / SHELF_DEPTH
 
-    blend = _blend_table()
-    sea_table = _sea_table()
+    blend = _blend_table(night)
+    sea_table = _sea_table(night)
     speck = _grain_steps()
 
-    canopy_r = int(CANOPY_TINT[0] * 255.0 + 0.5)
-    canopy_g = int(CANOPY_TINT[1] * 255.0 + 0.5)
-    canopy_b = int(CANOPY_TINT[2] * 255.0 + 0.5)
-    marsh_r = int(MARSH_TINT[0] * 255.0 + 0.5)
-    marsh_g = int(MARSH_TINT[1] * 255.0 + 0.5)
-    marsh_b = int(MARSH_TINT[2] * 255.0 + 0.5)
-    lake_r = int(LAKE_TINT[0] * 255.0 + 0.5)
-    lake_g = int(LAKE_TINT[1] * 255.0 + 0.5)
-    lake_b = int(LAKE_TINT[2] * 255.0 + 0.5)
-    sand_r = int(SAND_TINT[0] * 255.0 + 0.5)
-    sand_g = int(SAND_TINT[1] * 255.0 + 0.5)
-    sand_b = int(SAND_TINT[2] * 255.0 + 0.5)
-    mud_r = int(MUD_TINT[0] * 255.0 + 0.5)
-    mud_g = int(MUD_TINT[1] * 255.0 + 0.5)
-    mud_b = int(MUD_TINT[2] * 255.0 + 0.5)
+    # The cover tints are applied in the loop rather than through a table, so they
+    # take the night transform here. Missing one of these is a wood or a fen that
+    # keeps its daylight colour on the night plate and glows.
+    canopy_r, canopy_g, canopy_b = _tint(CANOPY_TINT, night)
+    marsh_r, marsh_g, marsh_b = _tint(MARSH_TINT, night)
+    lake_r, lake_g, lake_b = _tint(LAKE_TINT, night)
+    sand_r, sand_g, sand_b = _tint(SAND_TINT, night)
+    mud_r, mud_g, mud_b = _tint(MUD_TINT, night)
 
     pixels = bytearray(width * width * 3)
     land = bytearray(width * width)
@@ -838,8 +851,22 @@ def _ramp(stops, steps: int) -> list[tuple[float, float, float]]:
     return out
 
 
-@lru_cache(maxsize=1)
-def _blend_table() -> bytes:
+def _by_night(tint: tuple[float, float, float],
+              night: bool) -> tuple[float, float, float]:
+    """One colour carried onto the night plate, or left where it is."""
+    if not night:
+        return tint
+    return (tint[0] * NIGHT[0], tint[1] * NIGHT[1], tint[2] * NIGHT[2])
+
+
+def _tint(colour: tuple[float, float, float], night: bool) -> tuple[int, int, int]:
+    """A tint as three bytes, for the day or for the night."""
+    r, g, b = _by_night(colour, night)
+    return (int(r * 255.0 + 0.5), int(g * 255.0 + 0.5), int(b * 255.0 + 0.5))
+
+
+@lru_cache(maxsize=2)
+def _blend_table(night: bool = False) -> bytes:
     """Every tint crossed with every shade level, worked out once — and kept.
 
     Cached because it is pure and was being rebuilt on every render: a quarter of a
@@ -849,11 +876,11 @@ def _blend_table() -> bytes:
     the same arithmetic inside the pixel loop is two million multiplies and clamps per
     channel, which on a two-megapixel render is most of the render.
     """
-    tints = _ramp(LAND_RAMP, _TINT_STEPS)
+    tints = [_by_night(tint, night) for tint in _ramp(LAND_RAMP, _TINT_STEPS)]
     out = bytearray(_TINT_STEPS * _SHADE_STEPS * 3)
     n = 0
     top = _TINT_STEPS - 1
-    hz = HAZE_TINT
+    hz = _by_night(HAZE_TINT, night)
     for index, (r, g, b) in enumerate(tints):
         # The high ground is seen through more air. The table is indexed by height, so
         # the haze is applied here rather than per pixel — the whole term costs 256
@@ -875,8 +902,8 @@ def _blend_table() -> bytes:
     return bytes(out)
 
 
-@lru_cache(maxsize=1)
-def _sea_table() -> bytes:
+@lru_cache(maxsize=2)
+def _sea_table(night: bool = False) -> bytes:
     """Every depth crossed with every level of the paper's grain.
 
     Water has no shade axis to borrow — the sea is drawn from depth alone — so the
@@ -888,7 +915,7 @@ def _sea_table() -> bytes:
     out = bytearray(_TINT_STEPS * _GRAIN_LEVELS * 3)
     n = 0
     middle = (_GRAIN_LEVELS - 1) * 0.5
-    for r, g, b in _ramp(SEA_RAMP, _TINT_STEPS):
+    for r, g, b in (_by_night(t, night) for t in _ramp(SEA_RAMP, _TINT_STEPS)):
         for level in range(_GRAIN_LEVELS):
             lift = (level - middle) / middle * SEA_GRAIN
             for channel in (r, g, b):

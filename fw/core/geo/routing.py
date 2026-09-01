@@ -158,6 +158,8 @@ class Router:
             if speed <= 0:
                 continue
             days = segment.length / speed
+            days *= {"low": 1.0, "moderate": 1.35, "high": 1.8,
+                     "extreme": 2.5}.get(segment.danger, 1.0)
             if party_size and party_size > 500:
                 # A large body of people moves slower than its own marching speed: forage,
                 # water and column length all bite. A rough, honest penalty beats a

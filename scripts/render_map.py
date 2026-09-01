@@ -180,7 +180,7 @@ def paint(css: dict[str, str], role: str, fallback: str = "#888888") -> str:
 
 
 def the_map(world: World, *, day: int | None, mode: str, seen_as: str | None,
-            scale: int):
+            scale: int, night: bool = False):
     """The same three requests the client makes, through the in-process client."""
     from fastapi.testclient import TestClient
 
@@ -196,7 +196,9 @@ def the_map(world: World, *, day: int | None, mode: str, seen_as: str | None,
     relief = client.get("/api/map/relief").json()
     png = None
     if relief.get("available"):
-        got = client.get(f"/api/map/relief.png?scale={scale}")
+        # The theme reaches the raster through the URL, exactly as MapView sends it:
+        # the relief is painted from Python and cannot follow a CSS media query.
+        got = client.get(f"/api/map/relief.png?scale={scale}&night={str(night).lower()}")
         if got.status_code == 200:
             png = got.content
     return data, relief, png
@@ -524,7 +526,8 @@ def main() -> int:
             print(f"accepted {sum(report.counts.values())} features "
                   f"({report.counts})")
         data, relief, png = the_map(world, day=args.at, mode=args.mode,
-                                    seen_as=args.seen_as, scale=args.scale)
+                                    seen_as=args.seen_as, scale=args.scale,
+                                    night=args.dark)
     finally:
         world.close()
 
