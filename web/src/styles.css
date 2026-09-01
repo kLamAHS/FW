@@ -236,6 +236,149 @@
   }
 }
 
+/* Alternative palettes (§69, V2 §40). Set `data-palette` on the document root and
+   every map role is redefined; nothing else in the interface moves, because only the
+   `--map-*` names are overridden. Written as whole blocks rather than as filters: a
+   hue-rotate over a finished map shifts the paper and the type along with the land,
+   and the point is that the map still reads as a map.
+
+   The two colour-blind palettes hold the same LIGHTNESS ordering as the default —
+   ground pale, water dark, borders darker still — so the map survives even where a
+   hue distinction is lost entirely, which §69 requires of every colour decision.
+
+   The twelve house colours in each were SEARCHED, not chosen: twelve colours a
+   dichromat can tell apart do not come out of anybody's eye, and the hand-picked set
+   that stood here proved it — six of its pairs were closer than 25 under simulation
+   and its worst was 10, against the untreated default palette's 5. Picking by hand
+   had bought almost nothing. So they were annealed against the same two confusion
+   matrices `tests/test_mapgen_guards.py` simulates, holding every pair at least 45
+   apart against the guard's floor of 40, inside the chroma the default palette
+   already uses: mean 72 and 68 against the default's 71, and a lower maximum than
+   its own reddest house. The slots are then ordered so that CONSECUTIVE numbers sit
+   as far apart as the set allows (86 and 101), because houses take slots in order
+   and neighbours on the ground are often neighbours in the list.
+
+   What that 45 buys is the LEGEND. On the plate itself a house is never this colour
+   — it is this colour washed over the ground, and since the wash is a linear blend,
+   the distance scales exactly with it: 45 apart as a swatch is 13 apart at
+   analytical strength and 5 at atlas strength. No palette can fix that, and none
+   should try. It is the reason colour is never asked to carry the distinction on
+   its own here: the frontier, the label and the legend identify the house, and in
+   atlas presentation the frontier is deliberately given the weight the wash gives
+   up (`BORDER_IN_ATLAS` in MapView). */
+:root[data-palette="deuteranopia"] {
+  /* Only the roles a reader has to tell APART are redefined, and the ground, the
+     paper and the type are left to the theme — so this composes with dark mode
+     instead of replacing it, and a reader who needs it does not lose the night map
+     to get it. The non-house roles are still pulled by hand onto the blue/yellow
+     axis, which is the one axis deuteranopia keeps; there are only five of them and
+     they never have to be told apart from each other. */
+  --map-contested: #6b4a86;
+  --map-castle: #7d6a12;
+  --map-waterway: #3f7fb0;
+  --map-road: #8a7a4e;
+  --map-highway: #7a6a34;
+  --map-holder-0: #287c38;
+  --map-holder-1: #8090c0;
+  --map-holder-2: #646428;
+  --map-holder-3: #b478a0;
+  --map-holder-4: #548468;
+  --map-holder-5: #b87058;
+  --map-holder-6: #4a4caa;
+  --map-holder-7: #9c504c;
+  --map-holder-8: #c4a868;
+  --map-holder-9: #548cac;
+  --map-holder-10: #30348c;
+  --map-holder-11: #848080;
+}
+
+:root[data-palette="protanopia"] {
+  /* The same discipline, shifted for the red-weak axis: reds go darker as well as
+     bluer, because protanopia dims red rather than only confusing it. The houses
+     were annealed separately against the protan matrix rather than reused from the
+     block above — the two axes are close but not the same, and a set tuned for one
+     lands its worst pair somewhere else on the other. */
+  --map-contested: #5f4a86;
+  --map-castle: #756a2a;
+  --map-waterway: #3d7fb2;
+  --map-road: #857a55;
+  --map-highway: #75693c;
+  --map-holder-0: #8c6c94;
+  --map-holder-1: #343c90;
+  --map-holder-2: #9c9854;
+  --map-holder-3: #525c96;
+  --map-holder-4: #9ca88c;
+  --map-holder-5: #445458;
+  --map-holder-6: #70acb8;
+  --map-holder-7: #8c782c;
+  --map-holder-8: #6074c0;
+  --map-holder-9: #883438;
+  --map-holder-10: #bcb85c;
+  --map-holder-11: #588c54;
+}
+
+:root[data-palette="quiet"] {
+  --map-land: #d8d6c8;
+  --map-water: #6b7a85;
+  --map-sea: #7d8a95;
+  --map-border: #74706a;
+  --map-coastline: #5a5852;
+  --map-ridge: #7d786e;
+  --map-waterway: #6b8ba5;
+  --map-road: #918571;
+  --map-highway: #857862;
+  --map-track: #a89f8e;
+  --map-settlement: #4a4741;
+  --map-castle: #8a7a55;
+  --map-port: #5f7d95;
+  --map-contested: #9a6a63;
+  --map-holder-0: #8a7a63;
+  --map-holder-1: #6b8299;
+  --map-holder-2: #6f8a78;
+  --map-holder-3: #9a7570;
+  --map-holder-4: #85759a;
+  --map-holder-5: #9a8a63;
+  --map-holder-6: #75909a;
+  --map-holder-7: #9a7585;
+  --map-holder-8: #708a6b;
+  --map-holder-9: #8a7566;
+  --map-holder-10: #6b8590;
+  --map-holder-11: #7d759a;
+}
+
+/* Ink on paper: for print, and for anybody who needs the most contrast the map can
+   give. Every role is pushed to an end of the range rather than recoloured. */
+:root[data-palette="high-contrast"] {
+  --map-land: #f2efe6;
+  --map-water: #16324a;
+  --map-sea: #0f2436;
+  --map-border: #1a1814;
+  --map-coastline: #000000;
+  --map-ridge: #2a2620;
+  --map-waterway: #10456e;
+  --map-road: #3a2f18;
+  --map-highway: #1f1a0c;
+  --map-track: #5c5034;
+  --map-settlement: #000000;
+  --map-castle: #4a3300;
+  --map-port: #002d5c;
+  --map-contested: #8a0000;
+  --map-label: #000000;
+  --map-halo: #ffffff;
+  --map-holder-0: #6b3c00;
+  --map-holder-1: #003a6b;
+  --map-holder-2: #00452a;
+  --map-holder-3: #8a0000;
+  --map-holder-4: #4a005c;
+  --map-holder-5: #6b4a00;
+  --map-holder-6: #00485c;
+  --map-holder-7: #6b0033;
+  --map-holder-8: #1f4a00;
+  --map-holder-9: #5c2a00;
+  --map-holder-10: #003a4a;
+  --map-holder-11: #3a2a6b;
+}
+
 * { box-sizing: border-box; }
 
 html, body, #root { height: 100%; margin: 0; }
@@ -689,7 +832,7 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
 .proposal-head { display: flex; gap: 16px; align-items: flex-start;
                  justify-content: space-between; flex-wrap: wrap; }
 .proposal-actions { display: flex; gap: 8px; }
-.proposal-group { border-top: 1px solid var(--rule); padding-top: 8px;
+.proposal-group { border-top: 1px solid var(--line); padding-top: 8px;
                   margin-top: 8px; }
 .proposal-group h4 { display: flex; justify-content: space-between;
                      align-items: baseline; margin: 0 0 4px; font-weight: 600; }
@@ -698,20 +841,20 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
                  display: grid; gap: 10px; }
 .proposal-list li { display: grid; gap: 2px; padding-left: 2px;
                     border-left: 2px solid transparent; }
-.proposal-list li.blocked { opacity: 0.45; border-left-color: var(--rule); }
+.proposal-list li.blocked { opacity: 0.45; border-left-color: var(--line); }
 .proposal-row { display: flex; gap: 10px; align-items: center; }
 .proposal-row label { display: flex; gap: 8px; align-items: center; flex: 1; }
 .proposal-list label { display: flex; gap: 8px; align-items: center; }
 .proposal-name { flex: 1; max-width: 22em; padding: 2px 6px;
                  font: inherit; background: var(--panel);
-                 border: 1px solid var(--rule); border-radius: 3px; }
+                 border: 1px solid var(--line); border-radius: 3px; }
 .proposal-list .tag { font-size: 11px; text-transform: uppercase;
-                      letter-spacing: 0.06em; color: var(--muted);
-                      border: 1px solid var(--rule); border-radius: 3px;
+                      letter-spacing: 0.06em; color: var(--ink-faint);
+                      border: 1px solid var(--line); border-radius: 3px;
                       padding: 0 4px; }
 .findings { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
 .findings li { font-size: 13px; padding-left: 8px;
-               border-left: 3px solid var(--rule); }
+               border-left: 3px solid var(--line); }
 .findings li.warning { border-left-color: var(--error); }
 /* The proposal is drawn dashed and translucent: it is not the map yet. */
 .proposal-overlay { pointer-events: none; }
@@ -727,11 +870,11 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
 
 /* §80: a named moment, and the way to stop calling it that. */
 .snapshot-chip { display: inline-flex; align-items: stretch; }
-.snapshot-chip .forget { padding: 0 5px; border-left: 0; color: var(--muted);
+.snapshot-chip .forget { padding: 0 5px; border-left: 0; color: var(--ink-faint);
                          border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .snapshot-chip > button:first-child { border-top-right-radius: 0;
                                       border-bottom-right-radius: 0; }
-.snapshots .name-this { color: var(--muted); border-style: dashed; }
+.snapshots .name-this { color: var(--ink-faint); border-style: dashed; }
 
 /* §33: the same thing, told differently. A row of voices, not one official version.
    Three columns where there is room, stacked where there is not — this panel appears
@@ -743,7 +886,7 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
            align-items: baseline; padding: 6px 0;
            border-top: 1px solid var(--line-soft); }
 .account:first-of-type { border-top: 0; }
-.account-who { font-size: 13px; color: var(--muted); }
+.account-who { font-size: 13px; color: var(--ink-faint); }
 .account-label { font-family: var(--serif, Georgia, serif); }
 
 @container (max-width: 30em) {

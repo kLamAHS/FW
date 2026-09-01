@@ -79,6 +79,9 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // does on its own.
   const [relief, setRelief] = useState<ReliefBounds | null>(null)
   const [showRelief, setShowRelief] = useState(true)
+  // 'auto' is not a third way of drawing the map — it is "whichever of the two suits
+  // the ground underneath", re-read every time the ground is toggled.
+  const [presentation, setPresentation] = useState<Presentation>('auto')
   // Drawing on the map yourself (§66). `null` is the ordinary state — the tool is a
   // mode a writer enters deliberately, because a map that places a town wherever you
   // happened to click is a map you cannot pan.
@@ -270,9 +273,29 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // whose country this is has to stay legible.
   const groundShown = Boolean(relief && showRelief)
   const REDUNDANT_OVER_GROUND = new Set(['land', 'features', 'waters'])
+  // Two ways to colour a political map, and they answer different questions (V2 §22).
+  //
+  //   atlas       a wash thin enough to read the ground through, and a frontier heavy
+  //               enough to carry the distinction on its own. Whose country this is
+  //               becomes a line and a tint over a landscape — which is how a printed
+  //               atlas says it, and why its political plates still look like places.
+  //   analytical  a flat fill at reading strength. The relief goes quiet under it and
+  //               the question becomes extent alone: how far does this house reach,
+  //               and where exactly does it stop.
+  //
+  // The default follows the ground, because the atlas wash is right over relief and
+  // simply faint on blank paper. Pinning it is the writer's, so an analytical plate
+  // over the lit ground is one choice away rather than unreachable.
+  const atlas = presentation === 'auto' ? groundShown : presentation === 'atlas'
   const fillOpacityFor = (f: MapFeature, selected: boolean) => {
-    if (!groundShown) return selected ? 0.55 : 0.3
-    if (REDUNDANT_OVER_GROUND.has(f.layer)) return selected ? 0.25 : 0
+    // Land, natural features and open water answer to the relief, not to the
+    // presentation. With the ground drawn, a fill over them is the same ink twice.
+    // With it off they ARE the ground — nothing else draws it — so no choice of
+    // presentation may thin them: an atlas wash over nothing is a blank sheet.
+    if (REDUNDANT_OVER_GROUND.has(f.layer)) {
+      return groundShown ? (selected ? 0.25 : 0) : (selected ? 0.55 : 0.3)
+    }
+    if (!atlas) return selected ? 0.55 : 0.3
     return selected ? 0.3 : 0.12
   }
 
@@ -384,8 +407,13 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                   // traffic does, and a river drawn one width for its whole length — or
                   // a lane drawn as wide as the highway it joins — is one of the
                   // plainest ways a made map differs from a real one.
-                  (f.style['stroke-width'] as number | undefined)
-                  ?? (f.layer === 'waterways' ? 3.5 : 2.5)
+                  ((f.style['stroke-width'] as number | undefined)
+                    ?? (f.layer === 'waterways' ? 3.5 : 2.5))
+                  // In atlas presentation the wash is deliberately too thin to carry a
+                  // frontier by itself, so the frontier has to carry it: the border
+                  // takes the weight the fill gave up. Only the border — a river does
+                  // not get heavier because the politics went quiet.
+                  * ((f.style.role as string) === 'border' && atlas ? BORDER_IN_ATLAS : 1)
                 }
                 strokeDasharray={f.style.dash ? '6 4' : undefined}
                 strokeLinecap="round"
@@ -459,6 +487,21 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
               the ground
             </label>
           )}
+          <label>
+            colour
+            <select
+              value={presentation}
+              onChange={(e) => setPresentation(e.target.value as Presentation)}
+              aria-label="how the political plate is coloured"
+            >
+              <option value="auto">
+                {groundShown ? 'atlas (follows the ground)'
+                  : 'analytical (follows the ground)'}
+              </option>
+              <option value="atlas">atlas — a wash over the land</option>
+              <option value="analytical">analytical — extent, flat</option>
+            </select>
+          </label>
           {data.layers.map((layer) => (
             <label key={layer}>
               <input
@@ -771,6 +814,12 @@ function InProgress({ drawing }: { drawing: Drawing }) {
 
 /** The deep end of the relief renderer's own sea ramp, so the two meet without a seam. */
 const OPEN_WATER = 'var(--map-sea)'
+
+/** How a political plate is coloured; see `fillOpacityFor`. */
+type Presentation = 'auto' | 'atlas' | 'analytical'
+
+/** What a frontier gains when the wash under it goes thin. */
+const BORDER_IN_ATLAS = 1.45
 
 /** The three views of one map, widest first — the server solves labels per band. */
 const BANDS = ['world', 'regional', 'local'] as const

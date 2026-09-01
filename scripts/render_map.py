@@ -32,6 +32,9 @@ STYLESHEET = Path(__file__).resolve().parent.parent / "web" / "src" / "styles.cs
 
 # MapView's own compositing rules, mirrored.
 REDUNDANT_OVER_GROUND = {"land", "features", "waters"}
+
+# MapView's `BORDER_IN_ATLAS`: what a frontier gains when the wash under it goes thin.
+BORDER_IN_ATLAS = 1.45
 LABEL_HALO_WIDTH = 3.0
 
 STAR = ((0, -1), (0.225, -0.309), (0.951, -0.309), (0.363, 0.118), (0.588, 0.809),
@@ -39,40 +42,89 @@ STAR = ((0, -1), (0.225, -0.309), (0.951, -0.309), (0.363, 0.118), (0.588, 0.809
         (-0.225, -0.309))
 
 
-def stylesheet_colours(dark: bool = False) -> dict[str, str]:
+def _blocks(css: str) -> list[tuple[str, str]]:
+    """Every rule in the sheet as (selector, body), comments stripped.
+
+    A hand-rolled brace walk rather than a regex: the sheet nests (`@media` holds
+    rules) and a regex over the whole file cannot tell a declaration inside a rule
+    from one inside a comment. Which was not academic — a commented-out example of
+    a custom property parsed as a live declaration and, because the old parser let
+    the last duplicate win, could silently replace the real palette.
+    """
+    css = re.sub(r"/\*.*?\*/", "", css, flags=re.S)
+    out: list[tuple[str, str]] = []
+    depth, start, head = 0, 0, ""
+    for n, ch in enumerate(css):
+        if ch == "{":
+            if depth == 0:
+                head = css[start:n].strip()
+                start = n + 1
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                out.append((head, css[start:n]))
+                start = n + 1
+    return out
+
+
+def _declared(body: str) -> list[tuple[str, str]]:
+    """The custom properties a rule body sets, including an unterminated last one."""
+    return re.findall(r"--([a-z0-9-]+)\s*:\s*([^;}]+)", body)
+
+
+DARK_QUERY = "prefers-color-scheme: dark"
+
+
+def stylesheet_colours(dark: bool = False, palette: str = "") -> dict[str, str]:
     """Every CSS custom property, resolved, from the client's own stylesheet.
 
-    The light block is everything up to the dark media query; dark overlays it.
-    `var(--x)` references are chased so a role defined in terms of another resolves
-    to paint.
+    Read per rule rather than by splitting the file on the dark media query. The
+    split was load-bearing and fragile in three ways worth naming, because each one
+    failed *silently* into a grey or wrongly-themed picture: reformatting the media
+    query at all dropped the whole dark palette; a second dark block was ignored;
+    and an accessibility palette had no position that worked — before the query it
+    overwrote the defaults, after it, it was invisible.
+
+    Precedence is the cascade's own: the base `:root`, then the requested palette,
+    then dark overrides of both. `var(--x)` references are chased so a role defined
+    in terms of another resolves to paint.
     """
-    css = STYLESHEET.read_text()
-    parts = css.split("@media (prefers-color-scheme: dark)")
-    declarations = re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", parts[0])
-    values = dict(declarations)
-    if dark and len(parts) > 1:
-        # Only the first block of the media query is theme overrides; later rules
-        # with variables would be component styling, and overriding from those
-        # would scramble the palette.
-        depth, cut = 0, len(parts[1])
-        for n, ch in enumerate(parts[1]):
-            if ch == "{":
-                depth += 1
-            elif ch == "}":
-                depth -= 1
-                if depth == 0:
-                    cut = n
-                    break
-        values.update(re.findall(r"--([a-z0-9-]+)\s*:\s*([^;]+);", parts[1][:cut]))
+    values: dict[str, str] = {}
+    wanted = f'[data-palette="{palette}"]' if palette else ""
+
+    for head, body in _blocks(STYLESHEET.read_text()):
+        if DARK_QUERY in head:
+            if not dark:
+                continue
+            for inner_head, inner_body in _blocks(body):
+                if _selects(inner_head, wanted):
+                    values.update(_declared(inner_body))
+        elif _selects(head, wanted):
+            values.update(_declared(body))
 
     def resolve(value: str, seen: frozenset = frozenset()) -> str:
-        match = re.match(r"var\(--([a-z0-9-]+)\)", value.strip())
+        match = re.match(r"var\(\s*--([a-z0-9-]+)\s*[,)]", value.strip())
         if match and match.group(1) not in seen:
-            inner = values.get(match.group(1), "#888888")
-            return resolve(inner, seen | {match.group(1)})
+            inner = values.get(match.group(1))
+            if inner is not None:
+                return resolve(inner, seen | {match.group(1)})
         return value.strip()
 
     return {name: resolve(value) for name, value in values.items()}
+
+
+def _selects(head: str, wanted: str) -> bool:
+    """Whether a rule sets the palette we are painting with.
+
+    `:root` is the base every palette starts from; a `[data-palette=...]` block
+    counts only when that palette was asked for. Anything else — a component rule
+    that happens to set a custom property — is styling, not palette.
+    """
+    head = head.strip()
+    if head.startswith(":root") and "[data-palette" not in head:
+        return True
+    return bool(wanted) and wanted in head
 
 
 def paint(css: dict[str, str], role: str, fallback: str = "#888888") -> str:
@@ -224,7 +276,8 @@ def _label(label: dict, css: dict[str, str], n: int) -> str:
 
 def render_svg(data: dict, relief: dict, png: bytes | None, *,
                css: dict[str, str], mode: str, width: int = 1400,
-               labels: bool = True, band: str = "world") -> str:
+               labels: bool = True, band: str = "world",
+               presentation: str = "auto") -> str:
     draw = data.get("draw") or {}
     bounds = draw.get("bounds") or {"x": 0, "y": 0, "width": 100, "height": 100}
     x0, y0 = float(bounds["x"]), float(bounds["y"])
@@ -232,6 +285,9 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
     height = int(width * (h / w)) if w else width
     holders = {str(k): str(v) for k, v in (draw.get("holders") or {}).items()}
     ground = bool(png)
+    # MapView: 'auto' is not a third way of drawing the map, it is whichever of the
+    # two suits the ground underneath.
+    atlas = ground if presentation == "auto" else presentation == "atlas"
     contested_colour = paint(css, "contested")
 
     out = [
@@ -254,8 +310,13 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
     features = data.get("features") or []
     for f in (f for f in features if f["kind"] == "polygon"):
         fill = fill_for(f, mode, holders, css)
-        opacity = 0.0 if ground and f["layer"] in REDUNDANT_OVER_GROUND else (
-            0.12 if ground else 0.3)
+        # MapView's `fillOpacityFor`: land, natural features and open water answer to
+        # the relief and not to the presentation — with the ground drawn they are the
+        # same ink twice, with it off they are the only ground there is.
+        if f["layer"] in REDUNDANT_OVER_GROUND:
+            opacity = 0.0 if ground else 0.3
+        else:
+            opacity = 0.12 if atlas else 0.3
         # MapView: a polygon marked edge:none carries no stroke of its own — its
         # borders arrive as shared arcs, each stroked once, and the coastline wins
         # on its seaward side.
@@ -274,6 +335,9 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
     for f in (f for f in features if f["kind"] == "line"):
         style = f.get("style") or {}
         wide = style.get("stroke-width") or (3.5 if f["layer"] == "waterways" else 2.5)
+        # MapView: in atlas presentation the frontier takes the weight the fill gave up.
+        if style.get("role") == "border" and atlas:
+            wide *= BORDER_IN_ATLAS
         # Only an explicit dash in the style: MapView does not dash approximate
         # *lines* (a generated river is a guess about a real river, not a sketch).
         dash = ' stroke-dasharray="6 4"' if style.get("dash") else ""
@@ -366,6 +430,12 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=1400)
     parser.add_argument("--scale", type=int, default=8, help="relief render scale")
     parser.add_argument("--dark", action="store_true", help="the night palette")
+    parser.add_argument("--palette", default=None,
+                        help="an alternative palette: deuteranopia, protanopia, "
+                             "quiet, high-contrast")
+    parser.add_argument("--presentation", default="auto",
+                        choices=("auto", "atlas", "analytical"),
+                        help="how the political plate is coloured")
     parser.add_argument("--no-labels", action="store_true")
     parser.add_argument("--band", default="world",
                         choices=("world", "regional", "local"),
@@ -393,9 +463,10 @@ def main() -> int:
     finally:
         world.close()
 
-    css = stylesheet_colours(dark=args.dark)
+    css = stylesheet_colours(dark=args.dark, palette=args.palette or "")
     svg = render_svg(data, relief, png, css=css, mode=args.mode, width=args.width,
-                     labels=not args.no_labels, band=args.band)
+                     labels=not args.no_labels, band=args.band,
+                     presentation=args.presentation)
 
     destination = Path(args.out)
     destination.parent.mkdir(parents=True, exist_ok=True)

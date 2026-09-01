@@ -22,6 +22,8 @@ from fw.core.mapgen.findings import Finding, ordered, warn
 from fw.core.world import World
 
 MAPGEN = pathlib.Path(__file__).resolve().parent.parent / "fw" / "core" / "mapgen"
+STYLESHEET = (pathlib.Path(__file__).resolve().parent.parent
+              / "web" / "src" / "styles.css")
 
 # Correctly rounded by IEEE 754 on every platform, so these are safe.
 ALLOWED_MATH = {"hypot", "dist", "sqrt", "floor", "ceil", "fabs", "isqrt",
@@ -32,6 +34,22 @@ ALLOWED_MATH = {"hypot", "dist", "sqrt", "floor", "ceil", "fabs", "isqrt",
 def modules() -> list[pathlib.Path]:
     return sorted(p for p in MAPGEN.glob("**/*.py") if p.name != "__init__.py")
 
+
+
+# The palettes a reader can choose, and the two confusion axes the guards simulate.
+# Brettel-style projections, kept as plain matrices so the test does no colour-science
+# of its own: each row says how much of each channel a reader on that axis perceives.
+PALETTES = ("deuteranopia", "protanopia", "quiet", "high-contrast")
+_DEUTERAN = ((0.625, 0.375, 0.0), (0.70, 0.30, 0.0), (0.0, 0.30, 0.70))
+_PROTAN = ((0.567, 0.433, 0.0), (0.558, 0.442, 0.0), (0.0, 0.242, 0.758))
+
+
+def _seen_as(hex_colour: str, matrix) -> tuple[float, float, float]:
+    """One colour as a reader on that axis sees it."""
+    value = hex_colour.strip().lstrip("#")
+    rgb = tuple(int(value[n:n + 2], 16) for n in (0, 2, 4))
+    return tuple(sum(m * c for m, c in zip(row, rgb, strict=True))
+                 for row in matrix)
 
 class TestNoPlatformMath:
     """`math.sin`, `cos`, `exp` and `x ** 0.5` go through the platform's libm, which is
@@ -360,22 +378,93 @@ class TestColourIsARole:
                     offences.append(f"{path.name}:{node.lineno} {node.value[:40]}")
         assert not offences, "colour belongs in the stylesheet: " + "; ".join(offences)
 
+    def test_no_rule_reaches_for_a_property_that_was_never_defined(self):
+        """`var(--rule)` where the name is `--line` fails in the quietest way CSS has.
+
+        The declaration is not dropped and no error is logged: the custom property is
+        simply invalid at computed-value time, so `border-color` falls back to
+        `currentColor` and `color` inherits. The rule *looks* applied, and what the
+        reader gets is a hairline in text ink where a pale rule was meant. Nine such
+        references had accumulated — `--rule` for `--line`, `--muted` for
+        `--ink-faint` — none of which any test could see, because every one of them
+        produced a page that rendered.
+        """
+        text = STYLESHEET.read_text()
+        defined = set(re.findall(r"(--[a-z0-9-]+)\s*:", text))
+        wanted = set(re.findall(r"var\(\s*(--[a-z0-9-]+)", text))
+        # A `var(--x, fallback)` is a deliberate default and needs no definition.
+        with_fallback = set(re.findall(r"var\(\s*(--[a-z0-9-]+)\s*,", text))
+        missing = sorted(wanted - defined - with_fallback)
+        assert not missing, f"referenced but never defined: {missing}"
+
+    @staticmethod
+    def _palette(dark: bool = False, palette: str = "") -> dict:
+        """The stylesheet as the parity renderer reads it.
+
+        Through the renderer's own parser rather than a second regex of this test's
+        own: the two used to disagree about what counted as the dark block — the
+        test split on one string, the renderer on a longer one — so a stylesheet
+        that satisfied the guard could still render grey.
+        """
+        import sys
+
+        root = pathlib.Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(root / "scripts"))
+        from render_map import stylesheet_colours
+
+        return stylesheet_colours(dark, palette)
+
     def test_every_role_the_map_uses_has_a_value_in_the_stylesheet(self):
         """A role with no `--map-…` behind it renders as nothing at all."""
         from fw.core.mapgen import cartography
 
-        css = (pathlib.Path(__file__).resolve().parent.parent
-               / "web" / "src" / "styles.css").read_text()
+        light = self._palette()
         missing = [role for role in cartography.ROLES
-                   if f"--map-{role}:" not in css]
+                   if f"map-{role}" not in light]
         assert not missing, f"no colour defined for {missing}"
 
     def test_every_role_has_a_dark_value_too(self):
         from fw.core.mapgen import cartography
 
-        css = (pathlib.Path(__file__).resolve().parent.parent
-               / "web" / "src" / "styles.css").read_text()
-        dark = css.split("prefers-color-scheme: dark", 1)[-1]
-        missing = [role for role in cartography.ROLES
-                   if f"--map-{role}:" not in dark]
+        dark = self._palette(dark=True)
+        light = self._palette()
+        missing = [role for role in cartography.ROLES if f"map-{role}" not in dark]
         assert not missing, f"no dark value for {missing}"
+        # And the dark map must actually be a dark map: the ground, the paper behind
+        # every label and the sea are the three that decide whether it reads at night.
+        for role in ("land", "sea", "halo"):
+            assert dark[f"map-{role}"] != light[f"map-{role}"], (
+                f"{role} is the same by day and by night")
+
+    def test_every_alternative_palette_still_paints_the_whole_map(self):
+        """A palette that redefines some roles and forgets others is a map with
+        holes in it — and the reader who needs that palette is exactly the reader
+        least able to tell a wrong colour from a right one."""
+        from fw.core.mapgen import cartography
+
+        for name in PALETTES:
+            for dark in (False, True):
+                painted = self._palette(dark=dark, palette=name)
+                missing = [role for role in cartography.ROLES
+                           if f"map-{role}" not in painted]
+                assert not missing, f"{name} (dark={dark}) leaves {missing} unpainted"
+
+    def test_the_colour_blind_palettes_hold_their_houses_apart(self):
+        """Simulated on the two commonest confusion axes: any two holders a reader
+        cannot tell apart are two houses that read as one on a political map."""
+        from fw.core.mapgen import cartography
+
+        holders = [r for r in cartography.ROLES if r.startswith("holder-")]
+        for name, matrix in (("deuteranopia", _DEUTERAN), ("protanopia", _PROTAN)):
+            painted = self._palette(palette=name)
+            seen = [_seen_as(painted[f"map-{h}"], matrix) for h in holders]
+            worst, pair = 1e9, None
+            for a in range(len(seen)):
+                for b in range(a + 1, len(seen)):
+                    gap = sum((x - y) ** 2 for x, y in zip(seen[a], seen[b],
+                                                           strict=True)) ** 0.5
+                    if gap < worst:
+                        worst, pair = gap, (holders[a], holders[b])
+            assert worst >= 40.0, (
+                f"under {name}, {pair[0]} and {pair[1]} are {worst:.0f} apart — "
+                f"two houses one colour")

@@ -115,7 +115,37 @@ of image height in effect). All of it stays byte-deterministic.
 Every colour is a role in `web/src/styles.css` (`--map-*`), with a light and a dark
 value; Python emits role names only (guard-tested). Political holder colours are
 palette slots (`holder-N`), stable per holder per world. Accessibility palettes
-(Phase E) are full `--map-*` blocks under `data-palette`, not filters.
+(Phase E) are full `--map-*` blocks under `data-palette`, not filters — a hue-rotate
+over a finished map moves the paper and the type along with the land.
+
+The two colour-blind blocks redefine only the roles a reader must tell *apart*,
+leaving the ground, the paper and the type to the theme, so they compose with dark
+mode instead of replacing it. Their twelve house colours were **annealed** against
+the same confusion matrices `tests/test_mapgen_guards.py` simulates, not chosen by
+eye: `docs/reference/palettes.png` (regenerate with `scripts/palette_chart.py`) is
+the argument in one picture — rows 1 and 4 are the default palette under the two
+axes, where four houses collapse into one blue-grey and three more into one olive.
+Every pair now holds ≥ 45 against the guard's floor of 40, inside the default
+palette's own chroma.
+
+What that separation buys is the **legend**, which is the only place a house is seen
+at full strength. On the plate a house is a wash over the ground, and since the wash
+is a linear blend the distance scales exactly with it: 45 apart as a swatch is 13.5
+apart in analytical presentation and 5.4 in atlas. Colour is therefore never asked
+to carry the distinction alone — the frontier, the label and the legend identify the
+house, and in atlas presentation the frontier is given the weight the wash gives up.
+
+### Presentation: atlas or analytical
+
+Two ways to colour a political plate, answering different questions. *Atlas* is a
+wash thin enough to read the ground through plus a frontier heavy enough to carry
+the distinction on its own — how a printed atlas says it, and why its political
+plates still look like places. *Analytical* is a flat fill at reading strength: the
+relief goes quiet and the question becomes extent alone. The default follows the
+ground (atlas over relief, analytical on blank paper); a writer can pin either.
+Land, natural features and open water answer to the relief rather than to this
+choice — with the ground drawn they are the same ink twice, with it off they are the
+only ground there is.
 
 ## Measured baselines (Phase A, world = Renn accepted with everything)
 

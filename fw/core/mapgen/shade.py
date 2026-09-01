@@ -32,6 +32,7 @@ left in the loop is four array reads, a dozen flops, one square root and a slice
 
 from __future__ import annotations
 
+import hashlib
 import math
 from array import array
 from dataclasses import dataclass
@@ -210,6 +211,34 @@ CANOPY_STRIDE = 1
 MARSH_TINT = (0.639, 0.671, 0.616)
 MARSH_DEEPEST = 0.55
 
+# Paper. Ink sits on a sheet with a tooth to it, and a perfectly even wash is the one
+# thing in this renderer that no amount of relief work fixes: flat colour reads as a
+# screen rather than as a printed sheet, and the eye finds the flatness before it finds
+# the mountains. So every pixel is nudged by a fraction of a step — under one percent of
+# luminance, far below where it reads as noise, and just enough that no two neighbouring
+# pixels of open ground are quite the same colour.
+#
+# It is applied at the *index*, never to the three channels. Shifting which row a pixel
+# reads from a table that already exists costs one list lookup; nudging three channels
+# costs three multiplies and three clamps — measured at 0.10 µs/px against 0.56, which
+# on a two-megapixel render is the difference between a rounding error and doubling the
+# cost of `_paint`. It also cannot push a channel out of range, because every row of
+# every table was already clamped when the table was built.
+#
+# Both numbers below are set to the same measured swing: plus or minus two channel units,
+# which on land runs from 0.4% to 1.4% of the tint depending where on the ramp the
+# pixel sits. They are expressed differently because the two hooks are: on land the
+# grain moves the shade INDEX, and three rows of the shade table happen to be worth
+# two channel units; on water there is no shade axis to move along, so the swing is
+# stated directly. Set the water's from the land's measurement rather than by eye —
+# at the three units this started at, the grain was 3.8% of the deep sea's own value
+# against 1% of the land's, and the water read as noise while the ground read as paper.
+GRAIN = 3                 # shade steps of swing either way; three rows ≈ two units
+SEA_GRAIN = 2.0           # channel units of swing on water, which has no shade axis
+_GRAIN_SHIFT = 5          # a digest byte, right-shifted, is the sea's grain bucket
+_GRAIN_LEVELS = 1 << (8 - _GRAIN_SHIFT)   # derived, so the two can never disagree
+_GRAIN_DIGEST = 64        # bytes per digest, and so pixels covered by one
+
 _SHADE_STEPS = 256
 _TINT_STEPS = 256
 
@@ -255,7 +284,8 @@ def render(grid: Grid, *, elevation: Field, seed: str, scale: int = SCALE,
     surface, size, width, shore_codes = _surface(
         grid, elevation, seed, scale, detail, sea_level, flow, shoreline)
     cover = _cover(grid, canopy, marsh, seed, scale, width)
-    return _paint(surface, width, scale, sea_level, relief_gain, cover,
+    grain = _grain(seed, width * width)
+    return _paint(surface, width, scale, sea_level, relief_gain, grain, cover,
                   shore_codes)
 
 
@@ -585,7 +615,8 @@ def _detail_field(size: int, seed: str) -> tuple[list[float], int]:
 
 
 def _paint(surface: array, width: int, scale: int, sea_level: float,
-           relief_gain: float, cover: tuple[array, array] | None = None,
+           relief_gain: float, grain: bytes,
+           cover: tuple[array, array] | None = None,
            shore_codes: bytearray | None = None) -> Relief:
     """Shade and tint the surface, one pass, through a precomputed blend table."""
     # The three lights are summed into one vector before the loop, and that vector is
@@ -621,6 +652,7 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
 
     blend = _blend_table()
     sea_table = _sea_table()
+    speck = _grain_steps()
 
     canopy_r = int(CANOPY_TINT[0] * 255.0 + 0.5)
     canopy_g = int(CANOPY_TINT[1] * 255.0 + 0.5)
@@ -675,7 +707,10 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
                     shelf = top_tint
                 elif shelf < 0:
                     shelf = 0
-                index = shelf * 3
+                # The water needs its own hook: the sea branch never reads the blend
+                # table, and grain that stops at the waterline is a seam along every
+                # coast — the one place on the map the eye is already looking.
+                index = (shelf * _GRAIN_LEVELS + (grain[k] >> _GRAIN_SHIFT)) * 3
                 red = sea_table[index]
                 green = sea_table[index + 1]
                 blue = sea_table[index + 2]
@@ -729,9 +764,11 @@ def _paint(surface: array, width: int, scale: int, sea_level: float,
                 level += lit if lit < CURVE_LIMIT else CURVE_LIMIT
             if level < 0.0:
                 level = 0.0
-            shade = int(level * top_shade)
+            shade = int(level * top_shade) + speck[grain[k]]
             if shade > top_shade:
                 shade = top_shade
+            elif shade < 0:
+                shade = 0
             tint = int((height - sea_level) * tint_step)
             if tint < 0:
                 tint = 0
@@ -840,11 +877,51 @@ def _blend_table() -> bytes:
 
 @lru_cache(maxsize=1)
 def _sea_table() -> bytes:
-    out = bytearray(_TINT_STEPS * 3)
+    """Every depth crossed with every level of the paper's grain.
+
+    Water has no shade axis to borrow — the sea is drawn from depth alone — so the
+    grain is crossed into the depth table instead, which keeps it at one lookup in the
+    loop. Depth is clamped before the lookup, so most of the open sea sits pinned at
+    the deepest row: nudging the *index* there would be nudging against a stop, and
+    the deep water would come out glassy while the shallows had a tooth.
+    """
+    out = bytearray(_TINT_STEPS * _GRAIN_LEVELS * 3)
     n = 0
+    middle = (_GRAIN_LEVELS - 1) * 0.5
     for r, g, b in _ramp(SEA_RAMP, _TINT_STEPS):
-        for channel in (r, g, b):
-            value = int(channel * 255.0 + 0.5)
-            out[n] = 0 if value < 0 else (255 if value > 255 else value)
-            n += 1
+        for level in range(_GRAIN_LEVELS):
+            lift = (level - middle) / middle * SEA_GRAIN
+            for channel in (r, g, b):
+                value = int(channel * 255.0 + 0.5 + lift)
+                out[n] = 0 if value < 0 else (255 if value > 255 else value)
+                n += 1
     return bytes(out)
+
+
+def _grain(seed: str, count: int) -> bytes:
+    """The tooth of the paper: one deterministic byte per pixel.
+
+    Bulk digests, not `noise.unit` per pixel. The noise field is a smooth function of
+    position and this wants precisely the opposite — an uncorrelated speck at pixel
+    scale, which is what a hash gives away for nothing. One 64-byte digest covers 64
+    pixels, so a two-megapixel sheet costs about thirty thousand digests: 0.017 µs a
+    pixel, against 2.1 for a cold `noise.unit`.
+
+    Keyed on the world's seed, so the paper is the same sheet every time this world is
+    drawn and a different one for the next world.
+    """
+    key = f"{seed}|paper".encode()
+    out = bytearray()
+    block = 0
+    while len(out) < count:
+        out += hashlib.blake2b(key + block.to_bytes(4, "big"),
+                               digest_size=_GRAIN_DIGEST).digest()
+        block += 1
+    return bytes(out[:count])
+
+
+@lru_cache(maxsize=1)
+def _grain_steps() -> tuple[int, ...]:
+    """A digest byte read as a signed nudge, in shade steps."""
+    span = GRAIN * 2 + 1
+    return tuple(value * span // 256 - GRAIN for value in range(256))
