@@ -86,9 +86,16 @@ def stylesheet_colours(dark: bool = False, palette: str = "") -> dict[str, str]:
     and an accessibility palette had no position that worked — before the query it
     overwrote the defaults, after it, it was invisible.
 
-    Precedence is the cascade's own: the base `:root`, then the requested palette,
-    then dark overrides of both. `var(--x)` references are chased so a role defined
-    in terms of another resolves to paint.
+    Precedence is the cascade's own, and the way it is reached is worth stating
+    because it is easy to misread: rules are applied in FILE order, and that lands on
+    the browser's answer because `:root[data-palette=…]` is (0,2,0) against the dark
+    block's `:root` at (0,1,0) — a media query adds no specificity — and the palette
+    blocks are written after the dark query. Move them above it and this parser would
+    still agree with the browser only by accident, so they stay where they are.
+
+    `var(--x)` references are chased so a role defined in terms of another resolves
+    to paint; one with a fallback is left intact, because the fallback is valid CSS
+    and a browser will use it.
     """
     values: dict[str, str] = {}
     wanted = f'[data-palette="{palette}"]' if palette else ""
@@ -112,6 +119,47 @@ def stylesheet_colours(dark: bool = False, palette: str = "") -> dict[str, str]:
         return value.strip()
 
     return {name: resolve(value) for name, value in values.items()}
+
+
+def declared_by(*, dark: bool = False, palette: str = "") -> dict[str, str]:
+    """What ONE block says itself, with no cascade under it.
+
+    `stylesheet_colours` answers "what colour will this be", which is the question a
+    renderer asks. This answers "did that block say so", which is the question a guard
+    has to ask — and they are not the same question. A guard that tests the merged
+    answer for a dark or a palette override can never fail, because the merge always
+    carries the base `:root` underneath: every role is present whether or not the
+    override declares it. That hole was live, and it is what this exists to close.
+
+    With `dark`, the `:root` inside the dark media query. With `palette`, that
+    palette's own block. With both, a dark-mode block for that palette, if the sheet
+    has one.
+    """
+    wanted = f'[data-palette="{palette}"]' if palette else ""
+    out: dict[str, str] = {}
+    for head, body in _blocks(STYLESHEET.read_text()):
+        inside_dark = DARK_QUERY in head
+        if inside_dark != dark:
+            continue
+        for rule_head, rule_body in (_blocks(body) if inside_dark else ((head, body),)):
+            rule_head = rule_head.strip()
+            if not rule_head.startswith(":root"):
+                continue
+            if ("[data-palette" in rule_head) != bool(wanted):
+                continue
+            if wanted and wanted not in rule_head:
+                continue
+            out.update(_declared(rule_body))
+    return out
+
+
+def palettes() -> set[str]:
+    """The `data-palette` names the stylesheet actually defines."""
+    found = set()
+    for head, _ in _blocks(STYLESHEET.read_text()):
+        for name in re.findall(r'\[data-palette="([^"]+)"\]', head):
+            found.add(name)
+    return found
 
 
 def _selects(head: str, wanted: str) -> bool:
@@ -293,14 +341,20 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
     out = [
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
         f'viewBox="{x0:.1f} {y0:.1f} {w:.1f} {h:.1f}">',
-        # The open water past the rendered ground — MapView paints it on the wrapper.
-        f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{w:.1f}" height="{h:.1f}" '
-        f'fill="{paint(css, "sea")}"/>',
         f'<defs><pattern id="contested-hatch" width="8" height="8" '
         f'patternUnits="userSpaceOnUse" patternTransform="rotate(45)">'
         f'<line x1="0" y1="0" x2="0" y2="8" stroke="{contested_colour}" '
         f'stroke-width="1.6"/></pattern></defs>',
     ]
+    if ground:
+        # The open water past the rendered ground — MapView paints it on the wrapper,
+        # and ONLY when the ground is drawn (`style={groundShown ? …: undefined}`).
+        # Painting it unconditionally was a parity break with teeth: with no relief,
+        # the client draws its polygons over the panel's white and this drew them
+        # over deep sea, so a region at 0.12 opacity came out `#527090` here against
+        # `#f1ebe6` in the app — the same map, and not the same picture.
+        out.append(f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{w:.1f}" '
+                   f'height="{h:.1f}" fill="{paint(css, "sea")}"/>')
     if png:
         uri = "data:image/png;base64," + base64.b64encode(png).decode()
         out.append(f'<image href="{uri}" x="{relief["x"]}" y="{relief["y"]}" '
@@ -358,9 +412,16 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
     # already solved per band.
     order = {"world": 0, "regional": 1, "local": 2}
     depth = order.get(band, 0)
-    for icon in draw.get("icons") or []:
-        if order.get(str(icon.get("band") or "world"), 0) <= depth:
-            out.append(_icon(icon, css))
+    # Band by band, widest first — MapView emits one <g> per band in BANDS order, so
+    # a local icon paints OVER a regional one wherever the two overlap. `draw.icons`
+    # is not sorted by band, so walking it straight put the pair the other way up:
+    # measured on the `empire` corpus at the local band, a castle keep covered the
+    # town disc beside it in this renderer and sat under it in the app.
+    icons = draw.get("icons") or []
+    for level in range(depth + 1):
+        for icon in icons:
+            if order.get(str(icon.get("band") or "world"), 0) == level:
+                out.append(_icon(icon, css))
     if labels:
         named = draw.get("labels") or {}
         shown = named.get(band, []) if isinstance(named, dict) else named
@@ -430,9 +491,13 @@ def main() -> int:
     parser.add_argument("--width", type=int, default=1400)
     parser.add_argument("--scale", type=int, default=8, help="relief render scale")
     parser.add_argument("--dark", action="store_true", help="the night palette")
-    parser.add_argument("--palette", default=None,
-                        help="an alternative palette: deuteranopia, protanopia, "
-                             "quiet, high-contrast")
+    # Checked against the stylesheet rather than a list written here, so a palette
+    # added to the sheet is offered without touching this file — and, more to the
+    # point, so a typo is refused instead of silently drawing the default palette.
+    # `--palette deuteranopa` used to exit 0 and hand the reader who asked for it
+    # exactly the map they cannot read.
+    parser.add_argument("--palette", default=None, choices=sorted(palettes()),
+                        help="an alternative palette defined in the stylesheet")
     parser.add_argument("--presentation", default="auto",
                         choices=("auto", "atlas", "analytical"),
                         help="how the political plate is coloured")
@@ -470,8 +535,10 @@ def main() -> int:
 
     destination = Path(args.out)
     destination.parent.mkdir(parents=True, exist_ok=True)
-    if destination.suffix == ".svg" or not rasterise(
-            svg, destination, css.get("map-sea", "#4a6580")):
+    # The page behind the SVG, for the same reason: the client's `.map-wrap` is
+    # `--panel` until the ground gives it a sea.
+    behind = css.get("map-sea", "#4a6580") if png else css.get("panel", "#ffffff")
+    if destination.suffix == ".svg" or not rasterise(svg, destination, behind):
         destination = destination.with_suffix(".svg")
         destination.write_text(svg)
     print(f"wrote {destination}")

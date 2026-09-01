@@ -344,6 +344,36 @@
   --map-holder-9: #8a7566;
   --map-holder-10: #6b8590;
   --map-holder-11: #7d759a;
+  /* The rest of the map, so nothing is left to the theme. A palette that fixes
+     the ground has taken the theme's job and must finish it: `[data-palette=…]`
+     out-specifies the dark block's `:root`, so a role this palette does not set is
+     inherited from a theme whose lightness no longer matches its own ground. Each
+     of these is the default pulled two thirds of the way towards its own grey,
+     which is the rule the whole palette is written by rather than a colour picked
+     one at a time. */
+  --map-label: #17181a;
+  --map-halo: #f6f5f4;
+  --map-label-water: #43535d;
+  --map-label-region: #4d5053;
+  --map-label-relief: #525049;
+  --map-terrain-mountain: #6b6a67;
+  --map-terrain-glacier: #c0c5c7;
+  --map-terrain-hills: #7a796b;
+  --map-terrain-highland: #737169;
+  --map-terrain-forest: #5b6659;
+  --map-terrain-plain: #737867;
+  --map-terrain-farmland: #818670;
+  --map-terrain-steppe: #868473;
+  --map-terrain-desert: #a8a190;
+  --map-terrain-marsh: #636965;
+  --map-terrain-coast: #767369;
+  --map-terrain-ocean: #525f68;
+  --map-cover-forest: #78816f;
+  --map-cover-marsh: #929687;
+  --map-cover-downs: #bab8a7;
+  --map-cover-moor: #a4a196;
+  --map-cover-waste: #d2cbb9;
+  --map-cover-ice: #e1e4e5;
 }
 
 /* Ink on paper: for print, and for anybody who needs the most contrast the map can
@@ -377,6 +407,32 @@
   --map-holder-9: #5c2a00;
   --map-holder-10: #003a4a;
   --map-holder-11: #3a2a6b;
+  /* The rest of the map, for the same reason as `quiet` above: this palette fixes
+     a paper-white ground, so every role it failed to declare came from whichever
+     theme was running and, under dark, landed light type on light paper. Each keeps
+     its hue and is driven to an end of the range — already-light lighter, everything
+     else darker — which is the rule the palette is written by. */
+  --map-label-water: #12252f;
+  --map-label-region: #1f2225;
+  --map-label-relief: #24221a;
+  --map-terrain-mountain: #393733;
+  --map-terrain-glacier: #e4e9ec;
+  --map-terrain-hills: #413f2c;
+  --map-terrain-highland: #3d3b30;
+  --map-terrain-forest: #293826;
+  --map-terrain-plain: #3a4029;
+  --map-terrain-farmland: #41482b;
+  --map-terrain-steppe: #48452e;
+  --map-terrain-desert: #e2dbcb;
+  --map-terrain-marsh: #303833;
+  --map-terrain-coast: #403c2e;
+  --map-terrain-ocean: #1b2933;
+  --map-cover-forest: #3a462d;
+  --map-cover-marsh: #49503b;
+  --map-cover-downs: #e7e4d3;
+  --map-cover-moor: #dedbd0;
+  --map-cover-waste: #f2ebd9;
+  --map-cover-ice: #f2f5f6;
 }
 
 * { box-sizing: border-box; }

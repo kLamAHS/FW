@@ -40,6 +40,12 @@ def modules() -> list[pathlib.Path]:
 # Brettel-style projections, kept as plain matrices so the test does no colour-science
 # of its own: each row says how much of each channel a reader on that axis perceives.
 PALETTES = ("deuteranopia", "protanopia", "quiet", "high-contrast")
+
+# The roles whose value has to agree with the theme's own lightness: the ground a map
+# is drawn on, and the type drawn over it. A palette that sets any of these has taken
+# the theme's job and must finish it.
+GROUND_ROLES = ("land", "water", "sea")
+TYPE_ROLES = ("label", "halo", "label-water", "label-region", "label-relief")
 _DEUTERAN = ((0.625, 0.375, 0.0), (0.70, 0.30, 0.0), (0.0, 0.30, 0.70))
 _PROTAN = ((0.567, 0.433, 0.0), (0.558, 0.442, 0.0), (0.0, 0.242, 0.758))
 
@@ -391,11 +397,16 @@ class TestColourIsARole:
         """
         text = STYLESHEET.read_text()
         defined = set(re.findall(r"(--[a-z0-9-]+)\s*:", text))
-        wanted = set(re.findall(r"var\(\s*(--[a-z0-9-]+)", text))
-        # A `var(--x, fallback)` is a deliberate default and needs no definition.
-        with_fallback = set(re.findall(r"var\(\s*(--[a-z0-9-]+)\s*,", text))
-        missing = sorted(wanted - defined - with_fallback)
-        assert not missing, f"referenced but never defined: {missing}"
+        # Per SITE, not per name. `var(--x, fallback)` is a deliberate default and
+        # needs no definition, but excusing the NAME would excuse every bare
+        # `var(--x)` elsewhere in the sheet on the strength of one fallback
+        # somewhere else — and the sheet already mixes the two: `--serif` is
+        # referenced bare four times and with a fallback once, so dropping its
+        # definition would have gone unreported and four headings would have
+        # silently fallen back to the inherited sans face.
+        bare = set(re.findall(r"var\(\s*(--[a-z0-9-]+)\s*\)", text))
+        missing = sorted(bare - defined)
+        assert not missing, f"referenced without a fallback, never defined: {missing}"
 
     @staticmethod
     def _palette(dark: bool = False, palette: str = "") -> dict:
@@ -414,6 +425,23 @@ class TestColourIsARole:
 
         return stylesheet_colours(dark, palette)
 
+    @staticmethod
+    def _declared(dark: bool = False, palette: str = "") -> dict:
+        """What one block SAYS, with no cascade under it — see `render_map`.
+
+        The distinction matters more than it looks. `_palette` answers the renderer's
+        question, "what colour will this be", and the answer always carries the base
+        `:root` underneath it. A guard that asks that question about an override can
+        never fail: the role is present whether or not the override declares it.
+        """
+        import sys
+
+        root = pathlib.Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(root / "scripts"))
+        from render_map import declared_by
+
+        return declared_by(dark=dark, palette=palette)
+
     def test_every_role_the_map_uses_has_a_value_in_the_stylesheet(self):
         """A role with no `--map-…` behind it renders as nothing at all."""
         from fw.core.mapgen import cartography
@@ -424,30 +452,71 @@ class TestColourIsARole:
         assert not missing, f"no colour defined for {missing}"
 
     def test_every_role_has_a_dark_value_too(self):
+        """Asked of the dark block ITSELF, not of the resolved colour.
+
+        This guard was briefly unfalsifiable, and the way it broke is worth keeping
+        written down because the mistake is an easy one to make twice. It was
+        rewritten to go through the renderer's own parser — sound in intent, the test
+        and the parser had genuinely disagreed about what "the dark block" was — but
+        the parser returns the CASCADE: base `:root` first, dark overlaid. So every
+        role a light block defines is a key in the dark result whether or not the dark
+        block mentions it, and `missing` was empty by construction. Deleting
+        `--map-terrain-glacier` from the dark block left the suite green and the
+        glacier glaring white on the night map.
+        """
         from fw.core.mapgen import cartography
 
-        dark = self._palette(dark=True)
-        light = self._palette()
-        missing = [role for role in cartography.ROLES if f"map-{role}" not in dark]
-        assert not missing, f"no dark value for {missing}"
+        night = self._declared(dark=True)
+        missing = [role for role in cartography.ROLES
+                   if f"map-{role}" not in night]
+        assert not missing, f"the dark block never declares {missing}"
         # And the dark map must actually be a dark map: the ground, the paper behind
         # every label and the sea are the three that decide whether it reads at night.
+        light = self._palette()
+        dark = self._palette(dark=True)
         for role in ("land", "sea", "halo"):
             assert dark[f"map-{role}"] != light[f"map-{role}"], (
                 f"{role} is the same by day and by night")
 
-    def test_every_alternative_palette_still_paints_the_whole_map(self):
-        """A palette that redefines some roles and forgets others is a map with
-        holes in it — and the reader who needs that palette is exactly the reader
-        least able to tell a wrong colour from a right one."""
+    def test_a_palette_that_repaints_the_ground_repaints_all_of_it(self):
+        """There are two kinds of palette here, and only one may leave a role behind.
+
+        A *composing* palette (deuteranopia, protanopia) shifts hues and nothing else.
+        It deliberately declares only the roles a reader must tell apart and inherits
+        lightness from whichever theme is running, which is the whole reason a reader
+        who needs it does not lose the night map to get it.
+
+        A *replacing* palette (quiet, high-contrast) fixes the ground, and the moment
+        it does, every role it fails to declare is inherited from a theme that no
+        longer matches it. `[data-palette=…]` is (0,2,0) and out-specifies the dark
+        block's `:root` at (0,1,0) — a media query adds no specificity — so under dark
+        mode a palette that sets a pale `--map-land` and forgets `--map-label` gets
+        pale ground with the night theme's near-white type on it. Measured before this
+        guard existed: `quiet` under dark gave land `#d8d6c8` against label `#e8e6e1`,
+        a contrast ratio of 1.17, with every name on the map reduced to a dark halo
+        around nothing.
+
+        So: touch the ground and you own the whole map.
+        """
         from fw.core.mapgen import cartography
 
         for name in PALETTES:
-            for dark in (False, True):
-                painted = self._palette(dark=dark, palette=name)
+            declared = self._declared(palette=name)
+            assert declared, (
+                f"the {name} palette declares nothing — is its selector spelled "
+                f"the same in the stylesheet as it is here?")
+            replaces = any(f"map-{role}" in declared for role in GROUND_ROLES)
+            if replaces:
                 missing = [role for role in cartography.ROLES
-                           if f"map-{role}" not in painted]
-                assert not missing, f"{name} (dark={dark}) leaves {missing} unpainted"
+                           if f"map-{role}" not in declared]
+                assert not missing, (
+                    f"{name} repaints the ground but leaves {missing} to the theme")
+            else:
+                trespass = [role for role in GROUND_ROLES + TYPE_ROLES
+                            if f"map-{role}" in declared]
+                assert not trespass, (
+                    f"{name} composes with the theme but sets {trespass}, which "
+                    f"only half-replaces it")
 
     def test_the_colour_blind_palettes_hold_their_houses_apart(self):
         """Simulated on the two commonest confusion axes: any two holders a reader
