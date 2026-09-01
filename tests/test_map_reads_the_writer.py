@@ -121,6 +121,35 @@ class TestACastleSaysWhatItIsFor:
             world.close()
 
 
+class TestARoadDrawnEntirelyByBusierRoadsIsStillRemembered:
+    def test_re_applying_an_identical_plan_writes_nothing_for_covered_roads(self):
+        """The ink dedup can leave a route with no shapes of its own — every stretch
+        already drawn by busier roads. Such a feature exists only as a travel-graph
+        segment, and a ledger that read only shapes forgot it: each re-apply of the
+        identical plan minted a fresh road entity and a duplicate segment.
+        """
+        from fw.core.mapgen.apply import apply_plan
+        from fw.core.mapgen.decide import DecisionSet
+
+        world = seed_renn()
+        try:
+            plan = plan_map(world, MapBrief(invent_settlements=True))
+            covered = [f for f in plan.features
+                       if f.kind == "road" and not f.shapes]
+            assert covered, "Renn no longer has a fully-covered road; rig one"
+            apply_plan(world, plan, DecisionSet.accept_all(plan))
+            roads = sum(1 for _ in world.entities("road"))
+            segments = len(world.route_segments())
+            before = world.db.one("SELECT COUNT(*) AS n FROM revision")["n"]
+            again = apply_plan(world, plan, DecisionSet.accept_all(plan))
+            assert again.action_id is None, "an identical plan wrote something"
+            assert world.db.one("SELECT COUNT(*) AS n FROM revision")["n"] == before
+            assert sum(1 for _ in world.entities("road")) == roads
+            assert len(world.route_segments()) == segments
+        finally:
+            world.close()
+
+
 class TestTheMapDoesNotSecondGuessTheExampleWorld:
     def test_the_plausibility_notes_are_silent_on_renn(self, plan):
         """V2 §44's own gate: loud on rigged worlds, silent on a sound one. Every

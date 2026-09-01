@@ -48,16 +48,40 @@ class LedgerRow:
     signature: str
     pinned: bool
     generation: str
+    # The route segments this feature stamped. A road whose every stretch of ink was
+    # already drawn by busier roads has no geometry at all — only its segment — and a
+    # ledger that read only shapes forgot it existed: every re-apply of an identical
+    # plan then minted a fresh entity and a duplicate segment.
+    segments: tuple = ()
 
     @property
     def geometry_ids(self) -> tuple[str, ...]:
         return tuple(g.id for g in self.geometries)
 
+    @property
+    def segment_signatures(self) -> tuple[str, ...]:
+        """What this feature last said in the travel graph, as stamped."""
+        return tuple(sorted(str(provenance(s).get("sig") or "")
+                            for s in self.segments))
 
-def provenance(geometry: Geometry) -> dict:
-    """The stamp on one shape, or an empty dict if it is the writer's own."""
+
+def provenance(geometry) -> dict:
+    """The stamp on one shape or segment, or an empty dict if it is the writer's own."""
     marker = (geometry.props or {}).get(PROVENANCE_KEY)
     return marker if isinstance(marker, dict) else {}
+
+
+def segment_signature(segment) -> str:
+    """A route segment's identity, independent of how its ends were referenced.
+
+    The plan names an end as a draft ref and the store as an entity id, so the ends
+    cannot take part; the payload is what "the same segment" means across a re-apply.
+    Works on a `SegmentSpec` and a stored `RouteSegment` alike — they share every
+    field this reads.
+    """
+    seasons = ",".join(segment.closed_seasons or ())
+    return (f"{segment.length:.1f}|{segment.medium}|{segment.quality:.2f}|"
+            f"{segment.terrain}|{segment.danger}|{segment.built_on}|{seasons}")
 
 
 def semantics(geometry: Geometry) -> dict:
@@ -132,6 +156,16 @@ def read_ledger(world: World, *, at: int | None = None) -> dict[str, LedgerRow]:
             else:
                 loose.append(geometry)
 
+    # What each feature said in the travel graph. Read beside the shapes because a
+    # feature can exist as a segment alone — a road whose ink was all drawn by busier
+    # roads — and forgetting it re-created it on every apply.
+    said: dict[str, list] = {}
+    for segment in world.route_segments():
+        marker = provenance(segment)
+        feature_id = marker.get("feature")
+        if feature_id:
+            said.setdefault(str(feature_id), []).append(segment)
+
     entities = {e.id: e for e in world.entities()}
     for feature_id in sorted(by_entity):
         shapes = tuple(sorted(by_entity[feature_id], key=lambda g: (g.layer, g.id)))
@@ -146,6 +180,24 @@ def read_ledger(world: World, *, at: int | None = None) -> dict[str, LedgerRow]:
             signature=str(first.get("sig") or ""),
             pinned=bool(first.get("pinned", False)),
             generation=str(first.get("gen") or ALGORITHM),
+            segments=tuple(sorted(said.get(feature_id, ()),
+                                  key=lambda s: s.id)),
+        )
+
+    for feature_id in sorted(set(said) - set(rows)):
+        spoken = tuple(sorted(said[feature_id], key=lambda s: s.id))
+        first = provenance(spoken[0])
+        entity_id = spoken[0].entity_id
+        rows[feature_id] = LedgerRow(
+            feature_id=feature_id,
+            entity_id=entity_id if entity_id in entities else None,
+            geometries=(),
+            name_at_write=str(first.get("name") or ""),
+            summary_at_write=str(first.get("summary") or ""),
+            signature="",
+            pinned=bool(first.get("pinned", False)),
+            generation=str(first.get("gen") or ALGORITHM),
+            segments=spoken,
         )
 
     for geometry in sorted(loose, key=lambda g: g.id):

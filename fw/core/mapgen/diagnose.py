@@ -42,7 +42,7 @@ def study(generator, drafts, known) -> list[Finding]:
     out.extend(_uphill_rivers(generator, drafts))
     out.extend(_waterless_towns(generator, known))
     out.extend(_isolated_towns(generator, drafts, known))
-    out.extend(_fen_roads(generator, drafts))
+    out.extend(_fen_roads(generator, known))
     out.extend(_unwatched_towers(generator))
     return out
 
@@ -128,30 +128,32 @@ def _isolated_towns(generator, drafts, known) -> list[Finding]:
     return out
 
 
-def _fen_roads(generator, drafts) -> list[Finding]:
+def _fen_roads(generator, known) -> list[Finding]:
+    """A road laid through open fen. Walked over the route's own lattice cells,
+    never the drawn line: the drawn line is eased and simplified, so a dead-straight
+    fen crossing keeps only its two endpoints and a vertex count would miss exactly
+    the geometry this check exists for."""
+    if len(known) < 2:
+        return []
     marsh = generator.vegetation.marsh
     out = []
-    for draft in drafts:
-        if draft.kind != "road":
-            continue
-        worst = 0
-        for shape in draft.shapes:
-            if shape.kind != "line":
-                continue
-            run = 0
-            for x, y in shape.coordinates:
-                i, j = generator._cell_of(float(x), float(y))
-                if not generator.sea[j][i] and marsh[j][i] >= FEN:
-                    run += 1
-                    worst = max(worst, run)
-                else:
-                    run = 0
+    for route in generator.road_network(known).routes:
+        run = worst = 0
+        for i, j in route.cells:
+            if not generator.sea[j][i] and marsh[j][i] >= FEN:
+                run += 1
+                worst = max(worst, run)
+            else:
+                run = 0
         if worst >= CAUSEWAY:
-            grade = draft.detail.get("grade", "road")
+            a, b = route.joins
+            ends = sorted(place.name or "a proposed town"
+                          for place in (known[a], known[b]))
             out.append(note(
                 "implausible",
-                f"a {grade} runs {worst} cells through open fen with nothing "
-                f"said about a causeway"))
+                f"the {route.grade} between {ends[0]} and {ends[1]} runs "
+                f"{worst} cells through open fen with nothing said about "
+                f"a causeway"))
     return out
 
 

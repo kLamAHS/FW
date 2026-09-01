@@ -110,21 +110,37 @@ class TestIsolatedTowns:
 
 
 class TestFenRoads:
+    """Walked over route cells, never the drawn line — a straight fen crossing
+    simplifies to its two endpoints and a vertex count misses it entirely."""
+
+    @staticmethod
+    def crossing(cells, grade="road"):
+        route = SimpleNamespace(cells=tuple(cells), grade=grade, joins=(0, 1))
+        return lambda known: SimpleNamespace(routes=(route,))
+
     def test_a_road_through_open_fen_wants_a_causeway(self):
         marsh = flat(0.0)
         for i in range(30, 40):
             marsh[10][i] = 0.8
-        g = rig(vegetation=SimpleNamespace(marsh=marsh))
-        road = line("road", [[float(i), 10.0] for i in range(25, 45)],
-                    role="segment", detail={"grade": "road"})
-        said = diagnose._fen_roads(g, [road])
+        g = rig(vegetation=SimpleNamespace(marsh=marsh),
+                road_network=self.crossing([(i, 10) for i in range(25, 45)]))
+        known = [town(25, 10, name="Wetford"), town(44, 10, name="Dryhall")]
+        said = diagnose._fen_roads(g, known)
         assert len(said) == 1 and "causeway" in said[0].message
+        assert "Dryhall" in said[0].message and "Wetford" in said[0].message
 
     def test_a_road_on_dry_ground_says_nothing(self):
-        g = rig()
-        road = line("road", [[float(i), 10.0] for i in range(25, 45)],
-                    role="segment")
-        assert diagnose._fen_roads(g, [road]) == []
+        g = rig(road_network=self.crossing([(i, 10) for i in range(25, 45)]))
+        known = [town(25, 10), town(44, 10)]
+        assert diagnose._fen_roads(g, known) == []
+
+    def test_one_wet_cell_is_a_puddle_not_a_fen(self):
+        marsh = flat(0.0)
+        marsh[10][30] = 0.8
+        g = rig(vegetation=SimpleNamespace(marsh=marsh),
+                road_network=self.crossing([(i, 10) for i in range(25, 45)]))
+        known = [town(25, 10), town(44, 10)]
+        assert diagnose._fen_roads(g, known) == []
 
 
 class TestUnwatchedTowers:

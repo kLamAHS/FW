@@ -639,26 +639,29 @@ def _cabotage_drafts(generator, known) -> list[FeatureDraft]:
     """
     from fw.core.mapgen.generate import CELL, LAYER_ROADS
 
+    # Indexed by position in this name-sorted list everywhere below, never by name:
+    # two ports the writer gave the same name would otherwise share one Dijkstra
+    # field and one partner slot, and entity ids differ between twin worlds.
     ports = sorted((p for p in known if p.entity_id
                     and p.rank.lower() in ("port", "harbour", "harbor")),
-                   key=lambda p: p.name)
+                   key=lambda p: (p.name, p.x, p.y))
     if len(ports) < 2:
         return []
     offshore = _offshore(generator)
-    sailed: dict[str, tuple[dict, dict]] = {}
-    for port in ports:
+    sailed: dict[int, tuple[dict, dict]] = {}
+    for n, port in enumerate(ports):
         seeds = _quay_seeds(generator, port)
         if seeds:
-            sailed[port.name] = _coastwise(generator, seeds, offshore)
+            sailed[n] = _coastwise(generator, seeds, offshore)
 
-    chosen: dict[tuple[str, str], tuple] = {}
-    for port in ports:
-        if port.name not in sailed:
+    chosen: dict[tuple[int, int], tuple] = {}
+    for n, _port in enumerate(ports):
+        if n not in sailed:
             continue
-        _came, best = sailed[port.name]
+        _came, best = sailed[n]
         calls = []
-        for other in ports:
-            if other.name == port.name or other.name not in sailed:
+        for m, other in enumerate(ports):
+            if m == n or m not in sailed:
                 continue
             cell = generator._cell_of(other.x, other.y)
             landings = [(best[step] + inland * INLAND_COST, step)
@@ -667,17 +670,18 @@ def _cabotage_drafts(generator, known) -> list[FeatureDraft]:
             if not landings:
                 continue
             cost, landing = min(landings)
-            calls.append((cost, other.name, other, landing))
+            calls.append((cost, m, other, landing))
         calls.sort(key=lambda call: (call[0], call[1]))
-        for _cost, _, other, landing in calls[:CABOTAGE_PARTNERS]:
-            pair = tuple(sorted((port.name, other.name)))
+        for _cost, m, other, landing in calls[:CABOTAGE_PARTNERS]:
+            pair = (n, m) if n < m else (m, n)
             if pair not in chosen:
-                chosen[pair] = (port, other, landing)
+                chosen[pair] = (n, other, landing)
 
     out: list[FeatureDraft] = []
     for pair in sorted(chosen):
-        origin, target, landing = chosen[pair]
-        came, _best = sailed[origin.name]
+        origin_index, target, landing = chosen[pair]
+        origin = ports[origin_index]
+        came, _best = sailed[origin_index]
         cells = [landing]
         while cells[-1] in came:
             cells.append(came[cells[-1]])

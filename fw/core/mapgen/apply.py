@@ -201,8 +201,15 @@ class _Writer:
             guards.canonical_json(ledger_module.semantics(g))
             == guards.canonical_json(feature.detail)
             for g in (row.geometries if row else ()))
-        if (row is not None and set(wanted) == set(present) - {""} and present
-                and same_story):
+        # What it says in the travel graph counts too — both ways. A feature can be a
+        # segment and nothing else (a road whose ink was all drawn by busier roads),
+        # and a segment can change under an unmoved line (a re-dated built_on).
+        same_saying = (row is not None and row.segment_signatures == tuple(
+            sorted(ledger_module.segment_signature(spec)
+                   for spec in feature.segments)))
+        told = bool(present) or bool(row.segments if row else ())
+        if (row is not None and told and set(wanted) == set(present) - {""}
+                and same_story and same_saying):
             self.outcomes.append(FeatureOutcome(
                 feature_id=feature.id, name=name, op="unchanged",
                 entity_id=entity_id, geometry_ids=row.geometry_ids,
@@ -221,7 +228,7 @@ class _Writer:
         for spec in feature.facts:
             self._assert(feature, entity_id, spec)
         for spec in feature.segments:
-            self._segment(feature, spec)
+            self._segment(feature, spec, name)
 
         self.outcomes.append(FeatureOutcome(
             feature_id=feature.id, name=name,
@@ -299,7 +306,8 @@ class _Writer:
                 f"this world has no “{spec.predicate_key}” to record, so that part of "
                 f"the map was left unsaid ({exc})"))
 
-    def _segment(self, feature: PlannedFeature, spec: SegmentSpec) -> None:
+    def _segment(self, feature: PlannedFeature, spec: SegmentSpec,
+                 name: str = "") -> None:
         origin = self._resolve_ref(spec.from_ref)
         target = self._resolve_ref(spec.to_ref)
         if origin is None or target is None:
@@ -309,7 +317,11 @@ class _Writer:
             terrain=spec.terrain, entity_id=self.entity_of.get(feature.id),
             closed_seasons=spec.closed_seasons, danger=spec.danger,
             built_on=spec.built_on,
-            props=ledger_module.stamp(feature.id, "segment", "", ""),
+            # A real signature and the name as written, not blanks: a feature that is
+            # a segment and nothing else is remembered by exactly this stamp.
+            props=ledger_module.stamp(
+                feature.id, "segment",
+                ledger_module.segment_signature(spec), name),
         )
         self.wrote = True
 

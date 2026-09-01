@@ -1286,8 +1286,8 @@ class MapGenerator:
         # to the 1.0 default — below a village — and generated hamlet-level traffic,
         # so the roads out of it never bundled into anything (V2 §10).
         weight = {"capital": 6.0, "city": 5.0, "port": 4.5, "harbour": 4.5,
-                  "market town": 3.5, "fortress": 3.0, "town": 3.0,
-                  "village": 1.6, "hamlet": 1.0}
+                  "harbor": 4.5, "market town": 3.5, "fortress": 3.0,
+                  "town": 3.0, "village": 1.6, "hamlet": 1.0}
         self._network = roads.plan_roads(
             self._grid(),
             places=[self._cell_of(p.x, p.y) for p in known],
