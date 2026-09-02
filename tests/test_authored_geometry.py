@@ -120,14 +120,64 @@ class TestTheMapBuildsAroundIt:
         after = coastline(plan_map(world, MapBrief()))
         assert before != after, "the writer drew a border and the land ignored it"
 
-    def test_the_map_does_not_redraw_what_they_drew(self, client, ids, world):
+    def test_the_map_draws_the_country_their_ring_claims(self, client, ids, world):
+        """It used to skip the region entirely, and that cost the map its shape.
+
+        The rule was "the writer drew it; it is not ours to redraw", and it meant an
+        authored region got no traced outline and no shared border arcs — so the map
+        fell back to stroking the raw ring, and the seeded world came out as three
+        quadrilaterals lying across a coastline. A reader looked at it and said so.
+
+        `coast._hold` already argues the other reading, about those very provinces: a
+        ring dragged round a country says WHERE THE COUNTRY IS, not where its coast
+        runs, and honouring it literally is over-reading it. The terrain layer has
+        always spread that claim into a swell rather than tracing the pencil. This is
+        the same reading carried through to the ink.
+
+        §66 is untouched and the three tests below check it: the ring is not moved,
+        not restyled, not swept away by a regeneration, and never mistaken for the
+        map's own work. What changed is only which of the two shapes gets inked.
+        """
         client.post("/api/geometry", json={
             "entity_id": ids["Greenhollow"], "kind": "polygon",
             "layer": "regions", "coordinates": BORDER})
         plan = plan_map(world, MapBrief())
-        redrawn = {f.name for f in plan.features if f.kind == "region"}
-        assert "Greenhollow" not in redrawn
-        assert {"The Iron Spine", "The Sunlit Coast"} <= redrawn
+        drawn = {f.name for f in plan.features if f.kind == "region"}
+        assert {"Greenhollow", "The Iron Spine", "The Sunlit Coast"} <= drawn
+        theirs = next(f for f in plan.features
+                      if f.kind == "region" and f.name == "Greenhollow")
+        ring = next(s for s in theirs.shapes if s.kind == "polygon")
+        # Against the RING's own point count, not `len(BORDER)` — that is a list of
+        # rings, so it is 1, and comparing against it would pass for any shape at all.
+        assert len(ring.coordinates[0]) > len(BORDER[0]) + 1, (
+            f"the traced territory has {len(ring.coordinates[0])} points, no richer "
+            f"than the {len(BORDER[0]) + 1}-point ring it came from")
+        assert ring.style.get("edge") == "none", (
+            "the plate strokes its own ring, so every frontier is drawn twice")
+
+    def test_the_writers_ring_still_reaches_the_client(self, client, ids, world):
+        """Hiding it from the picture must not hide it from the writer.
+
+        MapView builds its "Drawn by you" panel from `features.filter(f =>
+        !f.generated)`, and that panel is the only place in the client that lists a
+        writer's own shape and the only one carrying its "rub out" button. Dropping
+        the ring from the payload — which is the tidier-looking way to stop drawing
+        two outlines per country — takes away their ability to see or delete the thing
+        they drew. So it stays on the wire, paired with the plate instead.
+        """
+        client.post("/api/geometry", json={
+            "entity_id": ids["Greenhollow"], "kind": "polygon",
+            "layer": "regions", "coordinates": BORDER})
+        plan = plan_map(world, MapBrief())
+        apply_plan(world, plan, DecisionSet(plan_id=plan.plan_id, decisions=tuple(
+            Decision(feature_id=f.id, accept=True) for f in plan.features)))
+        served = client.get("/api/map").json()["features"]
+        rings = [f for f in served if not f["generated"] and f["kind"] == "polygon"]
+        assert rings, "the writer's own ring never reached the client"
+        ring = rings[0]
+        assert ring["superseded_by"], "the ring is not paired with its plate"
+        plate = next(f for f in served if f["id"] == ring["superseded_by"])
+        assert plate["generated"] and plate["traced_from"] == ring["id"]
 
     def test_their_shape_is_never_taken_for_the_map_s_own(self, client, ids, world):
         """`ledger.is_generated` is what a regeneration retires by."""

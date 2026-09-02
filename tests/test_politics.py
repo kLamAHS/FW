@@ -221,7 +221,7 @@ class TestBordersAreStrokedOnce:
         """The coastline wins: a border re-drawn along the shore is the double line."""
         from fw.core.mapgen import pipeline
 
-        borders = pipeline._border_arcs(built, {})
+        borders = pipeline._border_arcs(built)
         drawn = sum(len(runs) for runs in borders.values())
         inland = sum(1 for left, right, pts in
                      territory.drawn_arcs(built.partition, built.sea)
@@ -232,7 +232,7 @@ class TestBordersAreStrokedOnce:
     def test_each_frontier_arc_belongs_to_exactly_one_region(self, built):
         from fw.core.mapgen import pipeline
 
-        borders = pipeline._border_arcs(built, {})
+        borders = pipeline._border_arcs(built)
         seen: set = set()
         for runs in borders.values():
             for points, _kind in runs:

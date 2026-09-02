@@ -134,6 +134,10 @@ export interface MapFeature {
   approximate: boolean
   /** Whose shape this is. False means the writer drew it themselves (§66). */
   generated: boolean
+  /** This shape is the writer's own, and the map has traced a plate from it. */
+  superseded_by?: string
+  /** This plate was traced from the writer's ring of that id. */
+  traced_from?: string
   control: Record<string, { id: string; name: string }[]>
   /**
    * What the generator understood about the shape — a river's stream order, a road's
