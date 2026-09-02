@@ -1273,14 +1273,14 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 331.7,
+    "x": 330.6,
     "y": 590.9
    },
    {
@@ -1955,14 +1955,14 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 331.7,
+    "x": 330.6,
     "y": 590.9
    },
    {
@@ -2184,14 +2184,14 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Prize",
     "tier": 0,
     "tracking": 0.14,
-    "x": 331.7,
+    "x": 330.6,
     "y": 590.9
    },
    {

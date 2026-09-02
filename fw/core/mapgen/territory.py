@@ -485,9 +485,19 @@ MAX_ARC_VERTICES = 160        # per arc, so a long border cannot blow the payloa
 # and un-shares the border. Bounding it by raising one tolerance for the whole map until
 # the largest ring fits is worse still: it flattened a five-vertex march to nothing while
 # the big region it was fitted to was still over. An arc's budget is the arc's own.
+#
+# But an arc budget does not bound a RING, and `MAX_RING_VERTICES` says one is bounded.
+# A region with many neighbours chains many perfectly legal arcs into one illegal ring,
+# and for a long time nothing noticed, because the only code that ever read that
+# constant was the test — until a richer world produced a 268-vertex ring against a cap
+# of 240. `_shared_budget` below is the third way the paragraph above did not consider:
+# escalate the tolerance only on the arcs of the rings that are actually over, and do it
+# in the `drawn` map BOTH SIDES READ. That keeps the border shared, because the two
+# neighbours are still handed the same simplified arc, and it leaves a small march alone
+# unless its own ring is the one over budget.
 
 
-def _drawn(arc: Arc) -> list[tuple[float, float]]:
+def _drawn(arc: Arc, tolerance: float = ARC_TOLERANCE) -> list[tuple[float, float]]:
     """An arc as it is drawn: the staircase taken off it, once, for both its owners.
 
     Smoothed here rather than in either neighbour's outline, which is the point — two
@@ -499,14 +509,14 @@ def _drawn(arc: Arc) -> list[tuple[float, float]]:
         # A whole shore, or a region wholly enclosed by one neighbour: no junction on it
         # anywhere, so it is a ring in its own right and smooths as one.
         ring = shapes.bounded(shapes.smoothed(points[:-1], ARC_SMOOTHING),
-                              MAX_ARC_VERTICES)
+                              min(MAX_ARC_VERTICES, MAX_RING_VERTICES - 1))
         return [*ring, ring[0]]
-    return _within_budget(shapes.eased(points, ARC_SMOOTHING))
+    return _within_budget(shapes.eased(points, ARC_SMOOTHING), tolerance)
 
 
-def _within_budget(eased: list[tuple[float, float]]) -> list[tuple[float, float]]:
+def _within_budget(eased: list[tuple[float, float]],
+                   tolerance: float = ARC_TOLERANCE) -> list[tuple[float, float]]:
     """Simplify until the arc fits its share of the payload, ends pinned throughout."""
-    tolerance = ARC_TOLERANCE
     drawn = shapes.simplify(eased, tolerance)
     while len(drawn) > MAX_ARC_VERTICES and tolerance < 64.0:
         tolerance *= 2.0
@@ -525,12 +535,38 @@ def outlines(partition: Partition,
     if not arcs:
         return {key: [] for key in partition.keys}
 
-    drawn = {n: _drawn(arc) for n, arc in enumerate(arcs)}
+    drawn = _shared_budget(partition, arcs)
     rings = {key: _rings_of(partition, arcs, drawn, index)
              for index, key in enumerate(partition.keys)}
     grid = partition.grid
     return {key: [shapes.closed(grid.to_world(ring)) for ring in shape]
             for key, shape in rings.items()}
+
+
+def _shared_budget(partition: Partition,
+                   arcs: list[Arc]) -> dict[int, list[tuple[float, float]]]:
+    """Draw every arc, then coarsen the ones whose rings overflow — see the note above.
+
+    Only the arcs of an over-budget ring are touched, and they are coarsened in the one
+    map both their neighbours read, so the border stays shared. Bounded rounds: a ring
+    that will not fit even at the coarsest tolerance is returned as it is rather than
+    looped on, because a border simplified past recognition is worse than a large one.
+    """
+    coarse: dict[int, float] = {}
+    drawn = {n: _drawn(arc) for n, arc in enumerate(arcs)}
+    for _round in range(5):
+        over: set[int] = set()
+        for index in range(len(partition.keys)):
+            for ring in _rings_of(partition, arcs, drawn, index):
+                if len(ring) > MAX_RING_VERTICES:
+                    over.update(n for n, arc in enumerate(arcs)
+                                if index in (arc.left, arc.right))
+        if not over:
+            break
+        for n in over:
+            coarse[n] = coarse.get(n, ARC_TOLERANCE) * 2.0
+            drawn[n] = _drawn(arcs[n], coarse[n])
+    return drawn
 
 
 def _rings_of(partition: Partition, arcs: list[Arc],

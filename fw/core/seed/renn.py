@@ -527,23 +527,61 @@ def seed_renn(path: str = ":memory:") -> World:
     for entity, (x, y) in places.items():
         w.add_geometry(entity.id, "point", [x, y], layer="settlements")
 
+    # These were four-cornered boxes and two ruler-straight lines, and a reader looking
+    # at the example world said so: "it kinda looks pretty squarish, like 3 squares
+    # mashed together". The map's own answer is `coast._hold`'s — a ring says where a
+    # country IS, not where its coast runs — and the generator now traces the territory
+    # each claim implies. But the demonstration world should not need rescuing by the
+    # generator: what a writer sees here is what the tool teaches them to draw. So the
+    # provinces bend, the Renn meanders, and the roads have a route.
+    #
+    # Two things these satisfy beyond looking hand-drawn. Every vertex stays inside
+    # `coast.MARGIN`'s rim: the old Northmarch reached x=40, outside the terrain frame
+    # altogether, so `_keep_the_shore` forced the raster's first column dry and the
+    # relief cut the land off flat down the whole west edge. And the Iron Road is no
+    # longer the River Renn — it was that polyline reversed, minus one vertex, never
+    # more than 8.8 units from the water over a 473-unit run. It keeps its own bank now,
+    # a median 16.8 units off, and meets the water at the ford its town is named for.
     w.add_geometry(northmarch.id, "polygon",
-                   [[[40, 500], [420, 520], [400, 760], [60, 780], [40, 500]]],
+                   [[[111.9, 504.1], [156.3, 517.4], [222.3, 493.7], [283, 509.9],
+                     [345.7, 516.8], [389.5, 529.6], [405, 574.6], [411.9, 627.6],
+                     [396.9, 679.2], [413.6, 744], [372.4, 775], [310.9, 751.1],
+                     [254.7, 772.5], [195.2, 772.7], [124.9, 768.4], [105, 747.1],
+                     [120.9, 682.2], [114.2, 624.3], [105, 553.7]]],
                    layer="regions", style={"fill": "#5b6a72"})
     w.add_geometry(vale.id, "polygon",
-                   [[[180, 220], [560, 240], [540, 520], [200, 500], [180, 220]]],
+                   [[[193.3, 244.6], [243.5, 238.2], [300.1, 220.2], [360.2, 240.9],
+                     [410.5, 218.2], [473.5, 243.4], [526.2, 244.1], [567.5, 267.1],
+                     [548.6, 333.1], [567.1, 391.6], [546.5, 443.4], [549.2, 501.2],
+                     [510.3, 519.3], [451.3, 499.4], [394.5, 511.6], [340.9, 518.2],
+                     [284.5, 507.6], [212.8, 506.2], [199.6, 452.4], [193.1, 391.1],
+                     [187.8, 332], [204, 293.8]]],
                    layer="regions", style={"fill": "#6f7c4e"})
     w.add_geometry(reach.id, "polygon",
-                   [[[560, 120], [820, 140], [800, 340], [560, 300], [560, 120]]],
+                   [[[552.1, 131.8], [612.8, 145.2], [676.7, 123.2], [728.1, 144],
+                     [762.7, 151.3], [775, 215], [745.4, 272.9], [766.8, 337.5],
+                     [720.1, 334.8], [662.7, 329.2], [605.6, 311.1], [555.8, 289],
+                     [563.6, 235.5], [548.1, 175.7]]],
                    layer="regions", style={"fill": "#7c7358"})
     w.add_geometry(river.id, "line",
-                   [[430, 300], [330, 350], [250, 430], [180, 560], [120, 640]],
+                   [[430, 300], [402.2, 306.7], [393.2, 335.6], [384.5, 364.8],
+                   [351.2, 365.1], [332, 379.4], [319.1, 404.1], [295.2, 411.4],
+                   [263.1, 405.6], [242.9, 418.6], [249.7, 463], [209.4, 468.4],
+                   [183.9, 484], [196.6, 525.9], [171.5, 542.4], [133.5, 552.5],
+                   [128.5, 581.4], [144.9, 622.4], [120, 640]],
                    layer="waterways", style={"stroke": "#4a7fa5"})
     w.add_geometry(iron_road.id, "line",
-                   [[120, 640], [250, 430], [330, 350], [430, 300]],
+                   [[120, 640], [143.9, 605.3], [172, 574], [189.8, 545.1],
+                   [209.1, 517.2], [239.9, 497.8], [244.2, 461.9], [249.9, 430],
+                   [282.7, 409.3], [303.6, 377], [324.9, 344.9], [366.7, 340.1],
+                   [391.7, 306.7], [430, 300]],
                    layer="roads", style={"stroke": "#8a7550"})
     w.add_geometry(pass_road.id, "line",
-                   [[120, 640], [300, 620], [430, 300]],
+                   [[120, 640], [153.2, 640.4], [179.6, 612.4], [213.8, 617],
+                   [242.9, 609.2], [271.4, 617], [299.7, 634.9], [301.4, 584.5],
+                   [320.7, 557.1], [347.7, 533.1], [362.4, 503.6], [365, 468.6],
+                   [377.1, 441.2], [394.4, 415.4], [407.6, 388.1], [412.2, 357.7],
+                   [405.7, 323.3], [430, 300]],
                    layer="roads", style={"stroke": "#8a7550", "dash": True})
 
     # The planner needs statistics before the graph walks are fast. See store/db.py.
