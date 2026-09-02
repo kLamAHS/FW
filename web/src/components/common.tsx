@@ -154,28 +154,55 @@ export function usePanZoom(initialScale = 1) {
     dragging.current = null
     e.currentTarget.releasePointerCapture(e.pointerId)
   }
-  const onWheel = (e: React.WheelEvent<SVGSVGElement>) => {
-    const el = e.currentTarget
-    const rect = el.getBoundingClientRect()
-    const s = pixelsPerUnit(el)
-    const vb = el.viewBox?.baseVal
-    // The cursor, in viewBox units — including the letterboxing "meet" centres.
-    const dx = vb && vb.width ? (rect.width - vb.width * s) / 2 : 0
-    const dy = vb && vb.height ? (rect.height - vb.height * s) / 2 : 0
-    const px = (e.clientX - rect.left - dx) / s + (vb ? vb.x : 0)
-    const py = (e.clientY - rect.top - dy) / s + (vb ? vb.y : 0)
-    setView((v) => {
-      const k = Math.min(6, Math.max(0.08, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)))
-      // Keep the point under the cursor fixed while zooming.
-      return { k, x: px - ((px - v.x) / v.k) * k, y: py - ((py - v.y) / v.k) * k }
-    })
-  }
+  // The wheel is bound NATIVELY, not through React, and this is the whole reason the
+  // hook hands back a ref.
+  //
+  // React routes `wheel` through its own delegated listener, which it registers as
+  // PASSIVE — so `e.preventDefault()` inside an `onWheel` prop does nothing at all
+  // and the browser scrolls the page underneath the map while the map zooms. Which is
+  // exactly what it did: every notch of zoom walked the whole window up or down. The
+  // fix is not a flag; it is that the listener has to be our own, added with
+  // `{ passive: false }`, because only a non-passive listener is allowed to say the
+  // page must not move.
+  // A callback ref, not a plain one, and that detail is the whole fix working or not.
+  // Every view that pans returns early while its data loads, so the <svg> does not
+  // exist on the first render. An effect with a [] dependency runs once, at mount,
+  // finds `ref.current` still null, and never runs again — the listener is never
+  // attached, the wheel stops zooming, and the page scrolls as badly as before.
+  // Holding the node in state re-runs the effect the moment the element appears.
+  const [surface, setSurface] = useState<SVGSVGElement | null>(null)
+  useEffect(() => {
+    const el = surface
+    if (!el) return
+    const zoom = (e: WheelEvent) => {
+      // Over the map, the wheel means zoom and nothing else.
+      e.preventDefault()
+      const rect = el.getBoundingClientRect()
+      const s = pixelsPerUnit(el)
+      const vb = el.viewBox?.baseVal
+      // The cursor, in viewBox units — including the letterboxing "meet" centres.
+      const dx = vb && vb.width ? (rect.width - vb.width * s) / 2 : 0
+      const dy = vb && vb.height ? (rect.height - vb.height * s) / 2 : 0
+      const px = (e.clientX - rect.left - dx) / s + (vb ? vb.x : 0)
+      const py = (e.clientY - rect.top - dy) / s + (vb ? vb.y : 0)
+      setView((v) => {
+        const k = Math.min(6, Math.max(0.08, v.k * (e.deltaY < 0 ? 1.12 : 1 / 1.12)))
+        // Keep the point under the cursor fixed while zooming.
+        return { k, x: px - ((px - v.x) / v.k) * k, y: py - ((py - v.y) / v.k) * k }
+      })
+    }
+    el.addEventListener('wheel', zoom, { passive: false })
+    return () => el.removeEventListener('wheel', zoom)
+  }, [surface])
 
   return {
     view,
     setView,
     reset: () => setView({ x: 0, y: 0, k: initialScale }),
-    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerLeave: onPointerUp, onWheel },
+    // Put this on the <svg>. Without it the wheel does nothing, because the listener
+    // has nowhere to attach.
+    ref: setSurface,
+    handlers: { onPointerDown, onPointerMove, onPointerUp, onPointerLeave: onPointerUp },
     transform: `translate(${view.x},${view.y}) scale(${view.k})`,
   }
 }

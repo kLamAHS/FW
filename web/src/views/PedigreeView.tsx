@@ -69,7 +69,7 @@ export function PedigreeView({ day, onSelect, selectedId, version }: Props) {
         <button onClick={pan.reset}>Reset view</button>
       </div>
 
-      <svg className="pedigree-svg" viewBox={viewBox} {...pan.handlers}
+      <svg className="pedigree-svg" viewBox={viewBox} ref={pan.ref} {...pan.handlers}
            role="img" aria-label="Family tree">
         <g transform={pan.transform}>
           {/* parent → child lines */}

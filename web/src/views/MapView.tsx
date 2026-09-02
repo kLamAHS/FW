@@ -315,11 +315,14 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
           rasterises one that size into a tile that also lands over the relief. */}
       <div className="map-wrap"
            style={groundShown ? { background: OPEN_WATER } : undefined}>
-        <svg className="map-svg" viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
-             // While the tool is open a click places a corner rather than starting a
-             // drag: a surface that pans under the cursor cannot be drawn on. The wheel
-             // still zooms, because drawing at one scale is how a border goes wrong.
-             {...(drawing ? { onWheel: pan.handlers.onWheel } : pan.handlers)}
+        <svg className="map-svg" ref={pan.ref}
+             viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
+             // While the tool is open the DRAG handlers come off, so a click places a
+             // corner instead of starting a pan. The wheel is not one of these: it is
+             // a native listener on the element itself, so it keeps working while
+             // drawing — which is what we want, since drawing at one scale is how a
+             // border goes wrong.
+             {...(drawing ? {} : pan.handlers)}
              onClick={drawing ? place : undefined}
              style={drawing ? { cursor: 'crosshair' } : undefined}
              role="img"
