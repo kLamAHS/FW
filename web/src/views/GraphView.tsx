@@ -85,7 +85,7 @@ export function GraphView({ day, onSelect, selectedId, version }: Props) {
         <button onClick={pan.reset}>Reset view</button>
       </div>
 
-      <svg className="graph-svg" viewBox="0 0 1000 700" {...pan.handlers}
+      <svg className="graph-svg" viewBox="0 0 1000 700" ref={pan.ref} {...pan.handlers}
            role="img" aria-label="Relationship graph">
         <defs>
           <marker id="arrow" viewBox="0 0 10 10" refX="22" refY="5"

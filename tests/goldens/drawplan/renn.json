@@ -399,19 +399,6 @@
     "y": 447.0
    },
    {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Blackstead",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 366.7,
-    "y": 384.4
-   },
-   {
     "anchor": "start",
     "face": "sans",
     "halo": 3.2,
@@ -427,7 +414,7 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "village",
     "role": "label",
     "size": 10.0,
@@ -435,7 +422,7 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 474.1,
-    "y": 360.9
+    "y": 352.4
    },
    {
     "anchor": "start",
@@ -586,6 +573,19 @@
     "y": 350.8
    },
    {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Millgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 291.5,
+    "y": 616.8
+   },
+   {
     "anchor": "middle",
     "face": "sans",
     "halo": 3.1,
@@ -628,19 +628,6 @@
     "tracking": 0.0,
     "x": 438.0,
     "y": 481.3
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.1,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "North Ford",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 421.4,
-    "y": 386.1
    },
    {
     "anchor": "start",
@@ -935,29 +922,6 @@
    },
    {
     "anchor": "middle",
-    "face": "sans",
-    "halo": 3.0,
-    "kind": "road",
-    "path": [
-     [
-      283.4,
-      396.6
-     ],
-     [
-      319.9,
-      360.1
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "The Iron Road",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 319.9,
-    "y": 360.1
-   },
-   {
-    "anchor": "middle",
     "face": "sc",
     "halo": 3.1,
     "kind": "landmass",
@@ -1029,15 +993,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Northmarch",
     "tier": 0,
     "tracking": 0.14,
-    "x": 337.0,
-    "y": 639.1
+    "x": 339.3,
+    "y": 649.7
    },
    {
     "anchor": "middle",
@@ -1146,6 +1110,19 @@
     "tracking": 0.0,
     "x": 575.3,
     "y": 238.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Vale of Renn",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 525.4,
+    "y": 377.0
    }
   ],
   "regional": [
@@ -1272,27 +1249,17 @@
     "y": 350.8
    },
    {
-    "anchor": "middle",
+    "anchor": "end",
     "face": "sans",
-    "halo": 2.9,
-    "kind": "road",
-    "path": [
-     [
-      303.0,
-      412.9
-     ],
-     [
-      324.3,
-      391.6
-     ]
-    ],
+    "halo": 3.8,
+    "kind": "castle",
     "role": "label",
-    "size": 9.5,
-    "text": "Millford",
+    "size": 10.0,
+    "text": "Millgate",
     "tier": 2,
-    "tracking": 0.0,
-    "x": 324.3,
-    "y": 391.6
+    "tracking": 0.02,
+    "x": 291.5,
+    "y": 616.8
    },
    {
     "anchor": "middle",
@@ -1548,15 +1515,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Northmarch",
     "tier": 0,
     "tracking": 0.14,
-    "x": 337.0,
-    "y": 639.1
+    "x": 339.3,
+    "y": 649.7
    },
    {
     "anchor": "middle",
@@ -1638,6 +1605,19 @@
     "tracking": 0.0,
     "x": 575.3,
     "y": 238.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Vale of Renn",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 525.4,
+    "y": 377.0
    }
   ],
   "world": [
@@ -1748,15 +1728,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Northmarch",
     "tier": 0,
     "tracking": 0.14,
-    "x": 337.0,
-    "y": 639.1
+    "x": 339.3,
+    "y": 649.7
    },
    {
     "anchor": "middle",
@@ -1819,15 +1799,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Vale of Renn",
     "tier": 0,
     "tracking": 0.14,
-    "x": 483.1,
-    "y": 365.9
+    "x": 525.4,
+    "y": 377.0
    }
   ]
  },
@@ -1942,6 +1922,11 @@
    "text": "Black Haven"
   },
   {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Blackstead"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "Grey Ford"
@@ -1957,9 +1942,14 @@
    "text": "Ironwood"
   },
   {
-   "kind": "castle",
+   "kind": "road",
    "reason": "no room",
-   "text": "Millgate"
+   "text": "Millford"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "North Ford"
   },
   {
    "kind": "road",
@@ -2005,6 +1995,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Iron Ford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Iron Road"
   },
   {
    "kind": "road",

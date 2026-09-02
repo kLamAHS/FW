@@ -823,7 +823,14 @@ def _tier(tier: int, feature: Mapping[str, Any]) -> int:
     The Iron Road is one of two roads in the world whose name its author chose, and it
     went unlabelled while nine generated brooks took the room. §66 again: what they
     wrote outranks what was worked out.
+
+    A plate traced from a writer's own ring counts as theirs. It is generated ink, but
+    it is *their country* — the map worked out where the ring reaches, not whether the
+    place matters — and letting the name drop a tier because the map redrew the shape
+    would quietly demote every region a writer has drawn.
     """
+    if feature.get("traced_from"):
+        return max(0, tier - 1)
     return tier if feature.get("generated") else max(0, tier - 1)
 
 
@@ -837,6 +844,12 @@ def _one_per_thing(features: Sequence[Mapping[str, Any]]
     """
     best: dict[str, tuple[tuple[int, float], Mapping[str, Any]]] = {}
     for feature in features:
+        if feature.get("superseded_by"):
+            # The writer's ring, with a plate traced from it. The name goes on the
+            # country, not on the working drawing — and without this the winner is
+            # whichever of the two happens to be BIGGER, so a region's name would sit
+            # on the ring or the plate depending on how far its territory reached.
+            continue
         entity_id = str(feature.get("entity_id") or feature.get("id") or "")
         rank = _label_worth(feature)
         current = best.get(entity_id)

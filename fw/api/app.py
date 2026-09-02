@@ -695,6 +695,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 # painted; the provenance beside it still never crosses the wire.
                 "semantics": ledger.semantics(geometry),
             })
+        _pair_claim_with_plate(features)
         layers = sorted({f["layer"] for f in features})
         # Both caches key on the revision head — a monotone O(1) cursor every write
         # moves — because both of what they hold is expensive: unpacking the terrain
@@ -1930,6 +1931,46 @@ def _map_head(world: World) -> int:
     row = world.db.one("SELECT MAX(id) AS n FROM revision WHERE project_id = ?",
                        (world.project_id,))
     return int(row["n"] or 0) if row else 0
+
+
+def _pair_claim_with_plate(features: list[dict]) -> None:
+    """Tie a writer's own ring to the territory the map traced from it.
+
+    Once a map has been generated there are two shapes for the same country: the ring
+    the writer dragged round it, and the extent the generator traced out to the coast
+    and in to its neighbours. Both belong on the wire, and each renderer decides what
+    to do with them — so this marks the relationship rather than resolving it:
+
+        the ring gets   "superseded_by": the plate's geometry id
+        the plate gets  "traced_from":   the ring's geometry id
+
+    Dropping the ring from the payload instead would be the tidier-looking change and
+    it is wrong. `MapView`'s "Drawn by you" panel is built from
+    `features.filter(f => !f.generated)`, and it is the only place in the whole client
+    that lists a writer's own shape and the only one carrying its "rub out" button. A
+    ring that never arrives is a shape the writer can no longer see, select or delete —
+    §66 broken by the very change meant to honour it.
+
+    Keyed on provenance (`ledger.is_generated`), not on any style key: a writer can set
+    `style` through `POST /api/geometry`, and a rule a writer can forge is not a rule.
+    """
+    plates: dict[tuple[str, str], str] = {}
+    for f in features:
+        if f["kind"] == "polygon" and f["generated"]:
+            plates[(f["entity_id"], f["layer"])] = f["id"]
+    if not plates:
+        return
+    for f in features:
+        if f["kind"] != "polygon" or f["generated"]:
+            continue
+        plate = plates.get((f["entity_id"], f["layer"]))
+        if plate:
+            f["superseded_by"] = plate
+    by_id = {f["id"]: f for f in features}
+    for f in features:
+        ring = f.get("superseded_by")
+        if ring and ring in by_id:
+            by_id[ring]["traced_from"] = f["id"]
 
 
 def _seen_by(world: World, observer_id: str | None, day: int) -> Perspective:

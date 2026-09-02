@@ -327,7 +327,7 @@ def _label(label: dict, css: dict[str, str], n: int) -> str:
 def render_svg(data: dict, relief: dict, png: bytes | None, *,
                css: dict[str, str], mode: str, width: int = 1400,
                labels: bool = True, band: str = "world",
-               presentation: str = "auto") -> str:
+               presentation: str = "auto", authored: bool = False) -> str:
     draw = data.get("draw") or {}
     bounds = draw.get("bounds") or {"x": 0, "y": 0, "width": 100, "height": 100}
     x0, y0 = float(bounds["x"]), float(bounds["y"])
@@ -364,6 +364,12 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
                    f'preserveAspectRatio="none"/>')
 
     features = data.get("features") or []
+    # MapView: a ring the map has traced a plate from is the writer's working drawing,
+    # not the country. The app hides it unless the writer asks for it or is drawing, so
+    # the still picture hides it too — a parity renderer that quietly differs is worse
+    # than none.
+    if not authored:
+        features = [f for f in features if not f.get("superseded_by")]
     for f in (f for f in features if f["kind"] == "polygon"):
         fill = fill_for(f, mode, holders, css)
         # MapView's `fillOpacityFor`: land, natural features and open water answer to
@@ -382,6 +388,13 @@ def render_svg(data: dict, relief: dict, png: bytes | None, *,
         dash = ('' if waters else
                 ' stroke-dasharray="7 5"' if f.get("approximate") else "")
         wide = 1.0 if waters else 1.5
+        if f.get("superseded_by"):
+            # MapView: a line, never a country — no fill, hairline, finely dashed.
+            # Last, so nothing below re-decides any of the three.
+            opacity = 0.0
+            edge = paint(css, "label-region")
+            wide = 0.8
+            dash = ' stroke-dasharray="3 4"'
         d = _polygon_path(f["coordinates"])
         out.append(f'<path d="{d}" fill="{fill}" fill-opacity="{opacity}" '
                    f'stroke="{edge}" stroke-width="{wide}"{dash}/>')
@@ -504,6 +517,9 @@ def main() -> int:
                         choices=("auto", "atlas", "analytical"),
                         help="how the political plate is coloured")
     parser.add_argument("--no-labels", action="store_true")
+    parser.add_argument("--show-authored", action="store_true",
+                        help="also ink the rings the writer drew, beside the "
+                             "territory traced from them")
     parser.add_argument("--band", default="world",
                         choices=("world", "regional", "local"),
                         help="which zoom band's composition to draw")
@@ -534,7 +550,7 @@ def main() -> int:
     css = stylesheet_colours(dark=args.dark, palette=args.palette or "")
     svg = render_svg(data, relief, png, css=css, mode=args.mode, width=args.width,
                      labels=not args.no_labels, band=args.band,
-                     presentation=args.presentation)
+                     presentation=args.presentation, authored=args.show_authored)
 
     destination = Path(args.out)
     destination.parent.mkdir(parents=True, exist_ok=True)

@@ -401,12 +401,26 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
     from fw.core.mapgen.generate import LAYER_REGIONS, _terrain_role
 
     politics = generator.political()
-    borders = _border_arcs(generator, authored)
+    borders = _border_arcs(generator)
     out: list[FeatureDraft] = []
     for region_id in sorted(generator.profiles):
         profile = generator.profiles[region_id]
-        if region_id in authored:
-            continue                      # the writer drew it; it is not ours to redraw
+        # An authored region is drawn too, and this used to be where it was skipped:
+        # "the writer drew it; it is not ours to redraw". That reading of §66 cost the
+        # map its shape. `coast._hold` already argues the other one, about these very
+        # provinces: a ring a writer drags round a country is a claim about WHERE THE
+        # COUNTRY IS, not about where its coastline runs, and honouring it literally is
+        # over-reading it. The terrain layer has always spread that claim into a swell
+        # rather than tracing the pencil; the drawing layer traced the pencil, so the
+        # seeded world came out as three quadrilaterals lying across a coast — which is
+        # exactly what a reader called it.
+        #
+        # So the region is drawn as the territory its claim implies: the same traced
+        # outline a generated region gets, shared with its neighbours and stroked once.
+        # §66 is untouched, because nothing the writer drew is moved or rewritten — the
+        # authored ring keeps its own geometry row and is what the editor shows. What
+        # changes is only which of the two the MAP draws, and `/api/map` prefers this
+        # one where it exists.
         ring = generator._outline(region_id)
         if ring is None:
             continue
@@ -443,7 +457,10 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
                               approximate=True),
                     *edges),
             reasons=(Reason(kind="authored", weight=1.0,
-                            template="drawn where its neighbours leave room",
+                            template=("traced from the shape you drew, out to its own "
+                                      "coast and in to its neighbours"
+                                      if region_id in authored
+                                      else "drawn where its neighbours leave room"),
                             evidence=profile.why("terrain")),
                      *_holding_reasons(held),
                      *_frontier_reasons(generator, profile.name)),
@@ -456,7 +473,7 @@ def _region_drafts(generator, authored: dict) -> list[FeatureDraft]:
     return out
 
 
-def _border_arcs(generator, authored: dict) -> dict[str, list[tuple[list, str]]]:
+def _border_arcs(generator) -> dict[str, list[tuple[list, str]]]:
     """Each internal frontier arc, once, assigned to the one region that draws it.
 
     Coastal arcs — one side against the sea — are not here at all: the coastline wins,
@@ -469,17 +486,18 @@ def _border_arcs(generator, authored: dict) -> dict[str, list[tuple[list, str]]]
 
     if generator.partition is None:
         return {}
-    authored_names = {generator.profiles[rid].name for rid in authored
-                      if rid in generator.profiles}
     out: dict[str, list[tuple[list, str]]] = {}
     for left, right, points in territory.drawn_arcs(generator.partition,
                                                     generator.sea):
         if left is None or right is None or len(points) < 2:
             continue
-        keeper = left if left not in authored_names else (
-            right if right not in authored_names else None)
-        if keeper is None:
-            continue                  # both sides are the writer's own drawing (§66)
+        # Whichever side draws it, it is drawn once. This used to drop an arc whose
+        # two sides were both authored, which on the seeded world — where all three
+        # provinces are the writer's — meant every internal frontier went undrawn and
+        # the map fell back to stroking the raw rings. Now that an authored region is
+        # drafted like any other, both sides can draw, so the rule is simply: the
+        # first side by name keeps it.
+        keeper = left if left <= right else right
         out.setdefault(keeper, []).append(
             (points, _frontier_kind(generator, left, right)))
     return out

@@ -83,6 +83,9 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // 'auto' is not a third way of drawing the map — it is "whichever of the two suits
   // the ground underneath", re-read every time the ground is toggled.
   const [presentation, setPresentation] = useState<Presentation>('auto')
+  // Whether to ink the rings the writer drew, beside the plates traced from them.
+  // Off by default: the plate is the country, the ring is the working drawing.
+  const [showAuthored, setShowAuthored] = useState(false)
   const night = useDarkMode()
   // Drawing on the map yourself (§66). `null` is the ordinary state — the tool is a
   // mode a writer enters deliberately, because a map that places a town wherever you
@@ -238,7 +241,19 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   if (error) return <ErrorBox error={error} />
   if (!data) return null
 
-  const visible = data.features.filter((f) => !hidden.has(f.layer))
+  // A country is drawn once. Where the map has traced a plate from a writer's ring,
+  // the ring itself is not inked — drawing both is two outlines round every province,
+  // and inking the ring instead of the plate is what made the seeded world look like
+  // three quadrilaterals lying across a coast.
+  //
+  // It is never *gone*, though. It comes back whenever the writer is looking for it:
+  // while its own region is selected, while the drawing tool is open (you cannot line
+  // a new border up against one you cannot see), and whenever the toggle below is on.
+  // And it stays in `mine` unconditionally, so the "Drawn by you" panel still lists it
+  // and its "rub out" button still reaches it.
+  const shown = (f: MapFeature) =>
+    !f.superseded_by || showAuthored || drawing !== null || selectedId === f.entity_id
+  const visible = data.features.filter((f) => !hidden.has(f.layer) && shown(f))
   const draw = data.draw
   const byId = new Map(data.features.map((f) => [f.id, f]))
   // The writer's own shapes. `generated` comes from the server's own ledger rule, so
@@ -291,6 +306,10 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
   // over the lit ground is one choice away rather than unreachable.
   const atlas = presentation === 'auto' ? groundShown : presentation === 'atlas'
   const fillOpacityFor = (f: MapFeature, selected: boolean) => {
+    // A ring the map has traced a plate from is a working drawing, not a country: it
+    // is shown as a line so you can see what you drew against what it became, and a
+    // filled one would be the same territory coloured twice.
+    if (f.superseded_by) return 0
     // Land, natural features and open water answer to the relief, not to the
     // presentation. With the ground drawn, a fill over them is the same ink twice.
     // With it off they ARE the ground — nothing else draws it — so no choice of
@@ -315,11 +334,14 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
           rasterises one that size into a tile that also lands over the relief. */}
       <div className="map-wrap"
            style={groundShown ? { background: OPEN_WATER } : undefined}>
-        <svg className="map-svg" viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
-             // While the tool is open a click places a corner rather than starting a
-             // drag: a surface that pans under the cursor cannot be drawn on. The wheel
-             // still zooms, because drawing at one scale is how a border goes wrong.
-             {...(drawing ? { onWheel: pan.handlers.onWheel } : pan.handlers)}
+        <svg className="map-svg" ref={pan.ref}
+             viewBox={viewBox} preserveAspectRatio="xMidYMid meet"
+             // While the tool is open the DRAG handlers come off, so a click places a
+             // corner instead of starting a pan. The wheel is not one of these: it is
+             // a native listener on the element itself, so it keeps working while
+             // drawing — which is what we want, since drawing at one scale is how a
+             // border goes wrong.
+             {...(drawing ? {} : pan.handlers)}
              onClick={drawing ? place : undefined}
              style={drawing ? { cursor: 'crosshair' } : undefined}
              role="img"
@@ -366,16 +388,19 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                   // and its seaward side is the coastline itself. Stroking the ring
                   // anyway drew every internal border twice and the coast three
                   // times. Selection still gets its ring — emphasis, not geography.
-                  stroke={f.style.edge === 'none' && selectedId !== f.entity_id
+                  stroke={f.superseded_by ? 'var(--map-label-region)'
+                    : f.style.edge === 'none' && selectedId !== f.entity_id
                     ? 'none' : fillFor(f)}
-                  strokeWidth={selectedId === f.entity_id ? 3
+                  strokeWidth={f.superseded_by ? 0.8
+                    : selectedId === f.entity_id ? 3
                     : f.layer === 'waters' ? 1 : 1.5}
                   // Water is not a proposal. The dashed edge says "the map guessed
                   // this line and you may move it", which is true of a border and
                   // false of a lake: the shore of standing water is where the ground
                   // stops, and drawing it dashed over the rendered mere below it
                   // made one lake look like two disagreeing ones.
-                  strokeDasharray={f.approximate && f.layer !== 'waters'
+                  strokeDasharray={f.superseded_by ? '3 4'
+                    : f.approximate && f.layer !== 'waters'
                     ? '7 5' : undefined}
                   style={{ cursor: 'pointer' }}
                   onClick={() => onSelect(f.entity_id)}
@@ -529,6 +554,15 @@ export function MapView({ day, onSelect, selectedId, version, onMutate }: Props)
                    onChange={() => setShowLabels((v) => !v)} />
             labels
           </label>
+          {data.features.some((f) => f.superseded_by) && (
+            <label title="The rings you drew, beside the territory the map traced
+                          from them. Always shown while you are drawing, or while the
+                          region is selected.">
+              <input type="checkbox" checked={showAuthored}
+                     onChange={() => setShowAuthored((v) => !v)} />
+              what you drew
+            </label>
+          )}
           <label title="The solver's working: label boxes on the map, and why each
 missing name was dropped">
             <input type="checkbox" checked={debug}
