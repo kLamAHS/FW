@@ -48,6 +48,7 @@ complete without it, and `fw serve` will say so rather than showing a broken pag
 
 ```bash
 .venv/bin/fw seed demo.fwworld     # write the worked example world (§115) to a file
+                                   # (grows its map too; --no-map for the facts alone)
 ```
 
 ```bash

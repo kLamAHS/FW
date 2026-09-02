@@ -40,6 +40,7 @@ from fw.core.mapgen import (
     hydrology,
     movement,
     noise,
+    ranks,
     relief,
     resources,
     roads,
@@ -1157,11 +1158,7 @@ class MapGenerator:
 
     @staticmethod
     def _rank_for_population(people: int) -> str:
-        if people >= 20000:
-            return "city"
-        if people >= 4000:
-            return "town"
-        return "village"
+        return ranks.rank_for_population(people)
 
     def _settlements_wanted(self, profile: RegionProfile) -> int:
         """How many settlements a region's people and land imply.
@@ -1846,11 +1843,13 @@ class MapGenerator:
         said = self._said_of(entity_id)
         if said is None:
             return fallback
-        if said.rank.stated and said.rank.value:
-            return said.rank.value.lower()
-        if said.population.value:
-            return self._rank_for_population(int(said.population.value))
-        return fallback
+        # The rule itself lives in `ranks`, because `/api/map` has to reach the same
+        # answer about a town the writer placed by hand on a world that was never
+        # generated — where there is no reading to ask. Two copies of a settlement
+        # rank rule is the defect this phase has spent three commits unpicking.
+        return ranks.rank_of(
+            said.rank.value if said.rank.stated else None,
+            said.population.value or None, fallback)
 
     def _is_capital(self, entity_id: str) -> bool:
         said = self._said_of(entity_id)

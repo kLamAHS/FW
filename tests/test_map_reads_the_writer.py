@@ -36,6 +36,20 @@ def reasons(plan, kind: str) -> dict[str, tuple[str, ...]]:
     return {f.name: f.why for f in plan.features if f.kind == kind}
 
 
+@pytest.fixture(scope="module")
+def drawn(world):
+    """The seeded world as `/api/map` serves it, with nothing generated.
+
+    Deliberately the untouched seed rather than `plan`: what a writer sees the first
+    time they open the example world is a world nobody has pressed Generate on.
+    """
+    from fastapi.testclient import TestClient
+
+    from fw.api.app import create_app
+
+    return TestClient(create_app(world)).get("/api/map").json()
+
+
 class TestACastleKnowsWhoseItIs:
     def test_every_keep_stands_in_somebody_s_country(self, plan):
         said = reasons(plan, "castle")
@@ -282,3 +296,50 @@ class TestTheMapIsBuiltFromOneReading:
         first = plan_map(world, MapBrief(invent_settlements=True))
         second = plan_map(world, MapBrief(invent_settlements=True))
         assert first.reading_fingerprint == second.reading_fingerprint
+
+
+class TestATownTheWriterPlacedIsDrawnAsWhatItIs:
+    """A world nobody has generated is still a map, and it opens showing its places.
+
+    The writer's report, in their words: the seeded world "kinda looks pretty squarish
+    … like 3 squares mashed together". Part of that was the three quadrilaterals, fixed
+    upstream. The rest was that there was nothing else to look at — six towns were on
+    the wire and none of them was drawn at the zoom the map opens in. Measured before
+    this: every icon came back `rank="town"`, `shape="disc"`, `band="regional"`, and the
+    world band carried four names with no dots under any of them.
+
+    Two silences compounded. `/api/map` sent no semantics for a shape it did not plan,
+    so a settlement arrived with no rank at all; and `cartography._icons` read the rank
+    from `style` alone, so filling the semantics in would still have changed nothing.
+    The world knew the whole time — the seed writes `settlement_type` on all six.
+    """
+
+    def test_the_capital_is_drawn_as_a_capital(self, drawn):
+        icons = {icon["name"]: icon for icon in drawn["draw"]["icons"]}
+        assert icons["Rennford"]["rank"] == "capital"
+        assert icons["Rennford"]["shape"] == "star"
+
+    def test_the_capital_shows_at_the_zoom_the_map_opens_in(self, drawn):
+        icons = {icon["name"]: icon for icon in drawn["draw"]["icons"]}
+        world_band = {name for name, icon in icons.items() if icon["band"] == "world"}
+        assert {"Rennford", "Greyhaven", "Blackmere"} <= world_band, (
+            "the capital and both ports belong to the opening view; "
+            f"it shows {sorted(world_band)}")
+
+    def test_the_capital_s_name_is_set_in_the_capital_s_voice(self, drawn):
+        spoken = {(name["text"], name["kind"])
+                  for name in drawn["draw"]["labels"]["world"]}
+        assert ("Rennford", "capital") in spoken, (
+            f"the world band says {sorted(spoken)}")
+
+    def test_the_six_ranks_are_the_six_words_the_writer_used(self, drawn):
+        by_name = {icon["name"]: icon["rank"] for icon in drawn["draw"]["icons"]}
+        assert by_name == {"Greyhaven": "port", "Rennford": "capital",
+                           "Blackmere": "port", "Millbrook": "market town",
+                           "Northwatch": "fortress", "Red Ford": "town"}
+
+    def test_the_key_names_what_is_actually_drawn(self, drawn):
+        """A legend built from six identical discs told the reader nothing."""
+        keys = {entry["key"] for entry in drawn["draw"]["legend"]}
+        assert {"rank:capital", "rank:port", "rank:market town"} <= keys, (
+            f"the key offers {sorted(keys)}")

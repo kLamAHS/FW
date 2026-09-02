@@ -581,8 +581,17 @@ def _icons(features: Sequence[Mapping[str, Any]], mode: str,
         coordinates = feature.get("coordinates") or []
         if len(coordinates) < 2:
             continue
+        # What this place IS, from whichever channel knows. `style` carries it for a
+        # dot the generator sited; `semantics` carries it for one the writer placed by
+        # hand, filled in at the wire from their own `settlement_type` or population.
+        # Reading only `style` was a silence with a consequence nobody would guess from
+        # it: a hand-drawn capital fell through `_rank_of` to a flat "town", drew as an
+        # anonymous disc, took the wrong voice, and — because ICON_BAND puts a town at
+        # "regional" — vanished from the band the map opens in. The seeded example
+        # world opened on three provinces, a river, two roads and not one place.
         style = feature.get("style") or {}
-        told = str(style.get("rank") or "")
+        semantics = feature.get("semantics") or {}
+        told = str(style.get("rank") or semantics.get("rank") or "")
         rank = told or _rank_of(feature)
         shape, radius = RANKS.get(rank.lower(), DEFAULT_RANK)
         holder = _holder_of(feature, mode)

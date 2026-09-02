@@ -40,6 +40,20 @@ class TestLibrary:
         assert world.count_entities() > 20
         world.close()
 
+    def test_the_example_world_arrives_with_its_map_grown(self, tmp_path):
+        """This button says "show me what this does", so it has to.
+
+        It used to hand over the seed alone: three province outlines, a river and two
+        roads floating on blank paper, with no coast and no ground. The example world
+        is the only map most people will ever see this project draw.
+        """
+        world = World.open(Library(tmp_path).create("Tour", example=True))
+        try:
+            assert world.terrain() is not None, "no ground under it"
+            assert world.db.scalar("SELECT count(*) FROM geometry") > 100
+        finally:
+            world.close()
+
     def test_nameless_worlds_are_refused(self, tmp_path):
         with pytest.raises(LibraryError, match="name"):
             Library(tmp_path).create("   ")

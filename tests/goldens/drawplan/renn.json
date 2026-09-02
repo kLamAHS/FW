@@ -909,20 +909,20 @@
    {
     "anchor": "middle",
     "face": "sans",
-    "halo": 3.0,
+    "halo": 3.8,
     "kind": "road",
     "path": [
      [
-      290.8,
-      396.7
+      233.6,
+      555.5
      ],
      [
-      303.6,
-      377.0
+      245.0,
+      534.0
      ],
      [
-      319.1,
-      353.7
+      256.6,
+      509.4
      ]
     ],
     "role": "label",
@@ -930,8 +930,8 @@
     "text": "The Iron Road",
     "tier": 1,
     "tracking": 0.0,
-    "x": 303.6,
-    "y": 377.0
+    "x": 245.0,
+    "y": 534.0
    },
    {
     "anchor": "middle",
@@ -958,6 +958,45 @@
     "tracking": 0.02,
     "x": 337.0,
     "y": 158.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      279.5,
+      339.5
+     ],
+     [
+      281.4,
+      339.0
+     ],
+     [
+      299.0,
+      339.0
+     ],
+     [
+      308.5,
+      344.4
+     ],
+     [
+      322.1,
+      344.7
+     ],
+     [
+      325.7,
+      347.1
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Mill Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 308.5,
+    "y": 344.4
    },
    {
     "anchor": "middle",
@@ -2172,11 +2211,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Ironford"
-  },
-  {
-   "kind": "road",
-   "reason": "no room",
-   "text": "The Mill Ford"
   },
   {
    "kind": "road",

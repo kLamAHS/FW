@@ -43,13 +43,47 @@ def accepted(name: str) -> World:
     return world
 
 
+_PAYLOADS: dict[str, dict] = {}
+
+
+def map_payload(name: str) -> dict:
+    """A corpus world's accepted map, exactly as `/api/map` serves it.
+
+    Built once per session and kept, because building one costs a full plan and apply
+    and two suites want the same twelve: the goldens, for the composition, and
+    `test_map_is_not_boxes`, for whether the picture reads as a lattice. Asking for the
+    corpus twice doubled the slowest thing in the suite. The world is closed as soon as
+    its payload is out — what is cached is JSON, not an open database.
+    """
+    if name not in _PAYLOADS:
+        from fastapi.testclient import TestClient
+
+        from fw.api.app import create_app
+
+        world = accepted(name)
+        try:
+            _PAYLOADS[name] = TestClient(create_app(world)).get("/api/map").json()
+        finally:
+            world.close()
+    return _PAYLOADS[name]
+
+
+def drawplan_of(name: str) -> dict:
+    """The composition of a corpus world, off the shared payload."""
+    return _projected(map_payload(name)["draw"])
+
+
 def drawplan_snapshot(world: World) -> dict:
-    """The composition, with the per-file randomness projected out."""
+    """The composition of a world in hand — the path for anything not in the corpus."""
     from fastapi.testclient import TestClient
 
     from fw.api.app import create_app
 
-    drawn = TestClient(create_app(world)).get("/api/map").json()["draw"]
+    return _projected(TestClient(create_app(world)).get("/api/map").json()["draw"])
+
+
+def _projected(drawn: dict) -> dict:
+    """The composition, with the per-file randomness projected out."""
 
     def named(name: dict) -> dict:
         return {"text": name["text"], "kind": name["kind"], "tier": name["tier"],

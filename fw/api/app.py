@@ -12,6 +12,7 @@ nothing else.
 
 from __future__ import annotations
 
+import contextlib
 import math
 import sqlite3
 from dataclasses import replace
@@ -37,7 +38,7 @@ from fw.core.geo.routing import LAND as ROUTING_LAND
 from fw.core.geo.routing import PROFILES, Router
 from fw.core.geo.routing import SAILED as ROUTING_SAILED
 from fw.core.library import Library, LibraryError
-from fw.core.mapgen import cartography, ledger
+from fw.core.mapgen import cartography, ledger, ranks
 from fw.core.mapgen import drafts as MG_DRAFTS
 from fw.core.mapgen import plan as MG
 from fw.core.mapgen.generate import generate_map
@@ -693,7 +694,7 @@ def create_app(world: World | None = None, *, library: Library | None = None,
                 # What the generator understood about the shape — stream order, road
                 # grade, coast character. The one part of `props` that is meant to be
                 # painted; the provenance beside it still never crosses the wire.
-                "semantics": ledger.semantics(geometry),
+                "semantics": _semantics_of(world, geometry, entity, at),
             })
         _pair_claim_with_plate(features)
         layers = sorted({f["layer"] for f in features})
@@ -1931,6 +1932,45 @@ def _map_head(world: World) -> int:
     row = world.db.one("SELECT MAX(id) AS n FROM revision WHERE project_id = ?",
                        (world.project_id,))
     return int(row["n"] or 0) if row else 0
+
+
+def _semantics_of(world: World, geometry, entity, at: int) -> dict:
+    """What the map understands about a shape — including about one it did not draw.
+
+    A generated shape carries this from the plan. A shape the writer drew has none, and
+    for a settlement that silence had a consequence nobody would guess from it:
+    `cartography._icon_band` reads `rank`, falls through its `"regional"` default when
+    there is none, and the client opens at the `"world"` band where deeper bands draw
+    at opacity zero. So every town a writer placed by hand was invisible at the zoom
+    the map opens in — the seeded example world opened on three provinces, a river, two
+    roads and not one place, four names floating with no dots under them.
+
+    The world knew all along. Its towns carry `settlement_type` or a population, and
+    `ranks.rank_of` is the same rule the generator uses, kept in one place so the two
+    cannot drift. Only filled in where the shape itself says nothing, so a generated
+    rank is never overwritten, and only for settlements, because a rank is the one
+    thing a point needs to be drawn as what it is.
+    """
+    told = dict(ledger.semantics(geometry))
+    if told.get("rank") or entity.type_key != "settlement":
+        return told
+    stated = population = None
+    # Their own facts, not `facts_about`: `settlement_type` and `population` are
+    # properties whose subject IS the settlement, so the half of `facts_about` that
+    # flips incoming edges outward is a second query and a loop bought for nothing —
+    # per feature, inside a loop that already runs a fact query per feature.
+    for fact in world.facts_where(subject_id=entity.id, at=at):
+        if fact.predicate_key == "settlement_type" and fact.value:
+            stated = str(fact.value)
+        elif fact.predicate_key == "population" and fact.value:
+            # A writer may have typed "about 4,000" there. §60 makes the field theirs
+            # to fill however they like, so a population that will not parse simply
+            # does not decide the rank.
+            with contextlib.suppress(ValueError):
+                population = int(str(fact.value))
+    if stated or population:
+        told["rank"] = ranks.rank_of(stated, population)
+    return told
 
 
 def _pair_claim_with_plate(features: list[dict]) -> None:

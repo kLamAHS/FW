@@ -21,11 +21,7 @@ def test_the_composition_is_what_it_was(name: str):
     want = goldenlib.read_golden("drawplan", name)
     if want is None:
         pytest.skip(f"no golden for {name!r} — run scripts/regenerate_goldens.py")
-    world = goldenlib.accepted(name)
-    try:
-        got = goldenlib.drawplan_snapshot(world)
-    finally:
-        world.close()
+    got = goldenlib.drawplan_of(name)
     assert got == want, (
         f"the {name} map composes differently now — if that is intended, run "
         f"scripts/regenerate_goldens.py and review the diff")

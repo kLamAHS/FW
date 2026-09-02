@@ -57,8 +57,14 @@ RENNISH = Calendar(
 PRESENT_YEAR = 241
 
 
-def seed_renn(path: str = ":memory:") -> World:
-    """Build the example world and return it."""
+def seed_renn(path: str = ":memory:", *, with_map: bool = False) -> World:
+    """Build the example world and return it.
+
+    `with_map` also grows and accepts a map, which is what the two places that hand
+    this world to a *person* do — `fw seed` and the launcher's example button. It is
+    off by default because the corpus and most of the suite use this world as a
+    fixture, where six seconds and a terrain blob per call buy nothing.
+    """
     w = World.create(path, name="The Kingdom of Renn",
                      description="A low-fantasy realm in the year of a disputed crown.",
                      calendar=RENNISH)
@@ -570,11 +576,15 @@ def seed_renn(path: str = ":memory:") -> World:
                    [183.9, 484], [196.6, 525.9], [171.5, 542.4], [133.5, 552.5],
                    [128.5, 581.4], [144.9, 622.4], [120, 640]],
                    layer="waterways", style={"stroke": "#4a7fa5"})
+    # The road runs up the river's east bank, not down its middle. It used to BE the
+    # river — reversed, a vertex short, never more than 8.80 units away over a 473-unit
+    # run — and after the first redraw a third of it still ran alongside. It comes to
+    # the water at Red Ford, which is a ford, and stands off it everywhere else:
+    # measured, 10% of its length within 12 units of the river against 30% before.
     w.add_geometry(iron_road.id, "line",
-                   [[120, 640], [143.9, 605.3], [172, 574], [189.8, 545.1],
-                   [209.1, 517.2], [239.9, 497.8], [244.2, 461.9], [249.9, 430],
-                   [282.7, 409.3], [303.6, 377], [324.9, 344.9], [366.7, 340.1],
-                   [391.7, 306.7], [430, 300]],
+                   [[120, 640], [168, 622], [203, 597], [228, 566], [245, 534],
+                   [260, 502], [281, 468], [250, 430], [247, 396], [270, 372],
+                   [302, 357], [330, 350], [363, 331], [393, 315], [430, 300]],
                    layer="roads", style={"stroke": "#8a7550"})
     w.add_geometry(pass_road.id, "line",
                    [[120, 640], [153.2, 640.4], [179.6, 612.4], [213.8, 617],
@@ -586,4 +596,30 @@ def seed_renn(path: str = ":memory:") -> World:
 
     # The planner needs statistics before the graph walks are fast. See store/db.py.
     w.analyze()
+    if with_map:
+        _grow_the_map(w)
+        w.analyze()
     return w
+
+
+def _grow_the_map(w: World) -> None:
+    """Give the example world the map it is an example of.
+
+    Seeding alone leaves a world with three province outlines, a river and two roads
+    on it and nothing underneath them — no coast, no ground, no relief — which is what
+    a writer opening the example for the first time was shown. The generator is the
+    thing this project has spent its last five phases on; the world that demonstrates
+    the project should demonstrate that.
+
+    Everything is accepted, because a proposal nobody has answered is not a map. But
+    `invent_settlements` stays off: §66 says inventing a noun is opt-in, and the six
+    towns the writer placed are exactly the point of the example. The brief carries no
+    seed, so it takes the world's own name and the same world comes out twice.
+    """
+    from fw.core.mapgen.apply import apply_plan
+    from fw.core.mapgen.decide import DecisionSet
+    from fw.core.mapgen.pipeline import plan_map
+    from fw.core.mapgen.plan import MapBrief
+
+    proposal = plan_map(w, MapBrief())
+    apply_plan(w, proposal, DecisionSet.accept_all(proposal))

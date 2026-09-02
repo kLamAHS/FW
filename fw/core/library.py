@@ -99,7 +99,9 @@ class Library:
             if example:
                 from fw.core.seed.renn import seed_renn
 
-                world = seed_renn(str(path))
+                # With its map: this is the "show me what this does" button, and an
+                # example world with no ground under it demonstrates the opposite.
+                world = seed_renn(str(path), with_map=True)
                 world.close()
             else:
                 # An empty world starts on an Earth-like calendar; §60 makes calendars

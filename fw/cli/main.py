@@ -65,11 +65,18 @@ def cmd_seed(args) -> None:
         sys.exit(f"{path} already exists. Pass --force to overwrite.")
     if path.exists():
         path.unlink()
-    world = seed_renn(str(path))
+    if not args.no_map:
+        print("Seeding, then growing the map — this takes a few seconds.")
+    world = seed_renn(str(path), with_map=not args.no_map)
     print(f"Seeded {path} — “{world.name}”")
     print(f"  {world.count_entities()} entities, "
           f"{world.db.scalar('SELECT count(*) FROM fact')} facts, "
           f"{len(world.events())} events, {len(world.scenes())} scenes")
+    if args.no_map:
+        print("  no map: press Generate in the app, or seed again without --no-map")
+    else:
+        print(f"  {world.db.scalar('SELECT count(*) FROM geometry')} shapes on the "
+              "map, with ground under them")
     print(f"  Start the app with:  fw serve {path}")
     world.close()
 
@@ -402,6 +409,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = add("seed", cmd_seed, "Create the Kingdom of Renn example world.")
     p.add_argument("--force", action="store_true")
+    # The example world exists to be looked at, so it arrives with its map grown.
+    # The flag is for anyone who wants the facts alone and wants them instantly.
+    p.add_argument("--no-map", action="store_true",
+                   help="skip generating the map (faster; the world opens unmapped)")
 
     add("info", cmd_info, "Summarise a world.")
 
