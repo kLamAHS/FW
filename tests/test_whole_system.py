@@ -107,8 +107,12 @@ class TestFromProseToAMapYouCanRead:
         # onto came with it — a plan crosses to the client and back, and used to lose
         # its heightfield on the way, so every map the application accepted drew flat.
         assert any(g.id == theirs for g in fresh.geometries(layer="regions"))
-        assert "Greenhollow" not in {f["name"] for f in plan["features"]
-                                     if f["kind"] == "region"}
+        # And the map drew their country, rather than stroking their pencil line: an
+        # authored region gets the same traced territory a generated one does, while
+        # the ring itself stays in the world untouched. See
+        # `test_authored_geometry.py::test_the_map_draws_the_country_their_ring_claims`.
+        assert "Greenhollow" in {f["name"] for f in plan["features"]
+                                 if f["kind"] == "region"}
         assert client.get("/api/map/relief").json()["available"], \
             "the map was accepted onto no ground"
 

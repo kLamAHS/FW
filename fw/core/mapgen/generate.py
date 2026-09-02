@@ -1511,11 +1511,23 @@ class MapGenerator:
             self.report.notes.append(note)
 
     def _write_regions(self, authored: dict[str, list[list[float]]]) -> None:
+        """Every region gets the territory its claim implies, the writer's included.
+
+        This is the second copy of a decision `pipeline._region_drafts` also makes, and
+        for a while the two disagreed: that one was changed to draw an authored region's
+        traced extent and this one still skipped it, so the same world came out with
+        different regions depending on which way it was generated. Two code paths
+        disagreeing about one decision is how a map ends up with two answers.
+
+        `regions_kept` still means what it says — the writer's own ring is kept, always,
+        untouched — but a kept ring is no longer a reason to draw nothing. See
+        `coast._hold` for why a ring is a claim about where a country is rather than a
+        line its coast follows.
+        """
         for region_id in sorted(self.profiles):
             profile = self.profiles[region_id]
             if region_id in authored:
                 self.report.regions_kept.append(profile.name)
-                continue
             ring = self._outline(region_id)
             if ring is None:
                 continue

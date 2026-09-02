@@ -197,11 +197,22 @@ class TestItProposesRatherThanOverwrites:
                  if not (g.style or {}).get(GENERATED)}
         assert before == after
 
-    def test_a_drawn_region_is_kept_and_reported_as_kept(self, renn: World):
+    def test_a_drawn_region_is_kept_and_still_gets_its_territory(self, renn: World):
+        """Kept and drawn are not opposites, and reading them as opposites is what
+        made the seeded world look like three quadrilaterals.
+
+        `regions_kept` means the writer's ring is untouched — it is, and
+        `test_regenerating_replaces_only_its_own_work` below checks it. It does not
+        mean the map declines to say where the country reaches. This path used to skip
+        an authored region entirely while `pipeline._region_drafts` had been changed to
+        draw its traced extent, so the same world came out differently depending which
+        way it was generated.
+        """
         report = generate_map(renn, at=renn.day(PRESENT_YEAR))
-        assert set(report.regions_kept) == {
-            "The Northmarch", "The Vale of Renn", "The Salt Reach"}
-        assert report.regions_drawn == []
+        theirs = {"The Northmarch", "The Vale of Renn", "The Salt Reach"}
+        assert set(report.regions_kept) == theirs
+        assert theirs <= set(report.regions_drawn), (
+            "an authored region was kept and then left undrawn")
 
     def test_regenerating_replaces_only_its_own_work(self, renn: World):
         day = renn.day(PRESENT_YEAR)
