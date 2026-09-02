@@ -8,7 +8,6 @@ import time
 import pytest
 
 from fw.core.calendar.kernel import GREGORIAN
-from fw.core.mapgen.attributes import profile_region
 from fw.core.mapgen.climate import dryness_across
 from fw.core.mapgen.generate import GRID, MapGenerator
 from fw.core.world import World
@@ -41,8 +40,7 @@ def world_of(regions, borders, name="Andalor") -> World:
 
 def shaped(world: World, seed: str = "fixed") -> MapGenerator:
     generator = MapGenerator(world, seed=seed)
-    regions = list(world.entities("region"))
-    generator.profiles = {r.id: profile_region(world, r.id) for r in regions}
+    generator.read_the_world()
     authored = generator._authored_outlines()
     generator._build_landmass(authored)
     generator._assign_cells()
@@ -277,8 +275,7 @@ class TestRainShadow:
 
     def test_the_writer_can_say_which_way_the_wind_blows(self, mountains: World):
         generator = MapGenerator(mountains, seed="fixed")
-        regions = list(mountains.entities("region"))
-        generator.profiles = {r.id: profile_region(mountains, r.id) for r in regions}
+        generator.read_the_world()
         authored = generator._authored_outlines()
         generator._build_landmass(authored)
         generator._assign_cells()
@@ -361,8 +358,7 @@ class TestDeterminismAndCost:
         machine.
         """
         generator = MapGenerator(mountains, seed="fixed")
-        regions = list(mountains.entities("region"))
-        generator.profiles = {r.id: profile_region(mountains, r.id) for r in regions}
+        generator.read_the_world()
         authored = generator._authored_outlines()
         generator._build_landmass(authored)
         generator._assign_cells()

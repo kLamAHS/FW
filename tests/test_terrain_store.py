@@ -64,7 +64,8 @@ class TestTheGroundIsKept:
 
         kept = renn.terrain()
         assert kept is not None
-        assert sorted(kept["fields"]) == ["canopy", "elevation", "marsh"]
+        assert sorted(kept["fields"]) == ["canopy", "develop", "elevation", "flow",
+                                          "marsh", "shoreline"]
         assert kept["size"] == plan.terrain.size
         assert kept["seed"] == plan.terrain.seed
         for name, field in kept["fields"].items():

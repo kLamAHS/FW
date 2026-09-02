@@ -58,6 +58,15 @@ class FactOut(BaseModel):
     strength: str | None = None
     note: str = ""
     is_secret: bool = False
+    # Written on every fact since the first migration and rendered nowhere, which is
+    # worse than absent: a writer who cited a note could not see that they had.
+    valid_from_text: str = ""
+    valid_to_text: str = ""
+    source: str = ""
+    # §33: a fact *about* another fact — "House Marr disputes that the king died of
+    # fever". Accepted by `assert_fact` and tested since the first migration, and until
+    # now on neither wire shape, so the disagreement could be stored and never shown.
+    about_fact_id: str | None = None
 
 
 class FactIn(BaseModel):
@@ -71,6 +80,11 @@ class FactIn(BaseModel):
     secrecy: str = "public"
     strength: str | None = None
     note: str = ""
+    # Where it came from (§58). `assert_fact` has taken this since the first migration
+    # and the fact line has rendered it since the last commit; the form could not set it.
+    source_id: str | None = None
+    # What it is about, when it is about another fact rather than about the world (§33).
+    about_fact_id: str | None = None
 
 
 class DateOut(BaseModel):
@@ -142,6 +156,10 @@ class SuccessionOut(BaseModel):
 
 class ViolationOut(BaseModel):
     rule_key: str
+    # What the check is called, in the writer's language. Without it the client showed
+    # `rule_key` — a machine's name, and the thing a suppression is filed under, so
+    # renaming a check for clarity meant changing what every dismissal was keyed by.
+    label: str = ""
     severity: str
     message: str
     entity_ids: list[str]
@@ -201,10 +219,201 @@ class MapOut(BaseModel):
     day: int
     layers: list[str]
     features: list[dict[str, Any]]
+    # How to draw it: the frame, the labels, the icons and the key, worked out on the
+    # server so the same map is labelled the same way whatever is looking at it.
+    draw: dict[str, Any] = {}
+    # Whose eyes this was drawn through (§94), so the client can say so plainly rather
+    # than showing an altered map that looks like the objective one.
+    seen_as: str | None = None
+    seen_as_name: str = ""
+
+
+class GeometryIn(BaseModel):
+    """A shape the writer drew themselves (§66).
+
+    Deliberately has no `props` field. `props` is the machine-readable provenance that
+    tells a regeneration which shapes are its own to replace — a client able to set it
+    could stamp the writer's own coastline as generated and have the next run sweep it
+    away. Style is theirs; provenance is the server's.
+    """
+
+    entity_id: str
+    kind: str                       # point | line | polygon
+    coordinates: Any
+    layer: str = "regions"
+    style: dict[str, Any] = Field(default_factory=dict)
+    approximate: bool = False
+    valid_from: int | None = None
+    valid_to: int | None = None
+
+
+class QueryIn(BaseModel):
+    """A question, as the form built it (§49). See `fw.core.query.language`."""
+
+    query: dict[str, Any] = {}
+
+
+class SaveQueryIn(BaseModel):
+    name: str
+    note: str = ""
+    query: dict[str, Any] = {}
+
+
+# ---- the write surfaces for §8's titles and §6's secrets ------------------
+#
+# Every one of these `World` methods has existed since the world model was written,
+# is revision-logged and branch-scoped, and had no HTTP route and no form. Which meant
+# succession, scene context and half the dashboard were dead code for any world but the
+# seeded demo: a writer could not create a title, so nothing could be inherited; could
+# not record a secret, so nobody could know one.
+
+class TitleIn(BaseModel):
+    name: str
+    rank: int = 0
+    territory_id: str | None = None
+    succession_law: str = "male_preference_primogeniture"
+    dynasty_root_id: str | None = None
+    created_on: int | None = None
+    entity_id: str | None = None
+
+
+class GrantIn(BaseModel):
+    holder_id: str
+    from_day: int | None = None
+    to_day: int | None = None
+    how: str = "inheritance"
+    disputed: bool = False
+    note: str = ""
+
+
+class SecretIn(BaseModel):
+    name: str
+    truth: str = ""
+    about_id: str | None = None
+    fact_id: str | None = None
+    severity: str = "major"
+
+
+class KnowledgeIn(BaseModel):
+    observer_id: str
+    secret_id: str
+    stance: str
+    about_observer_id: str | None = None
+    acquired_on: int | None = None
+    acquired_from: str | None = None
+    scene_id: str | None = None
+    note: str = ""
+
+
+# The manuscript (§43). `work` and `chapter` have been in the schema since the first
+# migration, and the previous commit taught a scene to sit in a chapter — while leaving
+# no way to make one, so the "where it sits in the book" field was invisible in every
+# world but the demo. A half-finished feature is worse than an absent one: the writer
+# sees the shape of something they cannot use.
+
+class WorkIn(BaseModel):
+    title: str
+    kind: str = "novel"        # novel, novella, short story, series…
+    position: int = 0
+    summary: str = ""
+
+
+class ChapterIn(BaseModel):
+    work_id: str
+    title: str
+    position: int = 0
+    summary: str = ""
+
+
+# Where a fact came from (§58). The table and `assert_fact`'s `source_id` have been in
+# the schema since the first migration, and the previous commit taught every fact line
+# to render its citation — for citations nothing could create. The kinds are the ones
+# §58 names.
+
+# §60: "Users should be able to customize almost everything… avoid locking the software
+# to European medieval fantasy." Both writers already existed and were reachable only
+# from Python or the CLI, so the one thing standing between this application and a
+# science-fiction or a nomadic-steppe world was a form.
+
+class EntityTypeIn(BaseModel):
+    key: str
+    label: str
+    plural: str = ""
+    category: str = "other"
+    icon: str = ""
+
+
+class PredicateIn(BaseModel):
+    key: str
+    label: str
+    kind: str = "rel"                  # rel (points at something) | prop (a value)
+    inverse_key: str | None = None     # §77: name it once, see it on both pages
+    symmetric: bool = False
+    transitive: bool = False
+    datatype: str = "text"
+    category: str = "other"
+    description: str = ""
+
+
+# A road the writer knows about and the generator never drew (§20, §21). `route_segment`
+# has carried medium, quality, terrain, seasonal closures, danger and a toll holder since
+# the geo engine was written, and the only things that ever created one were the map
+# generator and the seed — so the Travel view could not answer for a road the writer had
+# in their head.
+
+class SegmentIn(BaseModel):
+    from_entity_id: str
+    to_entity_id: str
+    length: float
+    medium: str = "road"
+    quality: float = 1.0
+    terrain: str = "plain"
+    entity_id: str | None = None       # the road itself, if it is a named thing
+    built_on: int | None = None
+    ruined_on: int | None = None
+    closed_seasons: list[str] = Field(default_factory=list)
+    danger: str = "low"
+    toll_holder_id: str | None = None
+
+
+# What one party says about an event or a person (§33, §94). The table has been in the
+# schema since the first migration with a documented rationale, three seed rows and no
+# reader at all — so a demo world had interpretations and a writer's world never could.
+
+class InterpretationIn(BaseModel):
+    label: str
+    event_id: str | None = None
+    entity_id: str | None = None      # exactly one of these two
+    holder_id: str | None = None      # None is "an account nobody in particular owns"
+    account: str = ""
+
+
+class SnapshotIn(BaseModel):
+    """A name for a moment on the timeline (§80).
+
+    "Before the Red War" is how a writer holds a date; 81400 is not. The timeline has
+    rendered these as chips since it was written and only the seed could make one.
+    """
+
+    name: str
+    day: int
+    note: str = ""
+
+
+class SourceIn(BaseModel):
+    label: str
+    kind: str = "author_note"
+    detail: str = ""
+    scene_id: str | None = None
 
 
 class SceneIn(BaseModel):
     title: str
+    # Which chapter it belongs to (§43/§44). The column and its foreign key have been in
+    # the schema since the first migration and nothing could set one, so every scene a
+    # writer made was loose in the world rather than in their book.
+    chapter_id: str | None = None
+    position: int = 0
     day: int | None = None
     end_day: int | None = None
     location_id: str | None = None
@@ -264,6 +473,11 @@ class PlanMapIn(BaseModel):
     """What the writer can turn before a map is worked out."""
 
     seed: str | None = None
+    # Which year to draw. §36 makes the whole world temporal and the map is part of the
+    # world: a map of 1000 must not show a country founded in 1500. `MapBrief` has
+    # carried the date since the plan existed and this had no way to set one, so every
+    # proposal was of the present whatever the timeline said.
+    at: int | None = None
     include: list[str] | None = None
     invent_settlements: bool = False
     north: str = "up"

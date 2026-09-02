@@ -8,7 +8,6 @@ import pytest
 
 from fw.core.calendar.kernel import GREGORIAN
 from fw.core.mapgen import coast, territory
-from fw.core.mapgen.attributes import profile_region
 from fw.core.mapgen.generate import GRID, MapGenerator
 from fw.core.world import World
 
@@ -39,8 +38,7 @@ CHAIN_BORDERS = [("The Frostmarch", "The Wolfswold"), ("The Wolfswold", "The Nec
 
 def shaped(world: World, seed: str = "fixed") -> MapGenerator:
     generator = MapGenerator(world, seed=seed)
-    regions = list(world.entities("region"))
-    generator.profiles = {r.id: profile_region(world, r.id) for r in regions}
+    generator.read_the_world()
     authored = generator._authored_outlines()
     generator._build_landmass(authored)
     generator._assign_cells()

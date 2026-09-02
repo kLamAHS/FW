@@ -1,0 +1,2551 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Crown Ford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 215.8,
+   "y": 503.6
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kings Ford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 680.4,
+   "y": 479.9
+  },
+  {
+   "band": "world",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsbank",
+   "radius": 7.0,
+   "rank": "city",
+   "role": "settlement",
+   "shape": "ring",
+   "x": 288.4,
+   "y": 338.9
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "holder-0",
+   "name": "Kingsgate",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 566.5,
+   "y": 588.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingshollow",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 322.6,
+   "y": 642.7
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsmere",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 288.4,
+   "y": 508.8
+  },
+  {
+   "band": "world",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsport",
+   "radius": 8.5,
+   "rank": "capital",
+   "role": "settlement",
+   "shape": "star",
+   "x": 772.0,
+   "y": 365.9
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsthorpe",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 282.7,
+   "y": 657.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingsvale",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 280.7,
+   "y": 463.8
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Kingswick",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 668.2,
+   "y": 349.9
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Prize Ford",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 637.7,
+   "y": 421.8
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Prizecombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 654.9,
+   "y": 750.5
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "holder-1",
+   "name": "Prizegate",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 393.1,
+   "y": 485.2
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Prizestead",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 430.8,
+   "y": 410.8
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Prizewick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 485.1,
+   "y": 640.3
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Rebel Bridge",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 648.4,
+   "y": 378.8
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "holder-1",
+   "name": "Rebel Gate",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 317.3,
+   "y": 561.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "holder-0",
+   "name": "Rebel Pass",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 555.6,
+   "y": 441.9
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Rebelbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 371.1,
+   "y": 691.6
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Crown Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 266.5,
+   "y": 186.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Crownbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 730.3,
+   "y": 442.0
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Crownpass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 317.3,
+   "y": 474.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kings Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 343.1,
+   "y": 605.3
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 707.5,
+   "y": 528.0
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsclose",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 378.5,
+   "y": 345.9
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingscombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 767.8,
+   "y": 464.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsfield",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 361.3,
+   "y": 269.1
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingshill",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 266.7,
+   "y": 99.3
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsholt",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 643.8,
+   "y": 494.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "holder-0",
+   "name": "The Kingspass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 517.7,
+   "y": 512.3
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Kingsreach",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 257.3,
+   "y": 405.5
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Prize Bridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 237.3,
+   "y": 685.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "holder-1",
+   "name": "The Prize Gate",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 360.6,
+   "y": 555.6
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Prizebridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 239.7,
+   "y": 646.6
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Prizeford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 582.3,
+   "y": 371.8
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Prizepass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 441.9,
+   "y": 496.0
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Rebel Ford",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 730.5,
+   "y": 478.2
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Rebelford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 559.5,
+   "y": 312.5
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Rebelgate",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 319.5,
+   "y": 560.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Rebelpass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 274.0,
+   "y": 485.2
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Thornhall",
+   "radius": 6.5,
+   "rank": "fortress",
+   "role": "settlement",
+   "shape": "keep",
+   "x": 176.4,
+   "y": 665.9
+  }
+ ],
+ "labels": {
+  "local": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Crown Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 224.3,
+    "y": 504.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "road",
+    "path": [
+     [
+      360.6,
+      317.2
+     ],
+     [
+      360.6,
+      303.1
+     ],
+     [
+      355.2,
+      293.6
+     ],
+     [
+      355.2,
+      278.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Crowngate",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 355.2,
+    "y": 293.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      631.3,
+      652.8
+     ],
+     [
+      621.6,
+      643.0
+     ],
+     [
+      620.6,
+      640.3
+     ],
+     [
+      620.6,
+      618.0
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Crownholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 620.6,
+    "y": 640.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
+    "text": "Crownmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 415.0,
+    "y": 473.2
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Kings Ford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 671.9,
+    "y": 480.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Kingsbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 299.9,
+    "y": 339.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.68,
+    "text": "Kingscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "path": [
+     [
+      240.8,
+      436.9
+     ],
+     [
+      262.1,
+      436.9
+     ],
+     [
+      269.9,
+      443.3
+     ],
+     [
+      278.4,
+      445.4
+     ],
+     [
+      279.7,
+      446.3
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "Kingsfells",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 269.9,
+    "y": 443.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Kingsgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 575.0,
+    "y": 588.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Kingshollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 331.1,
+    "y": 643.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Kingsmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 296.9,
+    "y": 509.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.1,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Kingsport",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 785.8,
+    "y": 366.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Kingsthorpe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 292.5,
+    "y": 672.8
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Kingsvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 272.2,
+    "y": 464.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Kingswick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 678.0,
+    "y": 350.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Prize Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 647.5,
+    "y": 422.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Prizecombe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 663.4,
+    "y": 751.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Prizegate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 384.6,
+    "y": 485.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Prizeholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 539.3,
+    "y": 478.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Prizestead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 439.3,
+    "y": 411.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Prizewick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 493.6,
+    "y": 640.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "path": [
+     [
+      393.4,
+      95.0
+     ],
+     [
+      410.3,
+      95.0
+     ],
+     [
+      415.6,
+      90.0
+     ],
+     [
+      416.3,
+      89.8
+     ]
+    ],
+    "role": "label",
+    "size": 6.5,
+    "text": "Prizewold",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 415.6,
+    "y": 90.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Rebel Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 656.9,
+    "y": 379.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Rebel Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 326.8,
+    "y": 561.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      296.0,
+      240.0
+     ],
+     [
+      296.0,
+      240.8
+     ],
+     [
+      304.4,
+      250.3
+     ],
+     [
+      306.5,
+      254.3
+     ],
+     [
+      306.5,
+      277.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Rebel Land",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 304.4,
+    "y": 250.3
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Rebel Pass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 547.1,
+    "y": 442.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Rebelbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 380.9,
+    "y": 692.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Rebelcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "path": [
+     [
+      428.3,
+      808.7
+     ],
+     [
+      435.5,
+      808.6
+     ],
+     [
+      445.1,
+      799.1
+     ],
+     [
+      446.3,
+      798.6
+     ],
+     [
+      452.1,
+      793.6
+     ]
+    ],
+    "role": "label",
+    "size": 6.5,
+    "text": "Rebelmarsh",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 445.1,
+    "y": 799.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Rebelmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 192.9,
+    "y": 705.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Rebelshaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 361.3,
+    "y": 726.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Crown Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 275.0,
+    "y": 186.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Crownbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 738.8,
+    "y": 455.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.89,
+    "text": "The Crowncape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "path": [
+     [
+      571.4,
+      439.6
+     ],
+     [
+      707.4,
+      439.6
+     ],
+     [
+      725.0,
+      429.5
+     ],
+     [
+      740.2,
+      429.5
+     ]
+    ],
+    "role": "label-region",
+    "size": 17.82,
+    "text": "The Crownlands",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 725.0,
+    "y": 429.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "road",
+    "path": [
+     [
+      766.9,
+      435.4
+     ],
+     [
+      766.9,
+      376.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Crownmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 766.9,
+    "y": 376.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Crownpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 326.8,
+    "y": 465.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "road",
+    "path": [
+     [
+      263.1,
+      172.7
+     ],
+     [
+      263.1,
+      112.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Crownstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 263.1,
+    "y": 112.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.7,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kings Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 351.6,
+    "y": 605.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.99,
+    "text": "The Kings Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingsbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 716.0,
+    "y": 528.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Kingsclose",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 388.3,
+    "y": 336.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingsfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 369.8,
+    "y": 269.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Kingshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 276.5,
+    "y": 100.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingsholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 652.3,
+    "y": 507.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingspass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingsreach",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 265.8,
+    "y": 406.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Prize",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 331.7,
+    "y": 590.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prize Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 228.8,
+    "y": 686.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prize Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 360.6,
+    "y": 546.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prizebridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 231.2,
+    "y": 647.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.46,
+    "text": "The Prizecoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prizeford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 573.8,
+    "y": 372.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.02,
+    "text": "The Prizemoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 584.2,
+    "y": 768.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prizepass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 496.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Rebel Fells",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 702.7,
+    "y": 704.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Rebel Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 740.3,
+    "y": 493.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      284.2,
+      366.1
+     ],
+     [
+      292.8,
+      359.9
+     ],
+     [
+      410.0,
+      359.9
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "The Rebel March",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 292.8,
+    "y": 359.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "path": [
+     [
+      454.0,
+      528.2
+     ],
+     [
+      455.2,
+      528.7
+     ],
+     [
+      466.6,
+      528.7
+     ],
+     [
+      470.4,
+      530.9
+     ],
+     [
+      499.0,
+      530.9
+     ],
+     [
+      500.2,
+      531.4
+     ]
+    ],
+    "role": "label",
+    "size": 8.91,
+    "text": "The Rebelfells",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 470.4,
+    "y": 530.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Rebelford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 568.0,
+    "y": 313.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Rebelgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 309.7,
+    "y": 561.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      385.8,
+      618.7
+     ],
+     [
+      401.9,
+      634.8
+     ],
+     [
+      406.0,
+      636.9
+     ],
+     [
+      439.1,
+      636.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Rebelmarch",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 406.0,
+    "y": 636.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Rebelpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 264.5,
+    "y": 485.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Thornhall",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 186.9,
+    "y": 666.4
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      681.6,
+      467.8
+     ],
+     [
+      682.2,
+      466.9
+     ],
+     [
+      686.3,
+      463.9
+     ],
+     [
+      723.9,
+      463.5
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Crown Land",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 686.3,
+    "y": 463.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Kingsbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 299.9,
+    "y": 339.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.68,
+    "text": "Kingscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.1,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Kingsport",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 785.8,
+    "y": 366.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Kingsthorpe",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 292.5,
+    "y": 658.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Kingswick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 678.0,
+    "y": 350.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Prize Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 647.5,
+    "y": 422.5
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Rebel Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 307.8,
+    "y": 561.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      296.0,
+      240.0
+     ],
+     [
+      296.0,
+      240.8
+     ],
+     [
+      304.4,
+      250.3
+     ],
+     [
+      306.5,
+      254.3
+     ],
+     [
+      306.5,
+      277.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Rebel Land",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 304.4,
+    "y": 250.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      518.2,
+      469.0
+     ],
+     [
+      521.1,
+      469.0
+     ],
+     [
+      523.8,
+      467.9
+     ],
+     [
+      544.9,
+      446.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Rebeland",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 523.8,
+    "y": 467.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Rebelbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 380.9,
+    "y": 692.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Rebelcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.89,
+    "text": "The Crowncape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      652.7,
+      508.1
+     ],
+     [
+      654.1,
+      513.0
+     ],
+     [
+      661.9,
+      521.1
+     ],
+     [
+      666.0,
+      523.1
+     ],
+     [
+      672.8,
+      523.1
+     ],
+     [
+      675.5,
+      524.1
+     ],
+     [
+      689.0,
+      537.3
+     ],
+     [
+      690.4,
+      538.0
+     ],
+     [
+      693.1,
+      537.3
+     ],
+     [
+      694.0,
+      536.5
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Crownford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 675.5,
+    "y": 524.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "path": [
+     [
+      571.4,
+      439.6
+     ],
+     [
+      707.4,
+      439.6
+     ],
+     [
+      725.0,
+      429.5
+     ],
+     [
+      740.2,
+      429.5
+     ]
+    ],
+    "role": "label-region",
+    "size": 17.82,
+    "text": "The Crownlands",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 725.0,
+    "y": 429.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      766.9,
+      443.6
+     ],
+     [
+      766.9,
+      384.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Crownmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 766.9,
+    "y": 384.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Crownpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 326.8,
+    "y": 474.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.99,
+    "text": "The Kings Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Kingsclose",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 388.3,
+    "y": 336.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Kingshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 276.5,
+    "y": 100.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Kingspass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 527.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Prize",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 331.7,
+    "y": 590.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.46,
+    "text": "The Prizecoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Prizepass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 451.4,
+    "y": 496.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Rebel Ford",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 740.3,
+    "y": 478.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      284.2,
+      366.1
+     ],
+     [
+      292.8,
+      359.9
+     ],
+     [
+      410.0,
+      359.9
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "The Rebel March",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 292.8,
+    "y": 359.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Rebelgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 329.3,
+    "y": 561.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Rebelpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 264.5,
+    "y": 485.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Thornhall",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 186.9,
+    "y": 666.4
+   }
+  ],
+  "world": [
+   {
+    "anchor": "start",
+    "face": "sans-medium",
+    "halo": 3.3,
+    "kind": "city",
+    "role": "label",
+    "size": 13.0,
+    "text": "Kingsbank",
+    "tier": 1,
+    "tracking": 0.01,
+    "x": 299.9,
+    "y": 339.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.68,
+    "text": "Kingscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans-bold",
+    "halo": 3.1,
+    "kind": "capital",
+    "role": "label",
+    "size": 15.0,
+    "text": "Kingsport",
+    "tier": 0,
+    "tracking": 0.01,
+    "x": 785.8,
+    "y": 366.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Rebelcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.89,
+    "text": "The Crowncape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "path": [
+     [
+      571.4,
+      439.6
+     ],
+     [
+      707.4,
+      439.6
+     ],
+     [
+      725.0,
+      429.5
+     ],
+     [
+      740.2,
+      429.5
+     ]
+    ],
+    "role": "label-region",
+    "size": 17.82,
+    "text": "The Crownlands",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 725.0,
+    "y": 429.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.99,
+    "text": "The Kings Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Prize",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 331.7,
+    "y": 590.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 10.46,
+    "text": "The Prizecoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      284.2,
+      366.1
+     ],
+     [
+      292.8,
+      359.9
+     ],
+     [
+      410.0,
+      359.9
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "The Rebel March",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 292.8,
+    "y": 359.9
+   }
+  ]
+ },
+ "legend": [
+  {
+   "label": "Capital",
+   "note": "",
+   "role": "settlement",
+   "swatch": "star"
+  },
+  {
+   "label": "City",
+   "note": "",
+   "role": "settlement",
+   "swatch": "ring"
+  },
+  {
+   "label": "Fortress",
+   "note": "",
+   "role": "settlement",
+   "swatch": "keep"
+  },
+  {
+   "label": "Hamlet",
+   "note": "",
+   "role": "settlement",
+   "swatch": "dot"
+  },
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  },
+  {
+   "label": "House Solane",
+   "note": "Owned in law by",
+   "role": "holder-0",
+   "swatch": "fill"
+  },
+  {
+   "label": "House Varr",
+   "note": "Owned in law by",
+   "role": "holder-1",
+   "swatch": "fill"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crown March"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownbank"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownclose"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crowncombe"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Crownfells"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownhill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownthorpe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Crownwick"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Kings Wood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Kingsmarch"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Kingsweald"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Prize Port"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Prizefells"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Prizeland"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Prizeport"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Prizerun"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Prizeshaw"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Rebel Port"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Rebelrun"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Rebelwater"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Crown Shaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Crown Weald"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownfield"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownhollow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownland"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownmarch"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownport"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Crownreach"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Crownwood"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Kings Fells"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kings Land"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kings March"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "The Kingscombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kingsford"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Kingshaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Kingsmoor"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Kingsrun"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Kingstead"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Kingswold"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Prize Land"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Prize Shaw"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Prizeflow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Prizemarch"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Rebelholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Rebelport"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Rebelrush"
+  }
+ ]
+}

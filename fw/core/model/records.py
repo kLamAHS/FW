@@ -12,6 +12,14 @@ from typing import Any
 
 from fw.core.calendar.uncertain import Interval, Precision, UncertainDate
 
+# The tag every generated shape and every entity the map invents carries. Defined here,
+# where the entity is, rather than in the generator: three separate parts of the
+# application have to be able to tell the map's own suggestions from the writer's world
+# — the entity lists, the continuity checks, and the generator's own anti-drift rule —
+# and a string literal repeated in three places is a rename waiting to go wrong.
+GENERATED_TAG = "generated-map"
+PROPOSED_TAG = "proposed"          # the first generator's mark, still in old worlds
+
 
 @dataclass(frozen=True)
 class Entity:
@@ -46,6 +54,19 @@ class Entity:
         if self.exists_to is not None and day > self.exists_to:
             return False
         return True
+
+    @property
+    def is_a_map_proposal(self) -> bool:
+        """Something the map suggested and the writer has not accepted.
+
+        Both halves matter. An entity the writer accepted keeps its `generated-map` tag,
+        because that is how the next run recognises its own previous work and does not
+        propose the town twice — so the tag alone would hide the writer's own world from
+        them. Speculative alone would hide every uncertain thing they wrote themselves.
+        """
+        if self.confidence != "speculative":
+            return False
+        return bool({GENERATED_TAG, PROPOSED_TAG} & set(self.tags or ()))
 
     def certainly_exists_on(self, day: int) -> bool:
         lo = self.exists_from_hi if self.exists_from_hi is not None else self.exists_from
@@ -183,6 +204,28 @@ class Secret:
     about_id: str | None = None
     fact_id: str | None = None
     severity: str = "major"
+
+
+@dataclass(frozen=True)
+class Interpretation:
+    """What one party says about an event or a person (§33, §94).
+
+    The same battle is a liberation to one house and a massacre to another, and the same
+    man is the King to one and the Pretender to the other. Both are one shape — a holder,
+    a subject, and what the holder calls it — which is why one table carries both and a
+    perspective (§94) can read historical interpretation and political labels from the
+    same place. Exactly one of `event_id` and `entity_id` is set.
+
+    `holder_id` may be None: "the clerical account" is a version nobody in particular owns,
+    and refusing to record it would force the writer to invent a church to hold it.
+    """
+
+    id: str
+    label: str
+    account: str = ""
+    event_id: str | None = None
+    entity_id: str | None = None
+    holder_id: str | None = None
 
 
 @dataclass(frozen=True)

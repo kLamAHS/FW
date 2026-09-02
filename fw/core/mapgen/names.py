@@ -37,6 +37,18 @@ MAX_LENGTH = 14
 BOUNDARY = "^"
 END = "$"
 
+# The endings a name falls back on when the world's own vocabulary is exhausted. Plain,
+# common, and letters rather than digits — see `_last_resort`.
+_LAST_DITCH = ("stead", "ford", "holt", "wick", "combe", "thorpe", "mere", "hollow",
+               "reach", "gate", "hill", "vale", "moor", "bank", "field", "close")
+
+# And how a real place name is told from its neighbour once every stem and ending in the
+# world has been spent. Not by counting — Greyhaven2 is not a place, it is a variable —
+# but the way English toponymy has always done it, which is why there is a Great Missenden
+# and a Little Missenden rather than a Missenden 1 and a Missenden 2.
+_QUALIFIERS = ("Upper", "Lower", "Little", "Great", "Old", "New",
+               "North", "South", "East", "West", "Nether", "Over")
+
 # Toponymic endings and the ground each one claims. This is the register most English
 # language worlds are written in, so it is a reasonable prior for *reading* the writer's
 # names. It is never imposed: an ending the writer's own world does not use is only
@@ -273,21 +285,27 @@ class Namer:
     # ---- learning ---------------------------------------------------------
 
     @classmethod
-    def from_world(cls, world, *, seed: str = "names") -> Namer:
-        """Learn from every place name the writer has already chosen."""
+    def from_corpus(cls, corpus, *, seed: str = "names") -> Namer:
+        """Learn from every name the writer has already chosen.
+
+        `corpus` is `(type_key, name)` pairs — `WorldReading.corpus`. It used to be the
+        world itself, walked here: the last traversal in the pipeline that opened the
+        world for itself, and a stage that reads the world is a stage whose answer
+        depends on when it ran rather than only on what it was given.
+        """
         gathered: dict[str, list[str]] = {}
         articles: dict[str, int] = {}
         every: list[str] = []
         every_articles = 0
         taken: set[str] = set()
-        for entity in world.entities():
-            clean, had_article = _normalise(entity.name)
+        for type_key, name in corpus:
+            clean, had_article = _normalise(name)
             taken.add(clean)
             if len(clean) < 3:
                 continue
-            gathered.setdefault(entity.type_key, []).append(clean)
-            articles[entity.type_key] = articles.get(entity.type_key, 0) + had_article
-            if entity.type_key in PLACE_TYPES:
+            gathered.setdefault(type_key, []).append(clean)
+            articles[type_key] = articles.get(type_key, 0) + had_article
+            if type_key in PLACE_TYPES:
                 every.append(clean)
                 every_articles += had_article
         return cls(
@@ -373,9 +391,11 @@ class Namer:
             return ""
         context = BOUNDARY * ORDER
         out: list[str] = []
+        ended = False
         for step in range(MAX_LENGTH):
             successors = chain.get(context)
             if not successors:
+                ended = True
                 break
             total = sum(count for _, count in successors)
             pick = noise.unit(f"{self.seed}|{kind}|{key}|{attempt}", step) * total
@@ -387,10 +407,14 @@ class Namer:
                     char = candidate
                     break
             if char == END:
+                ended = True
                 break
             out.append(char)
             context = (context + char)[-ORDER:]
-        return "".join(out).strip()
+        # A walk the cap cut off mid-word is not a name — "The Norey Shorth S" is
+        # fourteen characters of somewhere real. Returned empty so the attempt loop
+        # tries again rather than shipping the stump.
+        return "".join(out).strip() if ended else ""
 
     def name(self, kind: str, key: str, *, hint: str = "") -> str:
         """A name for one generated thing.
@@ -411,23 +435,49 @@ class Namer:
             else:
                 candidate = self._spin(kind, model, key, attempt)
             flat = candidate.replace(" ", "")
+            # The last-word floor guards against a low-order chain's fake endings:
+            # with two characters of context, "Marsh" teaches that "sh" can end a
+            # name, and "The Norey Sh" follows. No real toponym has a two-letter
+            # final word.
             if (len(candidate) < 4 or candidate in self.taken
-                    or candidate in model.names or flat in AVOID):
+                    or candidate in model.names or flat in AVOID
+                    or len(candidate.split()[-1]) < 3):
                 continue
             self.taken.add(candidate)
             return self._dress(model, candidate, key)
         return self._dress(model, self._last_resort(model, key, hint), key)
 
     def _last_resort(self, model: KindModel, key: str, hint: str) -> str:
-        """When the world is too small to have a voice — two entities, or none."""
-        stem = (model.prefixes or model.names or ("march",))[0][:6]
-        ending = self._ending_for(model, hint, key) or "stead"
-        for suffix in range(1, 200):
-            candidate = _join(stem, ending) + ("" if suffix == 1 else str(suffix))
-            if candidate not in self.taken:
-                self.taken.add(candidate)
-                return candidate
-        return _join(stem, ending) + key
+        """When the world is too small to have a voice — two entities, or none.
+
+        Never with a number on the end. Greyhaven2 is not a place, it is a variable, and
+        one of them on a map tells the writer the generator gave up. So the pool is
+        widened instead of counted through: every stem the world offered against every
+        ending it offered, in a stable order, and only then the key's own letters — which
+        at least read as a word.
+        """
+        stems = list(model.prefixes or model.names or ("march",))
+        endings = list(model.endings or ()) or [self._ending_for(model, hint, key)
+                                                or "stead"]
+        made: list[str] = []
+        for stem in stems:
+            for ending in tuple(endings) + _LAST_DITCH:
+                candidate = _join(stem[:6], ending)
+                made.append(candidate)
+                if candidate not in self.taken:
+                    self.taken.add(candidate)
+                    return candidate
+
+        # Every stem against every ending is spent. A world only reaches this by being
+        # asked for far more places than it has words for, and the answer is the one the
+        # language itself uses: say which of the two you mean.
+        for qualifier in _QUALIFIERS:
+            for base in made:
+                candidate = f"{qualifier} {base}"
+                if candidate not in self.taken:
+                    self.taken.add(candidate)
+                    return candidate
+        return made[0] if made else "March"
 
     def _dress(self, model: KindModel, name: str, key: str) -> str:
         """Title case, and the article if this world's names of that kind wear one."""

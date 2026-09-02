@@ -75,16 +75,32 @@ class TestOnceItIs:
                 != drawn.get("/api/map/relief.png?scale=4").content)
 
     def test_the_picture_is_mostly_not_one_colour(self, drawn):
-        """A render that failed quietly comes back as a flat rectangle."""
-        import zlib
+        """A render that failed quietly comes back as a flat rectangle.
+
+        Read as the spread of BLOCK means rather than as the count of distinct bytes
+        in the compressed stream. Those bytes are PNG *filter deltas*, so what the old
+        assertion measured was how much neighbouring pixels differ — and since the
+        paper grain went in, neighbouring pixels differ everywhere by construction.
+        Measured on a blank grey sheet with nothing but grain on it, the old check
+        still fails (13 distinct, needing 20), so it had not gone vacuous; but what
+        keeps it honest is now the grain's amplitude rather than anything the map
+        does. A block mean averages the grain away and leaves the structure, which is
+        the thing that actually goes missing when a render fails quietly: the same
+        blank sheet spreads 1.0 against a floor of 30, and a real relief spreads far
+        past it.
+        """
+        from fw.core.mapgen import raster
 
         body = drawn.get("/api/map/relief.png?scale=4").content
-        idat = b""
-        position = 8
-        while position < len(body):
-            length = struct.unpack(">I", body[position:position + 4])[0]
-            if body[position + 4:position + 8] == b"IDAT":
-                idat += body[position + 8:position + 8 + length]
-            position += 12 + length
-        raw = zlib.decompress(idat)
-        assert len(set(raw[::997])) > 20, "the relief came back flat"
+        width, height, pixels = raster.decode(body)
+        step = max(1, width // 16)
+        means = []
+        for top in range(0, height - step, step):
+            for left in range(0, width - step, step):
+                total = 0
+                for y in range(top, top + step):
+                    row = (y * width + left) * 3
+                    total += sum(pixels[row:row + step * 3])
+                means.append(total / (step * step * 3))
+        assert max(means) - min(means) > 30.0, "the relief came back flat"
+        assert len(means) > 100

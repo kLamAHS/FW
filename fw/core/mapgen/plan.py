@@ -32,9 +32,12 @@ from fw.core.mapgen import guards
 from fw.core.mapgen.drafts import FactSpec, SegmentSpec, ShapeSpec, SubjectSpec
 from fw.core.mapgen.findings import Finding
 from fw.core.mapgen.ids import ALGORITHM
+from fw.core.model.records import GENERATED_TAG as _GENERATED_TAG
 
 PLAN_FORMAT = 1
-GENERATED_TAG = "generated-map"
+# Defined on the entity itself: the lists and the continuity checks
+# have to recognise the map's own suggestions too.
+GENERATED_TAG = _GENERATED_TAG
 PROVENANCE_KEY = "mapgen"
 
 # Ceilings, so a pathological world cannot ship a map the browser cannot draw.
@@ -44,26 +47,38 @@ MAX_PLAN_VERTICES = 40_000
 # Drawing and reading order: land first, roads last, so the plan lists features the way
 # a reader meets them rather than the way the pipeline happened to compute them.
 KIND_ORDER = ("coast", "island", "region", "range", "hills", "sea", "water", "lake",
-              "river", "natural", "settlement", "castle", "ruin", "road")
+              "river", "natural", "settlement", "castle", "ruin", "road", "lane")
 
 # What each kind must say about itself. A plan whose details do not match is a bug in
 # the stage that emitted it, and `violations()` is how it gets caught in a test rather
 # than in front of the writer.
 DETAIL_KEYS: dict[str, tuple[str, ...]] = {
-    "coast": ("landmass", "area"),
-    "island": ("landmass", "area"),
-    "region": ("share", "dominant"),
-    "range": ("strike", "crest"),
-    "hills": ("crest",),
-    "sea": ("water_kind",),
-    "water": ("water_kind",),
-    "lake": ("area",),
-    "river": ("mouth", "strahler"),
-    "natural": ("feature_kind", "area_cells"),
-    "settlement": ("rank",),
-    "castle": ("rank",),
-    "ruin": ("rank",),
-    "road": ("tier", "span"),
+    "coast": ("landmass", "area", "shore", "importance"),
+    "island": ("landmass", "area", "shore", "importance"),
+    "region": ("share", "dominant", "frontiers", "importance"),
+    "range": ("strike", "crest", "importance"),
+    "hills": ("crest", "importance"),
+    "sea": ("water_kind", "importance"),
+    "water": ("water_kind", "importance"),
+    "lake": ("area", "outlet", "importance"),
+    "river": ("mouth", "strahler", "discharge", "source_elevation", "mouth_kind",
+              "importance"),
+    "natural": ("feature_kind", "area_cells", "importance"),
+    "settlement": ("rank", "importance"),
+    "castle": ("rank", "archetype", "watches", "importance"),
+    "ruin": ("rank", "importance"),
+    "road": ("grade", "traffic", "span", "importance"),
+    "lane": ("tier", "span", "lands_at", "importance"),
+}
+
+
+# Kinds drafted under another kind's switch, mirroring `pipeline._compute`: islands
+# fall out of tracing the coast, lanes are drawn only when both roads and a coast are.
+# Every other kind answers for itself.
+_DRAFT_GATES: dict[str, tuple[str, ...]] = {
+    "island": ("coast",),
+    "lane": ("road", "coast"),
+    "lake": ("river",),
 }
 
 
@@ -101,6 +116,16 @@ class MapBrief:
 
     def wants(self, kind: str) -> bool:
         return kind in self.include
+
+    def covers(self, kind: str) -> bool:
+        """Whether this brief could have proposed the kind — the retirement question.
+
+        Not the same as `wants`: islands ride the coast gate and sea lanes need both
+        of their parents, exactly as in the pipeline's drafting gates. A brief never
+        says "island", so a retirement gated on `wants` could not take one back — an
+        island the new map does not have would stand forever.
+        """
+        return all(self.wants(k) for k in _DRAFT_GATES.get(kind, (kind,)))
 
 
 @dataclass(frozen=True)
@@ -462,7 +487,8 @@ def _subject_dict(subject: SubjectSpec | None, *, redact: bool = False) -> dict 
     return {"mode": subject.mode, "type_key": subject.type_key,
             "entity_id": None if redact else subject.entity_id,
             "summary_template": subject.summary_template,
-            "tags": list(subject.tags), "confidence": subject.confidence}
+            "tags": list(subject.tags), "confidence": subject.confidence,
+            "exists_from": subject.exists_from}
 
 
 def _subject_of(raw) -> SubjectSpec | None:
@@ -472,7 +498,8 @@ def _subject_of(raw) -> SubjectSpec | None:
                        entity_id=raw.get("entity_id"),
                        summary_template=str(raw.get("summary_template") or ""),
                        tags=tuple(raw.get("tags") or ()),
-                       confidence=str(raw.get("confidence") or "speculative"))
+                       confidence=str(raw.get("confidence") or "speculative"),
+                       exists_from=raw.get("exists_from"))
 
 
 def _shape_dict(shape: ShapeSpec) -> dict:
@@ -489,18 +516,21 @@ def _shape_of(raw) -> ShapeSpec:
 
 
 def _fact_dict(fact: FactSpec, *, redact: bool = False) -> dict:
-    reference = fact.object_ref
-    if redact and reference and not reference.startswith("@"):
-        reference = "<entity>"
-    return {"predicate_key": fact.predicate_key, "object_ref": reference,
-            "value": fact.value, "confidence": fact.confidence, "note": fact.note}
+    def hidden(ref: str | None) -> str | None:
+        if redact and ref and not ref.startswith("@"):
+            return "<entity>"
+        return ref
+    return {"predicate_key": fact.predicate_key, "object_ref": hidden(fact.object_ref),
+            "value": fact.value, "confidence": fact.confidence, "note": fact.note,
+            "subject_ref": hidden(fact.subject_ref)}
 
 
 def _fact_of(raw) -> FactSpec:
     return FactSpec(predicate_key=str(raw["predicate_key"]),
                     object_ref=raw.get("object_ref"), value=raw.get("value"),
                     confidence=str(raw.get("confidence") or "speculative"),
-                    note=str(raw.get("note") or ""))
+                    note=str(raw.get("note") or ""),
+                    subject_ref=raw.get("subject_ref"))
 
 
 def _segment_dict(segment: SegmentSpec, *, redact: bool = False) -> dict:
@@ -510,7 +540,8 @@ def _segment_dict(segment: SegmentSpec, *, redact: bool = False) -> dict:
     return {"from_ref": ref(segment.from_ref), "to_ref": ref(segment.to_ref),
             "length": segment.length, "medium": segment.medium,
             "quality": segment.quality, "terrain": segment.terrain,
-            "closed_seasons": list(segment.closed_seasons), "danger": segment.danger}
+            "closed_seasons": list(segment.closed_seasons), "danger": segment.danger,
+            "built_on": segment.built_on}
 
 
 def _segment_of(raw) -> SegmentSpec:
@@ -520,4 +551,5 @@ def _segment_of(raw) -> SegmentSpec:
                        quality=float(raw.get("quality", 0.8)),
                        terrain=str(raw.get("terrain") or "plain"),
                        closed_seasons=tuple(raw.get("closed_seasons") or ()),
-                       danger=str(raw.get("danger") or "low"))
+                       danger=str(raw.get("danger") or "low"),
+                       built_on=raw.get("built_on"))

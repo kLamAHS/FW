@@ -1,0 +1,2044 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "End Bridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 485.7,
+   "y": 649.7
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "End Gate",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 387.7,
+   "y": 512.3
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Endclose",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 291.2,
+   "y": 529.2
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Endholt",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 524.1,
+   "y": 344.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Endthorpe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 561.6,
+   "y": 346.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Inkford",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 343.0,
+   "y": 411.2
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Inkstead",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 299.1,
+   "y": 676.2
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Open Bridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 514.3,
+   "y": 285.7
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Pennbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 730.3,
+   "y": 479.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endbank",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 252.5,
+   "y": 698.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endcombe",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 560.0,
+   "y": 641.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endfield",
+   "radius": 3.4,
+   "rank": "hamlet",
+   "role": "settlement",
+   "shape": "dot",
+   "x": 278.2,
+   "y": 339.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endgate",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 306.5,
+   "y": 517.7
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endhill",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 685.4,
+   "y": 519.8
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endhollow",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 655.1,
+   "y": 749.9
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endmere",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 583.4,
+   "y": 381.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endmoor",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 194.2,
+   "y": 555.0
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endreach",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 675.8,
+   "y": 403.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Endwick",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 527.9,
+   "y": 382.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Openpass",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 441.9,
+   "y": 496.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Penbridge",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 534.0,
+   "y": 376.9
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Penn Bridge",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 371.5,
+   "y": 295.6
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Penngate",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 387.7,
+   "y": 452.7
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Vale End",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 243.4,
+   "y": 131.0
+  }
+ ],
+ "labels": {
+  "local": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "End Bridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 495.5,
+    "y": 650.4
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "End Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 378.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "river",
+    "path": [
+     [
+      454.6,
+      541.3
+     ],
+     [
+      456.1,
+      542.8
+     ],
+     [
+      458.1,
+      546.8
+     ],
+     [
+      458.1,
+      559.0
+     ],
+     [
+      457.1,
+      561.7
+     ],
+     [
+      453.7,
+      565.8
+     ],
+     [
+      452.7,
+      568.5
+     ],
+     [
+      452.7,
+      585.1
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "End Water",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 457.1,
+    "y": 561.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Endclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 299.7,
+    "y": 542.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Endholt",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 515.6,
+    "y": 344.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Endthorpe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 570.1,
+    "y": 346.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "river",
+    "path": [
+     [
+      282.5,
+      466.9
+     ],
+     [
+      283.8,
+      468.3
+     ],
+     [
+      285.1,
+      473.7
+     ],
+     [
+      286.8,
+      476.4
+     ],
+     [
+      308.7,
+      498.3
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Endwater",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 285.1,
+    "y": 473.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      541.5,
+      384.4
+     ],
+     [
+      553.6,
+      396.5
+     ],
+     [
+      556.3,
+      398.2
+     ],
+     [
+      559.0,
+      398.5
+     ],
+     [
+      563.1,
+      396.5
+     ],
+     [
+      569.2,
+      390.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Inkbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 559.0,
+    "y": 398.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Inkford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 351.5,
+    "y": 411.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "Inkstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 307.6,
+    "y": 676.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      580.8,
+      423.7
+     ],
+     [
+      596.9,
+      439.8
+     ],
+     [
+      600.6,
+      441.7
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Inkvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 596.9,
+    "y": 439.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Open Bridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 524.1,
+    "y": 286.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 9.29,
+    "text": "Opencoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      402.3,
+      393.1
+     ],
+     [
+      412.8,
+      393.1
+     ],
+     [
+      415.5,
+      392.1
+     ],
+     [
+      434.5,
+      373.2
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Pen Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 415.5,
+    "y": 392.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Pennbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 740.1,
+    "y": 479.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Pennwood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 702.8,
+    "y": 700.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 261.0,
+    "y": 699.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endcombe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 568.5,
+    "y": 641.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 286.7,
+    "y": 339.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 297.0,
+    "y": 518.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endhill",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 693.9,
+    "y": 520.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endhollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 663.6,
+    "y": 750.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 591.9,
+    "y": 394.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 202.7,
+    "y": 555.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Endreach",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 685.6,
+    "y": 404.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Endwick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 518.1,
+    "y": 383.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      616.1,
+      576.4
+     ],
+     [
+      653.0,
+      539.5
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Ink Water",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 653.0,
+    "y": 539.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 12.04,
+    "text": "The Inkcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      269.3,
+      217.8
+     ],
+     [
+      312.9,
+      254.1
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Inkwater",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 312.9,
+    "y": 254.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Open Vale",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 672.9,
+    "y": 464.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "path": [
+     [
+      503.7,
+      250.5
+     ],
+     [
+      545.3,
+      250.5
+     ],
+     [
+      561.2,
+      242.0
+     ],
+     [
+      568.9,
+      242.0
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Open Wood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 561.2,
+    "y": 242.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 9.92,
+    "text": "The Openmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 461.2,
+    "y": 786.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Openpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 450.4,
+    "y": 496.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "road",
+    "path": [
+     [
+      326.5,
+      481.5
+     ],
+     [
+      336.9,
+      471.0
+     ],
+     [
+      338.6,
+      468.3
+     ],
+     [
+      340.0,
+      462.9
+     ],
+     [
+      344.0,
+      457.4
+     ],
+     [
+      344.2,
+      436.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Openvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 340.0,
+    "y": 462.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Penbridge",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 542.5,
+    "y": 369.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.5,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Penn Bridge",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 380.0,
+    "y": 296.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      643.6,
+      659.8
+     ],
+     [
+      645.7,
+      661.9
+     ],
+     [
+      647.4,
+      664.6
+     ],
+     [
+      647.7,
+      716.1
+     ],
+     [
+      648.6,
+      717.8
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Penn Water",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 647.4,
+    "y": 664.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Penngate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 397.2,
+    "y": 453.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      254.7,
+      401.7
+     ],
+     [
+      257.0,
+      399.6
+     ],
+     [
+      263.8,
+      397.5
+     ],
+     [
+      269.2,
+      393.5
+     ],
+     [
+      274.6,
+      392.1
+     ],
+     [
+      280.1,
+      388.0
+     ],
+     [
+      308.6,
+      387.7
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Penwater",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 269.2,
+    "y": 393.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "path": [
+     [
+      144.6,
+      615.7
+     ],
+     [
+      184.3,
+      604.9
+     ],
+     [
+      204.6,
+      592.2
+     ],
+     [
+      308.1,
+      592.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Penwood",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 204.6,
+    "y": 592.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer's Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer'scape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "path": [
+     [
+      162.1,
+      688.2
+     ],
+     [
+      168.0,
+      692.7
+     ],
+     [
+      187.2,
+      702.3
+     ],
+     [
+      190.0,
+      702.5
+     ],
+     [
+      197.1,
+      705.5
+     ],
+     [
+      201.0,
+      705.6
+     ],
+     [
+      203.4,
+      707.1
+     ],
+     [
+      207.3,
+      707.2
+     ],
+     [
+      209.6,
+      708.7
+     ],
+     [
+      214.7,
+      708.7
+     ],
+     [
+      217.5,
+      710.2
+     ],
+     [
+      222.0,
+      710.2
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Writer'sfen",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 203.4,
+    "y": 707.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Vale End",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 253.2,
+    "y": 131.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      289.4,
+      323.5
+     ],
+     [
+      328.5,
+      284.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Writer's Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 328.5,
+    "y": 284.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Writer'scoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      249.7,
+      618.0
+     ],
+     [
+      261.1,
+      629.4
+     ],
+     [
+      270.6,
+      633.5
+     ],
+     [
+      283.4,
+      646.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Writer'svale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 270.6,
+    "y": 633.5
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "End Bridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 495.5,
+    "y": 650.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "End Gate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 397.2,
+    "y": 512.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "river",
+    "path": [
+     [
+      454.6,
+      541.3
+     ],
+     [
+      456.1,
+      542.8
+     ],
+     [
+      458.1,
+      546.8
+     ],
+     [
+      458.1,
+      559.0
+     ],
+     [
+      457.1,
+      561.7
+     ],
+     [
+      453.7,
+      565.8
+     ],
+     [
+      452.7,
+      568.5
+     ],
+     [
+      452.7,
+      585.1
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "End Water",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 457.1,
+    "y": 561.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "river",
+    "path": [
+     [
+      282.5,
+      466.9
+     ],
+     [
+      283.8,
+      468.3
+     ],
+     [
+      285.1,
+      473.7
+     ],
+     [
+      286.8,
+      476.4
+     ],
+     [
+      308.7,
+      498.3
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Endwater",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 285.1,
+    "y": 473.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "road",
+    "path": [
+     [
+      580.8,
+      423.7
+     ],
+     [
+      596.9,
+      439.8
+     ],
+     [
+      600.6,
+      441.7
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Inkvale",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 596.9,
+    "y": 439.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Open Bridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 524.1,
+    "y": 286.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 9.29,
+    "text": "Opencoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Pennbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 740.1,
+    "y": 479.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Endgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 316.0,
+    "y": 518.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Endreach",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 685.6,
+    "y": 404.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Endwick",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 537.7,
+    "y": 383.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 12.04,
+    "text": "The Inkcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      269.3,
+      217.8
+     ],
+     [
+      312.9,
+      254.1
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Inkwater",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 312.9,
+    "y": 254.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Open Vale",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 672.9,
+    "y": 464.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Penngate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 397.2,
+    "y": 453.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      254.7,
+      401.7
+     ],
+     [
+      257.0,
+      399.6
+     ],
+     [
+      263.8,
+      397.5
+     ],
+     [
+      269.2,
+      393.5
+     ],
+     [
+      274.6,
+      392.1
+     ],
+     [
+      280.1,
+      388.0
+     ],
+     [
+      308.6,
+      387.7
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Penwater",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 269.2,
+    "y": 393.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "path": [
+     [
+      144.6,
+      615.7
+     ],
+     [
+      184.3,
+      604.9
+     ],
+     [
+      204.6,
+      592.2
+     ],
+     [
+      308.1,
+      592.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Penwood",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 204.6,
+    "y": 592.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "road",
+    "path": [
+     [
+      336.3,
+      265.7
+     ],
+     [
+      364.0,
+      293.6
+     ],
+     [
+      366.7,
+      295.3
+     ],
+     [
+      369.4,
+      295.6
+     ],
+     [
+      378.9,
+      290.2
+     ],
+     [
+      388.6,
+      290.2
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Writer's Road",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 369.4,
+    "y": 295.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer's Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer'scape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Vale End",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 253.2,
+    "y": 131.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      289.4,
+      323.5
+     ],
+     [
+      328.5,
+      284.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Writer's Bridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 328.5,
+    "y": 284.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Writer'scoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   }
+  ],
+  "world": [
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      541.5,
+      384.4
+     ],
+     [
+      553.6,
+      396.5
+     ],
+     [
+      556.3,
+      398.2
+     ],
+     [
+      559.0,
+      398.5
+     ],
+     [
+      563.1,
+      396.5
+     ],
+     [
+      569.2,
+      390.6
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Inkbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 559.0,
+    "y": 398.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 9.29,
+    "text": "Opencoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.3,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 12.04,
+    "text": "The Inkcoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 432.4,
+    "y": 140.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "river",
+    "path": [
+     [
+      269.3,
+      217.8
+     ],
+     [
+      312.9,
+      254.1
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Inkwater",
+    "tier": 0,
+    "tracking": 0.02,
+    "x": 312.9,
+    "y": 254.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Open Vale",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 672.9,
+    "y": 464.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "path": [
+     [
+      144.6,
+      615.7
+     ],
+     [
+      184.3,
+      604.9
+     ],
+     [
+      204.6,
+      592.2
+     ],
+     [
+      308.1,
+      592.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Penwood",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 204.6,
+    "y": 592.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer's Wick",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Writer'scape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.2,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "Writer'scoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   }
+  ]
+ },
+ "legend": [
+  {
+   "label": "Hamlet",
+   "note": "",
+   "role": "settlement",
+   "swatch": "dot"
+  },
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Endbridge"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Endfen"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Endstead"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Inkwood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Pennvale"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Pennwater"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Endford"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Endwood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Ink Vale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Ink Wood"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Open Water"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Openmere"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Openwater"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Openwood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Pen Vale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Pen Water"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Pen Wood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Penn Vale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Penvale"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Writer's Water"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Writer'sbridge"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Writer'swater"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Writer'swood"
+  }
+ ]
+}

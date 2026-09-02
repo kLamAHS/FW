@@ -165,7 +165,8 @@ Three things are tested in ways worth mentioning:
 
 ## Scope
 
-Implemented: the entity and relationship model with custom types, temporal facts,
+Implemented: the entity and relationship model with custom types — structurally, through
+the same rows the built-ins use, and added from a screen of their own — temporal facts,
 world-state-at-date, genealogy with legal/biological/adoptive parentage, twelve succession
 laws with hypotheticals, the four-way territorial distinction (§11), layered temporal maps,
 the relationship graph, the pedigree, events and causal chains, layered knowledge and
@@ -174,28 +175,59 @@ routing, search, and the "why does this matter" / "what if it vanished" analyses
 
 Building happens in the client too: create entities (three fields, everything else behind
 one disclosure, per §56), write scenes and record events with participants and roles (§31,
-§44), link one event to its consequences (§32), record relationships and properties with
+§44), place a scene in a chapter of the manuscript (§43), create a title and grant it so
+there is something to inherit (§8), record a secret and who thinks what about it (§6),
+link one event to its consequences (§32), record relationships and properties with
 in-world dates, end a fact on the timeline's current date rather than deleting it (§106.3's
 rule as the one-click path), and edit or delete from the side panel without losing your
-place (§76). Every mutation is written to the §59 revision log inside the same
+place (§76). And ask the world questions (§49): a structured filter over the fact spine,
+built from a form rather than typed, compiled to one SQL statement, with the answer's
+working shown and the question keepable so it can be asked again when the answer has
+changed. Every mutation is written to the §59 revision log inside the same
 transaction — deletions record the complete row, including the facts an entity takes with
 it — and any recorded change can be walked back: a deleted entity is restored from the
 dashboard with its connections, an edit from the entity's own change history, and a restore
 is itself a logged, reversible change. The dashboard shows what changed most recently
 (§74), and `fw restore` does all of this from the command line.
 
+The map is grown from what the writer wrote rather than from noise: one reading of their
+world (regions, houses, titles, roads, rivers, events, resources — not two fields), a
+continent shaped before politics, erosion and rain shadow, vegetation, movement cost,
+settlements sited from the ground, roads that bundle into highways, castles at the passes,
+borders that follow where the towns stop reaching, and a name for everything it draws.
+Nothing is written until the writer accepts it, feature by feature, with the case for each
+one in a sentence (§66, §67).
+
+And it can be read through somebody's eyes (§93, §94). The same battle is told three ways
+and the same man is called two things — §33's `interpretation`, which had a table and no
+reader — and a perspective joins that to §11's claims and to what a party has never heard
+of, so House Orren's map shows the Northmarch as theirs, House Marr's list calls Prince
+Oren the Pretender, and a place Lady Mara does not know about is simply not on her map.
+Ignorance is opt-in: a world nobody has annotated renders exactly as it did before, because
+§93 asks for this *optionally* and a lens that hid everything unstated would be useless.
+The objective world is one click away, and the view says exactly what it changed and why
+(§67) rather than quietly altering a map.
+
+And it answers the question §19 asks it: *where does Greyhaven get its grain?* The facts
+were all there and nothing joined them, so the answer is a trace rather than a simulation
+— the Vale exports it, the road runs Red Ford to Greyhaven, it is 2.8 days by wagon on
+this date, and the Vale is the only source Greyhaven can reach, which is a plot. Seasonal
+closures and construction dates apply, so a supply line can be open in summer and gone in
+winter. The same reading answers §117's *“Who benefits?”*: what a house is worth is
+counted from the ground it holds, the people on it and the roads it can tax, rather than
+read off a `prestige: high` label somebody typed.
+
 Deliberately not yet built, and reachable because of the decisions above:
 
-- **Alternate timelines (§105).** `branch_id` is on every temporal table from the first
-  migration and the MVP resolves a single branch with an equality predicate. The column
-  exists; branch overlay resolution does not.
-- **Perspective and fog-of-knowledge maps (§93, §94).** Knowledge attaches to secrets, not
-  yet to geometry or labels.
-- **Economic simulation beyond descriptive (§18–19)**, the plausibility assistant (§73), AI
-  features (§103) and plugins (§102).
+- **Economic simulation.** Supply is *traced* (§19) — who says they produce a thing, who
+  says they need it, and how long the road takes on the day in question — and nothing
+  computes a yield from soil, labour and rainfall. §68 and §116 both warn against adding
+  simulation for its own sake.
+- **The plausibility assistant (§73), AI features (§103) and plugins (§102).**
 - **Prose.** Scenes carry metadata and context, not manuscript text.
-- **A full undo stack.** Restore works per recorded change; a single walk-backwards
-  undo/redo pointer over the log is not built.
+- **Perspective outside the map.** The map, the world state and the entity list can be
+  read through one party's eyes; the graph, the pedigree and the timeline are still the
+  view from nowhere.
 
 ## The brief's own principles
 

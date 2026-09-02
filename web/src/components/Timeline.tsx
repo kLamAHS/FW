@@ -10,21 +10,27 @@
  * picture where they are — "somewhere near the right-hand end" is not a date.
  */
 
+import { useState } from 'react'
 import type { WorldSummary } from '../api'
 
 interface Props {
   world: WorldSummary
   day: number
   onChange: (day: number) => void
-  snapshots: { name: string; day: number }[]
+  snapshots: { id: string; name: string; day: number }[]
   dateText: string
   season: string | null
   onEditEras: () => void
+  /** §80: name this moment, or take a name back off. */
+  onName: (name: string) => void
+  onForget: (id: string) => void
 }
 
 export function Timeline(
-  { world, day, onChange, snapshots, dateText, season, onEditEras }: Props,
+  { world, day, onChange, snapshots, dateText, season, onEditEras,
+    onName, onForget }: Props,
 ) {
+  const [naming, setNaming] = useState<string | null>(null)
   const { first, last } = world.span
   const year = Math.floor((day - first) / world.calendar.days_in_year)
 
@@ -76,20 +82,47 @@ export function Timeline(
         ages
       </button>
 
-      {snapshots.length > 0 && (
-        <span className="snapshots">
-          {snapshots.map((s) => (
+      {/* §80. The chips have been here since the timeline was written and only the
+          seeded world could have any: "Before the Red War" is how a writer holds a
+          date, and 81400 is not. */}
+      <span className="snapshots">
+        {snapshots.map((s) => (
+          <span key={s.id} className="snapshot-chip">
             <button
-              key={s.name}
               onClick={() => onChange(s.day)}
               className={s.day === day ? 'active' : ''}
               title={`Jump to ${s.name}`}
             >
               {s.name}
             </button>
-          ))}
-        </span>
-      )}
+            <button className="forget" title={`Stop calling that day “${s.name}”`}
+                    onClick={() => onForget(s.id)}>×</button>
+          </span>
+        ))}
+        {naming === null ? (
+          <button className="name-this" title="Give this date a name you can come back to"
+                  onClick={() => setNaming('')}>
+            + name this date
+          </button>
+        ) : (
+          <>
+            <input autoFocus value={naming} placeholder="Before the Red War"
+                   onChange={(e) => setNaming(e.target.value)}
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter' && naming.trim()) {
+                       onName(naming.trim())
+                       setNaming(null)
+                     }
+                     if (e.key === 'Escape') setNaming(null)
+                   }} />
+            <button className="active" disabled={!naming.trim()}
+                    onClick={() => { onName(naming.trim()); setNaming(null) }}>
+              Name it
+            </button>
+            <button onClick={() => setNaming(null)}>Cancel</button>
+          </>
+        )}
+      </span>
     </div>
   )
 }

@@ -331,31 +331,276 @@ def _adopt_the_rest(grid: Grid, sea: list[list[bool]],
     return stranded
 
 
-def outline(partition: Partition, key: str) -> list[list[list[float]]]:
-    """A region's shape, traced from the ground it actually holds.
+# ---- borders traced once, and shared ----------------------------------------
+#
+# A border between two regions is ONE line. It has to be, or it is drawn twice: each
+# neighbour contours its own territory against its own background and the two lines
+# disagree — measured at a median of one whole lattice cell apart on the example
+# continent, and up to two. On a political fill that is a seam of the wrong colour all
+# the way along every internal frontier.
+#
+# So nothing is contoured per region. The ownership field is walked once, the boundary
+# between every pair of unlike cells is collected as a unit edge on the corner lattice,
+# those edges are chained into arcs that run from junction to junction, and each arc is
+# smoothed once. A region's outline is then assembled from arcs it shares with its
+# neighbours — the same points, in the other direction. Byte-identical from both sides
+# by construction rather than by tolerance.
 
-    Contoured from the ownership field rather than cast as rays, so the shape can be as
-    concave as the territory is — a region that wraps around a bay looks like one — and
-    so the edge it shares with a neighbour is the same edge on both maps.
+# Corners are held in doubled integer coordinates so the arithmetic stays exact: the
+# corner shared by cells (i,j), (i+1,j), (i,j+1) and (i+1,j+1) is at lattice
+# (i+0.5, j+0.5), which is (2i+1, 2j+1) doubled. Every corner is therefore odd/odd, and
+# two corners are the same corner if and only if their integers match.
+OUTSIDE = -1                      # the sea, and everything off the edge of the lattice
+
+
+@dataclass(frozen=True)
+class Arc:
+    """One run of border, from junction to junction, belonging to two regions at once."""
+
+    corners: tuple[tuple[int, int], ...]        # doubled integer corner coordinates
+    left: int                                   # region index walking `corners` forward
+    right: int
+    closed: bool = False
+
+    def other(self, mine: int) -> int:
+        return self.right if mine == self.left else self.left
+
+
+def trace_arcs(partition: Partition, sea: list[list[bool]] | None = None) -> list[Arc]:
+    """Every stretch of border on the map, each traced exactly once.
+
+    Walked from the ownership field, so an arc knows both of the regions it divides and
+    neither of them owns it.
     """
-    if key not in partition.keys:
-        return []
     grid = partition.grid
-    index = partition.keys.index(key)
-    mask = grid.filled(0.0)
-    for j in range(grid.size):
-        for i in range(grid.size):
-            if partition.owner[j][i] == index:
-                mask[j][i] = 1.0
+    size = grid.size
+    owner = partition.owner
 
-    rings: list[list[list[float]]] = []
-    for ring, encloses in shapes.outlines(grid.blurred(mask), 0.5,
-                                          smallest=SMALLEST_REGION,
-                                          most=MAX_RING_VERTICES):
-        if not encloses:
-            continue                    # a hole in a region is another region, not a gap
-        rings.append(shapes.closed(grid.to_world(ring)))
-    return rings
+    def at(i: int, j: int) -> int:
+        if not (0 <= i < size and 0 <= j < size):
+            return OUTSIDE
+        if sea is not None and sea[j][i]:
+            return OUTSIDE
+        value = owner[j][i]
+        return value if value >= 0 else OUTSIDE
+
+    # Every unit edge where two unlike cells meet, with the cell on each side of it.
+    # Keyed by the pair of corners, smaller first, so an edge is found once.
+    edges: dict[tuple[tuple[int, int], tuple[int, int]], tuple[int, int]] = {}
+    for j in range(-1, size):
+        for i in range(-1, size):
+            here = at(i, j)
+            east = at(i + 1, j)
+            if here != east:
+                # Vertical edge at x = i+0.5, from y = j-0.5 to y = j+0.5. Walking it in
+                # +y has the eastern cell on the left.
+                low, high = (2 * i + 1, 2 * j - 1), (2 * i + 1, 2 * j + 1)
+                edges[(low, high)] = (east, here)
+            south = at(i, j + 1)
+            if here != south:
+                # Horizontal edge at y = j+0.5. Walking it in +x has this cell on the left.
+                low, high = (2 * i - 1, 2 * j + 1), (2 * i + 1, 2 * j + 1)
+                edges[(low, high)] = (here, south)
+
+    incident: dict[tuple[int, int], list[tuple[tuple[int, int], tuple[int, int]]]] = {}
+    for edge in edges:
+        for corner in edge:
+            incident.setdefault(corner, []).append(edge)
+
+    # A junction is a corner where the border forks, or where the pair of regions it
+    # divides changes. Everywhere else the border simply carries on.
+    def is_junction(corner: tuple[int, int]) -> bool:
+        here = incident[corner]
+        if len(here) != 2:
+            return True
+        first, second = (edges[here[0]], edges[here[1]])
+        return {first[0], first[1]} != {second[0], second[1]}
+
+    junctions = {corner for corner in incident if is_junction(corner)}
+
+    def sides(edge, forward: tuple[tuple[int, int], tuple[int, int]]) -> tuple[int, int]:
+        """(left, right) walking the edge in the given direction."""
+        left, right = edges[edge]
+        return (left, right) if forward == edge else (right, left)
+
+    walked: set[tuple[tuple[int, int], tuple[int, int]]] = set()
+    out: list[Arc] = []
+
+    def run(start: tuple[int, int], edge) -> None:
+        """Follow the border from a junction until it reaches another one."""
+        corners = [start]
+        here, step = start, edge
+        left, right = sides(step, (here, step[1] if step[0] == here else step[0]))
+        while True:
+            walked.add(step)
+            here = step[1] if step[0] == here else step[0]
+            corners.append(here)
+            if here in junctions or here == start:
+                break
+            onward = [e for e in incident[here] if e != step and e not in walked]
+            if not onward:
+                break
+            step = onward[0]
+        out.append(Arc(corners=tuple(corners), left=left, right=right,
+                       closed=corners[0] == corners[-1]))
+
+    for start in sorted(junctions):
+        for edge in sorted(incident[start]):
+            if edge not in walked:
+                run(start, edge)
+
+    # Anything left is a border with no junction anywhere on it — an island's whole
+    # shore, or a region entirely enclosed by one neighbour.
+    for edge in sorted(edges):
+        if edge in walked:
+            continue
+        run(edge[0], edge)
+    return out
+
+
+def _to_lattice(corners: tuple[tuple[int, int], ...]) -> list[tuple[float, float]]:
+    return [(a / 2.0, b / 2.0) for a, b in corners]
+
+
+# How hard the staircase is cut off an arc, and how far a drawn arc may stray from the
+# lattice line it came from. Both apply to the arc rather than to either neighbour's
+# ring, which is the whole discipline: anything done to a border after the two regions
+# have taken their copies of it un-shares it again.
+# Rounds of corner cutting before an arc is simplified. Four, not the two a coastline
+# uses, and the difference is not cosmetic: at two rounds a third of the border's length
+# still ran exactly along a lattice axis and the islands came out as flights of steps.
+# Four takes that to a twentieth. It costs nothing — simplifying afterwards brings the
+# vertex count back down — and the direction histogram cannot see the problem on a
+# closed ring, because going all the way round balances the bins.
+ARC_SMOOTHING = 4
+# In lattice cells. Chosen by measurement rather than by eye: at 0.40 the longest ring
+# on the four-region world falls from 383 vertices to 175 — comfortably inside the cap a
+# ring can no longer be trimmed to — while the drawn border strays at most 0.387 of a
+# cell from the line it came from, which is about two units on a nine-hundred-unit map.
+ARC_TOLERANCE = 0.40
+MAX_ARC_VERTICES = 160        # per arc, so a long border cannot blow the payload
+
+# The budget is per *arc* and not per ring, which matters more than it sounds. Bounding
+# the ring after assembly re-simplifies points the neighbour has already committed to,
+# and un-shares the border. Bounding it by raising one tolerance for the whole map until
+# the largest ring fits is worse still: it flattened a five-vertex march to nothing while
+# the big region it was fitted to was still over. An arc's budget is the arc's own.
+
+
+def _drawn(arc: Arc) -> list[tuple[float, float]]:
+    """An arc as it is drawn: the staircase taken off it, once, for both its owners.
+
+    Smoothed here rather than in either neighbour's outline, which is the point — two
+    regions that smoothed the same border separately would disagree about it again.
+    Junctions are pinned, so the rings assembled from these arcs still close exactly.
+    """
+    points = _to_lattice(arc.corners)
+    if arc.closed:
+        # A whole shore, or a region wholly enclosed by one neighbour: no junction on it
+        # anywhere, so it is a ring in its own right and smooths as one.
+        ring = shapes.bounded(shapes.smoothed(points[:-1], ARC_SMOOTHING),
+                              MAX_ARC_VERTICES)
+        return [*ring, ring[0]]
+    return _within_budget(shapes.eased(points, ARC_SMOOTHING))
+
+
+def _within_budget(eased: list[tuple[float, float]]) -> list[tuple[float, float]]:
+    """Simplify until the arc fits its share of the payload, ends pinned throughout."""
+    tolerance = ARC_TOLERANCE
+    drawn = shapes.simplify(eased, tolerance)
+    while len(drawn) > MAX_ARC_VERTICES and tolerance < 64.0:
+        tolerance *= 2.0
+        drawn = shapes.simplify(eased, tolerance)
+    return drawn
+
+
+def outlines(partition: Partition,
+             sea: list[list[bool]] | None = None) -> dict[str, list[list[list[float]]]]:
+    """Every region's shape, from one walk of the ownership field.
+
+    All of them together, because the borders are shared: tracing per region would both
+    do the work n times and lose the sharing that is the reason for tracing at all.
+    """
+    arcs = trace_arcs(partition, sea)
+    if not arcs:
+        return {key: [] for key in partition.keys}
+
+    drawn = {n: _drawn(arc) for n, arc in enumerate(arcs)}
+    rings = {key: _rings_of(partition, arcs, drawn, index)
+             for index, key in enumerate(partition.keys)}
+    grid = partition.grid
+    return {key: [shapes.closed(grid.to_world(ring)) for ring in shape]
+            for key, shape in rings.items()}
+
+
+def _rings_of(partition: Partition, arcs: list[Arc],
+              drawn: dict[int, list[tuple[float, float]]],
+              index: int) -> list[list[tuple[float, float]]]:
+    """Chain a region's arcs into closed rings, each oriented with the region on its left."""
+    runs: list[list[tuple[float, float]]] = []
+    for n, arc in enumerate(arcs):
+        if index not in (arc.left, arc.right):
+            continue
+        runs.append(drawn[n] if arc.left == index else list(reversed(drawn[n])))
+    if not runs:
+        return []
+
+    starting: dict[tuple[float, float], list[int]] = {}
+    for n, run in enumerate(runs):
+        starting.setdefault(_key(run[0]), []).append(n)
+
+    rings: list[list[tuple[float, float]]] = []
+    unused = set(range(len(runs)))
+    while unused:
+        first = min(unused)
+        ring = list(runs[first])
+        unused.discard(first)
+        while _key(ring[-1]) != _key(ring[0]):
+            waiting = [n for n in starting.get(_key(ring[-1]), ()) if n in unused]
+            if not waiting:
+                break
+            step = min(waiting)
+            unused.discard(step)
+            ring.extend(runs[step][1:])
+        rings.append(ring)
+
+    rings = [r for r in rings if len(r) >= 4 and shapes.area(r) >= SMALLEST_REGION]
+    if not rings:
+        return []
+    # The largest ring is the region itself; anything wound the other way inside it is a
+    # neighbour sitting in a hole, which is another region rather than a gap.
+    rings.sort(key=shapes.area, reverse=True)
+    outward = shapes.signed_area(rings[0]) > 0
+    return [r for r in rings if (shapes.signed_area(r) > 0) == outward]
+
+
+def outline(partition: Partition, key: str,
+            sea: list[list[bool]] | None = None) -> list[list[list[float]]]:
+    """One region's shape. See `outlines`, which does the work for all of them at once."""
+    return outlines(partition, sea).get(key, [])
+
+
+def drawn_arcs(partition: Partition, sea: list[list[bool]] | None = None
+               ) -> list[tuple[str | None, str | None, list[tuple[float, float]]]]:
+    """Every border arc as it is drawn, with its two sides named.
+
+    The same arcs `outlines` assembles into rings, kept apart so a border can be
+    *stroked* exactly once: a map that strokes each region's ring draws every internal
+    frontier twice, and draws the coastline once more on top of its own coast. A side
+    is None where the arc runs against the sea or the map edge — which is how a caller
+    tells a frontier from a shore without re-deriving either.
+    """
+    grid = partition.grid
+
+    def name_of(index: int) -> str | None:
+        return partition.keys[index] if index >= 0 else None
+
+    return [(name_of(arc.left), name_of(arc.right), grid.to_world(_drawn(arc)))
+            for arc in trace_arcs(partition, sea)]
+
+
+def _key(point: tuple[float, float]) -> tuple[float, float]:
+    return (round(point[0], 4), round(point[1], 4))
 
 
 def audit(partition: Partition, borders: set[tuple[str, str]]) -> list[str]:

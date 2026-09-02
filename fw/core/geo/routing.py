@@ -46,6 +46,11 @@ LAND = {"plain": 1.0, "hill": 0.75, "mountain": 0.45, "forest": 0.7,
         "marsh": 0.5, "desert": 0.8, "water": 0.0}
 WATER = {"water": 1.0}
 
+# The ways that are sailed rather than walked. Named here because this is where the
+# distinction is *used* — a medium missing from this set is routed over dry ground,
+# scores zero against water, and drops out of every journey without an error anywhere.
+SAILED = ("river", "sea", "canal")
+
 PROFILES: dict[str, TransportProfile] = {
     p.key: p
     for p in (
@@ -115,6 +120,55 @@ class Route:
         return head + "\n" + "\n".join(steps)
 
 
+# What danger costs a traveller, as a multiplier on the days a stretch takes.
+#
+# Two of these four are all the system produces today: the column defaults to "low"
+# and the generator writes "moderate" on sea lanes and nothing else. The other two are
+# here for a writer, because `danger` is a free text column with no scale behind it
+# and no editor — a writer who types "high" on the road through the pass should not be
+# told their word is not a word. Anything unrecognised is priced as safe, which is the
+# conservative direction: an invented penalty is a lie about the world, where a missing
+# one is only a road that is no worse than it looks.
+#
+# `test_travel.py` asserts every value the GENERATOR can write is in here, because the
+# silent 1.0 that makes an unknown word safe is exactly how a danger system dies
+# quietly.
+DANGER_COST = {"low": 1.0, "moderate": 1.35, "high": 1.8, "extreme": 2.5}
+
+
+def _stretch_days(segment: RouteSegment, transport: TransportProfile,
+                  party_size: int | None) -> float | None:
+    """What one stretch costs this traveller, in days. `None` if impassable.
+
+    ONE definition, used both to choose the route and to report it. They were two —
+    the Dijkstra weight carried the party-size penalty and the reported leg carried
+    only `length / speed` — so `Route.days` and `sum(leg.days)` disagreed whenever a
+    large party travelled, which was rare enough to go unnoticed. Pricing danger made
+    it every sea voyage on every map, because the generator marks every lane
+    "moderate"; and the API serves both numbers, with `explain()` printing them in the
+    same paragraph. A journey that shows a reader two different totals is worse than
+    one that shows a wrong total.
+    """
+    speed = transport.speed_on(segment.terrain, segment.quality)
+    if speed <= 0:
+        return None
+    days = segment.length / speed
+    # A dangerous road is not a slower road, but it costs a traveller the same way:
+    # you go in company, you wait for one, you take the long way round the wood. The
+    # generator has been SAYING the router does this since sea lanes were drawn —
+    # `pipeline.LANE_DANGER` sets "moderate" under a comment claiming the router
+    # "models through quality and danger" — and the router did not. A comment
+    # asserting a behaviour the code lacks is worth less than nothing: it stops
+    # anyone checking.
+    days *= DANGER_COST.get(segment.danger, 1.0)
+    if party_size and party_size > 500:
+        # A large body of people moves slower than its own marching speed: forage,
+        # water and column length all bite. A rough, honest penalty beats a
+        # precise-looking model the writer cannot check.
+        days *= 1.0 + min(party_size / 10_000, 0.6)
+    return days
+
+
 class Router:
     def __init__(self, world: World) -> None:
         self.world = world
@@ -147,17 +201,11 @@ class Router:
         for segment in self.segments:
             if not segment.usable_on(day, season):
                 continue
-            if transport.water != (segment.medium in ("river", "sea", "canal")):
+            if transport.water != (segment.medium in SAILED):
                 continue
-            speed = transport.speed_on(segment.terrain, segment.quality)
-            if speed <= 0:
+            days = _stretch_days(segment, transport, party_size)
+            if days is None:
                 continue
-            days = segment.length / speed
-            if party_size and party_size > 500:
-                # A large body of people moves slower than its own marching speed: forage,
-                # water and column length all bite. A rough, honest penalty beats a
-                # precise-looking model the writer cannot check.
-                days *= 1.0 + min(party_size / 10_000, 0.6)
             adjacency.setdefault(segment.from_entity_id, []).append(
                 (segment.to_entity_id, days, segment))
             adjacency.setdefault(segment.to_entity_id, []).append(
@@ -189,11 +237,10 @@ class Router:
         cursor = destination_id
         while cursor != origin_id:
             prior, segment = previous[cursor]
-            speed = transport.speed_on(segment.terrain, segment.quality)
             legs.append(Leg(
                 from_id=prior, to_id=cursor, segment_id=segment.id,
                 medium=segment.medium, length=segment.length,
-                days=segment.length / speed if speed else float("inf"),
+                days=_stretch_days(segment, transport, party_size) or float("inf"),
             ))
             cursor = prior
         legs.reverse()
@@ -208,12 +255,28 @@ class Router:
         return route.days if route else None
 
     def reachable_within(self, origin_id: str, days: float, **kw) -> dict[str, float]:
-        """Everywhere reachable inside a time budget — the 'who could be here' question."""
+        """Everywhere reachable inside a time budget — the 'who could be here' question.
+
+        Everywhere the routes reach, not every settlement. An island is a place a ship
+        can put in at and never a settlement, so a list built from settlements alone
+        answered "nowhere" for the one journey a reader most wants timed.
+        """
         out: dict[str, float] = {}
-        for entity in self.world.entities("settlement"):
-            if entity.id == origin_id:
+        for entity_id in self.places():
+            if entity_id == origin_id:
                 continue
-            time = self.travel_time(origin_id, entity.id, **kw)
+            time = self.travel_time(origin_id, entity_id, **kw)
             if time is not None and time <= days:
-                out[entity.id] = time
+                out[entity_id] = time
         return out
+
+    def places(self) -> tuple[str, ...]:
+        """Every entity a route can start or end at, in a stated order."""
+        ends = {segment.from_entity_id for segment in self.segments}
+        ends |= {segment.to_entity_id for segment in self.segments}
+        ends |= {entity.id for entity in self.world.entities("settlement")}
+        named = [(self.world.get_entity(eid), eid) for eid in ends]
+        return tuple(eid for entity, eid in
+                     sorted(named, key=lambda pair: (
+                         pair[0].name if pair[0] else "", pair[1]))
+                     if entity is not None)

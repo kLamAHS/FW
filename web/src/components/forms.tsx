@@ -16,11 +16,18 @@ import { useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import { api } from '../api'
 import type {
-  CalendarInfo, Entity, EntityDraft, EventDraft, SceneDraft, Vocabulary,
+  CalendarInfo, Chapter, Entity, EntityDraft, EventDraft, SceneDraft, Source,
+  Vocabulary,
 } from '../api'
 import { useAsync, useDebounced } from './common'
 
 /* ------------------------------------------------------------------ modal */
+
+// Mirrors `fw.core.model.vocabulary`. The server validates against the same lists and
+// says so in words, so a mismatch here is a nuisance rather than a corruption.
+const SECRET_SEVERITIES = ['trivial', 'minor', 'major', 'catastrophic'] as const
+const KNOWLEDGE_STANCES =
+  ['knows', 'believes', 'suspects', 'misinformed', 'unaware'] as const
 
 export function Modal(
   { title, onClose, children }:
@@ -299,6 +306,7 @@ export function EntityForm(
 
 const SECRECY_LEVELS = ['public', 'known', 'discreet', 'secret', 'deep_secret'] as const
 
+
 export function FactForm(
   { subject, vocabulary, calendar, onDone, onCancel }:
   {
@@ -323,8 +331,16 @@ export function FactForm(
   const [secrecy, setSecrecy] = useState('public')
   const [from, setFrom] = useState<CivilDraft>(EMPTY_DATE)
   const [note, setNote] = useState('')
+  const [source, setSource] = useState('')
+  const [sources, setSources] = useState<Source[]>([])
+  const [newSource, setNewSource] = useState<{ label: string; kind: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // §58: the citation was rendered on every fact line before anything could make one.
+  useEffect(() => {
+    void api.sources().then(setSources).catch(() => setSources([]))
+  }, [])
 
   const predicate = vocabulary.predicates.find((p) => p.key === predicateKey)
   const isRelationship = predicate?.kind === 'rel'
@@ -339,6 +355,18 @@ export function FactForm(
       return []
     }
   })()
+
+  const keepSource = async () => {
+    if (!newSource?.label.trim()) return
+    try {
+      const made = await api.addSource(newSource.label.trim(), newSource.kind)
+      setSources(await api.sources())
+      setSource(made.id)
+      setNewSource(null)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
 
   const submit = async () => {
     if (busy) return
@@ -356,6 +384,7 @@ export function FactForm(
         secrecy,
         valid_from: await resolveDate(from),
         note: note.trim(),
+        source_id: source || null,
       })
       onDone()
     } catch (err) {
@@ -427,6 +456,42 @@ export function FactForm(
         <div className="small muted">A note (optional)</div>
         <input value={note} onChange={(e) => setNote(e.target.value)}
                placeholder="Why, or how it came to be" />
+      </label>
+
+      {/* §58. A picker with nothing in it is the half-finished shape this whole
+          commit exists to remove, so a source can be made from right here. */}
+      <label className="field">
+        <div className="small muted">Where this came from (§58)</div>
+        {newSource ? (
+          <div className="toolbar">
+            <input autoFocus value={newSource.label} placeholder="Chapter 3 draft"
+                   onChange={(e) => setNewSource({ ...newSource, label: e.target.value })} />
+            <select value={newSource.kind}
+                    onChange={(e) => setNewSource({ ...newSource, kind: e.target.value })}>
+              {vocabulary.source_kinds.map((k) => (
+                <option key={k.key} value={k.key}>{k.label}</option>
+              ))}
+            </select>
+            <button className="active" disabled={!newSource.label.trim()}
+                    onClick={() => void keepSource()}>Add it</button>
+            <button onClick={() => setNewSource(null)}>Cancel</button>
+          </div>
+        ) : (
+          <select value={source}
+                  onChange={(e) => {
+                    if (e.target.value === '+') {
+                      setNewSource({ label: '', kind: 'author_note' })
+                    } else {
+                      setSource(e.target.value)
+                    }
+                  }}>
+            <option value="">not cited</option>
+            {sources.map((s) => (
+              <option key={s.id} value={s.id}>{s.label} — {s.label_kind}</option>
+            ))}
+            <option value="+">a source you have not recorded yet…</option>
+          </select>
+        )}
       </label>
 
       {error && <div className="error-box">{error}</div>}
@@ -555,8 +620,16 @@ export function SceneForm(
   const [participants, setParticipants] = useState<Entity[]>([])
   const [objective, setObjective] = useState('')
   const [conflict, setConflict] = useState('')
+  const [chapter, setChapter] = useState('')
+  const [chapters, setChapters] = useState<Chapter[]>([])
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+
+  // The book, if there is one. A world with no manuscript in it yet simply does not
+  // see the field, rather than seeing an empty dropdown it cannot fill.
+  useEffect(() => {
+    void api.chapters().then(setChapters).catch(() => setChapters([]))
+  }, [])
 
   const submit = async () => {
     if (busy) return
@@ -566,6 +639,7 @@ export function SceneForm(
     try {
       const draft: SceneDraft = {
         title: title.trim(),
+        chapter_id: chapter || null,
         day: await resolveDate(when),
         location_id: location?.id ?? null,
         pov_id: pov?.id ?? null,
@@ -595,6 +669,17 @@ export function SceneForm(
       </label>
       <WorldDateInput label="When" calendar={calendar} value={when} onChange={setWhen}
                       hint="the context panel is built from this date" />
+      {chapters.length > 0 && (
+        <label className="field">
+          <div className="small muted">Where it sits in the book</div>
+          <select value={chapter} onChange={(e) => setChapter(e.target.value)}>
+            <option value="">not placed yet</option>
+            {chapters.map((c) => (
+              <option key={c.id} value={c.id}>{c.work_title} — {c.title}</option>
+            ))}
+          </select>
+        </label>
+      )}
       <EntityPicker label="Where" chosen={location} onChoose={setLocation} />
       <EntityPicker label="Whose eyes (POV)" chosen={pov} onChoose={setPov}
                     typeKey="person" />
@@ -709,6 +794,194 @@ export function EventForm(
         <button onClick={onCancel}>Cancel</button>
         <button className="active" onClick={() => void submit()} disabled={busy}>
           {busy ? 'Saving…' : 'Record the event'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A title, so there is something for anyone to inherit (§8).
+ *
+ * `World.add_title` has existed since the world model did — revision-logged,
+ * branch-scoped, with a succession engine already able to run a line over it — and had
+ * no route and no form. So succession worked on the seeded example world and on nothing
+ * a writer built for themselves, and the Succession screen was, for them, an empty page
+ * with no way to fill it.
+ */
+export function TitleForm(
+  { calendar, laws, onDone, onCancel }:
+  {
+    calendar: CalendarInfo
+    laws: { key: string; label: string; description: string }[]
+    onDone: () => void
+    onCancel: () => void
+  },
+) {
+  const [name, setName] = useState('')
+  const [rank, setRank] = useState(1)
+  const [law, setLaw] = useState('male_preference_primogeniture')
+  const [territory, setTerritory] = useState<Entity | null>(null)
+  const [holder, setHolder] = useState<Entity | null>(null)
+  const [since, setSince] = useState<CivilDraft>(EMPTY_DATE)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (busy) return
+    if (!name.trim()) { setError('A title needs a name.'); return }
+    setBusy(true)
+    setError(null)
+    try {
+      const made = await api.createTitle({
+        name: name.trim(), rank, succession_law: law,
+        territory_id: territory?.id ?? null,
+      })
+      // The first holder in the same breath: a title nobody holds is a title the
+      // succession engine has nothing to run a line from.
+      if (holder) {
+        await api.grantTitle(made.id, {
+          holder_id: holder.id, from_day: await resolveDate(since), how: 'inheritance',
+        })
+      }
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const chosen = laws.find((l) => l.key === law)
+  return (
+    <div className="form-stack">
+      <label className="field">
+        <div className="small muted">What is it called?</div>
+        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus
+               placeholder="Warden of the Northmarch" />
+      </label>
+      <label className="field">
+        <div className="small muted">How high it stands — a king outranks a warden</div>
+        <input type="number" value={rank} min={0} max={10}
+               onChange={(e) => setRank(Number(e.target.value) || 0)} />
+      </label>
+      <label className="field">
+        <div className="small muted">How it passes on</div>
+        <select value={law} onChange={(e) => setLaw(e.target.value)}>
+          {laws.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+        </select>
+        {chosen && <div className="small muted">{chosen.description}</div>}
+      </label>
+      <EntityPicker label="Over what ground" chosen={territory} onChoose={setTerritory} />
+      <EntityPicker label="Who holds it now" chosen={holder} onChoose={setHolder} />
+      {holder && (
+        <WorldDateInput label="Since" calendar={calendar} value={since} onChange={setSince}
+                        hint="leave blank if it has always been theirs" />
+      )}
+      {error && <div className="error-box">{error}</div>}
+      <div className="form-actions">
+        <button onClick={onCancel}>Cancel</button>
+        <button className="active" onClick={() => void submit()} disabled={busy}>
+          {busy ? 'Saving…' : 'Create the title'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * A secret, and who thinks what about it (§6).
+ *
+ * The truth lives in one place; what each person believes lives beside it as a stance.
+ * That separation is the brief's own: "who knows X" and "who believes X" have to be
+ * separately answerable, and a boolean on the fact cannot do it. Nor can it hold the
+ * second-order case — Edric believes that *Mara* believes the wrong thing — which is
+ * what `about` is for, and what a scene usually turns on.
+ */
+export function SecretForm(
+  { calendar, onDone, onCancel }:
+  { calendar: CalendarInfo; onDone: () => void; onCancel: () => void },
+) {
+  const [name, setName] = useState('')
+  const [truth, setTruth] = useState('')
+  const [severity, setSeverity] = useState('major')
+  const [about, setAbout] = useState<Entity | null>(null)
+  const [observer, setObserver] = useState<Entity | null>(null)
+  const [stance, setStance] = useState('knows')
+  const [wrongAbout, setWrongAbout] = useState<Entity | null>(null)
+  const [since, setSince] = useState<CivilDraft>(EMPTY_DATE)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  const submit = async () => {
+    if (busy) return
+    if (!name.trim()) { setError('A secret needs a name to file it under.'); return }
+    setBusy(true)
+    setError(null)
+    try {
+      const made = await api.createSecret({
+        name: name.trim(), truth: truth.trim(), severity,
+        about_id: about?.id ?? null,
+      })
+      if (observer) {
+        await api.recordKnowledge({
+          observer_id: observer.id, secret_id: made.id, stance,
+          about_observer_id: wrongAbout?.id ?? null,
+          acquired_on: await resolveDate(since),
+        })
+      }
+      onDone()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="form-stack">
+      <label className="field">
+        <div className="small muted">What is the secret called?</div>
+        <input value={name} onChange={(e) => setName(e.target.value)} autoFocus
+               placeholder="The forged will" />
+      </label>
+      <label className="field">
+        <div className="small muted">What is actually true</div>
+        <input value={truth} onChange={(e) => setTruth(e.target.value)}
+               placeholder="It was written a week after he died." />
+      </label>
+      <label className="field">
+        <div className="small muted">What it costs if it comes out</div>
+        <select value={severity} onChange={(e) => setSeverity(e.target.value)}>
+          {SECRET_SEVERITIES.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </label>
+      <EntityPicker label="Who or what it is about" chosen={about} onChoose={setAbout} />
+      <hr />
+      <p className="small muted">
+        And somebody's position on it. You can add more from the secret afterwards.
+      </p>
+      <EntityPicker label="Who" chosen={observer} onChoose={setObserver} />
+      {observer && (
+        <>
+          <label className="field">
+            <div className="small muted">What they think</div>
+            <select value={stance} onChange={(e) => setStance(e.target.value)}>
+              {KNOWLEDGE_STANCES.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </label>
+          <EntityPicker label="…about whose position (leave empty for the plain case)"
+                        chosen={wrongAbout} onChoose={setWrongAbout} />
+          <WorldDateInput label="Since when" calendar={calendar} value={since}
+                          onChange={setSince}
+                          hint="leave blank if they have always known" />
+        </>
+      )}
+      {error && <div className="error-box">{error}</div>}
+      <div className="form-actions">
+        <button onClick={onCancel}>Cancel</button>
+        <button className="active" onClick={() => void submit()} disabled={busy}>
+          {busy ? 'Saving…' : 'Record the secret'}
         </button>
       </div>
     </div>

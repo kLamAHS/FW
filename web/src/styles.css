@@ -9,6 +9,56 @@
  * holding a spatial or temporal relationship in their head.
  */
 
+/* The map's own type (V2 §15). Bundled OFL faces, not system stacks: committed em
+   tables in the generator measure exactly these files, and a label solved against one
+   OS's Palatino and rendered in another's Georgia is a label whose collision boxes are
+   fiction. Alegreya (serif, true italics), Alegreya SC (real small caps — a lowercase
+   name renders as caps-and-small-caps, the cartographic voice for regions and ranges),
+   and Alegreya Sans (the matching humanist sans, for settlements): one family by one
+   designer, licensed OFL — see web/public/fonts/OFL-*.txt. */
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-var.ttf") format("truetype-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya";
+  src: url("/fonts/Alegreya-Italic-var.ttf") format("truetype-variations");
+  font-weight: 400 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya SC";
+  src: url("/fonts/AlegreyaSC-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Alegreya Sans";
+  src: url("/fonts/AlegreyaSans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --ink: #16181d;
   --ink-soft: #4a5058;
@@ -31,11 +81,80 @@
   --secret: #6b3f7a;
   --secret-bg: #f4edf6;
 
+  /* The map's palette (C11). Every colour the generator used to emit as a hex from
+     Python lives here instead, as a role with a light value and a dark one. A hex
+     inside the generator is a colour that cannot follow the theme, cannot be changed
+     by a writer who finds it muddy, and has to be repeated in the client for the
+     legend to match the map. */
+  --map-land: #cfd3a4;
+  --map-water: #3f5b6c;
+  --map-sea: #4a6580;
+  --map-border: #6b6459;
+  --map-coastline: #4a4740;
+  --map-ridge: #6b6459;
+  --map-waterway: #4a7fa5;
+  --map-road: #8a7550;
+  --map-highway: #7a6238;
+  --map-track: #a08f6f;
+  --map-settlement: #3a3630;
+  --map-castle: #8a6113;
+  --map-port: #2f5d8a;
+  --map-contested: #a2332c;
+  --map-label: #16181d;
+  --map-label-water: #2c5871;
+  --map-label-region: #4a5058;
+  --map-label-relief: #55503f;
+  --map-halo: #f7f5f1;
+
+  --map-terrain-mountain: #6d6a63;
+  --map-terrain-glacier: #b9c6cc;
+  --map-terrain-hills: #7d7a55;
+  --map-terrain-highland: #75725c;
+  --map-terrain-forest: #4f6b4a;
+  --map-terrain-plain: #6f7c4e;
+  --map-terrain-farmland: #7d8a52;
+  --map-terrain-steppe: #8a8558;
+  --map-terrain-desert: #b3a075;
+  --map-terrain-marsh: #5d6b62;
+  --map-terrain-coast: #7c7358;
+  --map-terrain-ocean: #41627a;
+
+  --map-cover-forest: #6f8656;
+  --map-cover-marsh: #8d9a72;
+  --map-cover-downs: #bfb98c;
+  --map-cover-moor: #a9a184;
+  --map-cover-waste: #ddcb9a;
+  --map-cover-ice: #dde5e8;
+
+  /* Holders get a slot in a palette rather than a colour of their own, so the same
+     house reads the same on every layer and at every date. Twelve, not eight: the
+     ninth house used to take the first one's colour, so on a map with nine claimants
+     two of them were the same brown and the legend said so twice. Chosen to stay
+     distinguishable for the commonest kinds of colour blindness — the four added
+     slots hold to the same hue spacing and avoid the red/green confusion lines. */
+  --map-holder-0: #7a5c3e;
+  --map-holder-1: #2f5d8a;
+  --map-holder-2: #3f6b52;
+  --map-holder-3: #a2332c;
+  --map-holder-4: #6b3f7a;
+  --map-holder-5: #8a6113;
+  --map-holder-6: #557a8a;
+  --map-holder-7: #a2456a;
+  --map-holder-8: #4a6a3a;
+  --map-holder-9: #7a4a2c;
+  --map-holder-10: #3d5f6b;
+  --map-holder-11: #6b5a8a;
+
   --radius: 6px;
   --shadow: 0 1px 2px rgba(20, 18, 15, 0.06), 0 4px 14px rgba(20, 18, 15, 0.05);
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --serif: Iowan Old Style, "Palatino Linotype", Palatino, Georgia, serif;
+  --serif: "Alegreya", Iowan Old Style, "Palatino Linotype", Palatino, Georgia, serif;
+  /* The map's three voices, by face. The generator's width tables are measured from
+     exactly these files, so a label class must never swap family per-OS. */
+  --map-serif: "Alegreya", Georgia, serif;
+  --map-sc: "Alegreya SC", "Alegreya", Georgia, serif;
+  --map-sans: "Alegreya Sans", system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,7 +178,261 @@
     --secret: #c79cd6;
     --secret-bg: #261d2a;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 14px rgba(0, 0, 0, 0.3);
+
+    /* The map at night. Lifted rather than inverted: a coastline is still darker than
+       the land it encloses, and a river is still bluer than the ground. */
+    --map-land: #3b402c;
+    --map-water: #22333e;
+    --map-sea: #1d2b36;
+    --map-border: #9c948a;
+    --map-coastline: #cbc4b8;
+    --map-ridge: #9c948a;
+    --map-waterway: #6ea6cd;
+    --map-road: #c0a878;
+    --map-highway: #d6b979;
+    --map-track: #94856a;
+    --map-settlement: #e8e6e1;
+    --map-castle: #dcb464;
+    --map-port: #7fb0dd;
+    --map-contested: #e8908a;
+    --map-label: #e8e6e1;
+    --map-label-water: #93bfda;
+    --map-label-region: #b0aca4;
+    --map-label-relief: #c2b699;
+    --map-halo: #16171a;
+
+    --map-terrain-mountain: #4c4a45;
+    --map-terrain-glacier: #6c7a80;
+    --map-terrain-hills: #56543a;
+    --map-terrain-highland: #4f4d3e;
+    --map-terrain-forest: #33452f;
+    --map-terrain-plain: #474f31;
+    --map-terrain-farmland: #4f5834;
+    --map-terrain-steppe: #575437;
+    --map-terrain-desert: #6d6248;
+    --map-terrain-marsh: #3b453f;
+    --map-terrain-coast: #4c4737;
+    --map-terrain-ocean: #253a48;
+
+    --map-cover-forest: #44543a;
+    --map-cover-marsh: #57604a;
+    --map-cover-downs: #757155;
+    --map-cover-moor: #67624f;
+    --map-cover-waste: #857a5c;
+    --map-cover-ice: #7d888c;
+
+    --map-holder-0: #c9a678;
+    --map-holder-1: #7fb0dd;
+    --map-holder-2: #85c0a1;
+    --map-holder-3: #e8908a;
+    --map-holder-4: #c79cd6;
+    --map-holder-5: #dcb464;
+    --map-holder-6: #8fb6c4;
+    --map-holder-7: #dd93ac;
+    --map-holder-8: #9dc48a;
+    --map-holder-9: #d2a184;
+    --map-holder-10: #86aab8;
+    --map-holder-11: #b0a3d4;
   }
+}
+
+/* Alternative palettes (§69, V2 §40). Set `data-palette` on the document root and
+   every map role is redefined; nothing else in the interface moves, because only the
+   `--map-*` names are overridden. Written as whole blocks rather than as filters: a
+   hue-rotate over a finished map shifts the paper and the type along with the land,
+   and the point is that the map still reads as a map.
+
+   The two colour-blind palettes hold the same LIGHTNESS ordering as the default —
+   ground pale, water dark, borders darker still — so the map survives even where a
+   hue distinction is lost entirely, which §69 requires of every colour decision.
+
+   The twelve house colours in each were SEARCHED, not chosen: twelve colours a
+   dichromat can tell apart do not come out of anybody's eye, and the hand-picked set
+   that stood here proved it — six of its pairs were closer than 25 under simulation
+   and its worst was 10, against the untreated default palette's 5. Picking by hand
+   had bought almost nothing. So they were annealed against the same two confusion
+   matrices `tests/test_mapgen_guards.py` simulates, holding every pair at least 45
+   apart against the guard's floor of 40, inside the chroma the default palette
+   already uses: mean 72 and 68 against the default's 71, and a lower maximum than
+   its own reddest house. The slots are then ordered so that CONSECUTIVE numbers sit
+   as far apart as the set allows (86 and 101), because houses take slots in order
+   and neighbours on the ground are often neighbours in the list.
+
+   What that 45 buys is the LEGEND. On the plate itself a house is never this colour
+   — it is this colour washed over the ground, and since the wash is a linear blend,
+   the distance scales exactly with it: 45 apart as a swatch is 13 apart at
+   analytical strength and 5 at atlas strength. No palette can fix that, and none
+   should try. It is the reason colour is never asked to carry the distinction on
+   its own here: the frontier, the label and the legend identify the house, and in
+   atlas presentation the frontier is deliberately given the weight the wash gives
+   up (`BORDER_IN_ATLAS` in MapView). */
+:root[data-palette="deuteranopia"] {
+  /* Only the roles a reader has to tell APART are redefined, and the ground, the
+     paper and the type are left to the theme — so this composes with dark mode
+     instead of replacing it, and a reader who needs it does not lose the night map
+     to get it. The non-house roles are still pulled by hand onto the blue/yellow
+     axis, which is the one axis deuteranopia keeps; there are only five of them and
+     they never have to be told apart from each other. */
+  --map-contested: #6b4a86;
+  --map-castle: #7d6a12;
+  --map-waterway: #3f7fb0;
+  --map-road: #8a7a4e;
+  --map-highway: #7a6a34;
+  --map-holder-0: #287c38;
+  --map-holder-1: #8090c0;
+  --map-holder-2: #646428;
+  --map-holder-3: #b478a0;
+  --map-holder-4: #548468;
+  --map-holder-5: #b87058;
+  --map-holder-6: #4a4caa;
+  --map-holder-7: #9c504c;
+  --map-holder-8: #c4a868;
+  --map-holder-9: #548cac;
+  --map-holder-10: #30348c;
+  --map-holder-11: #848080;
+}
+
+:root[data-palette="protanopia"] {
+  /* The same discipline, shifted for the red-weak axis: reds go darker as well as
+     bluer, because protanopia dims red rather than only confusing it. The houses
+     were annealed separately against the protan matrix rather than reused from the
+     block above — the two axes are close but not the same, and a set tuned for one
+     lands its worst pair somewhere else on the other. */
+  --map-contested: #5f4a86;
+  --map-castle: #756a2a;
+  --map-waterway: #3d7fb2;
+  --map-road: #857a55;
+  --map-highway: #75693c;
+  --map-holder-0: #8c6c94;
+  --map-holder-1: #343c90;
+  --map-holder-2: #9c9854;
+  --map-holder-3: #525c96;
+  --map-holder-4: #9ca88c;
+  --map-holder-5: #445458;
+  --map-holder-6: #70acb8;
+  --map-holder-7: #8c782c;
+  --map-holder-8: #6074c0;
+  --map-holder-9: #883438;
+  --map-holder-10: #bcb85c;
+  --map-holder-11: #588c54;
+}
+
+:root[data-palette="quiet"] {
+  --map-land: #d8d6c8;
+  --map-water: #6b7a85;
+  --map-sea: #7d8a95;
+  --map-border: #74706a;
+  --map-coastline: #5a5852;
+  --map-ridge: #7d786e;
+  --map-waterway: #6b8ba5;
+  --map-road: #918571;
+  --map-highway: #857862;
+  --map-track: #a89f8e;
+  --map-settlement: #4a4741;
+  --map-castle: #8a7a55;
+  --map-port: #5f7d95;
+  --map-contested: #9a6a63;
+  --map-holder-0: #8a7a63;
+  --map-holder-1: #6b8299;
+  --map-holder-2: #6f8a78;
+  --map-holder-3: #9a7570;
+  --map-holder-4: #85759a;
+  --map-holder-5: #9a8a63;
+  --map-holder-6: #75909a;
+  --map-holder-7: #9a7585;
+  --map-holder-8: #708a6b;
+  --map-holder-9: #8a7566;
+  --map-holder-10: #6b8590;
+  --map-holder-11: #7d759a;
+  /* The rest of the map, so nothing is left to the theme. A palette that fixes
+     the ground has taken the theme's job and must finish it: `[data-palette=…]`
+     out-specifies the dark block's `:root`, so a role this palette does not set is
+     inherited from a theme whose lightness no longer matches its own ground. Each
+     of these is the default pulled two thirds of the way towards its own grey,
+     which is the rule the whole palette is written by rather than a colour picked
+     one at a time. */
+  --map-label: #17181a;
+  --map-halo: #f6f5f4;
+  --map-label-water: #43535d;
+  --map-label-region: #4d5053;
+  --map-label-relief: #525049;
+  --map-terrain-mountain: #6b6a67;
+  --map-terrain-glacier: #c0c5c7;
+  --map-terrain-hills: #7a796b;
+  --map-terrain-highland: #737169;
+  --map-terrain-forest: #5b6659;
+  --map-terrain-plain: #737867;
+  --map-terrain-farmland: #818670;
+  --map-terrain-steppe: #868473;
+  --map-terrain-desert: #a8a190;
+  --map-terrain-marsh: #636965;
+  --map-terrain-coast: #767369;
+  --map-terrain-ocean: #525f68;
+  --map-cover-forest: #78816f;
+  --map-cover-marsh: #929687;
+  --map-cover-downs: #bab8a7;
+  --map-cover-moor: #a4a196;
+  --map-cover-waste: #d2cbb9;
+  --map-cover-ice: #e1e4e5;
+}
+
+/* Ink on paper: for print, and for anybody who needs the most contrast the map can
+   give. Every role is pushed to an end of the range rather than recoloured. */
+:root[data-palette="high-contrast"] {
+  --map-land: #f2efe6;
+  --map-water: #16324a;
+  --map-sea: #0f2436;
+  --map-border: #1a1814;
+  --map-coastline: #000000;
+  --map-ridge: #2a2620;
+  --map-waterway: #10456e;
+  --map-road: #3a2f18;
+  --map-highway: #1f1a0c;
+  --map-track: #5c5034;
+  --map-settlement: #000000;
+  --map-castle: #4a3300;
+  --map-port: #002d5c;
+  --map-contested: #8a0000;
+  --map-label: #000000;
+  --map-halo: #ffffff;
+  --map-holder-0: #6b3c00;
+  --map-holder-1: #003a6b;
+  --map-holder-2: #00452a;
+  --map-holder-3: #8a0000;
+  --map-holder-4: #4a005c;
+  --map-holder-5: #6b4a00;
+  --map-holder-6: #00485c;
+  --map-holder-7: #6b0033;
+  --map-holder-8: #1f4a00;
+  --map-holder-9: #5c2a00;
+  --map-holder-10: #003a4a;
+  --map-holder-11: #3a2a6b;
+  /* The rest of the map, for the same reason as `quiet` above: this palette fixes
+     a paper-white ground, so every role it failed to declare came from whichever
+     theme was running and, under dark, landed light type on light paper. Each keeps
+     its hue and is driven to an end of the range — already-light lighter, everything
+     else darker — which is the rule the palette is written by. */
+  --map-label-water: #12252f;
+  --map-label-region: #1f2225;
+  --map-label-relief: #24221a;
+  --map-terrain-mountain: #393733;
+  --map-terrain-glacier: #e4e9ec;
+  --map-terrain-hills: #413f2c;
+  --map-terrain-highland: #3d3b30;
+  --map-terrain-forest: #293826;
+  --map-terrain-plain: #3a4029;
+  --map-terrain-farmland: #41482b;
+  --map-terrain-steppe: #48452e;
+  --map-terrain-desert: #e2dbcb;
+  --map-terrain-marsh: #303833;
+  --map-terrain-coast: #403c2e;
+  --map-terrain-ocean: #1b2933;
+  --map-cover-forest: #3a462d;
+  --map-cover-marsh: #49503b;
+  --map-cover-downs: #e7e4d3;
+  --map-cover-moor: #dedbd0;
+  --map-cover-waste: #f2ebd9;
+  --map-cover-ice: #f2f5f6;
 }
 
 * { box-sizing: border-box; }
@@ -284,11 +657,60 @@ ul.clean li:last-child { border-bottom: none; }
   max-height: calc(100% - 20px); overflow: auto;
 }
 .map-controls label { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
-.map-label { font-size: 11px; fill: var(--ink); paint-order: stroke; stroke: var(--paper);
-             stroke-width: 3px; stroke-linejoin: round; pointer-events: none; }
-.map-region-label { font-size: 13px; fill: var(--ink-soft); letter-spacing: 0.06em;
-                    text-transform: uppercase; paint-order: stroke; stroke: var(--paper);
-                    stroke-width: 3px; pointer-events: none; }
+/* Labels. The server decides *where* each name goes, how big it is set, AND the
+   voice it speaks in — face, weight, style, tracking arrive on the wire, because the
+   solver's collision boxes are measured from exactly those choices. The stylesheet
+   keeps only what the solver cannot feel: colour, and the halo of paper behind every
+   name — `paint-order: stroke` — without which a name over lit relief is unreadable
+   exactly where the map is most interesting. A text-transform or letter-spacing here
+   would un-measure every box; the old region class did precisely that. */
+.map-label { fill: var(--map-label); paint-order: stroke; stroke: var(--map-halo);
+             stroke-width: 3px; stroke-linejoin: round; pointer-events: none;
+             font-family: var(--map-serif); }
+.map-label-region { fill: var(--map-label-region); }
+.map-label-water { fill: var(--map-label-water); }
+.map-label-relief { fill: var(--map-label-relief); }
+
+/* Zoom bands crossfade rather than pop (V2 §18): 150ms, opacity only — the terrain
+   never animates, and a hidden band's labels are pointer-transparent already. */
+.map-band { transition: opacity 150ms ease; }
+
+/* Selection (V2 §34). Choosing a place quiets everything that is not it rather than
+   shouting about what is: the map stays a map, and the eye is led by contrast rather
+   than by a colour nothing else on the page uses. The terrain never dims — the ground
+   is not part of the selection, and a relief that faded would read as a different
+   world. Transitions only on opacity and stroke, so nothing reflows. */
+.map-quiet { transition: opacity 150ms ease; }
+.map-focus--on .map-quiet { opacity: 0.35; }
+.map-focus--on .map-quiet.map-kin { opacity: 1; }
+.map-label { transition: opacity 150ms ease; }
+.map-focus--on .map-label { opacity: 0.4; }
+.map-focus--on .map-label.map-kin { opacity: 1; }
+
+/* The key. A shape as well as a colour on every line — §69 does not allow colour to be
+   the only thing carrying a distinction. */
+.map-legend { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.map-legend-line { display: flex; align-items: center; gap: 7px; font-size: 0.82rem;
+                   background: none; border: 0; padding: 2px 0; color: inherit;
+                   text-align: left; cursor: default; }
+.map-legend-line.clickable { cursor: pointer; }
+.map-legend-line.clickable:hover .name { text-decoration: underline; }
+.map-legend-line .note { color: var(--ink-faint); font-size: 0.76rem; }
+.map-legend-swatch { flex: 0 0 auto; }
+
+/* ---------------------------------------------------------------- ask */
+
+/* A question is built, not typed (§49): every control here is a piece of the query the
+   server takes, so there is no syntax for a writer to get wrong. */
+.ask-row { display: grid; grid-template-columns: max-content 1fr max-content 1fr;
+           gap: 8px 12px; align-items: center; margin: 10px 0; }
+.ask-row select[multiple] { min-height: 5.2em; }
+.ask-condition { display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+                 padding: 8px; margin-bottom: 6px; border: 1px solid var(--line-soft);
+                 border-radius: var(--radius); background: var(--paper); }
+pre.mono { font-family: var(--mono); white-space: pre-wrap; word-break: break-word;
+           background: var(--paper); border: 1px solid var(--line-soft);
+           border-radius: var(--radius); padding: 8px; }
 
 /* ---------------------------------------------------------------- graph */
 
@@ -466,7 +888,7 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
 .proposal-head { display: flex; gap: 16px; align-items: flex-start;
                  justify-content: space-between; flex-wrap: wrap; }
 .proposal-actions { display: flex; gap: 8px; }
-.proposal-group { border-top: 1px solid var(--rule); padding-top: 8px;
+.proposal-group { border-top: 1px solid var(--line); padding-top: 8px;
                   margin-top: 8px; }
 .proposal-group h4 { display: flex; justify-content: space-between;
                      align-items: baseline; margin: 0 0 4px; font-weight: 600; }
@@ -475,20 +897,65 @@ table.data td { padding: 6px 9px 6px 0; border-bottom: 1px solid var(--line-soft
                  display: grid; gap: 10px; }
 .proposal-list li { display: grid; gap: 2px; padding-left: 2px;
                     border-left: 2px solid transparent; }
-.proposal-list li.blocked { opacity: 0.45; border-left-color: var(--rule); }
+.proposal-list li.blocked { opacity: 0.45; border-left-color: var(--line); }
 .proposal-row { display: flex; gap: 10px; align-items: center; }
 .proposal-row label { display: flex; gap: 8px; align-items: center; flex: 1; }
 .proposal-list label { display: flex; gap: 8px; align-items: center; }
 .proposal-name { flex: 1; max-width: 22em; padding: 2px 6px;
                  font: inherit; background: var(--panel);
-                 border: 1px solid var(--rule); border-radius: 3px; }
+                 border: 1px solid var(--line); border-radius: 3px; }
 .proposal-list .tag { font-size: 11px; text-transform: uppercase;
-                      letter-spacing: 0.06em; color: var(--muted);
-                      border: 1px solid var(--rule); border-radius: 3px;
+                      letter-spacing: 0.06em; color: var(--ink-faint);
+                      border: 1px solid var(--line); border-radius: 3px;
                       padding: 0 4px; }
 .findings { list-style: none; margin: 8px 0; padding: 0; display: grid; gap: 4px; }
 .findings li { font-size: 13px; padding-left: 8px;
-               border-left: 3px solid var(--rule); }
+               border-left: 3px solid var(--line); }
 .findings li.warning { border-left-color: var(--error); }
 /* The proposal is drawn dashed and translucent: it is not the map yet. */
 .proposal-overlay { pointer-events: none; }
+
+/* The book (§43): a book, its chapters, and what is written in them. */
+.manuscript-work { padding: 6px 0; border-top: 1px solid var(--line-soft); }
+.manuscript-work:first-of-type { border-top: 0; }
+.manuscript-work ol { margin: 4px 0; }
+.manuscript-work ol > li { list-style: decimal; margin-left: 14px; }
+/* The book is the heading; its chapters sit under it. Without this the chapter
+   titles read louder than the book they are in. */
+.manuscript-work > .entity-line > .name.serif { font-size: 17px; }
+
+/* §80: a named moment, and the way to stop calling it that. */
+.snapshot-chip { display: inline-flex; align-items: stretch; }
+.snapshot-chip .forget { padding: 0 5px; border-left: 0; color: var(--ink-faint);
+                         border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.snapshot-chip > button:first-child { border-top-right-radius: 0;
+                                      border-bottom-right-radius: 0; }
+.snapshots .name-this { color: var(--ink-faint); border-style: dashed; }
+
+/* §33: the same thing, told differently. A row of voices, not one official version.
+   Three columns where there is room, stacked where there is not — this panel appears
+   both in the events list (wide) and in the side panel (about 350px), and a fixed grid
+   wraps "His Highness the Prince" onto four lines in the narrow one. Keyed to the
+   container rather than the viewport, because the side panel is narrow on any screen. */
+.accounts { container-type: inline-size; }
+.account { display: grid; grid-template-columns: 10em 1fr auto; gap: 4px 10px;
+           align-items: baseline; padding: 6px 0;
+           border-top: 1px solid var(--line-soft); }
+.account:first-of-type { border-top: 0; }
+.account-who { font-size: 13px; color: var(--ink-faint); }
+.account-label { font-family: var(--serif, Georgia, serif); }
+
+@container (max-width: 30em) {
+  .account { grid-template-columns: 1fr auto; }
+  .account-who { grid-row: 1; grid-column: 1; }
+  .account > div:nth-child(2) { grid-row: 2; grid-column: 1 / -1; }
+  .account > button { grid-row: 1; grid-column: 2; }
+}
+
+/* §94: what a perspective changes, and why. */
+.difference { padding: 3px 0; }
+.difference + .difference { border-top: 1px solid var(--line-soft); }
+
+/* §19: a supply line, and the fact it was traced from. */
+.supply-finding { padding: 4px 0; }
+.supply-finding + .supply-finding { border-top: 1px solid var(--line-soft); }

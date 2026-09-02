@@ -21,7 +21,11 @@ interface Props {
 }
 
 export function TravelView({ day, dateText }: Props) {
-  const places = useAsync(() => api.entities({ type_key: 'settlement', at: day }), [day])
+  // Everywhere the routes reach, not every settlement: the map draws a crossing to
+  // each island it makes, and an island is a place a ship puts in at rather than a
+  // town — so a picker built from settlements could not offer the one journey the
+  // crossing exists for.
+  const places = useAsync(() => api.travelPlaces(), [day])
   const vocabulary = useAsync(() => api.vocabulary(), [])
   const [origin, setOrigin] = useState('')
   const [destination, setDestination] = useState('')
@@ -30,6 +34,12 @@ export function TravelView({ day, dateText }: Props) {
     { profile: string; label: string; route: RouteResult | null; error?: string }[] | null
   >(null)
   const [busy, setBusy] = useState(false)
+  // §20/§21: a road the writer knows about and the map never drew. The engine could
+  // always route over one; only the generator and the seed could make one.
+  const [laying, setLaying] = useState(false)
+  const [road, setRoad] = useState({ medium: 'road', terrain: 'plain', length: '40',
+                                     quality: '0.8' })
+  const [roadError, setRoadError] = useState<string | null>(null)
 
   // Default to the first two places so the view is useful the moment it opens.
   useEffect(() => {
@@ -55,6 +65,22 @@ export function TravelView({ day, dateText }: Props) {
     }))
     setResults(out)
     setBusy(false)
+  }
+
+  const lay = async () => {
+    setRoadError(null)
+    try {
+      await api.layRoad({
+        from_entity_id: origin, to_entity_id: destination,
+        length: Number(road.length), medium: road.medium,
+        quality: Number(road.quality), terrain: road.terrain,
+      })
+      setLaying(false)
+      setResults(null)
+      await run()
+    } catch (err) {
+      setRoadError(err instanceof Error ? err.message : String(err))
+    }
   }
 
   if (places.loading) return <Loading />
@@ -96,6 +122,60 @@ export function TravelView({ day, dateText }: Props) {
           On {dateText}. Season and construction dates both apply, so the answer changes
           with the timeline above.
         </p>
+
+        {/* §20, §21. "No route" is an answer rather than an error — and a writer who
+            knows there *is* a road had no way to say so. */}
+        {laying ? (
+          <div className="toolbar" style={{ flexWrap: 'wrap' }}>
+            <span className="small">
+              {nameOf(origin)} → {nameOf(destination)}, by
+            </span>
+            <select value={road.medium}
+                    onChange={(e) => {
+                      const wet = (vocabulary.data?.route_sailed ?? [])
+                        .includes(e.target.value)
+                      setRoad({
+                        ...road, medium: e.target.value,
+                        // A boat road over dry ground scores zero against every
+                        // profile and vanishes from every route, so the ground follows
+                        // the way rather than waiting to be got wrong.
+                        terrain: wet ? 'water'
+                          : road.terrain === 'water' ? 'plain' : road.terrain,
+                      })
+                    }}>
+              {(vocabulary.data?.route_media ?? []).map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+            <select value={road.terrain}
+                    onChange={(e) => setRoad({ ...road, terrain: e.target.value })}>
+              {(vocabulary.data?.route_terrains ?? []).map((t) => (
+                <option key={t} value={t}>over {t}</option>
+              ))}
+            </select>
+            <label className="small">
+              length
+              <input type="number" min={1} value={road.length} style={{ width: 80 }}
+                     onChange={(e) => setRoad({ ...road, length: e.target.value })} />
+            </label>
+            <label className="small">
+              quality
+              <input type="number" min={0.05} max={1} step={0.05} value={road.quality}
+                     style={{ width: 80 }}
+                     onChange={(e) => setRoad({ ...road, quality: e.target.value })} />
+            </label>
+            <button className="active" onClick={() => void lay()}
+                    disabled={origin === destination}>Lay it</button>
+            <button onClick={() => { setLaying(false); setRoadError(null) }}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setLaying(true)} disabled={origin === destination}>
+            + a road of your own between these two
+          </button>
+        )}
+        {roadError && <div className="error-box small">{roadError}</div>}
       </Panel>
 
       {results && (

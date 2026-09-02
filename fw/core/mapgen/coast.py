@@ -84,6 +84,10 @@ SHORE_WEIGHT = 0.30           # how much of the field it is
 # How much a region the writer drew by hand lifts the ground under it, and over how
 # many cells that lift comes in from the traced edge.
 HOLD_CLEARANCE = 0.20         # how far above the waterline drawn ground is lifted
+# And the nudge given to any drawn cell the blur still pulled under. Small on purpose:
+# these are cells already within a hundredth of the line, so this puts them back across
+# it rather than stamping a plateau on the sea.
+HOLD_MARGIN = 0.004
 HOLD_LOW = 0.34               # below this share of the swell, the writer drew nothing
 HOLD_HIGH = 0.86              # above it, they certainly did
 HOLD_QUANTILE = 0.22          # the share of drawn ground that may still end up wet

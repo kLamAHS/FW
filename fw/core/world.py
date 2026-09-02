@@ -32,6 +32,7 @@ from fw.core.model.records import (
     Event,
     Fact,
     Geometry,
+    Interpretation,
     Knowledge,
     RouteSegment,
     Scene,
@@ -97,7 +98,9 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
     "scene_participant": {"refs": {"scene_id": ("scene", "skip"),
                                    "entity_id": ("entity", "skip")},
                           "key": ("scene_id", "entity_id")},
-    "interpretation": {"refs": {"event_id": ("event", "skip"),
+    "interpretation": {"refs": {"branch_id": ("branch", "skip"),
+                                "event_id": ("event", "skip"),
+                                "entity_id": ("entity", "skip"),
                                 "holder_id": ("entity", "skip")}},
     "knowledge_state": {"refs": {"observer_id": ("entity", "skip"),
                                  "secret_id": ("secret", "skip"),
@@ -111,6 +114,13 @@ _RESTORE_SPEC: dict[str, dict[str, Any]] = {
                                  "entity_id": ("entity", "skip")},
                         "key": ("branch_id", "entity_id")},
     "era": {"refs": {"calendar_id": ("calendar", "skip")}},
+    # The manuscript (§43). A work is a book and a chapter is a part of one, and a
+    # scene points at a chapter — which is why `scene.chapter_id` has been in this
+    # table since before anything could create the chapter it refers to.
+    "work": {"refs": {}},
+    "chapter": {"refs": {"work_id": ("work", "skip")}},
+    "source": {"refs": {"scene_id": ("scene", "null")}},
+    "snapshot": {"refs": {"branch_id": ("branch", "skip")}},
 }
 
 # Tables whose updates undo by writing the previous values straight back. Anything
@@ -119,7 +129,8 @@ _PLAIN_UPDATABLE = ("era", "app_state")
 
 # Parents before children, so an event exists again before its participants do. Facts
 # are handled separately (they can be about each other and need a fixpoint).
-_RESTORE_ORDER = ("event", "title", "secret", "scene", "geometry", "route_segment",
+_RESTORE_ORDER = ("work", "chapter", "source", "snapshot",
+                  "event", "title", "secret", "scene", "geometry", "route_segment",
                   "title_holding", "event_participant", "scene_participant",
                   "interpretation", "knowledge_state", "causal_link",
                   "entity_override", "era", "app_state")
@@ -134,6 +145,8 @@ _ACTION_NOUNS: dict[str, str] = {
     "scene_participant": "a scene participation",
     "interpretation": "an interpretation",
     "app_state": "a map decision",
+    "work": "the book", "chapter": "the chapter", "source": "the source",
+    "snapshot": "the named date",
 }
 
 # What the FK cascade takes with a row of each table — the children a raw DELETE must
@@ -142,6 +155,7 @@ _CHILD_TABLES: dict[str, tuple[tuple[str, str], ...]] = {
     "event": (("event_participant", "event_id"), ("causal_link", "cause_id"),
               ("causal_link", "effect_id"), ("interpretation", "event_id")),
     "title": (("title_holding", "title_id"),),
+    "work": (("chapter", "work_id"),),
     "secret": (("knowledge_state", "secret_id"),),
     "scene": (("scene_participant", "scene_id"),),
 }
@@ -150,12 +164,14 @@ _CHILD_TABLES: dict[str, tuple[tuple[str, str], ...]] = {
 # but keeps the row, so a restore should offer to re-link it. Only these (table,
 # column) pairs may ever be relinked, whatever a crafted revision row claims.
 _RELINK_COLUMNS: dict[str, dict[str, str]] = {
-    "scene": {"location_id": "entity", "pov_id": "entity"},
+    "scene": {"location_id": "entity", "pov_id": "entity",
+              "chapter_id": "chapter"},
     "event": {"location_id": "entity"},
     "title": {"territory_id": "entity", "dynasty_root_id": "entity"},
     "knowledge_state": {"acquired_from": "entity"},
     "route_segment": {"toll_holder_id": "entity"},
     "secret": {"fact_id": "fact"},
+    "fact": {"source_id": "source"},
 }
 
 
@@ -581,6 +597,49 @@ class World:
             raise WorldError(f"a timeline named {name!r} already exists") from exc
         return name
 
+    def get_source(self, source_id: str) -> dict[str, Any] | None:
+        """Where a fact came from (§53).
+
+        The table has been in the schema since the first migration and `assert_fact`
+        has taken a `source_id` all along; nothing could read one back, so every fact
+        the writer cited was cited into a void.
+        """
+        row = self.db.one("SELECT * FROM source WHERE id = ?", (source_id,))
+        return dict(row) if row else None
+
+    def sources(self) -> list[dict[str, Any]]:
+        return [dict(r) for r in self.db.query(
+            "SELECT * FROM source WHERE project_id = ? ORDER BY label",
+            (self.project_id,))]
+
+    def add_source(self, label: str, *, kind: str = "author_note", detail: str = "",
+                   scene_id: str | None = None) -> str:
+        """Somewhere a fact came from (§58) — a chapter, a document, a note.
+
+        Logged, like every other write: a source is cited by facts that go on existing
+        after it, so a writer who mistypes one and presses Ctrl+Z expects the citation
+        gone and the facts left alone, which is exactly what `source_id`'s ON DELETE
+        SET NULL gives them.
+        """
+        sid = new_id()
+        with self.db.transaction():
+            self.db.insert("source", {
+                "id": sid, "project_id": self.project_id, "kind": kind,
+                "label": label, "detail": detail, "scene_id": scene_id})
+            self._log_revision("source", sid, "insert", None, {"label": label})
+        return sid
+
+    def all_tags(self) -> list[str]:
+        """Every tag anybody has used, so a form can offer them rather than ask.
+
+        A writer who has to remember whether they wrote `port-town` or `port town` will
+        get it wrong once and lose the query.
+        """
+        scope, params = self.branch_scope("e")
+        return [r["value"] for r in self.db.query(
+            f"SELECT DISTINCT json_each.value AS value FROM entity e, json_each(e.tags) "
+            f"WHERE {scope} ORDER BY value", params)]
+
     def counts_by_type(self) -> dict[str, int]:
         return {r["type_key"]: r["n"] for r in self.db.query(
             f"SELECT type_key, count(*) AS n FROM entity WHERE {self._in_chain} "
@@ -622,6 +681,25 @@ class World:
         if row is None:
             raise WorldError(f"no timeline named {name!r}")
         return World(self.db, self.project_id, row["id"])
+
+    # ---- scoping, for anything that composes its own SQL (§49) ------------
+
+    def branch_scope(self, alias: str = "") -> tuple[str, list[Any]]:
+        """The SQL and parameters that limit a table to this branch and its ancestors.
+
+        Public because the query engine composes its own statements and must not be
+        allowed to forget this: a query that skipped the branch chain would answer a
+        what-if with canon's data, or canon's with a what-if's, which is the one mistake
+        the whole overlay model exists to prevent.
+        """
+        column = f"{alias}.branch_id" if alias else "branch_id"
+        return (f"{column} IN (" + ",".join("?" for _ in self._chain) + ")",
+                list(self._chain))
+
+    def fact_visibility(self, alias: str) -> tuple[str, list[Any]]:
+        """The SQL and parameters that hide a fact this branch has overridden."""
+        sql, params = self._live_fact(alias)
+        return sql, list(params)
 
     def _live_fact(self, alias: str) -> tuple[str, list[str]]:
         """SQL for a fact row's visibility under this branch's overlays.
@@ -1750,7 +1828,8 @@ class World:
         doomed += [("entity_override", r) for r in q(
             "SELECT * FROM entity_override WHERE entity_id = ?", (entity_id,))]
         doomed += [("interpretation", r) for r in merged(
-            q("SELECT * FROM interpretation WHERE holder_id = ?", (entity_id,)),
+            q("SELECT * FROM interpretation WHERE holder_id = ? OR entity_id = ?",
+              (entity_id, entity_id)),
             rows_in("interpretation", "event_id", events))]
         doomed += [("knowledge_state", r) for r in merged(
             q("SELECT * FROM knowledge_state WHERE observer_id = ? "
@@ -2632,6 +2711,66 @@ class World:
 
     # ---- secrets and knowledge (§6) ---------------------------------------
 
+    # ---- what each party says happened (§33, §94) --------------------------
+
+    def add_interpretation(self, label: str, *, event_id: str | None = None,
+                           entity_id: str | None = None,
+                           holder_id: str | None = None,
+                           account: str = "") -> Interpretation:
+        """Record one party's version of an event, or their name for somebody (§33).
+
+        The table and its rationale have been in the schema since the first migration,
+        and the only thing that ever wrote to it was the seed — through a raw insert, so
+        the demo world's three accounts of the Red Ford were not even undoable. §94 reads
+        these to answer "show me the world as House Marr sees it", which is why one table
+        carries both the account of a battle and the name for a man.
+        """
+        if (event_id is None) == (entity_id is None):
+            raise WorldError(
+                "an interpretation is of one event or one thing, not both and not neither")
+        iid = new_id()
+        with self.db.transaction():
+            self.db.insert("interpretation", {
+                "id": iid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "event_id": event_id, "entity_id": entity_id,
+                "holder_id": holder_id, "label": label, "account": account,
+            })
+            self._log_revision("interpretation", iid, "insert", None, {"label": label})
+        return Interpretation(id=iid, label=label, account=account, event_id=event_id,
+                              entity_id=entity_id, holder_id=holder_id)
+
+    def interpretations(self, *, event_id: str | None = None,
+                        entity_id: str | None = None,
+                        holder_id: str | None = None) -> list[Interpretation]:
+        """Every version on record, or only those of one subject or one party.
+
+        Branch-scoped like every other assertion: a name House Marr invents on a what-if
+        is that timeline's, and entities are inherited down the chain, so without this a
+        label written on a branch would attach to the canon row and leak into canon.
+        """
+        sql = f"SELECT * FROM interpretation WHERE {self._in_chain}"
+        params: list[Any] = [*self._chain]
+        for column, value in (("event_id", event_id), ("entity_id", entity_id),
+                              ("holder_id", holder_id)):
+            if value is not None:
+                sql += f" AND {column} = ?"
+                params.append(value)
+        return [_interpretation(r) for r in self.db.query(sql + " ORDER BY label", params)]
+
+    def delete_interpretation(self, interpretation_id: str) -> None:
+        row = self.db.one("SELECT * FROM interpretation WHERE id = ?",
+                          (interpretation_id,))
+        if row is None:
+            raise WorldError(f"no interpretation {interpretation_id}")
+        if row["branch_id"] != self.branch_id:
+            raise WorldError(
+                f"“{row['label']}” was written on another timeline; switch to it first")
+        with self.db.transaction():
+            self.db.execute("DELETE FROM interpretation WHERE id = ?",
+                            (interpretation_id,))
+            self._log_revision("interpretation", interpretation_id, "delete",
+                               dict(row), None)
+
     def add_secret(self, name: str, *, truth: str = "", about_id: str | None = None,
                    fact_id: str | None = None, severity: str = "major") -> Secret:
         sid = new_id()
@@ -2696,16 +2835,48 @@ class World:
 
     def add_work(self, title: str, *, kind: str = "novel", position: int = 0,
                  summary: str = "") -> str:
+        """Start a book (§43).
+
+        Logged like every other write, because a writer who types the wrong title and
+        presses Ctrl+Z expects the book to go away — and until this had a route, nobody
+        could make one by accident, so nobody found out that it did not.
+        """
         wid = new_id()
-        self.db.insert("work", {"id": wid, "project_id": self.project_id, "title": title,
-                                "kind": kind, "position": position, "summary": summary})
+        with self.db.transaction():
+            self.db.insert("work", {"id": wid, "project_id": self.project_id,
+                                    "title": title, "kind": kind, "position": position,
+                                    "summary": summary})
+            self._log_revision("work", wid, "insert", None, {"title": title})
         return wid
+
+    def works(self) -> list[dict[str, Any]]:
+        """The manuscripts this project holds (§43).
+
+        `work` and `chapter` have been in the schema since the first migration and
+        nothing could read them back, so a scene's `chapter_id` — the field that puts a
+        scene in the book — could be written and never chosen.
+        """
+        return [dict(r) for r in self.db.query(
+            "SELECT * FROM work WHERE project_id = ? ORDER BY position, title",
+            (self.project_id,))]
+
+    def chapters(self, work_id: str | None = None) -> list[dict[str, Any]]:
+        sql = ("SELECT c.*, w.title AS work_title FROM chapter c "
+               "JOIN work w ON w.id = c.work_id WHERE w.project_id = ?")
+        params: list[Any] = [self.project_id]
+        if work_id:
+            sql += " AND c.work_id = ?"
+            params.append(work_id)
+        return [dict(r) for r in self.db.query(
+            sql + " ORDER BY w.position, c.position, c.title", params)]
 
     def add_chapter(self, work_id: str, title: str, *, position: int = 0,
                     summary: str = "") -> str:
         cid = new_id()
-        self.db.insert("chapter", {"id": cid, "work_id": work_id, "title": title,
-                                   "position": position, "summary": summary})
+        with self.db.transaction():
+            self.db.insert("chapter", {"id": cid, "work_id": work_id, "title": title,
+                                       "position": position, "summary": summary})
+            self._log_revision("chapter", cid, "insert", None, {"title": title})
         return cid
 
     def add_scene(self, title: str, *, chapter_id: str | None = None, position: int = 0,
@@ -3014,6 +3185,18 @@ class World:
                             closed_seasons=tuple(closed_seasons), danger=danger,
                             toll_holder_id=toll_holder_id, props=props or {})
 
+    def delete_route_segment(self, segment_id: str) -> None:
+        """Take a road back off the map. Undoable, like drawing one."""
+        row = self.db.one("SELECT * FROM route_segment WHERE id = ?", (segment_id,))
+        if row is None:
+            raise WorldError(f"no route segment {segment_id}")
+        if row["branch_id"] != self.branch_id:
+            raise WorldError(
+                "that road was laid on another timeline; switch to it first")
+        with self.db.transaction():
+            self.db.execute("DELETE FROM route_segment WHERE id = ?", (segment_id,))
+            self._log_revision("route_segment", segment_id, "delete", dict(row), None)
+
     def route_segments(self) -> list[RouteSegment]:
         # Ordered, because an unordered read makes a generated network impossible to
         # diff against the last one and a golden test impossible to write.
@@ -3025,12 +3208,33 @@ class World:
     # ---- snapshots (§80) --------------------------------------------------
 
     def add_snapshot(self, name: str, day: int, *, note: str = "") -> str:
+        """Give a day on the timeline a name (§80).
+
+        "Before the Red War" is how a writer thinks about a date; 81400 is not. The
+        timeline has rendered these as chips since it was written, and nothing but the
+        seed could make one.
+        """
         sid = new_id()
-        self.db.insert("snapshot", {
-            "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
-            "name": name, "day": day, "note": note,
-        })
+        with self.db.transaction():
+            self.db.insert("snapshot", {
+                "id": sid, "project_id": self.project_id, "branch_id": self.branch_id,
+                "name": name, "day": day, "note": note,
+            })
+            self._log_revision("snapshot", sid, "insert", None,
+                               {"name": name, "day": day})
         return sid
+
+    def delete_snapshot(self, snapshot_id: str) -> None:
+        """Take a name back off the timeline. The world it named is untouched."""
+        row = self.db.one("SELECT * FROM snapshot WHERE id = ?", (snapshot_id,))
+        if row is None:
+            raise WorldError(f"no snapshot {snapshot_id}")
+        if row["branch_id"] != self.branch_id:
+            raise WorldError(
+                f"“{row['name']}” was named on another timeline; switch to it first")
+        with self.db.transaction():
+            self.db.execute("DELETE FROM snapshot WHERE id = ?", (snapshot_id,))
+            self._log_revision("snapshot", snapshot_id, "delete", dict(row), None)
 
     def snapshots(self) -> list[dict]:
         return [dict(r) for r in self.db.query(
@@ -3121,6 +3325,14 @@ def _secret(row) -> Secret:
     return Secret(id=row["id"], name=row["name"], truth=row["truth"],
                   about_id=row["about_id"], fact_id=row["fact_id"],
                   severity=row["severity"])
+
+
+def _interpretation(row) -> Interpretation:
+    return Interpretation(
+        id=row["id"], label=row["label"], account=row["account"],
+        event_id=row["event_id"], entity_id=row["entity_id"],
+        holder_id=row["holder_id"],
+    )
 
 
 def _knowledge(row) -> Knowledge:

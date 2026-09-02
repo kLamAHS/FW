@@ -28,8 +28,13 @@ LAYERS = ("land", "waters", "regions", "relief", "features", "waterways",
           "settlements", "roads", "castles")
 
 # What a shape is *for*, which is how a regeneration recognises its own previous work
-# and how the client decides what to paint it with.
-ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill")
+# and how the client decides what to paint it with. An "arm" is a delta's
+# distributary: part of the river, but exempt from the course's own invariants —
+# it is narrower than the mouth it leaves, which no reach upstream may be. A "border"
+# is one shared frontier arc, stroked once for both of its regions — their outline
+# polygons carry the fill and no edge of their own.
+ROLES = ("outline", "spine", "point", "ring", "hole", "segment", "fill", "arm",
+         "border", "shore")
 
 
 @dataclass(frozen=True)
@@ -90,6 +95,11 @@ class FactSpec:
     value: str | None = None
     confidence: str = "speculative"
     note: str = ""
+    # When the true sentence runs the other way. Only forward predicate keys are
+    # assertable — "occupies" is a predicate, "occupied_by" is display conjugation — so
+    # a keep that wants to say who holds it must let the house speak: subject_ref names
+    # the fact's subject, and the drafted feature's entity becomes its object.
+    subject_ref: str | None = None
 
 
 @dataclass(frozen=True)
@@ -101,9 +111,15 @@ class SegmentSpec:
     length: float
     medium: str = "road"               # road | river | sea
     quality: float = 0.8
-    terrain: str = "plain"             # MUST be a key of routing.LAND
+    # MUST be a key of the terrain table the medium's profiles use: `routing.LAND` for
+    # a road, `routing.WATER` for a river or a sea lane. A mismatch does not raise —
+    # the segment simply scores zero and vanishes from every route.
+    terrain: str = "plain"
     closed_seasons: tuple[str, ...] = ()
     danger: str = "low"
+    # The earliest day this way makes sense — a road is no older than the younger of
+    # the places it joins. None is honestly "it is just there", never a claim.
+    built_on: int | None = None
 
 
 @dataclass(frozen=True)
@@ -116,6 +132,11 @@ class SubjectSpec:
     summary_template: str = ""
     tags: tuple[str, ...] = ()
     confidence: str = "speculative"
+    # When the map can say honestly how old a thing is. A proposed town cannot predate
+    # the country it stands in, which is a real bound and better than nothing; where
+    # even that is unknown it is left null, which the world reads as "it is just there"
+    # rather than as a claim.
+    exists_from: int | None = None
 
 
 @dataclass(frozen=True)
@@ -138,6 +159,11 @@ class FeatureDraft:
     # A name that is already decided and not the namer's to invent — the mainland is
     # called after the world, not after a syllable model.
     fixed_name: str = ""
+    # A name made out of another feature's, once that one has been named. A crossing is
+    # called after where it lands, and where it lands may be a town this same run is
+    # inventing — so the template is filled in after every name is chosen, not before.
+    name_template: str = ""
+    name_refs: tuple[str, ...] = ()
     detail: dict[str, Any] = field(default_factory=dict)
     depends_on_keys: tuple[tuple[str | int, ...], ...] = ()
     # §66 in one field: siting a place the writer already made is accepted by default;

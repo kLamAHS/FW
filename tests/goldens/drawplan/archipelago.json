@@ -1,0 +1,2262 @@
+{
+ "bounds": {
+  "height": 920.0,
+  "width": 920.0,
+  "x": -10.0,
+  "y": -10.0
+ },
+ "icons": [
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Banksbridge",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 355.2,
+   "y": 322.7
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "Bankstead",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 425.6,
+   "y": 577.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Bankswick",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 409.4,
+   "y": 447.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Brokenbridge",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 552.3,
+   "y": 370.2
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Islesgate",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 678.5,
+   "y": 564.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "Islesvale",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 351.7,
+   "y": 719.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Bankscombe",
+   "radius": 4.2,
+   "rank": "tower",
+   "role": "castle",
+   "shape": "tower",
+   "x": 301.0,
+   "y": 317.3
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Banksford",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 317.3,
+   "y": 528.5
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Banksgate",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 474.4,
+   "y": 599.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Bankshaven",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 284.8,
+   "y": 225.2
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Banksholt",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 328.1,
+   "y": 593.5
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Bankspass",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 496.0,
+   "y": 544.8
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Banksport",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 436.5,
+   "y": 658.5
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Brokenhaven",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 271.8,
+   "y": 226.2
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Brokenport",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 434.9,
+   "y": 659.1
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Islesbank",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 237.8,
+   "y": 508.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Islesbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 675.8,
+   "y": 405.9
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Islesclose",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 261.6,
+   "y": 448.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Islesfield",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 242.0,
+   "y": 348.8
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Isleshill",
+   "radius": 5.5,
+   "rank": "town",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 725.7,
+   "y": 480.1
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Islesmoor",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 212.3,
+   "y": 631.7
+  },
+  {
+   "band": "regional",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Ound",
+   "radius": 6.0,
+   "rank": "castle",
+   "role": "castle",
+   "shape": "keep",
+   "x": 485.2,
+   "y": 479.8
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Outerbridge",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 262.1,
+   "y": 410.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Outerford",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 317.9,
+   "y": 500.2
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Outerstead",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 274.6,
+   "y": 519.4
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Outerwick",
+   "radius": 4.2,
+   "rank": "village",
+   "role": "settlement",
+   "shape": "disc",
+   "x": 315.9,
+   "y": 225.0
+  },
+  {
+   "band": "local",
+   "contested": false,
+   "holder_role": "",
+   "name": "The Souter Banks",
+   "radius": 5.0,
+   "rank": "keep",
+   "role": "castle",
+   "shape": "keep",
+   "x": 680.2,
+   "y": 566.5
+  }
+ ],
+ "labels": {
+  "local": [
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Banksbridge",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 363.7,
+    "y": 323.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Banksclose",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 350.0,
+    "y": 182.5
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.5,
+    "text": "Bankscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.87,
+    "text": "Banksdowns",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 129.5,
+    "y": 322.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Banksmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 524.8,
+    "y": 316.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "river",
+    "path": [
+     [
+      346.0,
+      310.9
+     ],
+     [
+      348.8,
+      307.1
+     ],
+     [
+      350.8,
+      300.4
+     ],
+     [
+      358.6,
+      292.2
+     ],
+     [
+      360.6,
+      288.2
+     ],
+     [
+      360.6,
+      270.0
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Banksrush",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 358.6,
+    "y": 292.2
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Bankstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 417.1,
+    "y": 577.9
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Bankswick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 418.9,
+    "y": 447.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Brokenbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 562.1,
+    "y": 370.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "river",
+    "path": [
+     [
+      447.3,
+      558.8
+     ],
+     [
+      447.3,
+      596.9
+     ],
+     [
+      448.3,
+      599.6
+     ],
+     [
+      452.4,
+      605.1
+     ],
+     [
+      452.4,
+      606.6
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Brokenrush",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 448.3,
+    "y": 599.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "path": [
+     [
+      184.6,
+      790.3
+     ],
+     [
+      228.9,
+      790.3
+     ],
+     [
+      236.9,
+      782.8
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "Brokenweald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 228.9,
+    "y": 790.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      291.2,
+      299.9
+     ],
+     [
+      299.0,
+      292.2
+     ],
+     [
+      300.7,
+      289.5
+     ],
+     [
+      302.1,
+      284.1
+     ],
+     [
+      305.4,
+      280.1
+     ],
+     [
+      306.5,
+      277.3
+     ],
+     [
+      306.5,
+      263.7
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Islescombe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 302.1,
+    "y": 284.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Islesgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 678.5,
+    "y": 553.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      582.4,
+      600.1
+     ],
+     [
+      583.4,
+      599.3
+     ],
+     [
+      591.5,
+      599.0
+     ],
+     [
+      594.2,
+      597.9
+     ],
+     [
+      609.0,
+      583.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Islestead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 591.5,
+    "y": 599.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Islesvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 361.5,
+    "y": 719.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Banksbank",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 176.5,
+    "y": 162.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.29,
+    "text": "The Bankscape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Bankscombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 292.5,
+    "y": 317.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.02,
+    "text": "The Banksfield",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 317.7,
+    "y": 105.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 326.8,
+    "y": 528.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 483.9,
+    "y": 599.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Bankshaven",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 284.8,
+    "y": 243.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Bankshollow",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 337.6,
+    "y": 593.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "path": [
+     [
+      157.1,
+      687.9
+     ],
+     [
+      168.6,
+      693.6
+     ],
+     [
+      171.6,
+      693.8
+     ],
+     [
+      179.0,
+      697.5
+     ],
+     [
+      182.0,
+      700.3
+     ],
+     [
+      192.9,
+      705.7
+     ],
+     [
+      196.0,
+      706.0
+     ],
+     [
+      203.8,
+      709.3
+     ],
+     [
+      216.4,
+      709.3
+     ],
+     [
+      219.4,
+      711.1
+     ],
+     [
+      222.9,
+      711.1
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Banksmarsh",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 192.9,
+    "y": 705.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.24,
+    "text": "The Banksmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Bankspass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 505.5,
+    "y": 545.1
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksport",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 428.0,
+    "y": 659.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "river",
+    "path": [
+     [
+      451.9,
+      365.6
+     ],
+     [
+      452.7,
+      364.0
+     ],
+     [
+      452.4,
+      350.5
+     ],
+     [
+      448.3,
+      345.1
+     ],
+     [
+      447.0,
+      339.6
+     ],
+     [
+      442.9,
+      334.2
+     ],
+     [
+      441.9,
+      331.5
+     ],
+     [
+      441.9,
+      309.2
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Banksrun",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 447.0,
+    "y": 339.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      506.1,
+      423.5
+     ],
+     [
+      536.9,
+      451.6
+     ],
+     [
+      683.7,
+      451.6
+     ],
+     [
+      707.5,
+      433.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Broken Isles",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 683.7,
+    "y": 451.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      582.9,
+      387.8
+     ],
+     [
+      592.9,
+      388.0
+     ],
+     [
+      605.1,
+      398.2
+     ],
+     [
+      619.9,
+      398.9
+     ],
+     [
+      628.1,
+      404.0
+     ],
+     [
+      638.2,
+      404.0
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Brokenbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 619.9,
+    "y": 398.9
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Brokenhaven",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 263.3,
+    "y": 226.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Brokenholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 568.2,
+    "y": 251.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 9.65,
+    "text": "The Brokenmarsh",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 380.1,
+    "y": 410.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Brokenmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 474.1,
+    "y": 785.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Brokenport",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 444.7,
+    "y": 650.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "path": [
+     [
+      256.6,
+      370.5
+     ],
+     [
+      320.4,
+      370.5
+     ],
+     [
+      325.2,
+      374.5
+     ]
+    ],
+    "role": "label",
+    "size": 11.0,
+    "text": "The Brokenstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 320.4,
+    "y": 370.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 9.56,
+    "text": "The Brokenthorpe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 235.1,
+    "y": 429.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 6.5,
+    "text": "The Brokenwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 415.2,
+    "y": 265.7
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Islesbank",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 228.0,
+    "y": 509.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Islesbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 684.3,
+    "y": 406.5
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Islesclose",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 270.1,
+    "y": 449.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Islesfield",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 250.5,
+    "y": 349.4
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Isleshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 735.5,
+    "y": 480.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Islesmoor",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 220.8,
+    "y": 632.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      688.8,
+      531.0
+     ],
+     [
+      705.3,
+      514.3
+     ],
+     [
+      709.3,
+      504.8
+     ],
+     [
+      719.6,
+      494.3
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Isleswick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 709.3,
+    "y": 504.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Ound",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 494.7,
+    "y": 480.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Outer Banks",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 326.9,
+    "y": 686.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Outerbridge",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 270.6,
+    "y": 411.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Outerford",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 326.4,
+    "y": 513.6
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Outerstead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 266.1,
+    "y": 532.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "village",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Outerwick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 324.4,
+    "y": 225.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Sound",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 416.7,
+    "y": 489.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Souter Banks",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 688.7,
+    "y": 579.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "Wrackholm",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 350.4,
+    "y": 139.7
+   }
+  ],
+  "regional": [
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.5,
+    "text": "Bankscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "river",
+    "path": [
+     [
+      346.0,
+      310.9
+     ],
+     [
+      348.8,
+      307.1
+     ],
+     [
+      350.8,
+      300.4
+     ],
+     [
+      358.6,
+      292.2
+     ],
+     [
+      360.6,
+      288.2
+     ],
+     [
+      360.6,
+      270.0
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Banksrush",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 358.6,
+    "y": 292.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Bankswick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 418.9,
+    "y": 447.6
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Brokenbridge",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 562.1,
+    "y": 370.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "river",
+    "path": [
+     [
+      447.3,
+      558.8
+     ],
+     [
+      447.3,
+      596.9
+     ],
+     [
+      448.3,
+      599.6
+     ],
+     [
+      452.4,
+      605.1
+     ],
+     [
+      452.4,
+      606.6
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Brokenrush",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 448.3,
+    "y": 599.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.1,
+    "kind": "road",
+    "path": [
+     [
+      291.2,
+      299.9
+     ],
+     [
+      299.0,
+      292.2
+     ],
+     [
+      300.7,
+      289.5
+     ],
+     [
+      302.1,
+      284.1
+     ],
+     [
+      305.4,
+      280.1
+     ],
+     [
+      306.5,
+      277.3
+     ],
+     [
+      306.5,
+      263.7
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Islescombe",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 302.1,
+    "y": 284.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Islesgate",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 688.3,
+    "y": 565.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      582.4,
+      600.1
+     ],
+     [
+      583.4,
+      599.3
+     ],
+     [
+      591.5,
+      599.0
+     ],
+     [
+      594.2,
+      597.9
+     ],
+     [
+      609.0,
+      583.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "Islestead",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 591.5,
+    "y": 599.0
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "Islesvale",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 361.5,
+    "y": 719.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.29,
+    "text": "The Bankscape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 326.8,
+    "y": 528.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 483.9,
+    "y": 599.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Bankshollow",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Banksholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 337.6,
+    "y": 593.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.24,
+    "text": "The Banksmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.2,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Bankspass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 505.5,
+    "y": 545.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "river",
+    "path": [
+     [
+      451.9,
+      365.6
+     ],
+     [
+      452.7,
+      364.0
+     ],
+     [
+      452.4,
+      350.5
+     ],
+     [
+      448.3,
+      345.1
+     ],
+     [
+      447.0,
+      339.6
+     ],
+     [
+      442.9,
+      334.2
+     ],
+     [
+      441.9,
+      331.5
+     ],
+     [
+      441.9,
+      309.2
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "The Banksrun",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 447.0,
+    "y": 339.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      506.1,
+      423.5
+     ],
+     [
+      536.9,
+      451.6
+     ],
+     [
+      683.7,
+      451.6
+     ],
+     [
+      707.5,
+      433.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Broken Isles",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 683.7,
+    "y": 451.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      582.9,
+      387.8
+     ],
+     [
+      592.9,
+      388.0
+     ],
+     [
+      605.1,
+      398.2
+     ],
+     [
+      619.9,
+      398.9
+     ],
+     [
+      628.1,
+      404.0
+     ],
+     [
+      638.2,
+      404.0
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Brokenbank",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 619.9,
+    "y": 398.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.3,
+    "kind": "road",
+    "path": [
+     [
+      268.5,
+      588.7
+     ],
+     [
+      268.5,
+      525.2
+     ],
+     [
+      269.7,
+      522.8
+     ],
+     [
+      270.7,
+      522.1
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Brokenhollow",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 269.7,
+    "y": 522.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.8,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Brokenport",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 444.7,
+    "y": 650.0
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Islesbank",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 228.0,
+    "y": 509.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "town",
+    "role": "label",
+    "size": 11.5,
+    "text": "The Isleshill",
+    "tier": 1,
+    "tracking": 0.0,
+    "x": 735.5,
+    "y": 480.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 3.0,
+    "kind": "road",
+    "path": [
+     [
+      246.5,
+      355.6
+     ],
+     [
+      246.6,
+      355.8
+     ],
+     [
+      246.9,
+      374.8
+     ],
+     [
+      252.0,
+      383.0
+     ],
+     [
+      252.6,
+      397.9
+     ],
+     [
+      257.1,
+      403.9
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Islesmere",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 252.0,
+    "y": 383.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "road",
+    "path": [
+     [
+      681.4,
+      538.5
+     ],
+     [
+      705.3,
+      514.3
+     ],
+     [
+      709.3,
+      504.8
+     ],
+     [
+      712.2,
+      501.8
+     ]
+    ],
+    "role": "label",
+    "size": 9.5,
+    "text": "The Isleswick",
+    "tier": 2,
+    "tracking": 0.0,
+    "x": 709.3,
+    "y": 504.8
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 2.9,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "The Ound",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 494.7,
+    "y": 480.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Outer Banks",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 326.9,
+    "y": 686.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Sound",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 416.7,
+    "y": 489.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "Wrackholm",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 350.4,
+    "y": 139.7
+   }
+  ],
+  "world": [
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.5,
+    "text": "Bankscoast",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 133.1,
+    "y": 306.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.29,
+    "text": "The Bankscape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 753.9,
+    "y": 598.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 7.0,
+    "text": "The Bankshollow",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 779.3,
+    "y": 233.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 8.24,
+    "text": "The Banksmere",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 657.5,
+    "y": 114.7
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      506.1,
+      423.5
+     ],
+     [
+      536.9,
+      451.6
+     ],
+     [
+      683.7,
+      451.6
+     ],
+     [
+      707.5,
+      433.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Broken Isles",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 683.7,
+    "y": 451.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Outer Banks",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 326.9,
+    "y": 686.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Sound",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 416.7,
+    "y": 489.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "Wrackholm",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 350.4,
+    "y": 139.7
+   }
+  ]
+ },
+ "legend": [
+  {
+   "label": "Town",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Village",
+   "note": "",
+   "role": "settlement",
+   "swatch": "disc"
+  },
+  {
+   "label": "Castle or keep",
+   "note": "",
+   "role": "castle",
+   "swatch": "keep"
+  },
+  {
+   "label": "River",
+   "note": "",
+   "role": "waterway",
+   "swatch": "line"
+  },
+  {
+   "label": "Road",
+   "note": "thicker where more of the kingdom's traffic goes",
+   "role": "road",
+   "swatch": "line"
+  },
+  {
+   "label": "Drawn by the map, not surveyed",
+   "note": "a dashed edge is the map's guess and yours to move",
+   "role": "border",
+   "swatch": "dashed"
+  }
+ ],
+ "mode": "legally_owns",
+ "unlabelled": [
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Banksfells"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Bankshill"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Brokenclose"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Brokenford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Brokengate"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "Brokenrun"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "Brokenvale"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Banksflow"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Bankshaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Banksreach"
+  },
+  {
+   "kind": "landmass",
+   "reason": "no room",
+   "text": "The Banksthorpe"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Banksvale"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Bankswaste"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Banksweald"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Bankswold"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Bankswood"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Brokencombe"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Brokenfield"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Brokenflow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Brokenhill"
+  },
+  {
+   "kind": "river",
+   "reason": "no room",
+   "text": "The Brokenmere"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Brokenreach"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Brokenshaw"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Brokenwaste"
+  },
+  {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "The Brokenwood"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Islesford"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Isleshollow"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Islesholt"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Islesreach"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The Islesthorpe"
+  },
+  {
+   "kind": "sea",
+   "reason": "no room",
+   "text": "The Open Sea"
+  }
+ ]
+}

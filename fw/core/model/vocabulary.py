@@ -240,11 +240,24 @@ PREDICATES: tuple[PredicateDef, ...] = (
          description="A watercourse joining a greater one, or reaching the sea."),
 
     # -- economy (§17, §19)
-    _rel("produces", "produces", "produced_by", category="economy"),
-    _rel("consumes", "consumes", "consumed_by", category="economy"),
-    _rel("imports", "imports", "imported_by", category="economy"),
-    _rel("exports", "exports", "exported_by", category="economy"),
+    # §18's "simple mode" is `grain production: high`, and `magnitude` has spelled
+    # none/low/medium/high/very high since the first vocabulary. Without a `scale_key`
+    # the fact form hides its strength control entirely, so the seeded world contained
+    # `produces … strength="high"` that the application itself could not author.
+    _rel("produces", "produces", "produced_by", category="economy",
+         scale_key="magnitude"),
+    _rel("consumes", "consumes", "consumed_by", category="economy",
+         scale_key="magnitude"),
+    _rel("imports", "imports", "imported_by", category="economy",
+         scale_key="magnitude"),
+    _rel("exports", "exports", "exported_by", category="economy",
+         scale_key="magnitude"),
     _rel("trades_with", "trades with", symmetric=True, category="economy"),
+    # §19 wants a commodity on a route. `carries` was already *read* when the map
+    # generator collected a road's goods, and was in no vocabulary and written by
+    # nothing — a dead read three layers deep. This is the half that was missing.
+    _rel("carries", "carries", "carried_by", category="economy",
+         description="§19: what moves along this road, river or trade route."),
     _rel("depends_on", "depends on", "depended_on_by", category="economy",
          description="Systemic dependency, used by failure analysis (§85)."),
 
@@ -259,6 +272,13 @@ PREDICATES: tuple[PredicateDef, ...] = (
 
     # -- knowledge and events (§6, §31)
     _rel("knows_about", "knows about", "known_by", category="knowledge"),
+    # §93's fog of knowledge, said as a fact rather than a column so it is dated,
+    # undoable, branch-aware and askable like everything else. Ignorance is the
+    # exception a writer records, not the default the software assumes: a perspective
+    # that hid everything not explicitly granted would show an empty map.
+    _rel("unaware_of", "has never heard of", "unknown_to", category="knowledge",
+         description="§93: what this observer does not know exists. End the fact on "
+                     "the day they find out."),
     _rel("participated_in", "participated in", "had_participant", category="history"),
     _rel("witnessed", "witnessed", "was_witnessed_by", category="history"),
     _rel("killed", "killed", "killed_by", category="history"),
@@ -340,3 +360,6 @@ CONFIDENCE_LEVELS = ("canon", "draft", "tentative", "rumored", "disputed",
                      "speculative", "unknown", "deprecated")
 SECRECY_LEVELS = ("public", "known", "discreet", "secret", "deep_secret")
 KNOWLEDGE_STANCES = ("knows", "believes", "suspects", "misinformed", "unaware")
+# How much a secret costs when it comes out. Closed so the write surface can validate
+# and the client can enumerate, like every other list here.
+SECRET_SEVERITIES = ("trivial", "minor", "major", "catastrophic")

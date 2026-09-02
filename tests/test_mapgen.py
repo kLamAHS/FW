@@ -9,7 +9,7 @@ from fw.core.geo.routing import LAND, Router
 from fw.core.mapgen.attributes import (
     ROUTING_TERRAIN,
     TERRAIN_KINDS,
-    profile_region,
+    profiles_from,
     read_climate,
     read_terrain,
 )
@@ -25,6 +25,12 @@ from fw.core.mapgen.generate import (
 from fw.core.mapgen.territory import MAX_RING_VERTICES
 from fw.core.seed.renn import PRESENT_YEAR
 from fw.core.world import World, WorldError
+
+
+def _profiles(world: World):
+    """Every region's profile, the way the generator gets them: out of one reading."""
+    from fw.core.mapgen import source
+    return profiles_from(source.read_world(world))
 
 
 def build_world(name: str = "Ashmere") -> World:
@@ -72,7 +78,7 @@ class TestReadingWhatTheWriterWrote:
         assert read_climate("") == (None, None)
 
     def test_a_profile_says_where_every_number_came_from(self, renn: World):
-        profile = profile_region(renn, renn.entity_named("The Northmarch").id)
+        profile = _profiles(renn)[renn.entity_named("The Northmarch").id]
         assert profile.dominant == "mountain"
         assert profile.temperature < 0                      # "cold, heavy snow"
         assert "mountains and forest" in profile.why("terrain")
@@ -80,7 +86,7 @@ class TestReadingWhatTheWriterWrote:
 
     def test_an_undescribed_region_says_it_is_defaulting(self, blank: World):
         bare = blank.add_entity("region", "The Blank")
-        profile = profile_region(blank, bare.id)
+        profile = _profiles(blank)[bare.id]
         assert profile.dominant == "plain"
         assert "nothing is recorded" in profile.why("terrain")
 
@@ -378,7 +384,8 @@ class TestRiversAreDrawnByTheWaterInThem:
         rivers = plan.by_kind("river")
         assert rivers, "no rivers to measure"
         for river in rivers:
-            widths = [shape.style.get("stroke-width") for shape in river.shapes]
+            course = [s for s in river.shapes if s.role != "arm"]
+            widths = [shape.style.get("stroke-width") for shape in course]
             assert all(w is not None for w in widths), "a reach with no width"
             assert widths == sorted(widths), (
                 f"{river.name} narrows and widens along its length: {widths}")
@@ -388,7 +395,9 @@ class TestRiversAreDrawnByTheWaterInThem:
         from fw.core.mapgen.pipeline import plan_map
 
         for river in plan_map(renn).by_kind("river"):
-            reaches = list(river.shapes)
+            # A delta's arms both leave the same mouth, so they are not reaches of
+            # the course and carry their own role.
+            reaches = [s for s in river.shapes if s.role != "arm"]
             for before, after in zip(reaches, reaches[1:], strict=False):
                 assert before.coordinates[-1] == after.coordinates[0], (
                     f"{river.name} has a gap between reaches")

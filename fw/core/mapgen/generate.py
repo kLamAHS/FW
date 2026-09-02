@@ -31,18 +31,23 @@ from fw.core.mapgen import (
     biome as biome_module,
 )
 from fw.core.mapgen import (
+    cartography,
     climate,
     coast,
     erode,
     guards,
     hold,
+    hydrology,
     movement,
     noise,
     relief,
     resources,
     roads,
     settle,
+    shade,
     shapes,
+    shore,
+    source,
     territory,
     vegetation,
 )
@@ -53,10 +58,12 @@ from fw.core.mapgen.attributes import (
     DEFAULT_TERRAIN,
     ROUTING_TERRAIN,
     RegionProfile,
-    profile_region,
+    profiles_from,
 )
 from fw.core.mapgen.grid import Field, Grid
 from fw.core.mapgen.layout import Site, arrange
+from fw.core.mapgen.source.reading import key_for
+from fw.core.model.records import GENERATED_TAG as _GENERATED_TAG
 from fw.core.world import World, WorldError
 
 # The canvas. Fictional worlds have no coordinate system (§34), so these are the same
@@ -76,11 +83,17 @@ CELL = SPAN / GRID
 # a bit flat" rather than as an error.
 SEA_LEVEL = 0.0
 SHELF_CELLS = 14.0             # how far offshore the sea floor keeps falling
-SHELF_DEPTH = 0.22             # how deep it gets, in the same units as the land
+# How deep the shelf gets, in the same units as the land. The renderer's sea ramp is
+# defined over the same number — one constant, one home — because for a phase they
+# disagreed (0.22 modelled, 0.10 rendered) and the outer half of every shelf drew as
+# one flat colour with a uniform bright band hugging the coast.
+SHELF_DEPTH = shade.SHELF_DEPTH
 SHORE_CELLS = 4.0              # over how many cells inland the land takes over the shore
 RIVER_SHARE = 0.022            # the share of land cells that carry a channel
 OUTLINE_RAYS = 44              # vertices per generated region outline
 ROAD_TOLERANCE = 0.6           # how far a drawn road may cut a corner, in leagues
+WATER_TOLERANCE = 0.4          # and a river, which wanders more and is watched closer
+SHORE_FLOOR = 0.002            # how far above the waterline the driest land must sit
 MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cells
                                # (kept by settle.TIERS, which spaces every rank wider)
 
@@ -88,7 +101,9 @@ MIN_SPACING_CELLS = 3.0        # settlements no closer than this, in lattice cel
 # the writer's alone. The client passes unknown style keys through untouched.
 GENERATED = "generated_by"
 GENERATOR = "mapgen/1"
-GENERATED_TAG = "generated-map"
+# Defined on the entity itself: the lists and the continuity checks
+# have to recognise the map's own suggestions too.
+GENERATED_TAG = _GENERATED_TAG
 
 LAYER_REGIONS = "regions"
 LAYER_WATER = "waterways"
@@ -113,6 +128,9 @@ RESOURCE_WORDS = {
     "iron": "ore", "ore": "ore", "silver": "ore", "gold": "ore", "copper": "ore",
     "tin": "ore", "lead": "ore", "mines": "ore", "mining": "ore",
     "fish": "fish", "fishing": "fish", "fisheries": "fish", "whaling": "fish",
+    # Salt is got from a pan or a mine, and the Salt Reach is named for it — a region
+    # whose defining resource claims nothing is the map failing to hear its own writer.
+    "salt": "stone", "salterns": "stone", "saltpans": "stone",
 }
 
 
@@ -136,10 +154,18 @@ class Placement:
     x: float
     y: float
     region_id: str
-    rank: str                      # capital | city | town | village
+    # The writer's own settlement_type word, lowercased and open-ended ("capital",
+    # "market town", "fortress"...), else a population tier, else the site's.
+    rank: str
     score: float
     reasons: list[str] = field(default_factory=list)
     proposed: bool = False
+    # What the siting knew and used to throw away (V2 §12): the crossing the place
+    # stands on, how well its market area feeds it, and its lattice cell. Blank for
+    # a place read back from stored geometry — that ground was never scored.
+    crossing: str = ""             # ford | pass | harbour | ""
+    support: float = 0.0
+    cell: tuple[int, int] | None = None
 
     def because(self) -> str:
         if not self.reasons:
@@ -207,10 +233,16 @@ class MapGenerator:
         self.relief: relief.Relief | None = None
         self.erosion: erode.Erosion | None = None
         self.vegetation: vegetation.Vegetation | None = None
+        self.hydrology: hydrology.Hydrology | None = None
+        self.shore: shore.Shoreline | None = None
         self.movement: movement.Movement | None = None
         self.resources: resources.Resources | None = None
         self.settlement: settle.Settlement | None = None
         self.holds: hold.Holds | None = None
+        self.reading: source.WorldReading | None = None
+        self._keys: dict[str, str] = {}
+        self._outlines: dict[str, list[list[list[float]]]] = {}
+        self._outlines_for: int | None = None
         self.frontiers: list[territory.Frontier] = []
         self._network: roads.Roads | None = None
         self._network_for: tuple | None = None
@@ -237,8 +269,7 @@ class MapGenerator:
                 "few and say what they are like.")
             return self.report
 
-        self.profiles = {r.id: profile_region(self.world, r.id, at=self.at)
-                         for r in regions}
+        self.read_the_world()
         authored, rivers = self.build_the_world()
         placements = self._site_settlements(propose=propose_settlements)
         holds = self._site_castles(placements)
@@ -385,6 +416,22 @@ class MapGenerator:
         self.inland_max = max(
             (self.from_sea[j][i] for j in range(GRID) for i in range(GRID)), default=1)
 
+    def read_the_world(self) -> None:
+        """One reading of the writer's world, before any of it is drawn.
+
+        Everything the map knows about their world comes from here now. It used to be
+        gathered six separate times — once per region for the profiles, and again in this
+        module for outlines, borders, settlements, holdings, features, populations and
+        capitals, and again in the namer, and again in the ledger — with the answer kept
+        nowhere and no two of them guaranteed to agree.
+        """
+        self.reading = source.read_world(self.world, at=self.at)
+        self.profiles = profiles_from(self.reading)
+        # Entity id to key, kept: everything downstream that has an id in hand and wants
+        # to know what the writer said about it goes through here, and rebuilding the
+        # map inside a sort key is how a stage goes quadratic without anyone noticing.
+        self._keys = dict(self.reading.by_entity())
+
     def build_the_world(self) -> tuple[dict[str, list[list[float]]],
                                        list[list[tuple[int, int]]]]:
         """Everything the map knows, before a word of it is written down.
@@ -412,6 +459,21 @@ class MapGenerator:
         self._assign_cells()
         self._build_fields()
         rivers = self._trace_rivers()
+        # The drainage as a *system* (V2 §6): true stream order, mainstem-and-
+        # tributary rivers, mouth kinds, and the meres in the wet basins. Read off
+        # what erosion and vegetation already worked out, never recomputed.
+        self.hydrology = hydrology.study(
+            GRID, sea=self.sea, flow=self.erosion.flow,
+            downstream=self.erosion.downstream, marsh=self.vegetation.marsh,
+            settled=self.erosion.settled, elevation=self.elevation,
+            sea_level=SEA_LEVEL, shelf_depth=SHELF_DEPTH, share=RIVER_SHARE)
+        # And the coast's character (V2 §4), from the same fields plus the mouths
+        # just classified — a delta is where a specific river arrives.
+        self.shore = shore.classify(
+            GRID, sea=self.sea, elevation=self.elevation,
+            slope=self.erosion.slope, marsh=self.vegetation.marsh,
+            seed=self.seed,
+            mouths={s.mouth: s.mouth_kind for s in self.hydrology.systems})
         self._build_movement()
         self._build_civilisation()
         self._assign_cells(cost=self.movement.cost, from_the_towns=True)
@@ -572,6 +634,7 @@ class MapGenerator:
         self.erosion = erode.erode(
             grid, elevation=self.uplift, sea=self.sea, seed=self.seed)
         self.elevation = self.erosion.elevation
+        self._keep_the_shore()
 
         self.climate = climate.plan_climate(
             grid, elevation=self.elevation, sea=self.sea, from_sea=self.from_sea,
@@ -757,6 +820,33 @@ class MapGenerator:
                 wanted[profile.name] = asked
         return wanted
 
+    def _keep_the_shore(self) -> None:
+        """Land is above the water. It has to be said, because two stages disagree.
+
+        The mask is the writer's answer: it holds the ground they drew, above the
+        waterline, whatever the noise wanted. The elevation field is the map's answer,
+        and by the time erosion has cut a mouth down to base level and the shelf has
+        faded the first cells inland toward it, four hundred of them sit a hundredth
+        below zero — land to every stage that asks the mask, sea to every stage that
+        reads the field.
+
+        Nothing is subtle about the consequence. The relief shades them as water, the
+        coastline is contoured around them, and the region borders — which are traced
+        from ownership — run out across what looks like open sea to enclose them.
+
+        So the field is brought up to the mask rather than the mask down to the field.
+        That way round because the mask is where author sovereignty lives: a cell the
+        writer drew inside their own province may not be quietly drowned by an erosion
+        pass. The lift is small — a hundredth of the world's relief at the median — and
+        it lands on ground that is already the shore.
+        """
+        floor = SEA_LEVEL + SHORE_FLOOR
+        for j in range(GRID):
+            row, wet = self.elevation[j], self.sea[j]
+            for i in range(GRID):
+                if not wet[i] and row[i] < floor:
+                    row[i] = floor
+
     def _with_bathymetry(self, land: Field) -> Field:
         """One continuous surface, sea floor included — not a height plus a mask.
 
@@ -862,10 +952,10 @@ class MapGenerator:
         sources = [cell for cell in sorted(channel) if not feeds_into.get(cell)]
 
         rivers: list[list[tuple[int, int]]] = []
-        for source in sources:
-            path = [source]
-            seen = {source}
-            cursor = source
+        for head in sources:
+            path = [head]
+            seen = {head}
+            cursor = head
             for _ in range(GRID * 3):
                 step = self._downhill(*cursor)
                 if step is None or step in seen:
@@ -965,7 +1055,54 @@ class MapGenerator:
                 "if it lives on trade or tribute or is there to hold a pass, that is "
                 "worth writing down somewhere",
                 subjects=(entity.name,)))
+        out.extend(self._harbours_the_sea_did_not_reach())
         return out
+
+    # How near the water a place has to be for a ship to put in, in lattice cells. The
+    # same reach the crossings use, and for the same reason: a cell is a few miles.
+    QUAY_REACH = 8
+
+    def _harbours_the_sea_did_not_reach(self) -> list:
+        """A town the writer called a port, with the coastline drawn somewhere else.
+
+        Their town does not move (§66) and the coast is grown from their own regions, so
+        this is a disagreement the map cannot resolve on its own — but it is one they
+        would certainly want to know about, because a port that is thirty leagues inland
+        is a port no ship reaches, and every crossing the map draws will land elsewhere.
+        """
+        from fw.core.mapgen.findings import note
+
+        if self.settlement is None:
+            return []
+        out = []
+        for site in self.settlement.sites:
+            if not site.entity_id:
+                continue
+            entity = self.world.get_entity(site.entity_id)
+            if entity is None:
+                continue
+            if self._rank_of(site.entity_id, site.rank) not in ("port", "harbour",
+                                                                "harbor"):
+                continue
+            if self._sea_within(site.cell, self.QUAY_REACH):
+                continue
+            leagues = round(self.from_sea[site.cell[1]][site.cell[0]] * CELL)
+            out.append(note(
+                "contradiction",
+                f"You have {entity.name} as a port, and the coastline came out about "
+                f"{leagues} away from it. It has not been moved — but no ship reaches "
+                "it, so any crossing the map draws will land somewhere else",
+                subjects=(entity.name,)))
+        return out
+
+    def _sea_within(self, cell: tuple[int, int], reach: int) -> bool:
+        i, j = cell
+        for dj in range(-reach, reach + 1):
+            for di in range(-reach, reach + 1):
+                ni, nj = i + di, j + dj
+                if 0 <= ni < GRID and 0 <= nj < GRID and self.sea[nj][ni]:
+                    return True
+        return False
 
     def _best_site_in(self, region_id: str, spare, used: set):
         """The best unclaimed site inside a region, or None if it has run out."""
@@ -985,8 +1122,13 @@ class MapGenerator:
         y += noise.jitter(self.seed, f"py:{name}:{i}:{j}", CELL * 0.35)
         # What the writer said about how big a place is beats what the map worked out,
         # and where they said nothing the map's own reading stands.
-        stated = self._population_of(entity_id) if entity_id else 0
-        rank = self._rank_for_population(stated) if stated else site.rank
+        rank = self._rank_of(entity_id, site.rank)
+        # The same veto the reasons get (§66): a harbour crossing in a march the
+        # writer never called coastal is not a harbour the map may claim.
+        crossing = site.crossing
+        profile = self.profiles.get(region_id)
+        if crossing == "harbour" and (profile is None or not profile.coastal):
+            crossing = ""
         return Placement(
             entity_id=entity_id, name=name,
             x=round(max(MARGIN, min(SPAN - MARGIN, x)), 1),
@@ -994,6 +1136,7 @@ class MapGenerator:
             region_id=region_id, rank=rank, score=round(site.score, 3),
             reasons=self._reasons_the_region_allows(site, region_id),
             proposed=proposed,
+            crossing=crossing, support=site.support, cell=site.cell,
         )
 
     def _reasons_the_region_allows(self, site, region_id: str) -> list[str]:
@@ -1064,7 +1207,7 @@ class MapGenerator:
             points = self._road_line(p, path, q)
             self.world.add_geometry(
                 self._road_entity(), "line", points, layer=LAYER_ROADS,
-                style={"stroke": "#8a7550", GENERATED: GENERATOR})
+                style={"role": "road", GENERATED: GENERATOR})
             length = sum(math.dist(points[n], points[n + 1])
                          for n in range(len(points) - 1))
             self.world.add_route_segment(
@@ -1073,6 +1216,20 @@ class MapGenerator:
                 terrain=self._road_terrain(path))
             laid += 1
         self.report.roads = laid
+
+    def _water_line(self, path: list[tuple[int, int]]) -> list[list[float]]:
+        """A river's cells, as a line somebody could have drawn.
+
+        The same argument the roads make, and the roads were doing it alone: a channel
+        found by walking a lattice arrives as a staircase, and no river on any map has
+        ever run four cells due south and then three due east. Both ends are pinned —
+        a reach has to still meet the reach above and below it.
+        """
+        points = [self._centre(i, j) for i, j in path]
+        if len(points) < 3:
+            return [[round(x, 1), round(y, 1)] for x, y in points]
+        drawn = shapes.simplify(shapes.eased(points), WATER_TOLERANCE)
+        return [[round(x, 1), round(y, 1)] for x, y in drawn]
 
     def _road_line(self, start: Placement, path: list[tuple[int, int]],
                    end: Placement) -> list[list[float]]:
@@ -1091,6 +1248,30 @@ class MapGenerator:
         drawn = shapes.simplify(shapes.eased(points), ROAD_TOLERANCE)
         return [[round(x, 1), round(y, 1)] for x, y in drawn]
 
+    def _roads_the_writer_has(self, known: list[Placement]) -> list[tuple[int, int, str]]:
+        """The roads and trade routes already in the world, as pairs of places.
+
+        The Iron Road joins Greyhaven to Rennford; the Salt Run joins Blackmere to
+        Rennford. Both have been in the world as `connects` facts since it was written,
+        and the stage that lays roads has never read either — so the map drew its own
+        network beside the writer's rather than out of it.
+        """
+        if self.reading is None:
+            return []
+        where = {p.entity_id: n for n, p in enumerate(known) if p.entity_id}
+        by_key = {s.key: s.entity_id for s in self.reading.settlements if s.entity_id}
+        out: list[tuple[int, int, str]] = []
+        seen: set[tuple[int, int]] = set()
+        for route in self.reading.routes:
+            ends = [where[by_key[key]] for key in route.endpoint_keys
+                    if by_key.get(key) in where]
+            for a, b in zip(ends, ends[1:], strict=False):
+                pair = (min(a, b), max(a, b))
+                if a != b and pair not in seen:
+                    seen.add(pair)
+                    out.append((pair[0], pair[1], route.name))
+        return out
+
     def road_network(self, known: list[Placement]):
         """The bundled road network between the places handed in, worked out once.
 
@@ -1101,12 +1282,18 @@ class MapGenerator:
         key = tuple((p.x, p.y, p.rank) for p in known)
         if getattr(self, "_network_for", None) == key:
             return self._network
-        weight = {"city": 5.0, "town": 3.0, "village": 1.6, "hamlet": 1.0}
+        # The writer's own rank vocabulary included: a written capital used to fall
+        # to the 1.0 default — below a village — and generated hamlet-level traffic,
+        # so the roads out of it never bundled into anything (V2 §10).
+        weight = {"capital": 6.0, "city": 5.0, "port": 4.5, "harbour": 4.5,
+                  "harbor": 4.5, "market town": 3.5, "fortress": 3.0,
+                  "town": 3.0, "village": 1.6, "hamlet": 1.0}
         self._network = roads.plan_roads(
             self._grid(),
             places=[self._cell_of(p.x, p.y) for p in known],
             weights=[weight.get(p.rank, 1.0) for p in known],
-            cost=self.cost, sea=self.sea)
+            cost=self.cost, sea=self.sea,
+            demanded=self._roads_the_writer_has(known))
         self._network_for = key
         return self._network
 
@@ -1160,7 +1347,10 @@ class MapGenerator:
                         entity_id=sid, name=entity.name,
                         x=float(geometry.coordinates[0]),
                         y=float(geometry.coordinates[1]),
-                        region_id=region_id, rank="town", score=0.0))
+                        region_id=region_id, rank=self._rank_of(sid, "town"),
+                        score=0.0,
+                        cell=self._cell_of(float(geometry.coordinates[0]),
+                                           float(geometry.coordinates[1]))))
                     break
         return out
 
@@ -1190,7 +1380,9 @@ class MapGenerator:
             claims=claims, seed=self.seed, sea_level=SEA_LEVEL)
         self.features = features_module.plan_features(
             grid, biome=self.biome, sea=self.sea, channel=self.channel,
-            owner=owner, keys=keys)
+            owner=owner, keys=keys,
+            canopy=self.vegetation.canopy if self.vegetation else None,
+            marsh=self.vegetation.marsh if self.vegetation else None)
         notes = features_module.adopt(list(self.features.features),
                                       self._authored_features())
         self.features.notes.extend(notes)
@@ -1330,19 +1522,32 @@ class MapGenerator:
             self.world.add_geometry(
                 region_id, "polygon", [ring], layer=LAYER_REGIONS,
                 approximate=True,          # §92: a generated border is not a surveyed one
-                style={"fill": _terrain_colour(profile.dominant),
+                style={"role": _terrain_role(profile.dominant),
                        GENERATED: GENERATOR})
             self.report.regions_drawn.append(profile.name)
 
     def _outline(self, region_id: str) -> list[list[float]] | None:
-        """A region's shape, traced from the ground it holds.
+        """A region's shape, assembled from the borders it shares with its neighbours.
 
-        Contoured rather than cast as rays, so the shape is as concave as the territory
-        is and the edge it shares with a neighbour is the same edge on both maps.
+        Every border on the map is traced once and both its regions draw the same line,
+        so the edge between two marches is one edge rather than two that agree to within
+        a lattice cell — which is what it used to be, measured, all the way along.
         """
         name = self.profiles[region_id].name
-        rings = territory.outline(self.partition, name)
+        rings = self._all_outlines().get(name) or []
         return rings[0] if rings else None
+
+    def _all_outlines(self) -> dict[str, list[list[list[float]]]]:
+        """Every region's rings, from one walk of the ownership field, kept.
+
+        The walk is shared by construction, so doing it per region would both cost n
+        times as much and throw away the sharing it exists for.
+        """
+        key = id(self.partition)
+        if self._outlines_for != key:
+            self._outlines = territory.outlines(self.partition, self.sea)
+            self._outlines_for = key
+        return self._outlines
 
     def _road_entity(self) -> str:
         """One entity owning every generated road.
@@ -1362,15 +1567,14 @@ class MapGenerator:
 
     def _write_rivers(self, rivers: list[list[tuple[int, int]]]) -> None:
         for n, path in enumerate(rivers):
-            points = [[round(x, 1), round(y, 1)]
-                      for x, y in (self._centre(i, j) for i, j in path)]
+            points = self._water_line(path)
             name = f"Unnamed river {n + 1}"
             river = self.world.add_entity(
                 "waterway", name, confidence="speculative", tags=[GENERATED_TAG],
                 summary="Traced by the map generator; rename it and it is yours.")
             self.world.add_geometry(
                 river.id, "line", points, layer=LAYER_WATER,
-                style={"stroke": "#4a7fa5", GENERATED: GENERATOR})
+                style={"role": "waterway", GENERATED: GENERATOR})
             self.report.rivers.append(name)
 
     def _read_the_frontiers(self) -> None:
@@ -1437,8 +1641,87 @@ class MapGenerator:
             wanted=min(hold.CEILING, max(2, len(self.profiles) * hold.PER_REGION)),
             fixed=self._castles_the_writer_drew(),
             room={rid: hold.PER_REGION for rid in sorted(self.profiles)},
-            region_of=self.owner)
+            region_of=self.owner, houses=self._halls())
         return list(self.holds.sites)
+
+    # Who can hold a castle. A guild has a hall and a company has a camp; neither holds
+    # a march. Getting this wrong put two keeps in the hands of the Ironmongers of Red
+    # Ford and left House Marr, which legally owns three of the writer's places, with
+    # none at all.
+    LANDED = ("house", "dynasty", "order", "clan", "tribe")
+
+    def political(self) -> dict[str, dict[str, object]]:
+        """Who holds each region, under each of §11's four authorities and by title.
+
+        Not from whose hall is nearest, which was the first attempt and is a different
+        question with a different answer: House Dray and House Marr are both seated at
+        Northwatch, and it is Marr that owns the Northmarch.
+
+        The four authorities are kept apart all the way to the fill. The map has to
+        choose one colour, and it chooses whoever is actually in charge — an army in the
+        streets over a steward, a steward over an absent charter — but it carries the
+        other three onto the shape, so a writer looking at a march coloured for the
+        house that runs it can still see who owns it and who is taxing it.
+        """
+        if self.reading is None:
+            return {}
+        landed = {h.key for h in self.reading.houses if h.type_key in self.LANDED}
+        named = {h.key: h.name for h in self.reading.houses}
+        out: dict[str, dict[str, object]] = {}
+        for region_id, profile in self.profiles.items():
+            region = self.reading.region(key_for("region", profile.name))
+            if region is None:
+                continue
+            held = self.reading.authority_over(region.key)
+            # A guild has a hall and a company has a camp; neither holds a march. A
+            # nearest-hall rule put two keeps in the hands of the Ironmongers of Red
+            # Ford and left House Marr, which owns three of the writer's places, none.
+            under = {word: key for word, key in
+                     (("legally_owns", held.owns), ("administers", held.administers),
+                      ("occupies", held.occupies), ("taxes", held.taxes))
+                     if key in landed}
+            chosen = (under.get("occupies") or under.get("administers")
+                      or under.get("legally_owns"))
+            title = self.reading.holder_of(region.key)
+            if chosen is None and title is None:
+                continue
+            out[region_id] = {
+                "region_key": region.key,
+                "holder_key": chosen,
+                "holder": named.get(chosen or "", ""),
+                # Which of the four this colour actually stands for, so the legend can
+                # say "as administered" rather than implying a single kind of holding.
+                "authority": next((word for word in ("occupies", "administers",
+                                                     "legally_owns")
+                                   if under.get(word) == chosen and chosen), ""),
+                "under": {word: named.get(key, "") for word, key in sorted(under.items())},
+                "claimed_by": tuple(named.get(k, k) for k in held.claims
+                                    if k not in held.held_by),
+                "title": title.name if title else "",
+                "title_holder": title.holder_name if title else "",
+                "title_holder_key": title.holder_key if title else None,
+            }
+        return out
+
+    def _landholders(self) -> dict[str, tuple[str, str]]:
+        """Whose house each region is, for the stages that only need the one answer."""
+        return {rid: (str(row["holder"]), str(row["holder_key"]))
+                for rid, row in self.political().items() if row.get("holder_key")}
+
+    def _halls(self) -> dict[tuple[int, int], tuple[str, str]]:
+        """Whose country each acre is, for the stage that puts castles on it."""
+        holders = self._landholders()
+        if not holders:
+            return {}
+        where: dict[tuple[int, int], tuple[str, str]] = {}
+        for j in range(GRID):
+            for i in range(GRID):
+                if self.sea[j][i]:
+                    continue
+                held = holders.get(self.owner[j][i] or "")
+                if held:
+                    where[(i, j)] = held
+        return where
 
     def _castles_the_writer_drew(self) -> dict[tuple[int, int], str]:
         """Cells holding a castle the writer placed themselves, which do not move."""
@@ -1482,7 +1765,13 @@ class MapGenerator:
                 style={GENERATED: GENERATOR, "rank": place.rank})
 
     def _propose_hold_name(self, place, region_id: str | None) -> str:
-        """A placeholder that says what it is and what it watches — never an invention."""
+        """A placeholder that says what it is and whose — never an invention.
+
+        With a house it can say so: an unnamed keep of House Marr is a far more useful
+        thing to be offered than an unnamed keep.
+        """
+        if getattr(place, "house", ""):
+            return f"Unnamed {place.rank} of {place.house} at the {place.watches}"
         where = self.profiles[region_id].name if region_id else "the march"
         return f"Unnamed {place.rank} at the {place.watches} ({where})"
 
@@ -1517,25 +1806,47 @@ class MapGenerator:
         j = int((y - MARGIN) / max(1e-6, (SPAN - 2 * MARGIN)) * GRID)
         return (max(0, min(GRID - 1, i)), max(0, min(GRID - 1, j)))
 
+    def _said_of(self, entity_id: str | None):
+        """What the writer wrote about this place, if it is one of theirs."""
+        if self.reading is None or not entity_id:
+            return None
+        key = self._keys.get(entity_id)
+        return self.reading.settlement(key) if key else None
+
     def _population_of(self, entity_id: str) -> int:
-        facts = guards.sorted_facts(
-            self.world.facts_where("population", subject_id=entity_id, at=self.at))
-        if not facts or not facts[-1].value:
+        """How many people, out of the one reading — regions and towns alike."""
+        if self.reading is None:
             return 0
-        digits = "".join(ch for ch in facts[-1].value if ch.isdigit())
-        return int(digits) if digits else 0
+        key = self._keys.get(entity_id)
+        if key is None:
+            return 0
+        row = self.reading.region(key) or self.reading.settlement(key)
+        return int(row.population.value) if row else 0
+
+    def _rank_of(self, entity_id: str | None, fallback: str) -> str:
+        """What kind of place this is, in the writer's own word where they gave one.
+
+        They wrote `settlement_type` on every town in the example world — capital, port,
+        fortress, market town — and the map read the population instead and called all
+        six of them towns. A capital drawn as a town is the settlement hierarchy the
+        last three phases worked out, thrown away at the last step (§66).
+        """
+        said = self._said_of(entity_id)
+        if said is None:
+            return fallback
+        if said.rank.stated and said.rank.value:
+            return said.rank.value.lower()
+        if said.population.value:
+            return self._rank_for_population(int(said.population.value))
+        return fallback
 
     def _is_capital(self, entity_id: str) -> bool:
-        return bool(guards.sorted_facts(
-            self.world.facts_where("capital_of", subject_id=entity_id, at=self.at)))
+        said = self._said_of(entity_id)
+        return bool(said and said.rank.value.lower() == "capital")
 
 
-def _terrain_colour(kind: str) -> str:
-    return {"mountain": "#6d6a63", "glacier": "#b9c6cc", "hills": "#7d7a55",
-            "highland": "#75725c", "forest": "#4f6b4a", "plain": "#6f7c4e",
-            "farmland": "#7d8a52", "steppe": "#8a8558", "desert": "#b3a075",
-            "marsh": "#5d6b62", "coast": "#7c7358", "ocean": "#41627a"}.get(
-        kind, "#6f7c4e")
+def _terrain_role(kind: str) -> str:
+    return cartography.terrain_role(kind)
 
 
 def _inside(ring: list[list[float]], x: float, y: float) -> bool:

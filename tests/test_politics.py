@@ -209,6 +209,38 @@ class TestCastlesWatchSomething:
                 "the nearest crossing of any kind")
 
 
+class TestBordersAreStrokedOnce:
+    def test_an_arc_knows_when_it_runs_against_the_sea(self, built):
+        arcs = territory.drawn_arcs(built.partition, built.sea)
+        assert any(left is None or right is None for left, right, _ in arcs), \
+            "a coastal kingdom with no coastal arc"
+        assert any(left is not None and right is not None for left, right, _ in arcs), \
+            "several regions and no frontier between any two"
+
+    def test_only_the_inland_arcs_are_stroked(self, built):
+        """The coastline wins: a border re-drawn along the shore is the double line."""
+        from fw.core.mapgen import pipeline
+
+        borders = pipeline._border_arcs(built, {})
+        drawn = sum(len(runs) for runs in borders.values())
+        inland = sum(1 for left, right, pts in
+                     territory.drawn_arcs(built.partition, built.sea)
+                     if left is not None and right is not None and len(pts) >= 2)
+        assert drawn == inland
+        assert drawn, "no borders at all"
+
+    def test_each_frontier_arc_belongs_to_exactly_one_region(self, built):
+        from fw.core.mapgen import pipeline
+
+        borders = pipeline._border_arcs(built, {})
+        seen: set = set()
+        for runs in borders.values():
+            for points, _kind in runs:
+                key = tuple(tuple(p) for p in points)
+                assert key not in seen and tuple(reversed(key)) not in seen
+                seen.add(key)
+
+
 class TestTheSharedMeasuresAreShared:
     def test_a_claimant_may_spread_from_several_places_at_once(self):
         grid = Grid(size=9, span=9.0, origin_x=0.0, origin_y=0.0)

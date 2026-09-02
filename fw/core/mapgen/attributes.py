@@ -17,9 +17,6 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from fw.core.mapgen import guards
-from fw.core.world import World
-
 # Terrain kinds the generator understands, each with the elevation and roughness it
 # implies. Elevation is 0 (sea level) to 1 (peaks); roughness drives local relief.
 TERRAIN_KINDS: dict[str, tuple[float, float]] = {
@@ -208,115 +205,53 @@ def _number(text: str | None) -> int | None:
     return int(digits) if digits else None
 
 
-def profile_region(world: World, entity_id: str, *, at: int | None = None) -> RegionProfile:
-    """Everything the generator needs to know about one region, with provenance."""
-    entity = world.get_entity(entity_id)
-    if entity is None:
-        raise ValueError(f"no entity {entity_id}")
+def profiles_from(reading) -> dict[str, RegionProfile]:
+    """Every region's profile, out of the one reading of the world.
 
-    profile = RegionProfile(entity_id=entity_id, name=entity.name)
+    `profile_region` walks the facts of one region at a time, which is how the generator
+    came to read its own world once per region and then again, differently, everywhere
+    else. This is the same numbers taken from `source.read_world`, which read all of them
+    together and remembers where each came from.
 
-    def value_of(key: str) -> str | None:
-        # Sorted, because SQLite returns rows in whatever order it finds them and that
-        # order shifts as the file is edited — so an unsorted read makes "the latest
-        # assertion" mean something different after an unrelated change elsewhere.
-        facts = guards.sorted_facts(world.facts_where(key, subject_id=entity_id, at=at))
-        return facts[-1].value if facts else None
+    The profile itself is unchanged, so everything downstream keeps working while the
+    stages are moved over one at a time. What it gains is `traces` that quote the writer
+    rather than paraphrasing them, because a `Reading` carries the sentence.
+    """
+    # The writer's own name for the thing, not the lexicon's word for what kind it is:
+    # they wrote "Iron", and a profile that reports "iron" has quietly retyped them.
+    words = {}
+    for stuff in reading.resources:
+        for region_key in stuff.region_keys:
+            words.setdefault(region_key, []).append(stuff.name or stuff.word)
+    ids = {s.key: s.entity_id for s in reading.settlements if s.entity_id}
 
-    # ---- terrain: a token if the writer set one, else their prose, else a default
-    token = value_of("terrain_kind")
-    prose = value_of("terrain")
-    if token and token.lower() in TERRAIN_KINDS:
-        profile.terrain_mix = {token.lower(): 1.0}
+    out: dict[str, RegionProfile] = {}
+    for region in reading.regions:
+        if not region.entity_id:
+            continue
+        profile = RegionProfile(entity_id=region.entity_id, name=region.name)
+        profile.terrain_mix = dict(region.terrain_mix.value)
+        profile.temperature = region.temperature.value
+        profile.moisture = region.moisture.value
+        profile.population = region.population.value
+        profile.coastal = region.coastal
+        profile.resources = tuple(sorted(words.get(region.key, ())))
+        profile.settlements = tuple(
+            ids[key] for key in region.settlement_keys if key in ids)
+        # Terrain always explains itself, stated or not — every region is drawn on some
+        # ground, so "nothing is recorded, so it is open country" is a real answer. The
+        # rest only appear when the writer said something, because a stage asking
+        # `"moisture" in traces` is asking whether they did.
         profile.traces["terrain"] = Trace(profile.terrain_mix,
-                                          f"its terrain is set to “{token}”")
-    elif prose and read_terrain(prose):
-        profile.terrain_mix = read_terrain(prose)
-        named = ", ".join(sorted(profile.terrain_mix))
-        profile.traces["terrain"] = Trace(
-            profile.terrain_mix, f"“{prose}” reads as {named}")
-    else:
-        profile.terrain_mix = {DEFAULT_TERRAIN: 1.0}
-        profile.traces["terrain"] = Trace(
-            profile.terrain_mix,
-            "nothing is recorded about its terrain, so it is taken as open country")
-
-    # ---- climate
-    temp_token = value_of("temperature")
-    climate_prose = value_of("climate")
-    prose_temp, prose_wet = read_climate(climate_prose or "")
-    explicit_temp = _signed_number(temp_token)
-    if explicit_temp is not None:
-        profile.temperature = explicit_temp
-        profile.traces["temperature"] = Trace(
-            explicit_temp, f"its temperature is set to {temp_token}")
-    elif prose_temp is not None:
-        profile.temperature = prose_temp
-        profile.traces["temperature"] = Trace(
-            prose_temp, f"“{climate_prose}” reads as "
-                        f"{'cold' if prose_temp < -0.2 else 'hot' if prose_temp > 0.2 else 'mild'}")
-    else:
-        profile.traces["temperature"] = Trace(0.0, "no climate recorded, so temperate")
-
-    wet_token = _signed_number(value_of("rainfall"), lo=0.0, hi=1.0)
-    if wet_token is not None:
-        profile.moisture = wet_token
-        profile.traces["moisture"] = Trace(wet_token, "its rainfall is set directly")
-    elif prose_wet is not None:
-        profile.moisture = prose_wet
-        profile.traces["moisture"] = Trace(prose_wet, f"“{climate_prose}” reads as "
-                                                      f"{'wet' if prose_wet > 0.6 else 'dry' if prose_wet < 0.3 else 'moderate'}")
-    else:
-        profile.traces["moisture"] = Trace(0.5, "no rainfall recorded, so moderate")
-
-    # ---- people
-    population = _number(value_of("population"))
-    if population:
-        profile.population = population
-        profile.traces["population"] = Trace(population, f"{population:,} people recorded")
-    else:
-        profile.traces["population"] = Trace(0, "no population recorded")
-
-    # ---- what it makes. The seed tags resources with `note`, so read both.
-    resources: list[str] = []
-    for fact in guards.sorted_facts(
-            world.facts_where("produces", subject_id=entity_id, at=at)):
-        target = world.get_entity(fact.object_id) if fact.object_id else None
-        resources.append(target.name if target else (fact.value or ""))
-    for fact in guards.sorted_facts(
-            world.facts_where("note", subject_id=entity_id, at=at)):
-        if fact.value:
-            resources.append(fact.value)
-    profile.resources = tuple(r for r in dict.fromkeys(resources) if r)
-    if profile.resources:
-        profile.traces["resources"] = Trace(
-            profile.resources, "it produces " + ", ".join(profile.resources))
-
-    # ---- coastal, if the writer said so or the terrain implies it
-    coastal_words = {"coast", "ocean"}
-    profile.coastal = bool(coastal_words & set(profile.terrain_mix))
-    if not profile.coastal and prose:
-        profile.coastal = any(w in prose.lower()
-                              for w in ("coast", "sea", "port", "harbour", "harbor"))
-    if profile.coastal:
-        profile.traces["coastal"] = Trace(True, "its description reaches the sea")
-
-    profile.settlements = tuple(
-        f.subject_id for f in guards.sorted_facts(
-            world.facts_where("located_in", object_id=entity_id, at=at))
-        if (e := world.get_entity(f.subject_id)) is not None
-        and e.type_key in ("settlement", "holding", "site")
-    )
-    return profile
-
-
-def _signed_number(text: str | None, *, lo: float = -1.0,
-                   hi: float = 1.0) -> float | None:
-    """Parse a number a writer typed, clamped into range. None when unparseable."""
-    if text is None:
-        return None
-    try:
-        value = float(str(text).strip())
-    except ValueError:
-        return None
-    return max(lo, min(hi, value))
+                                          region.terrain_mix.because)
+        for name, value in (("temperature", region.temperature),
+                            ("moisture", region.moisture),
+                            ("population", region.population),
+                            ("coastal", region.sea_facing)):
+            if value.stated:
+                profile.traces[name] = Trace(value.value, value.because)
+        if profile.resources:
+            profile.traces["resources"] = Trace(
+                profile.resources, "it produces " + ", ".join(profile.resources))
+        out[region.entity_id] = profile
+    return out

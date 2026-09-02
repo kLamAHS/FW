@@ -93,6 +93,34 @@ class TestPlanningIsPure:
             assert feature.because().endswith(".")
             assert feature.name in feature.because()
 
+    def test_a_region_s_borders_are_arcs_stroked_once_never_along_the_coast(
+            self, prose: World):
+        """C6 of the V2 brief: the polygon fills, the shared arcs stroke, the
+        coastline wins its own ground — and what each frontier follows is data."""
+        plan = full(prose)
+        regions = [f for f in plan.features if f.kind == "region"]
+        assert regions
+        seen: set = set()
+        stroked = 0
+        for region in regions:
+            outline = next(s for s in region.shapes if s.role == "outline")
+            assert outline.style.get("edge") == "none", region.name
+            for shape in region.shapes:
+                if shape.role != "border":
+                    continue
+                stroked += 1
+                key = tuple(tuple(p) for p in shape.coordinates)
+                assert key not in seen and tuple(reversed(key)) not in seen, \
+                    "one frontier drawn twice"
+                seen.add(key)
+        assert stroked, "no border arcs anywhere"
+        told = [f for f in regions if f.detail["frontiers"]]
+        assert told, "no region says what its borders follow"
+        for region in told:
+            for frontier in region.detail["frontiers"]:
+                assert frontier["kind"] in ("natural", "surveyed")
+                assert frontier["with"] and frontier["along"]
+
 
 class TestApplying:
     def test_a_whole_map_is_one_undoable_action(self, prose: World):
@@ -319,7 +347,9 @@ class TestRefusals:
 
     def test_narrowing_the_brief_does_not_propose_what_it_dropped(self, prose: World):
         plan = plan_map(prose, MapBrief(include=("river",)))
-        assert {f.kind for f in plan.features} == {"river"}
+        # Lakes ride the river gate: asking for the water gets all of the water.
+        assert {f.kind for f in plan.features} <= {"river", "lake"}
+        assert any(f.kind == "river" for f in plan.features)
 
 
 class TestCarryingAnswersForward:
@@ -338,3 +368,168 @@ class TestCarryingAnswersForward:
         moved, findings = carry(stale, plan)
         assert moved.decisions == ()
         assert findings and "no longer" in findings[0].message
+
+
+class TestWhatTheMapUnderstoodSurvives:
+    """The semantics channel (V2 §2): `PlannedFeature.detail` used to die at accept.
+
+    The generator knew a river's order and a range's strike and wrote none of it down,
+    so the renderer of an accepted map was left guessing semantics back out of stroke
+    widths. Now the curated detail dict is stored beside the provenance and is the one
+    part of `props` that crosses the wire.
+    """
+
+    def test_what_the_map_understood_survives_acceptance(self, prose: World):
+        from fw.core.mapgen import guards
+
+        plan = full(prose)
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        told = {f.id: f.detail for f in plan.features}
+        stamped = 0
+        for geometry in prose.geometries():
+            marker = ledger_module.provenance(geometry)
+            if not marker:
+                continue
+            stamped += 1
+            want = told[marker["feature"]]
+            assert (guards.canonical_json(ledger_module.semantics(geometry))
+                    == guards.canonical_json(want))
+        assert stamped > 0
+
+    def test_a_map_from_before_the_generator_spoke_upgrades_in_place(self, prose: World):
+        """The whole migration story: no schema change, no script — re-accepting the
+        proposal rewrites any row whose stored understanding differs, and a world
+        that never re-plans keeps working because every reader tolerates absence."""
+        import json
+
+        plan = full(prose)
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        # Strip the semantics the way a pre-V2 file simply never had them.
+        for row in prose.db.query("SELECT id, props FROM geometry"):
+            props = json.loads(row["props"])
+            props.pop("sem", None)
+            prose.db.execute("UPDATE geometry SET props = ? WHERE id = ?",
+                             (json.dumps(props), row["id"]))
+        assert all(not ledger_module.semantics(g) for g in prose.geometries())
+
+        again = apply_plan(prose, plan, DecisionSet.defaults(plan))
+        assert again.counts.get("updated", 0) > 0
+        assert any(ledger_module.semantics(g) for g in prose.geometries())
+
+    def test_the_writers_own_shape_carries_none(self, prose: World):
+        region = next(e for e in prose.entities() if e.type_key == "region")
+        drawn = prose.add_geometry(region.id, "point", [10.0, 10.0], layer="regions")
+        assert ledger_module.semantics(drawn) == {}
+
+    def test_the_wire_carries_semantics_and_not_provenance(self, prose: World):
+        from fastapi.testclient import TestClient
+
+        from fw.api.app import create_app
+
+        plan = full(prose)
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        served = TestClient(create_app(prose)).get("/api/map").json()
+        generated = [f for f in served["features"] if f["generated"]]
+        assert generated
+        assert any(f["semantics"] for f in generated)
+        for feature in served["features"]:
+            # The ledger's rule holds: what identifies a shape as the generator's to
+            # replace is not paintable and not readable from a client.
+            assert "props" not in feature
+            assert "sig" not in feature.get("semantics", {})
+
+
+class TestReDrawingIsNotReSaying:
+    """Re-writing a feature used to delete its shapes and then re-assert its facts and
+    re-lay its route segments beside the old ones — every re-accepted plan added
+    another `located_in` and the router quietly counted each road twice."""
+
+    def test_a_rewrite_does_not_duplicate_facts_or_segments(self, prose: World):
+        import json
+
+        plan = full(prose)
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        facts = prose.db.one("SELECT COUNT(*) AS n FROM fact")["n"]
+        segments = prose.db.one("SELECT COUNT(*) AS n FROM route_segment")["n"]
+
+        # Force every feature down the rewrite path (stored semantics differ).
+        for row in prose.db.query("SELECT id, props FROM geometry"):
+            props = json.loads(row["props"])
+            if props.pop("sem", None) is not None:
+                prose.db.execute("UPDATE geometry SET props = ? WHERE id = ?",
+                                 (json.dumps(props), row["id"]))
+        again = apply_plan(prose, plan, DecisionSet.defaults(plan))
+        assert again.counts.get("updated", 0) > 0
+        assert prose.db.one("SELECT COUNT(*) AS n FROM fact")["n"] == facts
+        assert (prose.db.one("SELECT COUNT(*) AS n FROM route_segment")["n"]
+                == segments)
+
+    def test_the_writers_facts_survive_a_rewrite(self, prose: World):
+        """Only the feature's own stamped sayings go. A fact the writer asserted
+        about a generated town is theirs, whatever redrew the town."""
+        import json
+
+        plan = full(prose)
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        town = next(g.entity_id for g in prose.geometries()
+                    if ledger_module.provenance(g))
+        prose.assert_fact(town, "note", value="the miller's son was born here")
+        for row in prose.db.query("SELECT id, props FROM geometry"):
+            props = json.loads(row["props"])
+            if props.pop("sem", None) is not None:
+                prose.db.execute("UPDATE geometry SET props = ? WHERE id = ?",
+                                 (json.dumps(props), row["id"]))
+        apply_plan(prose, plan, DecisionSet.defaults(plan))
+        assert any(f.value == "the miller's son was born here"
+                   for f in prose.facts_about(town))
+
+
+class TestABriefOwnsWhatItsGatesDrew:
+    """Islands ride the coast gate and lanes need both parents, so `wants` could
+    never retire either: an island the new map does not have stood forever."""
+
+    def test_the_default_brief_covers_its_dependent_kinds(self):
+        brief = MapBrief()
+        assert not brief.wants("island") and brief.covers("island")
+        assert not brief.wants("lane") and brief.covers("lane")
+
+    def test_narrowing_still_protects_what_was_not_looked_at(self):
+        settlements_only = MapBrief(include=("settlement",))
+        assert not settlements_only.covers("island")
+        assert not settlements_only.covers("lane")
+        assert not settlements_only.covers("river")
+        # Dropping the coast protects the lanes that land on it, exactly as the
+        # drafting gate would have refused to draw them.
+        no_coast = MapBrief(include=("road", "settlement"))
+        assert not no_coast.covers("lane")
+
+
+class TestAnIslandCanBeTakenBack:
+    def test_a_redrawn_archipelago_leaves_no_orphan_islands(self):
+        """End to end over the gate fix: islands are keyed by ordinal, so when a
+        re-seeded coast has fewer of them the excess must be retired rather than
+        standing forever — which is exactly what `wants`-gated retirement could
+        never do, because no brief ever says "island"."""
+        import corpus
+
+        from fw.core.mapgen.ids import kind_of
+
+        w = corpus.archipelago()
+        try:
+            crowded = plan_map(w, MapBrief(seed="reef"))     # 13 islands
+            apply_plan(w, crowded, DecisionSet.defaults(crowded))
+            sparse = plan_map(w, MapBrief(seed="five"))      # 5 islands
+            retired_kinds = {kind_of(r.feature_id) for r in sparse.retiring}
+            assert "island" in retired_kinds, (
+                "eight islands left this map; retirement must offer them")
+            apply_plan(w, sparse, DecisionSet.defaults(sparse))
+            # Counted by FEATURE, not by shape: since the coast carries its
+            # character an island is an outline plus a stroke per run of shore,
+            # and "one geometry per island" stopped being true of a correct map.
+            drawn = {feature for g in w.geometries()
+                     if (feature := ledger_module.provenance(g).get("feature")
+                         or "").startswith("isl_")}
+            wanted = {f.id for f in sparse.features if f.kind == "island"}
+            assert drawn == wanted
+        finally:
+            w.close()

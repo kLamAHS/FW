@@ -11,6 +11,7 @@ from __future__ import annotations
 import ast
 import math
 import pathlib
+import re
 import subprocess
 import sys
 
@@ -21,6 +22,8 @@ from fw.core.mapgen.findings import Finding, ordered, warn
 from fw.core.world import World
 
 MAPGEN = pathlib.Path(__file__).resolve().parent.parent / "fw" / "core" / "mapgen"
+STYLESHEET = (pathlib.Path(__file__).resolve().parent.parent
+              / "web" / "src" / "styles.css")
 
 # Correctly rounded by IEEE 754 on every platform, so these are safe.
 ALLOWED_MATH = {"hypot", "dist", "sqrt", "floor", "ceil", "fabs", "isqrt",
@@ -31,6 +34,28 @@ ALLOWED_MATH = {"hypot", "dist", "sqrt", "floor", "ceil", "fabs", "isqrt",
 def modules() -> list[pathlib.Path]:
     return sorted(p for p in MAPGEN.glob("**/*.py") if p.name != "__init__.py")
 
+
+
+# The palettes a reader can choose, and the two confusion axes the guards simulate.
+# Brettel-style projections, kept as plain matrices so the test does no colour-science
+# of its own: each row says how much of each channel a reader on that axis perceives.
+PALETTES = ("deuteranopia", "protanopia", "quiet", "high-contrast")
+
+# The roles whose value has to agree with the theme's own lightness: the ground a map
+# is drawn on, and the type drawn over it. A palette that sets any of these has taken
+# the theme's job and must finish it.
+GROUND_ROLES = ("land", "water", "sea")
+TYPE_ROLES = ("label", "halo", "label-water", "label-region", "label-relief")
+_DEUTERAN = ((0.625, 0.375, 0.0), (0.70, 0.30, 0.0), (0.0, 0.30, 0.70))
+_PROTAN = ((0.567, 0.433, 0.0), (0.558, 0.442, 0.0), (0.0, 0.242, 0.758))
+
+
+def _seen_as(hex_colour: str, matrix) -> tuple[float, float, float]:
+    """One colour as a reader on that axis sees it."""
+    value = hex_colour.strip().lstrip("#")
+    rgb = tuple(int(value[n:n + 2], 16) for n in (0, 2, 4))
+    return tuple(sum(m * c for m, c in zip(row, rgb, strict=True))
+                 for row in matrix)
 
 class TestNoPlatformMath:
     """`math.sin`, `cos`, `exp` and `x ** 0.5` go through the platform's libm, which is
@@ -223,3 +248,292 @@ class TestRememberedDecisions:
         fork.remember("mapgen", "riv_abc", "the what-if says no")
         assert world.recall("mapgen", "riv_abc") == "canon says yes"
         assert fork.recall("mapgen", "riv_abc") == "the what-if says no"
+
+
+# Where the world is allowed to be touched: the reader that turns it into a
+# `WorldReading`, the two modules that write a map back, the orchestrator, the ledger
+# that reads provenance and the store of remembered decisions. Everything else is a
+# stage, and a stage that reads the world is a stage whose output depends on when it
+# ran and what else had been written by then — which is exactly what made the same
+# world generate a different map on the second press.
+MAY_TOUCH_THE_WORLD = {
+    "read.py",        # source/: the one reading, which is the point of the rule
+    "generate.py", "apply.py", "pipeline.py", "decide.py", "ledger.py",
+}
+
+
+class TestOnlyOneReadingOfTheWorld:
+    """C2's rule, enforced rather than meant.
+
+    The generator used to read the world six times per plan — once per region for the
+    profiles, again for authored outlines, again for the writer's own settlements,
+    again for holdings and features and capitals, again in the namer, again in the
+    ledger — and no two of those readings were guaranteed to agree with each other.
+    """
+
+    def test_no_stage_imports_the_world(self):
+        offences: list[str] = []
+        for path in modules():
+            if path.name in MAY_TOUCH_THE_WORLD:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module == "fw.core.world":
+                    offences.append(f"{path.name}:{node.lineno}")
+                elif isinstance(node, ast.Import):
+                    offences.extend(f"{path.name}:{node.lineno}" for a in node.names
+                                    if a.name.startswith("fw.core.world"))
+        assert not offences, ("a stage reads the world instead of the reading: "
+                             + ", ".join(offences))
+
+    def test_no_stage_calls_a_method_on_a_world(self):
+        """Catches the duck-typed route the import check cannot see."""
+        offences: list[str] = []
+        for path in modules():
+            if path.name in MAY_TOUCH_THE_WORLD:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call)
+                        and isinstance(node.func, ast.Attribute)
+                        and isinstance(node.func.value, ast.Name)
+                        and node.func.value.id == "world"):
+                    offences.append(f"{path.name}:{node.lineno} "
+                                    f"world.{node.func.attr}()")
+        assert not offences, ", ".join(offences)
+
+    def test_a_plan_reads_the_world_once(self):
+        """Not "few times". Once — and the count is the assertion."""
+        from fw.core.mapgen import source
+        from fw.core.mapgen.pipeline import plan_map
+        from fw.core.seed.renn import seed_renn
+
+        world = seed_renn()
+        try:
+            calls: list[int] = []
+            real = source.read_world
+
+            def counted(*args, **kw):
+                calls.append(1)
+                return real(*args, **kw)
+
+            source.read_world = counted
+            try:
+                import fw.core.mapgen.generate as generate_module
+                generate_module.source.read_world = counted
+                plan_map(world)
+            finally:
+                source.read_world = real
+                generate_module.source.read_world = real
+            assert len(calls) == 1, f"the world was read {len(calls)} times"
+        finally:
+            world.close()
+
+    def test_the_plan_records_which_world_it_was_read_from(self):
+        """`reading_fingerprint` was declared when the plan was and always empty."""
+        from fw.core.mapgen.pipeline import plan_map
+        from fw.core.seed.renn import seed_renn
+
+        world = seed_renn()
+        try:
+            plan = plan_map(world)
+            assert len(plan.reading_fingerprint) == 32
+        finally:
+            world.close()
+
+
+# Where a colour may still be a number: the raster renderer paints pixels, and a pixel
+# has no stylesheet. Everything that emits a *style* emits a role instead.
+PAINTS_PIXELS = {"shade.py", "raster.py"}
+HEX_COLOUR = re.compile(r"#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?\b")
+
+
+def _docstrings(tree: ast.AST):
+    """Every string constant that is a docstring rather than a value."""
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                             ast.AsyncFunctionDef)):
+            body = getattr(node, "body", [])
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                yield body[0].value
+
+
+class TestColourIsARole:
+    """C11: no hex leaves Python.
+
+    `#6d6a63` in the generator is a colour that cannot follow the reader's theme, cannot
+    be changed by a writer who finds the marshes muddy, and has to be repeated in the
+    client for the legend to match the map. A role — `terrain-mountain` — is one name
+    both ends agree on and one value in one stylesheet.
+    """
+
+    def test_no_stage_emits_a_colour(self):
+        """Over the syntax tree, not the text: a docstring may say `#6d6a63`."""
+        offences: list[str] = []
+        for path in modules():
+            if path.name in PAINTS_PIXELS:
+                continue
+            tree = ast.parse(path.read_text(), filename=str(path))
+            docstrings = {id(node) for node in _docstrings(tree)}
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Constant) and isinstance(node.value, str)
+                        and id(node) not in docstrings
+                        and HEX_COLOUR.search(node.value)):
+                    offences.append(f"{path.name}:{node.lineno} {node.value[:40]}")
+        assert not offences, "colour belongs in the stylesheet: " + "; ".join(offences)
+
+    def test_no_rule_reaches_for_a_property_that_was_never_defined(self):
+        """`var(--rule)` where the name is `--line` fails in the quietest way CSS has.
+
+        The declaration is not dropped and no error is logged: the custom property is
+        simply invalid at computed-value time, so `border-color` falls back to
+        `currentColor` and `color` inherits. The rule *looks* applied, and what the
+        reader gets is a hairline in text ink where a pale rule was meant. Nine such
+        references had accumulated — `--rule` for `--line`, `--muted` for
+        `--ink-faint` — none of which any test could see, because every one of them
+        produced a page that rendered.
+        """
+        text = STYLESHEET.read_text()
+        defined = set(re.findall(r"(--[a-z0-9-]+)\s*:", text))
+        # Per SITE, not per name. `var(--x, fallback)` is a deliberate default and
+        # needs no definition, but excusing the NAME would excuse every bare
+        # `var(--x)` elsewhere in the sheet on the strength of one fallback
+        # somewhere else — and the sheet already mixes the two: `--serif` is
+        # referenced bare four times and with a fallback once, so dropping its
+        # definition would have gone unreported and four headings would have
+        # silently fallen back to the inherited sans face.
+        bare = set(re.findall(r"var\(\s*(--[a-z0-9-]+)\s*\)", text))
+        missing = sorted(bare - defined)
+        assert not missing, f"referenced without a fallback, never defined: {missing}"
+
+    @staticmethod
+    def _palette(dark: bool = False, palette: str = "") -> dict:
+        """The stylesheet as the parity renderer reads it.
+
+        Through the renderer's own parser rather than a second regex of this test's
+        own: the two used to disagree about what counted as the dark block — the
+        test split on one string, the renderer on a longer one — so a stylesheet
+        that satisfied the guard could still render grey.
+        """
+        import sys
+
+        root = pathlib.Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(root / "scripts"))
+        from render_map import stylesheet_colours
+
+        return stylesheet_colours(dark, palette)
+
+    @staticmethod
+    def _declared(dark: bool = False, palette: str = "") -> dict:
+        """What one block SAYS, with no cascade under it — see `render_map`.
+
+        The distinction matters more than it looks. `_palette` answers the renderer's
+        question, "what colour will this be", and the answer always carries the base
+        `:root` underneath it. A guard that asks that question about an override can
+        never fail: the role is present whether or not the override declares it.
+        """
+        import sys
+
+        root = pathlib.Path(__file__).resolve().parent.parent
+        sys.path.insert(0, str(root / "scripts"))
+        from render_map import declared_by
+
+        return declared_by(dark=dark, palette=palette)
+
+    def test_every_role_the_map_uses_has_a_value_in_the_stylesheet(self):
+        """A role with no `--map-…` behind it renders as nothing at all."""
+        from fw.core.mapgen import cartography
+
+        light = self._palette()
+        missing = [role for role in cartography.ROLES
+                   if f"map-{role}" not in light]
+        assert not missing, f"no colour defined for {missing}"
+
+    def test_every_role_has_a_dark_value_too(self):
+        """Asked of the dark block ITSELF, not of the resolved colour.
+
+        This guard was briefly unfalsifiable, and the way it broke is worth keeping
+        written down because the mistake is an easy one to make twice. It was
+        rewritten to go through the renderer's own parser — sound in intent, the test
+        and the parser had genuinely disagreed about what "the dark block" was — but
+        the parser returns the CASCADE: base `:root` first, dark overlaid. So every
+        role a light block defines is a key in the dark result whether or not the dark
+        block mentions it, and `missing` was empty by construction. Deleting
+        `--map-terrain-glacier` from the dark block left the suite green and the
+        glacier glaring white on the night map.
+        """
+        from fw.core.mapgen import cartography
+
+        night = self._declared(dark=True)
+        missing = [role for role in cartography.ROLES
+                   if f"map-{role}" not in night]
+        assert not missing, f"the dark block never declares {missing}"
+        # And the dark map must actually be a dark map: the ground, the paper behind
+        # every label and the sea are the three that decide whether it reads at night.
+        light = self._palette()
+        dark = self._palette(dark=True)
+        for role in ("land", "sea", "halo"):
+            assert dark[f"map-{role}"] != light[f"map-{role}"], (
+                f"{role} is the same by day and by night")
+
+    def test_a_palette_that_repaints_the_ground_repaints_all_of_it(self):
+        """There are two kinds of palette here, and only one may leave a role behind.
+
+        A *composing* palette (deuteranopia, protanopia) shifts hues and nothing else.
+        It deliberately declares only the roles a reader must tell apart and inherits
+        lightness from whichever theme is running, which is the whole reason a reader
+        who needs it does not lose the night map to get it.
+
+        A *replacing* palette (quiet, high-contrast) fixes the ground, and the moment
+        it does, every role it fails to declare is inherited from a theme that no
+        longer matches it. `[data-palette=…]` is (0,2,0) and out-specifies the dark
+        block's `:root` at (0,1,0) — a media query adds no specificity — so under dark
+        mode a palette that sets a pale `--map-land` and forgets `--map-label` gets
+        pale ground with the night theme's near-white type on it. Measured before this
+        guard existed: `quiet` under dark gave land `#d8d6c8` against label `#e8e6e1`,
+        a contrast ratio of 1.17, with every name on the map reduced to a dark halo
+        around nothing.
+
+        So: touch the ground and you own the whole map.
+        """
+        from fw.core.mapgen import cartography
+
+        for name in PALETTES:
+            declared = self._declared(palette=name)
+            assert declared, (
+                f"the {name} palette declares nothing — is its selector spelled "
+                f"the same in the stylesheet as it is here?")
+            replaces = any(f"map-{role}" in declared for role in GROUND_ROLES)
+            if replaces:
+                missing = [role for role in cartography.ROLES
+                           if f"map-{role}" not in declared]
+                assert not missing, (
+                    f"{name} repaints the ground but leaves {missing} to the theme")
+            else:
+                trespass = [role for role in GROUND_ROLES + TYPE_ROLES
+                            if f"map-{role}" in declared]
+                assert not trespass, (
+                    f"{name} composes with the theme but sets {trespass}, which "
+                    f"only half-replaces it")
+
+    def test_the_colour_blind_palettes_hold_their_houses_apart(self):
+        """Simulated on the two commonest confusion axes: any two holders a reader
+        cannot tell apart are two houses that read as one on a political map."""
+        from fw.core.mapgen import cartography
+
+        holders = [r for r in cartography.ROLES if r.startswith("holder-")]
+        for name, matrix in (("deuteranopia", _DEUTERAN), ("protanopia", _PROTAN)):
+            painted = self._palette(palette=name)
+            seen = [_seen_as(painted[f"map-{h}"], matrix) for h in holders]
+            worst, pair = 1e9, None
+            for a in range(len(seen)):
+                for b in range(a + 1, len(seen)):
+                    gap = sum((x - y) ** 2 for x, y in zip(seen[a], seen[b],
+                                                           strict=True)) ** 0.5
+                    if gap < worst:
+                        worst, pair = gap, (holders[a], holders[b])
+            assert worst >= 40.0, (
+                f"under {name}, {pair[0]} and {pair[1]} are {worst:.0f} apart — "
+                f"two houses one colour")

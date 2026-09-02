@@ -21,7 +21,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from fw.core.mapgen import shapes
-from fw.core.mapgen.grid import Grid
+from fw.core.mapgen.grid import Field, Grid
 
 # Which biomes become named features, and what a writer calls one of them.
 NAMED_KINDS: dict[str, str] = {
@@ -41,6 +41,13 @@ NAME_HINT: dict[str, str] = {
 
 SMALLEST = 26           # cells; below this a patch is speckle, not a place
 MAX_FEATURES = 24       # per world, largest first — a map is not a botanical survey
+
+# Where a wood or a fen counts as one, read off the *same* fields the relief
+# renderer textures from. The named Wolfswood used to come from the Whittaker
+# table's forest patches while the drawn trees came from the vegetation's canopy —
+# two classifiers, two boundaries, and a name that did not sit on its own trees.
+CANOPY_IS_WOOD = 0.42
+MARSH_IS_FEN = 0.12
 
 
 @dataclass
@@ -75,16 +82,29 @@ class FeatureSet:
 def plan_features(grid: Grid, *, biome, sea: list[list[bool]],
                   channel: set[tuple[int, int]], owner: list[list[int]],
                   keys: tuple[str, ...],
-                  authored: dict[str, tuple[str, str]] | None = None) -> FeatureSet:
-    """Find the named country in the biome field.
+                  authored: dict[str, tuple[str, str]] | None = None,
+                  canopy: Field | None = None,
+                  marsh: Field | None = None) -> FeatureSet:
+    """Find the named country in the ground's own fields.
 
-    `authored` maps a lowercase name to (entity_id, kind) for features the writer has
-    already made, so their Wolfswood is adopted rather than a second one invented
-    beside it.
+    Woods and fens are cut from `canopy` and `marsh` — the fields the relief is
+    textured from — so a named forest sits exactly on its drawn trees; the drier
+    kinds (downs, moor, waste, ice) still come from the biome classification, which
+    is the only voice they have. `authored` maps a lowercase name to (entity_id,
+    kind) for features the writer already made, so their Wolfswood is adopted
+    rather than a second one invented beside it.
     """
     found: list[NaturalFeature] = []
     for biome_kind, feature_kind in sorted(NAMED_KINDS.items()):
-        for component in _components(grid, biome, biome_kind, sea, channel):
+        if biome_kind == "forest" and canopy is not None:
+            patches = _field_components(grid, canopy, CANOPY_IS_WOOD, sea, channel)
+        elif biome_kind == "marsh" and marsh is not None:
+            # No channel break for a fen: rivers are what forests stop at, and
+            # exactly what a marsh gathers around.
+            patches = _field_components(grid, marsh, MARSH_IS_FEN, sea, set())
+        else:
+            patches = _components(grid, biome, biome_kind, sea, channel)
+        for component in patches:
             if len(component) < SMALLEST:
                 continue
             found.append(_shape_up(grid, component, biome_kind, feature_kind,
@@ -97,6 +117,39 @@ def plan_features(grid: Grid, *, biome, sea: list[list[bool]],
                      f"left unnamed to keep the map readable")
         found = found[:MAX_FEATURES]
     return FeatureSet(features=tuple(found), notes=notes)
+
+
+def _field_components(grid: Grid, level: Field, floor: float,
+                      sea: list[list[bool]],
+                      channel: set[tuple[int, int]]
+                      ) -> list[list[tuple[int, int]]]:
+    """Contiguous ground where a continuous field stands above a floor.
+
+    The same walk as `_components`, with the membership test read off the field the
+    renderer textures from rather than the biome table.
+    """
+    size = grid.size
+    seen = [[False] * size for _ in range(size)]
+    out: list[list[tuple[int, int]]] = []
+    for j in range(size):
+        for i in range(size):
+            if (seen[j][i] or sea[j][i] or (i, j) in channel
+                    or level[j][i] < floor):
+                continue
+            stack = [(i, j)]
+            seen[j][i] = True
+            group: list[tuple[int, int]] = []
+            while stack:
+                ci, cj = stack.pop()
+                group.append((ci, cj))
+                for ni, nj in grid.neighbours(ci, cj, diagonal=False):
+                    if (seen[nj][ni] or sea[nj][ni] or (ni, nj) in channel
+                            or level[nj][ni] < floor):
+                        continue
+                    seen[nj][ni] = True
+                    stack.append((ni, nj))
+            out.append(sorted(group))
+    return out
 
 
 def _components(grid: Grid, biome, kind: str, sea: list[list[bool]],

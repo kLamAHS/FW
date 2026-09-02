@@ -33,6 +33,13 @@ export interface Fact {
   strength: string | null
   note: string
   is_secret: boolean
+  /** All three written on every fact since the first migration and rendered nowhere,
+   *  which is worse than absent: a writer who cited a note could not see that they had. */
+  valid_from_text: string
+  valid_to_text: string
+  source: string
+  /** §33: this fact is a remark about another fact, not about the world. */
+  about_fact_id?: string | null
 }
 
 export interface WorldDate {
@@ -98,6 +105,13 @@ export interface Vocabulary {
   scales: { key: string; label: string; steps: string }[]
   succession_laws: { key: string; label: string; description: string }[]
   transport_profiles: { key: string; label: string; description: string }[]
+  /** Served rather than spelled again here: a form offering a word the server refuses
+   *  produces errors nobody can act on, and one missing a word it takes hides a
+   *  feature that exists. (§58, §20/§21.) */
+  source_kinds: { key: string; label: string }[]
+  route_media: string[]
+  route_sailed: string[]
+  route_terrains: string[]
 }
 
 export interface WorldState {
@@ -118,13 +132,101 @@ export interface MapFeature {
   layer: string
   style: Record<string, unknown>
   approximate: boolean
+  /** Whose shape this is. False means the writer drew it themselves (§66). */
+  generated: boolean
   control: Record<string, { id: string; name: string }[]>
+  /**
+   * What the generator understood about the shape — a river's stream order, a road's
+   * grade, a coast's character. Empty for the writer's own shapes and for maps
+   * accepted before the generator started saying (re-accepting a proposal fills it).
+   */
+  semantics: Record<string, unknown>
+}
+
+/**
+ * How to draw the map, worked out on the server (C11).
+ *
+ * Label placement is a layout problem — measure the text, fit it to the shape, drop
+ * what does not fit — and doing it here would mean the same map labels itself
+ * differently in two clients, and differently again in an export. It arrives solved.
+ */
+export interface MapLabel {
+  key: string
+  text: string
+  kind: string
+  tier: number
+  role: string
+  size: number
+  x: number
+  y: number
+  anchor: 'start' | 'middle' | 'end'
+  /** The voice: which bundled face sets this name, and its letter-spacing in em.
+      Decided server-side — the collision boxes were measured for exactly this. */
+  face?: string
+  tracking?: number
+  /** Halo stroke weight — heavier where the relief under the name is busy. */
+  halo?: number
+  /** Set only when the name really bends; then the text runs along this path. */
+  path?: number[][]
+  /** The reserved boxes, present only when the map was asked with ?debug=1. */
+  boxes?: number[][]
+}
+
+/** A name that is not on the map, and the reason it is not (V2 §50). */
+export interface MapUnlabelled {
+  key: string
+  text: string
+  kind: string
+  tier: number
+  reason: string
+}
+
+export interface MapIcon {
+  key: string
+  entity_id: string
+  name: string
+  shape: 'star' | 'ring' | 'disc' | 'dot' | 'keep' | 'tower' | 'anchor'
+  rank: string
+  x: number
+  y: number
+  radius: number
+  role: string
+  holder_role: string
+  holder_name: string
+  contested: boolean
+  /** The widest zoom band this icon appears at: world | regional | local. */
+  band: string
+}
+
+export interface MapLegendEntry {
+  key: string
+  label: string
+  role: string
+  swatch: string
+  note: string
+  entity_id: string
+}
+
+export interface DrawPlan {
+  bounds: { x: number; y: number; width: number; height: number }
+  mode: string
+  /** Solved once per zoom band — world, regional, local — so what the world view
+      drops genuinely appears when the reader leans in (V2 §18). */
+  labels: Record<string, MapLabel[]>
+  icons: MapIcon[]
+  legend: MapLegendEntry[]
+  holders: Record<string, string>
+  unlabelled: MapUnlabelled[]
 }
 
 export interface MapData {
   day: number
   layers: string[]
   features: MapFeature[]
+  draw: DrawPlan
+  /** Whose eyes this was drawn through (§94) — empty for the map from nowhere. */
+  seen_as: string | null
+  seen_as_name: string
 }
 
 export interface GraphData {
@@ -180,6 +282,9 @@ export interface Succession {
 
 export interface Violation {
   rule_key: string
+  /** What the check is called, in the writer's language. `rule_key` is a machine's
+   *  name and the identity a dismissal is filed under; it should not be on screen. */
+  label: string
   severity: 'error' | 'warning' | 'notice'
   message: string
   entity_ids: string[]
@@ -323,6 +428,9 @@ export interface Finding {
   evidence: string[]
   entity_ids: string[]
   kind: string
+  /** Resolved server-side: an id is not something a writer can read, and a row of
+   *  identical "look at it" links is worse than none. */
+  entity_names?: string[]
 }
 
 export interface RouteResult {
@@ -408,10 +516,251 @@ export interface FactDraft {
   secrecy?: string
   strength?: string | null
   note?: string
+  /** Where it came from (§58). */
+  source_id?: string | null
+  /** What it is about, when it is about another fact rather than the world (§33). */
+  about_fact_id?: string | null
+}
+
+/* ---- questions (§49) ---------------------------------------------------- */
+
+export interface QueryCondition {
+  predicate: string
+  direction?: 'out' | 'in'
+  test?: string
+  value?: string
+  object_id?: string
+  object_type?: string
+  strength?: string[]
+  at?: number | null
+  negate?: boolean
+}
+
+export interface QueryWithin {
+  start_id: string
+  predicates: string[]
+  hops: number
+  direction?: 'out' | 'in' | 'either'
+  at?: number | null
+  include_start?: boolean
+}
+
+export interface QueryShape {
+  types?: string[]
+  name_contains?: string
+  tags?: string[]
+  confidence?: string[]
+  exists_on?: number | null
+  began_after?: number | null
+  began_before?: number | null
+  conditions?: QueryCondition[]
+  within?: QueryWithin | null
+  order?: string
+  descending?: boolean
+  limit?: number
+  explain?: boolean
+}
+
+export interface QueryRow {
+  id: string
+  name: string
+  type_key: string
+  summary: string
+  confidence: string
+  exists_from: number | null
+  exists_to: number | null
+  because: string[]
+  distance: number | null
+}
+
+export interface QueryAnswer {
+  query: QueryShape
+  rows: QueryRow[]
+  total: number
+  truncated: boolean
+  sql: string
+  ms: number
+  notes: string[]
+}
+
+export interface QueryVocabulary {
+  directions: string[]
+  tests: string[]
+  orders: string[]
+  confidence: string[]
+  tags: string[]
+  /** §5's qualitative steps. The engine has always filtered on these and the form
+   *  could not offer them, so §49's own example was unaskable. */
+  strengths: { key: string; label: string; scale: string }[]
+}
+
+export interface SavedQuery {
+  key: string
+  name: string
+  note: string
+  query: QueryShape
+}
+
+/**
+ * A shape the writer drew (§66).
+ *
+ * No `props`: provenance is the server's to write. A client able to set it could stamp
+ * its own drawing as generated and have the next run sweep the writer's coastline away.
+ */
+export interface DrawnShape {
+  entity_id: string
+  kind: 'point' | 'line' | 'polygon'
+  coordinates: number[] | number[][] | number[][][]
+  layer?: string
+  style?: Record<string, unknown>
+  approximate?: boolean
+}
+
+/* ---- titles and secrets ------------------------------------------------- */
+
+export interface TitleDraft {
+  name: string
+  rank?: number
+  territory_id?: string | null
+  succession_law?: string
+  dynasty_root_id?: string | null
+  created_on?: number | null
+  entity_id?: string | null
+}
+
+export interface GrantDraft {
+  holder_id: string
+  from_day?: number | null
+  to_day?: number | null
+  how?: string
+  disputed?: boolean
+  note?: string
+}
+
+export interface SecretDraft {
+  name: string
+  truth?: string
+  about_id?: string | null
+  fact_id?: string | null
+  severity?: string
+}
+
+export interface KnowledgeDraft {
+  observer_id: string
+  secret_id: string
+  stance: string
+  about_observer_id?: string | null
+  acquired_on?: number | null
+  acquired_from?: string | null
+  scene_id?: string | null
+  note?: string
+}
+
+export interface Chapter {
+  id: string
+  work_id: string
+  work_title: string
+  title: string
+  position: number
+  summary: string
+}
+
+/** Where a place gets what it does not grow (§19, §42, §86). */
+export interface SupplySource {
+  entity_id: string
+  name: string
+  level: string
+  exports: boolean
+  days: number | null
+  distance: number | null
+  path: string[]
+  path_names: string[]
+  note: string
+}
+
+export interface SupplyNeed {
+  resource_id: string
+  resource_name: string
+  level: string
+  sources: SupplySource[]
+  findings: Finding[]
+}
+
+export interface SupplyReport {
+  place_id: string
+  place_name: string
+  day: number
+  profile: string
+  needs: SupplyNeed[]
+  depended_on_by: Finding[]
+  standing: Finding[]
+}
+
+/** Somebody whose view of the world differs from everyone else's (§94). */
+export interface Perspective {
+  id: string
+  name: string
+  type_key: string
+  because: string
+}
+
+export interface PerspectiveDetail {
+  observer_id: string
+  observer_name: string
+  day: number
+  differences: {
+    text: string; kind: string; weight: number
+    evidence: string[]; entity_ids: string[]
+  }[]
+}
+
+/** What one party says about an event or a person (§33, §94). */
+export interface Interpretation {
+  id: string
+  label: string
+  account: string
+  event_id: string | null
+  entity_id: string | null
+  holder_id: string | null
+  holder_name: string
+  subject_name: string
+}
+
+/** Somewhere a fact came from (§58). */
+export interface Source {
+  id: string
+  kind: string
+  label: string
+  label_kind: string
+  detail: string
+  scene_id: string | null
+}
+
+/** A book, its chapters, and what is written in each (§43). */
+export interface Work {
+  id: string
+  title: string
+  kind: string
+  position: number
+  summary: string
+  chapters: WorkChapter[]
+  loose_scenes: number
+}
+
+export interface WorkChapter {
+  id: string
+  title: string
+  position: number
+  summary: string
+  scenes: { id: string; title: string; day: number | null; position: number }[]
 }
 
 export interface SceneDraft {
   title: string
+  /** Which chapter it belongs to (§43). The column has been there all along and
+   *  nothing could set one, so every scene was loose in the world rather than in
+   *  the book. */
+  chapter_id?: string | null
   day?: number | null
   end_day?: number | null
   location_id?: string | null
@@ -576,9 +925,90 @@ export const api = {
   snapshots: () => get<{ id: string; name: string; day: number; note: string; date: WorldDate }[]>(
     '/snapshots'),
 
-  entities: (params?: { type_key?: string; at?: number; limit?: number }) =>
-    get<Entity[]>('/entities', params),
+  entities: (params?: {
+    type_key?: string; at?: number; limit?: number; hide_generated?: boolean
+  }) => get<Entity[]>('/entities', params),
   entity: (id: string, at?: number) => get<EntityBundle>(`/entities/${id}`, { at }),
+  /* ---- questions (§49) ------------------------------------------------- */
+  ask: (query: QueryShape) => send<QueryAnswer>('/query', 'POST', { query }),
+  queryVocabulary: () => get<QueryVocabulary>('/query/vocabulary'),
+  chapters: () => get<Chapter[]>('/chapters'),
+
+  /* ---- the writer's own roads (§20, §21) --------------------------------- */
+  layRoad: (body: {
+    from_entity_id: string; to_entity_id: string; length: number
+    medium?: string; quality?: number; terrain?: string
+    closed_seasons?: string[]; danger?: string
+  }) => send<{ id: string }>('/segments', 'POST', body),
+  eraseRoad: (id: string) => send<void>(`/segments/${id}`, 'DELETE'),
+
+  /* ---- a world that need not be medieval Europe (§60) -------------------- */
+  addEntityType: (body: {
+    key: string; label: string; plural?: string; category?: string; icon?: string
+  }) => send<{ key: string }>('/vocabulary/entity-types', 'POST', body),
+  addPredicate: (body: {
+    key: string; label: string; kind?: string; inverse_key?: string | null
+    symmetric?: boolean; transitive?: boolean; category?: string; description?: string
+  }) => send<{ key: string }>('/vocabulary/predicates', 'POST', body),
+
+  /* ---- naming a moment on the timeline (§80) ---------------------------- */
+  nameTheDay: (name: string, day: number, note = '') =>
+    send<{ id: string }>('/snapshots', 'POST', { name, day, note }),
+  forgetTheDay: (id: string) => send<void>(`/snapshots/${id}`, 'DELETE'),
+
+  /* ---- where a place gets what it does not grow (§19, §42, §86) --------- */
+  supply: (placeId: string, day?: number, profile?: string) =>
+    get<SupplyReport>(`/supply/${placeId}`, { day, profile }),
+
+  /* ---- whose world is this? (§93, §94) ---------------------------------- */
+  perspectives: () => get<Perspective[]>('/perspectives'),
+  perspective: (id: string, day?: number) =>
+    get<PerspectiveDetail>(`/perspectives/${id}`, { day }),
+
+  /* ---- the same thing, told differently (§33, §94) ----------------------- */
+  interpretations: (params?: {
+    event_id?: string; entity_id?: string; holder_id?: string
+  }) => get<Interpretation[]>('/interpretations', params),
+  addInterpretation: (body: {
+    label: string; account?: string
+    event_id?: string | null; entity_id?: string | null; holder_id?: string | null
+  }) => send<{ id: string }>('/interpretations', 'POST', body),
+  forgetInterpretation: (id: string) =>
+    send<void>(`/interpretations/${id}`, 'DELETE'),
+
+  /* ---- citing where a fact came from (§58) ------------------------------ */
+  sources: () => get<Source[]>('/sources'),
+  addSource: (label: string, kind: string, detail = '') =>
+    send<Source>('/sources', 'POST', { label, kind, detail }),
+
+  /* ---- the manuscript (§43) -------------------------------------------- */
+  works: () => get<Work[]>('/works'),
+  addWork: (title: string, kind = 'novel') =>
+    send<{ id: string }>('/works', 'POST', { title, kind }),
+  addChapter: (workId: string, title: string, position = 0) =>
+    send<{ id: string }>('/chapters', 'POST',
+                         { work_id: workId, title, position }),
+  savedQueries: () => get<SavedQuery[]>('/queries'),
+  saveQuery: (name: string, query: QueryShape, note = '') =>
+    send<SavedQuery>('/queries', 'POST', { name, note, query }),
+  forgetQuery: (key: string) => send<void>(`/queries/${key}`, 'DELETE'),
+
+  /* ---- drawing on your own map (§66) ------------------------------------ */
+  draw: (shape: DrawnShape) => send<{ id: string }>('/geometry', 'POST', shape),
+  erase: (geometryId: string) => send<void>(`/geometry/${geometryId}`, 'DELETE'),
+
+  /* ---- the write surfaces for §8 and §6 --------------------------------- */
+  createTitle: (draft: TitleDraft) => send<{ id: string }>('/titles', 'POST', draft),
+  grantTitle: (titleId: string, draft: GrantDraft) =>
+    send<{ id: string }>(`/titles/${titleId}/grants`, 'POST', draft),
+  createSecret: (draft: SecretDraft) =>
+    send<{ id: string }>('/secrets', 'POST', draft),
+  recordKnowledge: (draft: KnowledgeDraft) =>
+    send<{ id: string }>('/knowledge', 'POST', draft),
+
+  /** Everywhere a journey can start or end — islands as well as towns. */
+  travelPlaces: () =>
+    get<{ id: string; name: string; type_key: string }[]>('/travel/places'),
   search: (q: string, type_key?: string) => get<Entity[]>('/search', { q, type_key }),
 
   facts: (params?: { predicate_key?: string; subject_id?: string; object_id?: string; at?: number }) =>
@@ -586,15 +1016,22 @@ export const api = {
 
   state: (day: number, includeSecret = true) =>
     get<WorldState>('/state', { day, include_secret: includeSecret }),
-  map: (day?: number, layer?: string) => get<MapData>('/map', { day, layer }),
+  map: (day?: number, layer?: string, mode?: string, as?: string | null,
+        debug?: boolean) =>
+    get<MapData>('/map', { day, layer, mode, as: as ?? undefined,
+                           debug: debug || undefined }),
   generateMap: (seed: string | null, proposeSettlements: boolean) =>
     send<MapGenerationReport>('/map/generate', 'POST',
       { seed, propose_settlements: proposeSettlements }),
-  planMap: (options: { seed?: string | null; invent_settlements?: boolean }) =>
-    send<MapPlan>('/map/plan', 'POST', {
-      seed: options.seed ?? null,
-      invent_settlements: options.invent_settlements ?? false,
-    }),
+  planMap: (options: {
+    seed?: string | null; invent_settlements?: boolean; at?: number | null
+  }) => send<MapPlan>('/map/plan', 'POST', {
+    seed: options.seed ?? null,
+    invent_settlements: options.invent_settlements ?? false,
+    // §36: the map is part of the world and the world is temporal, so a proposal is of
+    // the year the writer is looking at rather than always of the present.
+    at: options.at ?? null,
+  }),
   applyMap: (plan: MapPlan, decisions: MapDecision[]) =>
     send<ApplyReport>('/map/apply', 'POST', { plan, decisions }),
   graph: (params?: { day?: number; categories?: string; centre?: string; hops?: number }) =>

@@ -29,7 +29,7 @@ _PREFIX = {
     "coast": "cst", "island": "isl", "region": "rgn", "range": "rng",
     "hills": "hil", "water": "wat", "sea": "sea", "river": "riv",
     "lake": "lak", "natural": "nat", "settlement": "stl", "castle": "cas",
-    "ruin": "run", "road": "rd",
+    "ruin": "run", "road": "rd", "lane": "lan",
 }
 
 KINDS = tuple(sorted(_PREFIX))

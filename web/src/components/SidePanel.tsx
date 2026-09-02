@@ -18,6 +18,7 @@ import { api } from '../api'
 import type { CalendarInfo, Fact, Finding, Vocabulary } from '../api'
 import { Badge, ErrorBox, Loading, TypeChip, useAsync } from './common'
 import { EntityForm, FactForm } from './forms'
+import { Accounts } from './Accounts'
 
 interface Props {
   entityId: string
@@ -209,6 +210,12 @@ export function SidePanel(
                 </Section>
               )}
 
+              {/* §33/§94: what other parties call them. Above the change history,
+                  because "House Marr calls him the Pretender" is about the world and
+                  the history below is about the file. */}
+              <Accounts entityId={entity.id} subject={entity.name}
+                        version={version} onMutate={changed} />
+
               <ChangeHistory entityId={entity.id} onChanged={changed} />
             </>
           )}
@@ -261,6 +268,22 @@ function FactLine(
       )}
       {fact.strength && <Badge>{fact.strength.replace(/_/g, ' ')}</Badge>}
       {fact.is_secret && <Badge kind="secret" title="Secret">secret</Badge>}
+      {/* What the world already knew about this fact and never showed. A writer who
+          marked something rumoured, dated it, or cited the note it came from could not
+          see any of it on the line where it mattered — which reads as though the
+          application had thrown the answer away. */}
+      {fact.confidence !== 'canon' && (
+        <Badge kind="disputed" title="How sure you were">{fact.confidence}</Badge>
+      )}
+      {(fact.valid_from_text || fact.valid_to_text) && (
+        <span className="when" title="When this was true">
+          {fact.valid_from_text || '…'}
+          {fact.valid_to_text ? ` – ${fact.valid_to_text}` : ' onwards'}
+        </span>
+      )}
+      {fact.source && (
+        <span className="when" title="Where this came from">— {fact.source}</span>
+      )}
 
       <span className="fact-actions">
         {armed === 'end' ? (
