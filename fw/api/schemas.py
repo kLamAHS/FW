@@ -507,7 +507,7 @@ class SuppressIn(BaseModel):
 
 class WorldCreate(BaseModel):
     name: str
-    example: bool = False     # seed the §115 Kingdom of Renn instead of starting empty
+    example: bool = False     # seed the §115 example continent instead of starting empty
 
 
 class WorldOpen(BaseModel):

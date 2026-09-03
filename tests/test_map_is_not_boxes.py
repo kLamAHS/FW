@@ -27,6 +27,7 @@ import pytest
 
 from fw.core.mapgen import shapes
 from fw.core.mapgen.generate import CELL
+from fw.core.seed.nyren import seed_nyren
 from fw.core.seed.renn import seed_renn
 
 # Tangents rather than angles: an exact comparison, no libm, and the same arithmetic
@@ -279,26 +280,42 @@ def hausdorff(one, other) -> float:
                max(near(p, one) for p in other))
 
 
-# Two lines that end at the same town converge there, and no guard should ask a
-# writer to draw otherwise: the River Renn reaches the sea at Greyhaven, which is the
-# port, and the Iron Road starts at the quay. So the corridor is measured everywhere
-# except within this much of an end the two lines share. A ford is NOT excused — a
-# crossing is a point, and a point costs a percent or two.
+# Two lines that meet converge where they meet, and no guard should ask a writer to
+# draw otherwise: the Carth reaches the sea at Orra, which is the port, so the coast
+# road and the river share a quay; a tributary and the road that crosses it share the
+# confluence town. So the corridor is measured everywhere except within this much of a
+# place the two lines genuinely touch.
 JOIN_CLEAR = 45.0
+TOUCHING = 2.0
 
 
-def joins(one, other) -> list[tuple[float, float]]:
-    """The ends these two lines have in common."""
-    return [end for end in (one[0], one[-1])
-            if any(math.dist(end, far) <= 1.0 for far in (other[0], other[-1]))]
+def junctions(one, other) -> list[tuple[float, float]]:
+    """Where these two lines actually meet — a confluence, a ford, a shared quay.
+
+    The first version of this excused only ENDS the two lines have in common, which was
+    too narrow twice over. A road passing through the town where a tributary joins its
+    river meets it in the middle of both, and a short tributary converging on a junction
+    scored 20% purely because it is short. Neither is a line drawn twice.
+
+    It does not weaken the thing this guards against. Measured on the old example
+    world's road, which WAS its river reversed: under this rule it still reads 100%
+    alongside, because two lines that never part have junctions everywhere and the
+    stretches between them are still the same line.
+    """
+    met: list[tuple[float, float]] = []
+    for point in [*one, *other]:
+        if (near(point, one) <= TOUCHING and near(point, other) <= TOUCHING
+                and all(math.dist(point, seen) > 1.0 for seen in met)):
+            met.append(point)
+    return met
 
 
 def corridor_share(one, other, within: float = 12.0) -> float:
     """How much of a line runs alongside another, close enough to be the same line."""
-    met = joins(one, other)
+    met = junctions(one, other)
     shared = total = 0.0
     for where, length in walk(one):
-        if any(math.dist(where, end) <= JOIN_CLEAR for end in met):
+        if any(math.dist(where, place) <= JOIN_CLEAR for place in met):
             continue
         total += length
         if near(where, other) <= within:
@@ -306,9 +323,15 @@ def corridor_share(one, other, within: float = 12.0) -> float:
     return shared / total if total else 0.0
 
 
-@pytest.fixture(scope="module")
-def seeded():
-    made = seed_renn()
+# Both hand-drawn worlds: the continent this application ships, and the older example
+# the suite still uses as a fixture. The guard exists because of what the second one
+# used to be, and it has to watch the first, which is the one a writer opens.
+SEEDS = {"nyren": seed_nyren, "renn": seed_renn}
+
+
+@pytest.fixture(scope="module", params=sorted(SEEDS))
+def seeded(request):
+    made = SEEDS[request.param]()
     yield made
     made.close()
 
@@ -336,13 +359,13 @@ class TestTheSeedWasDrawnByAHand:
                 f"{share:.1%} of {name}'s outline runs within 5° of a lattice axis; "
                 "the quadrilateral it replaced was 90.1%")
 
-    def test_the_river_wanders(self, seeded):
+    def test_every_river_wanders(self, seeded):
         """Sinuosity: the length it runs against the distance it covers. The first
         River Renn measured 1.027 — a river drawn as a slightly bent ruler."""
-        river = authored(seeded, "waterways")["The River Renn"]
-        run = sum(math.dist(a, b) for a, b in zip(river, river[1:], strict=False))
-        sinuosity = run / math.dist(river[0], river[-1])
-        assert sinuosity > 1.12, f"the river's sinuosity is {sinuosity:.3f}"
+        for name, river in authored(seeded, "waterways").items():
+            run = sum(math.dist(a, b) for a, b in zip(river, river[1:], strict=False))
+            sinuosity = run / math.dist(river[0], river[-1])
+            assert sinuosity > 1.12, f"{name}'s sinuosity is {sinuosity:.3f}"
 
     def test_no_two_authored_lines_are_the_same_line(self, seeded):
         """The Iron Road *was* the River Renn: reversed, one vertex short, and never

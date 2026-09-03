@@ -87,7 +87,7 @@ class Library:
     def create(self, name: str, *, example: bool = False) -> Path:
         """Create a new world file named after the world, and return its path.
 
-        `example` seeds the §115 Kingdom of Renn instead of an empty world — the tour
+        `example` seeds the §115 continent instead of an empty world — the tour
         of what the application can do, opted into rather than imposed.
         """
         name = name.strip()
@@ -97,11 +97,11 @@ class Library:
             self.ensure()
             path = self._fresh_path(name)
             if example:
-                from fw.core.seed.renn import seed_renn
+                from fw.core.seed.nyren import seed_nyren
 
                 # With its map: this is the "show me what this does" button, and an
                 # example world with no ground under it demonstrates the opposite.
-                world = seed_renn(str(path), with_map=True)
+                world = seed_nyren(str(path), with_map=True)
                 world.close()
             else:
                 # An empty world starts on an Earth-like calendar; §60 makes calendars

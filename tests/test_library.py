@@ -36,7 +36,7 @@ class TestLibrary:
         library = Library(tmp_path)
         path = library.create("Tour", example=True)
         world = World.open(path)
-        assert world.name == "The Kingdom of Renn"
+        assert world.name == "The Continent"
         assert world.count_entities() > 20
         world.close()
 
@@ -115,7 +115,7 @@ class TestLauncherApi:
     def test_the_example_world_arrives_seeded(self, client):
         client.post("/api/worlds", json={"name": "Tour", "example": True})
         world = client.get("/api/world").json()
-        assert world["name"] == "The Kingdom of Renn"
+        assert world["name"] == "The Continent"
         assert world["counts"]["total"] > 20
 
     def test_traversal_and_ghosts_are_refused(self, client):

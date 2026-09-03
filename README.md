@@ -52,22 +52,36 @@ complete without it, and `fw serve` will say so rather than showing a broken pag
 ```
 
 ```bash
-fw succession demo.fwworld --title "King of Renn" --year 240 --month 5 --day 61
-fw succession demo.fwworld --title "King of Renn" --illegitimate "Prince Oren"
-fw route demo.fwworld Greyhaven Rennford
+fw succession demo.fwworld --title "King of Nyren" --year 1100 --month 5 --day 41
+fw succession demo.fwworld --title "King of Nyren" --illegitimate "Prince Hadren"
+fw route demo.fwworld Meret Hadrin
 fw scene demo.fwworld
-fw why demo.fwworld Greyhaven
-fw impact demo.fwworld Greyhaven
+fw why demo.fwworld Orra
+fw impact demo.fwworld Orra
 fw check demo.fwworld
 ```
 
 ## The example world
 
-`fw seed` builds the Kingdom of Renn, the demonstration dataset §115 asks for: one kingdom,
-three regions, six settlements, three noble houses, a royal dynasty, ten characters, a
-disputed inheritance, two roads, a major river, resources, two trade routes, a war, a
-secret, and an active political crisis. Almost every name comes from the brief's own
-running examples.
+`fw seed` builds the continent: a temperate landmass that had a history before anyone
+conquered it. Six peoples arranged by their own geography — the Merra on the western
+coast with the best middleman position on the map, the Carthi in the river basin that
+feeds everyone, the Vardi in the wet uplands with the timber, the Selli in the northern
+forests, the Talari in the warm southern hills, the Arthi in the mountains where the
+Carth rises, and the Orri on the dry steppe beyond the rain shadow with the horses.
+
+Then the Nyri came from Nyreland across the Northern Sea — not raiders but a
+centralised, literate kingdom that arrived because a Carthi claimant asked for help and
+stayed because nobody could make them leave. Over forty years (612–653) they took the
+interior. They never took Merran, and that is the fault line the four hundred and fifty
+years since have run along: Nyren grows the grain, Merran owns the mouth of the river,
+and Carthain's kings in the upper valley say both of them are newcomers.
+
+It is the demonstration dataset §115 asks for — realms, regions, settlements, noble
+houses, a royal dynasty, twelve characters, a disputed succession, roads, a major river,
+resources, trade routes, wars, a secret and an active political crisis — and it arrives
+with its map already grown, so the first thing you open is an atlas rather than an empty
+sheet. Pass `--no-map` to skip that.
 
 The disputed inheritance, the secret and the crisis are one thing. Old King Renn fathered
 Aldren and Corren. Aldren's legal children are Oren and Elia; Corren's are Caros and Mara.

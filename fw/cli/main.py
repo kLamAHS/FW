@@ -18,7 +18,7 @@ from fw.core.derive.dependency import DependencyAnalyst
 from fw.core.derive.scene_context import SceneContextEngine
 from fw.core.genealogy.kinship import Genealogy
 from fw.core.geo.routing import PROFILES, Router
-from fw.core.seed.renn import PRESENT_YEAR, seed_renn
+from fw.core.seed.nyren import PRESENT_YEAR, seed_nyren
 from fw.core.succession.engine import SuccessionEngine
 from fw.core.world import World, WorldError
 
@@ -67,7 +67,7 @@ def cmd_seed(args) -> None:
         path.unlink()
     if not args.no_map:
         print("Seeding, then growing the map — this takes a few seconds.")
-    world = seed_renn(str(path), with_map=not args.no_map)
+    world = seed_nyren(str(path), with_map=not args.no_map)
     print(f"Seeded {path} — “{world.name}”")
     print(f"  {world.count_entities()} entities, "
           f"{world.db.scalar('SELECT count(*) FROM fact')} facts, "
@@ -407,7 +407,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--name", default="Untitled world")
     p.add_argument("--force", action="store_true")
 
-    p = add("seed", cmd_seed, "Create the Kingdom of Renn example world.")
+    p = add("seed", cmd_seed, "Create the example world: the continent, Nyren and Merran.")
     p.add_argument("--force", action="store_true")
     # The example world exists to be looked at, so it arrives with its map grown.
     # The flag is for anyone who wants the facts alone and wants them instantly.
