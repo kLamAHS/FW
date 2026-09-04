@@ -82,10 +82,24 @@ this file, reviewed as such.
 | coast character | one class per stretch; minimum run ≥ 12 shore cells before it may change |
 | drawn rivers | trunks + order-≥2 tributaries only; brooks are relief, not features |
 | crossings (bridge/ford glyphs) per river | ≤ 3 |
-| label density | per 200×200-unit neighbourhood: ≤ 1 tier-0, ≤ 3 tier-1, ≤ 6 total |
+| label density | per 200×200-unit neighbourhood: ≤ 3 tier-1, ≤ 6 total. **Tier 0 is not rationed** — see below |
 | second labels (long rivers/ranges) | reach ≥ 55% of the map's span, one repeat |
 | icon clearance | label boxes never overlap an icon + 2 units |
 | negative space | ≥ 25% of land area carries no label or icon at world zoom |
+
+**Why tier 0 is not rationed, and what this table used to say.** It read "≤ 1 tier-0"
+per neighbourhood, and that could never coexist with this document's own target of a
+*zero tier-0/1 drop rate at the world band* further down: any map with two important
+places inside two hundred units has to break one to keep the other, and the code kept
+the ration. Measured on the example continent, the world band deleted seven tier-0
+names — among them the **capital** — reporting them as "left for air". The plane split
+in `_budgeted` was introduced for precisely that failure and only moved the collision
+inside a single plane.
+
+So the budget governs abundance and not the map's spine. Tier 0 is the top of the
+four-read hierarchy: the names without which the picture cannot be read at all. It is
+still bound by the neighbourhood **total**, which is what actually protects negative
+space; what it no longer competes for is a ration of one.
 
 ## Zoom bands (Phase D)
 

@@ -804,7 +804,7 @@
    {
     "anchor": "end",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 2.9,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -812,7 +812,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 167.9,
-    "y": 658.0
+    "y": 672.7
    },
    {
     "anchor": "start",
@@ -828,17 +828,82 @@
     "y": 512.8
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.6,
+    "halo": 3.8,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "Lower Marchbridge",
     "tier": 2,
     "tracking": 0.0,
-    "x": 498.7,
+    "x": 481.7,
     "y": 581.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Lower Marchcombe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 722.8,
+    "y": 401.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 10.33,
+    "text": "Lower Marchford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 630.5,
+    "y": 101.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Lower Marcholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 324.3,
+    "y": 79.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Lower Marchshaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 458.0,
+    "y": 421.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.6,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Lower Marchstead",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 294.7,
+    "y": 336.2
    },
    {
     "anchor": "middle",
@@ -847,8 +912,8 @@
     "kind": "range",
     "path": [
      [
-      569.6,
-      599.5
+      587.9,
+      614.1
      ],
      [
       592.1,
@@ -879,8 +944,12 @@
       695.1
      ],
      [
-      685.1,
-      696.4
+      691.2,
+      706.7
+     ],
+     [
+      695.9,
+      717.1
      ]
     ],
     "role": "label-relief",
@@ -888,46 +957,59 @@
     "text": "Lower Marchthorpe",
     "tier": 1,
     "tracking": 0.1,
-    "x": 645.4,
-    "y": 660.6
+    "x": 657.9,
+    "y": 675.7
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "feature",
     "role": "label",
     "size": 10.5,
     "text": "Lower Marchwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 554.0,
-    "y": 144.3
+    "x": 542.4,
+    "y": 100.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.91,
+    "text": "Lower Marchwood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 447.5,
+    "y": 123.9
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.7,
     "kind": "region",
     "role": "label-region",
     "size": 16.04,
     "text": "March 1",
     "tier": 0,
     "tracking": 0.14,
-    "x": 590.0,
+    "x": 554.8,
     "y": 414.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 17.82,
     "text": "March 10",
     "tier": 0,
     "tracking": 0.14,
-    "x": 711.3,
+    "x": 664.5,
     "y": 464.2
    },
    {
@@ -958,48 +1040,52 @@
     "text": "March 11",
     "tier": 0,
     "tracking": 0.14,
-    "x": 713.4,
+    "x": 687.1,
     "y": 537.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.8,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "March 12",
     "tier": 0,
     "tracking": 0.14,
-    "x": 658.5,
-    "y": 567.7
+    "x": 633.3,
+    "y": 570.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.8,
     "kind": "region",
     "path": [
      [
-      516.6,
-      542.2
+      549.4,
+      511.6
      ],
      [
-      523.1,
-      536.7
+      549.4,
+      598.7
      ],
      [
-      581.3,
-      536.7
+      545.4,
+      605.6
+     ],
+     [
+      545.4,
+      623.5
      ]
     ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 22.0,
     "text": "March 13",
     "tier": 0,
     "tracking": 0.14,
-    "x": 523.1,
-    "y": 536.7
+    "x": 549.4,
+    "y": 568.0
    },
    {
     "anchor": "middle",
@@ -1037,8 +1123,8 @@
     "text": "March 14",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.4,
-    "y": 764.6
+    "x": 667.1,
+    "y": 767.2
    },
    {
     "anchor": "middle",
@@ -1047,16 +1133,16 @@
     "kind": "region",
     "path": [
      [
-      405.9,
-      527.8
+      463.8,
+      499.4
      ],
      [
-      409.8,
-      531.1
+      452.2,
+      511.9
      ],
      [
-      471.5,
-      531.1
+      452.2,
+      561.7
      ]
     ],
     "role": "label-region",
@@ -1064,8 +1150,8 @@
     "text": "March 15",
     "tier": 0,
     "tracking": 0.14,
-    "x": 409.8,
-    "y": 531.1
+    "x": 452.2,
+    "y": 528.3
    },
    {
     "anchor": "middle",
@@ -1107,8 +1193,31 @@
     "text": "March 16",
     "tier": 0,
     "tracking": 0.14,
-    "x": 485.3,
-    "y": 632.4
+    "x": 472.6,
+    "y": 622.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      342.5,
+      558.1
+     ],
+     [
+      342.5,
+      671.1
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 342.5,
+    "y": 614.6
    },
    {
     "anchor": "middle",
@@ -1116,12 +1225,25 @@
     "halo": 3.4,
     "kind": "region",
     "role": "label-region",
-    "size": 16.04,
-    "text": "March 17",
+    "size": 12.65,
+    "text": "March 18",
     "tier": 0,
     "tracking": 0.14,
-    "x": 390.2,
-    "y": 589.3
+    "x": 274.2,
+    "y": 660.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 19",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 207.7,
+    "y": 594.5
    },
    {
     "anchor": "middle",
@@ -1129,64 +1251,52 @@
     "halo": 3.3,
     "kind": "region",
     "role": "label-region",
-    "size": 12.65,
-    "text": "March 18",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 291.7,
-    "y": 660.0
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.8,
-    "kind": "region",
-    "role": "label-region",
-    "size": 12.99,
-    "text": "March 19",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 233.0,
-    "y": 572.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.7,
-    "kind": "region",
-    "role": "label-region",
     "size": 22.0,
     "text": "March 2",
     "tier": 0,
     "tracking": 0.14,
-    "x": 522.9,
-    "y": 303.4
+    "x": 512.5,
+    "y": 299.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "March 20",
     "tier": 0,
     "tracking": 0.14,
-    "x": 164.2,
-    "y": 631.6
+    "x": 132.4,
+    "y": 638.4
    },
    {
     "anchor": "middle",
     "face": "sc",
     "halo": 3.8,
     "kind": "region",
+    "path": [
+     [
+      258.0,
+      356.6
+     ],
+     [
+      272.9,
+      372.3
+     ],
+     [
+      272.9,
+      453.4
+     ]
+    ],
     "role": "label-region",
-    "size": 22.0,
+    "size": 19.8,
     "text": "March 21",
     "tier": 0,
     "tracking": 0.14,
-    "x": 296.4,
-    "y": 423.5
+    "x": 272.9,
+    "y": 402.0
    },
    {
     "anchor": "middle",
@@ -1198,59 +1308,125 @@
     "text": "March 22",
     "tier": 0,
     "tracking": 0.14,
-    "x": 218.3,
-    "y": 296.3
+    "x": 222.4,
+    "y": 294.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
+    "path": [
+     [
+      380.4,
+      91.1
+     ],
+     [
+      380.4,
+      105.3
+     ],
+     [
+      375.9,
+      112.5
+     ],
+     [
+      375.3,
+      121.0
+     ],
+     [
+      366.2,
+      136.7
+     ],
+     [
+      360.8,
+      159.7
+     ],
+     [
+      347.5,
+      179.0
+     ],
+     [
+      342.0,
+      189.9
+     ],
+     [
+      341.5,
+      197.2
+     ]
+    ],
     "role": "label-region",
     "size": 22.0,
     "text": "March 23",
     "tier": 0,
     "tracking": 0.14,
-    "x": 405.2,
-    "y": 92.9
+    "x": 364.2,
+    "y": 145.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
+    "halo": 2.9,
     "kind": "region",
+    "path": [
+     [
+      307.0,
+      96.2
+     ],
+     [
+      304.7,
+      99.4
+     ],
+     [
+      304.7,
+      154.5
+     ],
+     [
+      298.4,
+      162.0
+     ]
+    ],
     "role": "label-region",
     "size": 12.99,
     "text": "March 24",
     "tier": 0,
     "tracking": 0.14,
-    "x": 330.8,
-    "y": 122.8
+    "x": 304.7,
+    "y": 129.9
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "region",
+    "path": [
+     [
+      388.0,
+      325.8
+     ],
+     [
+      388.0,
+      428.2
+     ]
+    ],
     "role": "label-region",
     "size": 22.0,
     "text": "March 3",
     "tier": 0,
     "tracking": 0.14,
-    "x": 448.7,
-    "y": 350.9
+    "x": 388.0,
+    "y": 377.0
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
+    "halo": 3.6,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "March 4",
     "tier": 0,
     "tracking": 0.14,
-    "x": 479.9,
+    "x": 488.7,
     "y": 251.2
    },
    {
@@ -1258,42 +1434,108 @@
     "face": "sc",
     "halo": 3.1,
     "kind": "region",
+    "path": [
+     [
+      547.2,
+      123.1
+     ],
+     [
+      547.3,
+      144.1
+     ],
+     [
+      551.0,
+      151.1
+     ],
+     [
+      572.3,
+      173.6
+     ],
+     [
+      572.3,
+      216.3
+     ]
+    ],
     "role": "label-region",
     "size": 22.0,
     "text": "March 5",
     "tier": 0,
     "tracking": 0.14,
-    "x": 589.1,
-    "y": 214.5
+    "x": 566.4,
+    "y": 167.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 17.4,
+    "text": "March 6",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 603.2,
+    "y": 265.2
    },
    {
     "anchor": "middle",
     "face": "sc",
     "halo": 3.8,
     "kind": "region",
+    "path": [
+     [
+      639.2,
+      338.7
+     ],
+     [
+      639.3,
+      342.5
+     ],
+     [
+      641.6,
+      346.4
+     ],
+     [
+      641.6,
+      430.3
+     ]
+    ],
     "role": "label-region",
-    "size": 21.99,
+    "size": 19.8,
     "text": "March 7",
     "tier": 0,
     "tracking": 0.14,
-    "x": 665.2,
-    "y": 405.7
+    "x": 641.6,
+    "y": 384.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.5,
+    "halo": 3.7,
     "kind": "region",
     "role": "label-region",
     "size": 14.43,
     "text": "March 8",
     "tier": 0,
     "tracking": 0.14,
-    "x": 757.8,
+    "x": 723.7,
     "y": 367.0
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 9",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 761.4,
+    "y": 430.7
+   },
+   {
+    "anchor": "end",
     "face": "sans",
     "halo": 3.8,
     "kind": "castle",
@@ -1302,7 +1544,7 @@
     "text": "Marchbank",
     "tier": 2,
     "tracking": 0.02,
-    "x": 277.0,
+    "x": 260.0,
     "y": 545.4
    },
    {
@@ -1321,15 +1563,28 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.1,
+    "kind": "landmass",
+    "role": "label-region",
+    "size": 11.05,
+    "text": "Marchcape",
+    "tier": 1,
+    "tracking": 0.14,
+    "x": 738.2,
+    "y": 629.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.09,
     "text": "Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    },
    {
     "anchor": "end",
@@ -1345,29 +1600,106 @@
     "y": 513.9
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.14,
+    "text": "Marchdowns",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 489.1,
+    "y": 535.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 8.14,
+    "text": "Marchfells",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 428.7,
+    "y": 333.2
+   },
+   {
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.4,
+    "halo": 3.7,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchfield",
     "tier": 2,
     "tracking": 0.02,
-    "x": 321.4,
+    "x": 302.4,
     "y": 615.5
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.7,
+    "kind": "river",
+    "path": [
+     [
+      349.8,
+      326.6
+     ],
+     [
+      349.8,
+      342.3
+     ],
+     [
+      348.8,
+      345.1
+     ],
+     [
+      345.7,
+      349.1
+     ],
+     [
+      346.4,
+      351.8
+     ],
+     [
+      349.5,
+      355.9
+     ],
+     [
+      350.1,
+      359.9
+     ],
+     [
+      351.8,
+      362.7
+     ],
+     [
+      356.8,
+      367.7
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Marchflow",
+    "tier": 1,
+    "tracking": 0.02,
+    "x": 346.4,
+    "y": 351.8
+   },
+   {
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.8,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchford",
     "tier": 2,
     "tracking": 0.02,
-    "x": 641.0,
+    "x": 622.0,
     "y": 447.6
    },
    {
@@ -1384,16 +1716,16 @@
     "y": 398.8
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.6,
+    "halo": 3.8,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchill",
     "tier": 2,
     "tracking": 0.02,
-    "x": 460.5,
+    "x": 477.5,
     "y": 556.2
    },
    {
@@ -1425,6 +1757,19 @@
    {
     "anchor": "start",
     "face": "sans",
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchollow",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 569.5,
+    "y": 594.1
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
     "halo": 3.6,
     "kind": "castle",
     "role": "label",
@@ -1436,30 +1781,43 @@
     "y": 485.8
    },
    {
-    "anchor": "end",
+    "anchor": "middle",
     "face": "sans",
-    "halo": 3.7,
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 577.3,
+    "y": 398.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 573.2,
-    "y": 523.4
+    "x": 592.2,
+    "y": 537.6
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.2,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
-    "size": 6.5,
+    "size": 11.0,
     "text": "Marchshaw",
     "tier": 2,
     "tracking": 0.02,
-    "x": 786.7,
-    "y": 494.2
+    "x": 771.9,
+    "y": 463.4
    },
    {
     "anchor": "start",
@@ -1475,17 +1833,56 @@
     "y": 339.6
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.5,
+    "halo": 3.2,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 464.9,
-    "y": 507.2
+    "x": 483.9,
+    "y": 521.4
+   },
+   {
+    "anchor": "end",
+    "face": "sans",
+    "halo": 3.6,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchwick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 623.0,
+    "y": 509.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Marchwold",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 440.1,
+    "y": 443.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Marchwood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 736.8,
+    "y": 580.7
    },
    {
     "anchor": "start",
@@ -1498,19 +1895,19 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 455.4,
-    "y": 327.4
+    "y": 335.9
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans-medium",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "city",
     "role": "label",
     "size": 13.0,
     "text": "New Marchbridge",
     "tier": 1,
     "tracking": 0.01,
-    "x": 292.4,
+    "x": 269.3,
     "y": 170.8
    },
    {
@@ -1605,30 +2002,17 @@
     "y": 314.2
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.4,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "New Marchmoor",
     "tier": 2,
     "tracking": 0.0,
-    "x": 428.4,
-    "y": 384.6
-   },
-   {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "New Marcholt",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 218.4,
-    "y": 669.7
+    "x": 445.4,
+    "y": 371.8
    },
    {
     "anchor": "end",
@@ -1672,7 +2056,7 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.0,
+    "halo": 3.4,
     "kind": "village",
     "role": "label",
     "size": 10.0,
@@ -1680,7 +2064,7 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 408.5,
-    "y": 410.2
+    "y": 397.4
    },
    {
     "anchor": "middle",
@@ -1696,30 +2080,17 @@
     "y": 314.8
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
     "face": "sans",
-    "halo": 3.1,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "North Marchford",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 576.6,
-    "y": 177.9
-   },
-   {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.6,
+    "halo": 3.3,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "North Marchmere",
     "tier": 2,
     "tracking": 0.0,
-    "x": 720.2,
-    "y": 352.1
+    "x": 728.7,
+    "y": 341.9
    },
    {
     "anchor": "start",
@@ -1737,28 +2108,15 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "village",
     "role": "label",
     "size": 10.0,
-    "text": "North Marchreach",
+    "text": "North Marcholt",
     "tier": 2,
     "tracking": 0.0,
-    "x": 785.7,
-    "y": 431.2
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.1,
-    "kind": "town",
-    "role": "label",
-    "size": 11.5,
-    "text": "North Marchwick",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 585.3,
-    "y": 262.8
+    "x": 584.5,
+    "y": 240.5
    },
    {
     "anchor": "start",
@@ -1774,17 +2132,17 @@
     "y": 762.1
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.7,
+    "halo": 3.1,
     "kind": "town",
     "role": "label",
     "size": 11.5,
     "text": "Old Marchbridge",
     "tier": 1,
     "tracking": 0.0,
-    "x": 251.6,
-    "y": 394.1
+    "x": 232.0,
+    "y": 403.9
    },
    {
     "anchor": "end",
@@ -1798,32 +2156,6 @@
     "tracking": 0.0,
     "x": 449.3,
     "y": 647.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.8,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Old Marchmoor",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 528.9,
-    "y": 565.1
-   },
-   {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.7,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Old Marchpass",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 303.3,
-    "y": 614.0
    },
    {
     "anchor": "start",
@@ -1841,15 +2173,50 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.8,
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.7,
     "kind": "feature",
     "role": "label",
-    "size": 10.15,
+    "size": 7.51,
     "text": "Upper Marchbank",
     "tier": 2,
     "tracking": 0.02,
-    "x": 267.5,
-    "y": 446.1
+    "x": 226.5,
+    "y": 447.5
    },
    {
     "anchor": "start",
@@ -1866,6 +2233,19 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.5,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Upper Marchclose",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 125.5,
+    "y": 712.0
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
     "halo": 3.3,
     "kind": "landmass",
@@ -1874,52 +2254,21 @@
     "text": "Upper Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 138.1
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
-    "size": 7.22,
-    "text": "Upper Marchdowns",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 327.7,
-    "y": 341.1
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 3.1,
-    "kind": "feature",
-    "path": [
-     [
-      522.8,
-      729.7
-     ],
-     [
-      543.8,
-      729.7
-     ],
-     [
-      556.2,
-      722.7
-     ],
-     [
-      570.1,
-      722.7
-     ]
-    ],
-    "role": "label",
-    "size": 7.22,
+    "size": 11.0,
     "text": "Upper Marchfield",
     "tier": 2,
     "tracking": 0.02,
-    "x": 556.2,
-    "y": 722.7
+    "x": 553.5,
+    "y": 739.4
    },
    {
     "anchor": "start",
@@ -1936,15 +2285,28 @@
    },
    {
     "anchor": "middle",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 328.1,
+    "y": 409.1
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "Upper Marchmere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -1953,12 +2315,12 @@
     "halo": 3.8,
     "kind": "feature",
     "role": "label",
-    "size": 8.02,
+    "size": 11.0,
     "text": "Upper Marchmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 710.0,
-    "y": 710.4
+    "x": 689.8,
+    "y": 741.2
    },
    {
     "anchor": "start",
@@ -1976,41 +2338,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
-    "kind": "feature",
-    "role": "label",
-    "size": 7.0,
-    "text": "Upper Marchreach",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 343.6,
-    "y": 150.7
-   },
-   {
-    "anchor": "middle",
-    "face": "serif-italic",
-    "halo": 3.3,
+    "halo": 3.7,
     "kind": "feature",
     "role": "label",
     "size": 10.43,
     "text": "Upper Marchshaw",
     "tier": 2,
     "tracking": 0.02,
-    "x": 687.2,
-    "y": 627.7
-   },
-   {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.8,
-    "kind": "castle",
-    "role": "label",
-    "size": 10.0,
-    "text": "Upper Marchstead",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 260.0,
-    "y": 350.4
+    "x": 700.3,
+    "y": 646.7
    },
    {
     "anchor": "middle",
@@ -2022,101 +2358,54 @@
     "text": "Upper Marchthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.8,
+    "halo": 3.7,
     "kind": "feature",
     "role": "label",
     "size": 6.5,
     "text": "Upper Marchvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 560.0,
+    "x": 538.2,
     "y": 321.4
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.2,
+    "halo": 3.4,
     "kind": "feature",
-    "path": [
-     [
-      741.0,
-      332.6
-     ],
-     [
-      745.5,
-      332.6
-     ],
-     [
-      747.4,
-      331.5
-     ],
-     [
-      749.5,
-      331.4
-     ],
-     [
-      752.5,
-      329.8
-     ],
-     [
-      757.3,
-      325.4
-     ],
-     [
-      780.6,
-      325.4
-     ],
-     [
-      785.1,
-      329.5
-     ]
-    ],
     "role": "label",
     "size": 6.5,
     "text": "Upper Marchweald",
     "tier": 2,
     "tracking": 0.02,
-    "x": 752.5,
-    "y": 329.8
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.2,
-    "kind": "castle",
-    "role": "label",
-    "size": 10.0,
-    "text": "Upper Marchwick",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 580.4,
-    "y": 239.0
+    "x": 762.6,
+    "y": 325.4
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Upper Marchwood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 433.4,
-    "y": 723.0
+    "x": 411.2,
+    "y": 721.2
    }
   ],
   "regional": [
    {
     "anchor": "end",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 2.9,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -2124,7 +2413,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 167.9,
-    "y": 658.0
+    "y": 672.7
    },
    {
     "anchor": "start",
@@ -2146,8 +2435,8 @@
     "kind": "range",
     "path": [
      [
-      569.6,
-      599.5
+      587.9,
+      614.1
      ],
      [
       592.1,
@@ -2178,8 +2467,12 @@
       695.1
      ],
      [
-      685.1,
-      696.4
+      691.2,
+      706.7
+     ],
+     [
+      695.9,
+      717.1
      ]
     ],
     "role": "label-relief",
@@ -2187,34 +2480,21 @@
     "text": "Lower Marchthorpe",
     "tier": 1,
     "tracking": 0.1,
-    "x": 645.4,
-    "y": 660.6
+    "x": 657.9,
+    "y": 675.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.7,
     "kind": "region",
     "role": "label-region",
     "size": 16.04,
     "text": "March 1",
     "tier": 0,
     "tracking": 0.14,
-    "x": 590.0,
+    "x": 554.8,
     "y": 414.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.1,
-    "kind": "region",
-    "role": "label-region",
-    "size": 17.82,
-    "text": "March 10",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 711.3,
-    "y": 464.2
    },
    {
     "anchor": "middle",
@@ -2222,39 +2502,87 @@
     "halo": 3.2,
     "kind": "region",
     "role": "label-region",
-    "size": 22.0,
-    "text": "March 12",
+    "size": 17.82,
+    "text": "March 10",
     "tier": 0,
     "tracking": 0.14,
-    "x": 658.5,
-    "y": 567.7
+    "x": 664.5,
+    "y": 464.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "region",
     "path": [
      [
-      516.6,
-      542.2
+      656.8,
+      530.4
      ],
      [
-      523.1,
-      536.7
+      664.1,
+      537.1
      ],
      [
-      581.3,
-      536.7
+      713.4,
+      537.1
+     ],
+     [
+      718.3,
+      532.7
      ]
     ],
     "role": "label-region",
     "size": 12.99,
+    "text": "March 11",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 687.1,
+    "y": 537.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 12",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 633.3,
+    "y": 570.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      549.4,
+      511.6
+     ],
+     [
+      549.4,
+      598.7
+     ],
+     [
+      545.4,
+      605.6
+     ],
+     [
+      545.4,
+      623.5
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
     "text": "March 13",
     "tier": 0,
     "tracking": 0.14,
-    "x": 523.1,
-    "y": 536.7
+    "x": 549.4,
+    "y": 568.0
    },
    {
     "anchor": "middle",
@@ -2292,8 +2620,35 @@
     "text": "March 14",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.4,
-    "y": 764.6
+    "x": 667.1,
+    "y": 767.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      463.8,
+      499.4
+     ],
+     [
+      452.2,
+      511.9
+     ],
+     [
+      452.2,
+      561.7
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 15",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 452.2,
+    "y": 528.3
    },
    {
     "anchor": "middle",
@@ -2335,8 +2690,31 @@
     "text": "March 16",
     "tier": 0,
     "tracking": 0.14,
-    "x": 485.3,
-    "y": 632.4
+    "x": 472.6,
+    "y": 622.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      342.5,
+      558.1
+     ],
+     [
+      342.5,
+      671.1
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 342.5,
+    "y": 614.6
    },
    {
     "anchor": "middle",
@@ -2344,12 +2722,25 @@
     "halo": 3.4,
     "kind": "region",
     "role": "label-region",
-    "size": 16.04,
-    "text": "March 17",
+    "size": 12.65,
+    "text": "March 18",
     "tier": 0,
     "tracking": 0.14,
-    "x": 390.2,
-    "y": 589.3
+    "x": 274.2,
+    "y": 660.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 19",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 207.7,
+    "y": 594.5
    },
    {
     "anchor": "middle",
@@ -2357,38 +2748,52 @@
     "halo": 3.3,
     "kind": "region",
     "role": "label-region",
-    "size": 12.65,
-    "text": "March 18",
+    "size": 22.0,
+    "text": "March 2",
     "tier": 0,
     "tracking": 0.14,
-    "x": 291.7,
-    "y": 660.0
+    "x": 512.5,
+    "y": 299.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
-    "kind": "region",
-    "role": "label-region",
-    "size": 12.99,
-    "text": "March 19",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 233.0,
-    "y": 572.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "March 20",
     "tier": 0,
     "tracking": 0.14,
-    "x": 164.2,
-    "y": 631.6
+    "x": 132.4,
+    "y": 638.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      258.0,
+      356.6
+     ],
+     [
+      272.9,
+      372.3
+     ],
+     [
+      272.9,
+      453.4
+     ]
+    ],
+    "role": "label-region",
+    "size": 19.8,
+    "text": "March 21",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 272.9,
+    "y": 402.0
    },
    {
     "anchor": "middle",
@@ -2400,47 +2805,218 @@
     "text": "March 22",
     "tier": 0,
     "tracking": 0.14,
-    "x": 218.3,
-    "y": 296.3
+    "x": 222.4,
+    "y": 294.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "path": [
+     [
+      380.4,
+      91.1
+     ],
+     [
+      380.4,
+      105.3
+     ],
+     [
+      375.9,
+      112.5
+     ],
+     [
+      375.3,
+      121.0
+     ],
+     [
+      366.2,
+      136.7
+     ],
+     [
+      360.8,
+      159.7
+     ],
+     [
+      347.5,
+      179.0
+     ],
+     [
+      342.0,
+      189.9
+     ],
+     [
+      341.5,
+      197.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 23",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 364.2,
+    "y": 145.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      307.0,
+      96.2
+     ],
+     [
+      304.7,
+      99.4
+     ],
+     [
+      304.7,
+      154.5
+     ],
+     [
+      298.4,
+      162.0
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 24",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 304.7,
+    "y": 129.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "path": [
+     [
+      388.0,
+      325.8
+     ],
+     [
+      388.0,
+      428.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 3",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 388.0,
+    "y": 377.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 4",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 488.7,
+    "y": 251.2
    },
    {
     "anchor": "middle",
     "face": "sc",
     "halo": 3.1,
     "kind": "region",
+    "path": [
+     [
+      547.2,
+      123.1
+     ],
+     [
+      547.3,
+      144.1
+     ],
+     [
+      551.0,
+      151.1
+     ],
+     [
+      572.3,
+      173.6
+     ],
+     [
+      572.3,
+      216.3
+     ]
+    ],
     "role": "label-region",
     "size": 22.0,
-    "text": "March 23",
+    "text": "March 5",
     "tier": 0,
     "tracking": 0.14,
-    "x": 405.2,
-    "y": 92.9
+    "x": 566.4,
+    "y": 167.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
+    "halo": 3.4,
     "kind": "region",
     "role": "label-region",
-    "size": 12.99,
-    "text": "March 24",
+    "size": 17.4,
+    "text": "March 6",
     "tier": 0,
     "tracking": 0.14,
-    "x": 330.8,
-    "y": 122.8
+    "x": 603.2,
+    "y": 265.2
    },
    {
     "anchor": "middle",
     "face": "sc",
     "halo": 3.8,
     "kind": "region",
+    "path": [
+     [
+      639.2,
+      338.7
+     ],
+     [
+      639.3,
+      342.5
+     ],
+     [
+      641.6,
+      346.4
+     ],
+     [
+      641.6,
+      430.3
+     ]
+    ],
     "role": "label-region",
-    "size": 22.0,
-    "text": "March 3",
+    "size": 19.8,
+    "text": "March 7",
     "tier": 0,
     "tracking": 0.14,
-    "x": 448.7,
-    "y": 350.9
+    "x": 641.6,
+    "y": 384.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.7,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 8",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 723.7,
+    "y": 367.0
    },
    {
     "anchor": "middle",
@@ -2449,37 +3025,37 @@
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
-    "text": "March 5",
+    "text": "March 9",
     "tier": 0,
     "tracking": 0.14,
-    "x": 589.1,
-    "y": 214.5
+    "x": 761.4,
+    "y": 430.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.5,
-    "kind": "region",
+    "halo": 3.1,
+    "kind": "landmass",
     "role": "label-region",
-    "size": 14.43,
-    "text": "March 8",
-    "tier": 0,
+    "size": 11.05,
+    "text": "Marchcape",
+    "tier": 1,
     "tracking": 0.14,
-    "x": 757.8,
-    "y": 367.0
+    "x": 738.2,
+    "y": 629.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.09,
     "text": "Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    },
    {
     "anchor": "end",
@@ -2495,30 +3071,68 @@
     "y": 513.9
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.4,
+    "halo": 3.7,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchfield",
     "tier": 2,
     "tracking": 0.02,
-    "x": 321.4,
+    "x": 302.4,
     "y": 615.5
    },
    {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.1,
-    "kind": "castle",
-    "role": "label",
-    "size": 10.0,
-    "text": "Marchford",
-    "tier": 2,
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.7,
+    "kind": "river",
+    "path": [
+     [
+      349.8,
+      326.6
+     ],
+     [
+      349.8,
+      342.3
+     ],
+     [
+      348.8,
+      345.1
+     ],
+     [
+      345.7,
+      349.1
+     ],
+     [
+      346.4,
+      351.8
+     ],
+     [
+      349.5,
+      355.9
+     ],
+     [
+      350.1,
+      359.9
+     ],
+     [
+      351.8,
+      362.7
+     ],
+     [
+      356.8,
+      367.7
+     ]
+    ],
+    "role": "label-water",
+    "size": 11.0,
+    "text": "Marchflow",
+    "tier": 1,
     "tracking": 0.02,
-    "x": 641.0,
-    "y": 447.6
+    "x": 346.4,
+    "y": 351.8
    },
    {
     "anchor": "end",
@@ -2560,42 +3174,55 @@
     "y": 599.3
    },
    {
-    "anchor": "end",
+    "anchor": "middle",
     "face": "sans",
-    "halo": 3.7,
+    "halo": 3.8,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Marchpass",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 577.3,
+    "y": 398.3
+   },
+   {
+    "anchor": "start",
+    "face": "sans",
+    "halo": 3.8,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 573.2,
-    "y": 523.4
+    "x": 592.2,
+    "y": 537.6
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.5,
+    "halo": 3.2,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Marchvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 464.9,
-    "y": 507.2
+    "x": 483.9,
+    "y": 521.4
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans-medium",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "city",
     "role": "label",
     "size": 13.0,
     "text": "New Marchbridge",
     "tier": 1,
     "tracking": 0.01,
-    "x": 292.4,
+    "x": 269.3,
     "y": 170.8
    },
    {
@@ -2652,19 +3279,6 @@
    },
    {
     "anchor": "start",
-    "face": "sans",
-    "halo": 3.1,
-    "kind": "town",
-    "role": "label",
-    "size": 11.5,
-    "text": "North Marchwick",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 585.3,
-    "y": 262.8
-   },
-   {
-    "anchor": "start",
     "face": "sans-medium",
     "halo": 3.0,
     "kind": "city",
@@ -2677,17 +3291,17 @@
     "y": 762.1
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.7,
+    "halo": 3.1,
     "kind": "town",
     "role": "label",
     "size": 11.5,
     "text": "Old Marchbridge",
     "tier": 1,
     "tracking": 0.0,
-    "x": 251.6,
-    "y": 394.1
+    "x": 232.0,
+    "y": 403.9
    },
    {
     "anchor": "end",
@@ -2716,6 +3330,41 @@
     "y": 482.2
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
+   },
+   {
     "anchor": "start",
     "face": "sans",
     "halo": 3.2,
@@ -2738,8 +3387,8 @@
     "text": "Upper Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 138.1
    },
    {
     "anchor": "start",
@@ -2756,15 +3405,28 @@
    },
    {
     "anchor": "middle",
+    "face": "sans",
+    "halo": 3.4,
+    "kind": "castle",
+    "role": "label",
+    "size": 10.0,
+    "text": "Upper Marchgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 328.1,
+    "y": 409.1
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "Upper Marchmere",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -2790,8 +3452,8 @@
     "text": "Upper Marchthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    }
   ],
   "world": [
@@ -2815,8 +3477,8 @@
     "kind": "range",
     "path": [
      [
-      569.6,
-      599.5
+      587.9,
+      614.1
      ],
      [
       592.1,
@@ -2847,8 +3509,12 @@
       695.1
      ],
      [
-      685.1,
-      696.4
+      691.2,
+      706.7
+     ],
+     [
+      695.9,
+      717.1
      ]
     ],
     "role": "label-relief",
@@ -2856,107 +3522,109 @@
     "text": "Lower Marchthorpe",
     "tier": 1,
     "tracking": 0.1,
-    "x": 645.4,
-    "y": 660.6
+    "x": 657.9,
+    "y": 675.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.8,
-    "kind": "range",
-    "path": [
-     [
-      237.9,
-      542.5
-     ],
-     [
-      239.0,
-      527.7
-     ],
-     [
-      243.3,
-      502.3
-     ],
-     [
-      247.5,
-      488.5
-     ],
-     [
-      257.2,
-      474.9
-     ],
-     [
-      265.8,
-      470.7
-     ],
-     [
-      279.4,
-      465.9
-     ],
-     [
-      288.9,
-      463.6
-     ],
-     [
-      304.3,
-      463.0
-     ],
-     [
-      315.5,
-      464.4
-     ],
-     [
-      324.0,
-      461.0
-     ]
-    ],
-    "role": "label-relief",
-    "size": 14.0,
-    "text": "Lower Marchwold",
-    "tier": 1,
-    "tracking": 0.1,
-    "x": 265.8,
-    "y": 470.7
+    "halo": 3.7,
+    "kind": "region",
+    "role": "label-region",
+    "size": 16.04,
+    "text": "March 1",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 554.8,
+    "y": 414.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 17.82,
     "text": "March 10",
     "tier": 0,
     "tracking": 0.14,
-    "x": 711.3,
+    "x": 664.5,
     "y": 464.2
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "region",
     "path": [
      [
-      516.6,
-      542.2
+      656.8,
+      530.4
      ],
      [
-      523.1,
-      536.7
+      664.1,
+      537.1
      ],
      [
-      581.3,
-      536.7
+      713.4,
+      537.1
+     ],
+     [
+      718.3,
+      532.7
      ]
     ],
     "role": "label-region",
     "size": 12.99,
+    "text": "March 11",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 687.1,
+    "y": 537.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 12",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 633.3,
+    "y": 570.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      549.4,
+      511.6
+     ],
+     [
+      549.4,
+      598.7
+     ],
+     [
+      545.4,
+      605.6
+     ],
+     [
+      545.4,
+      623.5
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
     "text": "March 13",
     "tier": 0,
     "tracking": 0.14,
-    "x": 523.1,
-    "y": 536.7
+    "x": 549.4,
+    "y": 568.0
    },
    {
     "anchor": "middle",
@@ -2994,8 +3662,35 @@
     "text": "March 14",
     "tier": 0,
     "tracking": 0.14,
-    "x": 670.4,
-    "y": 764.6
+    "x": 667.1,
+    "y": 767.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      463.8,
+      499.4
+     ],
+     [
+      452.2,
+      511.9
+     ],
+     [
+      452.2,
+      561.7
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 15",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 452.2,
+    "y": 528.3
    },
    {
     "anchor": "middle",
@@ -3037,8 +3732,31 @@
     "text": "March 16",
     "tier": 0,
     "tracking": 0.14,
-    "x": 485.3,
-    "y": 632.4
+    "x": 472.6,
+    "y": 622.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "path": [
+     [
+      342.5,
+      558.1
+     ],
+     [
+      342.5,
+      671.1
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 17",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 342.5,
+    "y": 614.6
    },
    {
     "anchor": "middle",
@@ -3046,12 +3764,25 @@
     "halo": 3.4,
     "kind": "region",
     "role": "label-region",
-    "size": 16.04,
-    "text": "March 17",
+    "size": 12.65,
+    "text": "March 18",
     "tier": 0,
     "tracking": 0.14,
-    "x": 390.2,
-    "y": 589.3
+    "x": 274.2,
+    "y": 660.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 19",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 207.7,
+    "y": 594.5
    },
    {
     "anchor": "middle",
@@ -3059,25 +3790,52 @@
     "halo": 3.3,
     "kind": "region",
     "role": "label-region",
-    "size": 12.65,
-    "text": "March 18",
+    "size": 22.0,
+    "text": "March 2",
     "tier": 0,
     "tracking": 0.14,
-    "x": 291.7,
-    "y": 660.0
+    "x": 512.5,
+    "y": 299.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "March 20",
     "tier": 0,
     "tracking": 0.14,
-    "x": 164.2,
-    "y": 631.6
+    "x": 132.4,
+    "y": 638.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      258.0,
+      356.6
+     ],
+     [
+      272.9,
+      372.3
+     ],
+     [
+      272.9,
+      453.4
+     ]
+    ],
+    "role": "label-region",
+    "size": 19.8,
+    "text": "March 21",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 272.9,
+    "y": 402.0
    },
    {
     "anchor": "middle",
@@ -3089,8 +3847,218 @@
     "text": "March 22",
     "tier": 0,
     "tracking": 0.14,
-    "x": 218.3,
-    "y": 296.3
+    "x": 222.4,
+    "y": 294.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "path": [
+     [
+      380.4,
+      91.1
+     ],
+     [
+      380.4,
+      105.3
+     ],
+     [
+      375.9,
+      112.5
+     ],
+     [
+      375.3,
+      121.0
+     ],
+     [
+      366.2,
+      136.7
+     ],
+     [
+      360.8,
+      159.7
+     ],
+     [
+      347.5,
+      179.0
+     ],
+     [
+      342.0,
+      189.9
+     ],
+     [
+      341.5,
+      197.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 23",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 364.2,
+    "y": 145.1
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 2.9,
+    "kind": "region",
+    "path": [
+     [
+      307.0,
+      96.2
+     ],
+     [
+      304.7,
+      99.4
+     ],
+     [
+      304.7,
+      154.5
+     ],
+     [
+      298.4,
+      162.0
+     ]
+    ],
+    "role": "label-region",
+    "size": 12.99,
+    "text": "March 24",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 304.7,
+    "y": 129.9
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "path": [
+     [
+      388.0,
+      325.8
+     ],
+     [
+      388.0,
+      428.2
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 3",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 388.0,
+    "y": 377.0
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 4",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 488.7,
+    "y": 251.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.1,
+    "kind": "region",
+    "path": [
+     [
+      547.2,
+      123.1
+     ],
+     [
+      547.3,
+      144.1
+     ],
+     [
+      551.0,
+      151.1
+     ],
+     [
+      572.3,
+      173.6
+     ],
+     [
+      572.3,
+      216.3
+     ]
+    ],
+    "role": "label-region",
+    "size": 22.0,
+    "text": "March 5",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 566.4,
+    "y": 167.3
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.4,
+    "kind": "region",
+    "role": "label-region",
+    "size": 17.4,
+    "text": "March 6",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 603.2,
+    "y": 265.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.8,
+    "kind": "region",
+    "path": [
+     [
+      639.2,
+      338.7
+     ],
+     [
+      639.3,
+      342.5
+     ],
+     [
+      641.6,
+      346.4
+     ],
+     [
+      641.6,
+      430.3
+     ]
+    ],
+    "role": "label-region",
+    "size": 19.8,
+    "text": "March 7",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 641.6,
+    "y": 384.2
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.7,
+    "kind": "region",
+    "role": "label-region",
+    "size": 14.43,
+    "text": "March 8",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 723.7,
+    "y": 367.0
    },
    {
     "anchor": "middle",
@@ -3099,88 +4067,36 @@
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
-    "text": "March 23",
+    "text": "March 9",
     "tier": 0,
     "tracking": 0.14,
-    "x": 405.2,
-    "y": 92.9
+    "x": 761.4,
+    "y": 430.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.8,
-    "kind": "region",
-    "role": "label-region",
-    "size": 12.99,
-    "text": "March 24",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 330.8,
-    "y": 122.8
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.8,
-    "kind": "region",
-    "role": "label-region",
-    "size": 22.0,
-    "text": "March 3",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 448.7,
-    "y": 350.9
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.5,
-    "kind": "region",
-    "role": "label-region",
-    "size": 14.43,
-    "text": "March 8",
-    "tier": 0,
-    "tracking": 0.14,
-    "x": 757.8,
-    "y": 367.0
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.3,
-    "kind": "landmass",
-    "role": "label-region",
-    "size": 11.05,
-    "text": "Marchcape",
-    "tier": 1,
-    "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 8.09,
     "text": "Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans-medium",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "city",
     "role": "label",
     "size": 13.0,
     "text": "New Marchbridge",
     "tier": 1,
     "tracking": 0.01,
-    "x": 292.4,
+    "x": 269.3,
     "y": 170.8
    },
    {
@@ -3198,6 +4114,41 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
     "halo": 3.3,
     "kind": "landmass",
@@ -3206,21 +4157,8 @@
     "text": "Upper Marchcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.2,
-    "kind": "landmass",
-    "role": "label-region",
-    "size": 7.0,
-    "text": "Upper Marchmere",
-    "tier": 1,
-    "tracking": 0.14,
-    "x": 779.3,
-    "y": 233.3
+    "x": 445.0,
+    "y": 138.1
    },
    {
     "anchor": "middle",
@@ -3232,8 +4170,8 @@
     "text": "Upper Marchthorpe",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    }
   ]
  },
@@ -3455,19 +4393,9 @@
    "text": "Lower Marchclose"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Lower Marchcombe"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "Lower Marchfield"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Lower Marchford"
   },
   {
    "kind": "road",
@@ -3495,11 +4423,6 @@
    "text": "Lower Marchollow"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Lower Marcholt"
-  },
-  {
    "kind": "village",
    "reason": "no room",
    "text": "Lower Marchpass"
@@ -3515,64 +4438,19 @@
    "text": "Lower Marchrush"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Lower Marchshaw"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Lower Marchstead"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "Lower Marchvale"
   },
   {
-   "kind": "feature",
+   "kind": "range",
    "reason": "no room",
-   "text": "Lower Marchwood"
-  },
-  {
-   "kind": "region",
-   "reason": "no room",
-   "text": "March 6"
-  },
-  {
-   "kind": "region",
-   "reason": "no room",
-   "text": "March 9"
+   "text": "Lower Marchwold"
   },
   {
    "kind": "castle",
    "reason": "no room",
    "text": "Marchclose"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Marchdowns"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Marchfells"
-  },
-  {
-   "kind": "river",
-   "reason": "no room",
-   "text": "Marchflow"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Marchollow"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Marchpass"
   },
   {
    "kind": "river",
@@ -3600,24 +4478,14 @@
    "text": "Marchweald"
   },
   {
-   "kind": "castle",
+   "kind": "village",
    "reason": "no room",
-   "text": "Marchwick"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Marchwold"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Marchwood"
+   "text": "New Marchollow"
   },
   {
    "kind": "village",
    "reason": "no room",
-   "text": "New Marchollow"
+   "text": "New Marcholt"
   },
   {
    "kind": "village",
@@ -3632,7 +4500,12 @@
   {
    "kind": "village",
    "reason": "no room",
-   "text": "North Marcholt"
+   "text": "North Marchford"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "North Marchreach"
   },
   {
    "kind": "village",
@@ -3643,6 +4516,11 @@
    "kind": "village",
    "reason": "no room",
    "text": "North Marchthorpe"
+  },
+  {
+   "kind": "town",
+   "reason": "no room",
+   "text": "North Marchwick"
   },
   {
    "kind": "town",
@@ -3665,6 +4543,11 @@
    "text": "Old Marchmere"
   },
   {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Old Marchmoor"
+  },
+  {
    "kind": "road",
    "reason": "no room",
    "text": "Old Marchollow"
@@ -3673,6 +4556,11 @@
    "kind": "road",
    "reason": "no room",
    "text": "Old Marcholt"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Old Marchpass"
   },
   {
    "kind": "road",
@@ -3690,29 +4578,19 @@
    "text": "Old Marchwick"
   },
   {
-   "kind": "sea",
-   "reason": "no room",
-   "text": "The Open Sea"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Upper Marchclose"
-  },
-  {
    "kind": "castle",
    "reason": "no room",
    "text": "Upper Marchcombe"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Upper Marchdowns"
+  },
+  {
    "kind": "range",
    "reason": "no room",
    "text": "Upper Marchfells"
-  },
-  {
-   "kind": "castle",
-   "reason": "no room",
-   "text": "Upper Marchgate"
   },
   {
    "kind": "feature",
@@ -3730,14 +4608,29 @@
    "text": "Upper Marcholt"
   },
   {
+   "kind": "feature",
+   "reason": "no room",
+   "text": "Upper Marchreach"
+  },
+  {
    "kind": "river",
    "reason": "no room",
    "text": "Upper Marchrush"
   },
   {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Upper Marchstead"
+  },
+  {
    "kind": "river",
    "reason": "no room",
    "text": "Upper Marchwater"
+  },
+  {
+   "kind": "castle",
+   "reason": "no room",
+   "text": "Upper Marchwick"
   },
   {
    "kind": "feature",

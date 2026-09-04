@@ -480,28 +480,107 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 3.1,
     "kind": "feature",
     "role": "label",
-    "size": 6.5,
-    "text": "Beltfield",
+    "size": 11.0,
+    "text": "Beltbank",
     "tier": 2,
     "tracking": 0.02,
-    "x": 245.6,
-    "y": 483.9
+    "x": 233.6,
+    "y": 622.4
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "feature",
     "role": "label",
-    "size": 8.67,
+    "size": 11.0,
+    "text": "Beltclose",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 133.0,
+    "y": 270.5
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "feature",
+    "path": [
+     [
+      229.3,
+      463.6
+     ],
+     [
+      232.4,
+      467.1
+     ],
+     [
+      232.4,
+      494.4
+     ]
+    ],
+    "role": "label",
+    "size": 9.9,
+    "text": "Beltfield",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 232.4,
+    "y": 478.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Beltgate",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 698.2,
+    "y": 367.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Belthill",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 736.8,
+    "y": 580.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Beltholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 339.3,
+    "y": 318.9
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.5,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.22,
     "text": "Belthorpe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 503.6,
-    "y": 455.7
+    "x": 496.8,
+    "y": 453.3
    },
    {
     "anchor": "middle",
@@ -513,7 +592,7 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -523,29 +602,65 @@
     "kind": "feature",
     "role": "label",
     "size": 11.0,
+    "text": "Beltmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 630.5,
+    "y": 85.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Beltmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 560.0,
+    "y": 329.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
     "text": "Beltreach",
     "tier": 2,
     "tracking": 0.02,
-    "x": 701.3,
-    "y": 701.4
+    "x": 681.2,
+    "y": 721.0
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
     "halo": 2.9,
     "kind": "feature",
+    "path": [
+     [
+      572.2,
+      203.9
+     ],
+     [
+      572.2,
+      238.2
+     ]
+    ],
     "role": "label",
     "size": 11.0,
     "text": "Beltvale",
     "tier": 2,
     "tracking": 0.02,
-    "x": 585.7,
-    "y": 248.3
+    "x": 572.2,
+    "y": 221.1
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.5,
+    "halo": 3.3,
     "kind": "feature",
     "path": [
      [
@@ -566,7 +681,7 @@
     "text": "Beltwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 410.3,
+    "x": 405.9,
     "y": 95.0
    },
    {
@@ -664,15 +779,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "Capitaland",
     "tier": 2,
     "tracking": 0.02,
-    "x": 546.1,
-    "y": 484.1
+    "x": 516.3,
+    "y": 468.7
    },
    {
     "anchor": "end",
@@ -745,16 +860,42 @@
     "y": 593.8
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Capitathorpe",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 188.8,
+    "y": 703.7
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Capitawick",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 434.8,
+    "y": 157.6
+   },
+   {
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.3,
+    "halo": 3.5,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Capity",
     "tier": 2,
     "tracking": 0.02,
-    "x": 564.1,
+    "x": 547.1,
     "y": 442.5
    },
    {
@@ -810,16 +951,16 @@
     "y": 642.4
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Hamlet Town",
     "tier": 2,
     "tracking": 0.02,
-    "x": 316.0,
+    "x": 297.0,
     "y": 371.8
    },
    {
@@ -864,7 +1005,7 @@
    {
     "anchor": "end",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.5,
     "kind": "village",
     "role": "label",
     "size": 10.0,
@@ -872,33 +1013,33 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 673.6,
-    "y": 478.7
+    "y": 491.5
    },
    {
     "anchor": "middle",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.8,
     "kind": "road",
     "path": [
      [
-      306.3,
-      264.4
+      290.5,
+      289.9
+     ],
+     [
+      304.4,
+      276.0
+     ],
+     [
+      306.5,
+      271.9
      ],
      [
       306.1,
       253.0
      ],
      [
-      297.7,
-      243.5
-     ],
-     [
-      295.6,
-      239.4
-     ],
-     [
-      295.4,
-      221.3
+      303.7,
+      250.2
      ]
     ],
     "role": "label",
@@ -906,8 +1047,8 @@
     "text": "Hamletclose",
     "tier": 2,
     "tracking": 0.0,
-    "x": 297.7,
-    "y": 243.5
+    "x": 306.5,
+    "y": 271.9
    },
    {
     "anchor": "middle",
@@ -916,8 +1057,8 @@
     "kind": "road",
     "path": [
      [
-      394.3,
-      356.4
+      400.0,
+      362.1
      ],
      [
       407.3,
@@ -936,8 +1077,8 @@
       388.4
      ],
      [
-      415.3,
-      393.4
+      421.0,
+      399.1
      ]
     ],
     "role": "label",
@@ -1078,8 +1219,8 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
     "anchor": "middle",
@@ -1113,8 +1254,8 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "start",
@@ -1144,34 +1285,42 @@
    },
    {
     "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Belt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 620.2,
+    "y": 469.4
+   },
+   {
+    "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.5,
+    "halo": 3.1,
     "kind": "feature",
-    "path": [
-     [
-      454.4,
-      524.4
-     ],
-     [
-      457.5,
-      527.0
-     ],
-     [
-      495.2,
-      527.0
-     ],
-     [
-      497.9,
-      528.1
-     ]
-    ],
     "role": "label",
-    "size": 8.02,
+    "size": 11.0,
     "text": "The Beltcombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 495.2,
+    "x": 481.5,
     "y": 527.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Beltford",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 236.4,
+    "y": 187.1
    },
    {
     "anchor": "middle",
@@ -1183,21 +1332,21 @@
     "text": "The Belthollow",
     "tier": 2,
     "tracking": 0.02,
-    "x": 732.4,
+    "x": 728.5,
     "y": 499.5
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.4,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
-    "size": 6.5,
+    "size": 11.0,
     "text": "The Beltstead",
     "tier": 2,
     "tracking": 0.02,
-    "x": 421.2,
-    "y": 471.2
+    "x": 404.4,
+    "y": 486.6
    },
    {
     "anchor": "middle",
@@ -1209,8 +1358,8 @@
     "text": "The Capitacombe",
     "tier": 2,
     "tracking": 0.02,
-    "x": 446.3,
-    "y": 798.6
+    "x": 440.9,
+    "y": 803.2
    },
    {
     "anchor": "middle",
@@ -1240,21 +1389,21 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 213.8,
+    "x": 267.3,
     "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
     "anchor": "middle",
@@ -1313,29 +1462,64 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "region",
     "path": [
      [
-      289.9,
-      325.7
+      379.6,
+      297.9
      ],
      [
-      299.5,
-      318.7
+      379.6,
+      423.0
      ],
      [
-      407.2,
-      318.7
+      405.6,
+      452.2
      ]
     ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 299.5,
-    "y": 318.7
+    "x": 379.6,
+    "y": 380.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    },
    {
     "anchor": "start",
@@ -1375,19 +1559,6 @@
     "tracking": 0.0,
     "x": 780.2,
     "y": 368.3
-   },
-   {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.8,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Upper Capitabank",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 373.5,
-    "y": 300.5
    },
    {
     "anchor": "start",
@@ -1442,17 +1613,17 @@
     "y": 691.6
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.6,
+    "halo": 3.3,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "Upper Capitahill",
     "tier": 2,
     "tracking": 0.0,
-    "x": 259.8,
-    "y": 329.4
+    "x": 276.8,
+    "y": 337.9
    },
    {
     "anchor": "start",
@@ -1492,19 +1663,6 @@
     "tracking": 0.0,
     "x": 233.0,
     "y": 650.2
-   },
-   {
-    "anchor": "end",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "village",
-    "role": "label",
-    "size": 10.0,
-    "text": "Upper Capitamoor",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 370.4,
-    "y": 345.2
    },
    {
     "anchor": "start",
@@ -1613,15 +1771,37 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.1,
     "kind": "landmass",
+    "path": [
+     [
+      132.5,
+      287.4
+     ],
+     [
+      122.5,
+      298.1
+     ],
+     [
+      122.4,
+      332.6
+     ],
+     [
+      120.1,
+      337.0
+     ],
+     [
+      109.0,
+      349.9
+     ]
+    ],
     "role": "label-region",
-    "size": 12.59,
+    "size": 15.75,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    }
   ],
   "regional": [
@@ -1635,7 +1815,7 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -1775,16 +1955,16 @@
     "y": 508.6
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.4,
+    "halo": 3.3,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Hamlet Town",
     "tier": 2,
     "tracking": 0.02,
-    "x": 316.0,
+    "x": 297.0,
     "y": 371.8
    },
    {
@@ -1886,8 +2066,8 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
     "anchor": "middle",
@@ -1921,8 +2101,8 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "start",
@@ -1953,6 +2133,19 @@
    {
     "anchor": "middle",
     "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Belt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 620.2,
+    "y": 469.4
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
     "halo": 2.9,
     "kind": "region",
     "path": [
@@ -1978,21 +2171,21 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 213.8,
+    "x": 267.3,
     "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
     "anchor": "middle",
@@ -2051,29 +2244,64 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "region",
     "path": [
      [
-      289.9,
-      325.7
+      379.6,
+      297.9
      ],
      [
-      299.5,
-      318.7
+      379.6,
+      423.0
      ],
      [
-      407.2,
-      318.7
+      405.6,
+      452.2
      ]
     ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 299.5,
-    "y": 318.7
+    "x": 379.6,
+    "y": 380.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    },
    {
     "anchor": "start",
@@ -2143,15 +2371,37 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.1,
     "kind": "landmass",
+    "path": [
+     [
+      132.5,
+      287.4
+     ],
+     [
+      122.5,
+      298.1
+     ],
+     [
+      122.4,
+      332.6
+     ],
+     [
+      120.1,
+      337.0
+     ],
+     [
+      109.0,
+      349.9
+     ]
+    ],
     "role": "label-region",
-    "size": 12.59,
+    "size": 15.75,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    }
   ],
   "world": [
@@ -2165,7 +2415,7 @@
     "text": "Beltland",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -2217,8 +2467,8 @@
     "text": "Hinterlage",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
     "anchor": "middle",
@@ -2252,8 +2502,21 @@
     "text": "Mard",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Belt",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 620.2,
+    "y": 469.4
    },
    {
     "anchor": "middle",
@@ -2283,61 +2546,118 @@
     "text": "The Coastward",
     "tier": 0,
     "tracking": 0.14,
-    "x": 213.8,
+    "x": 267.3,
     "y": 581.8
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.01,
     "text": "The Coastwarket",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "region",
     "path": [
      [
-      289.9,
-      325.7
+      379.6,
+      297.9
      ],
      [
-      299.5,
-      318.7
+      379.6,
+      423.0
      ],
      [
-      407.2,
-      318.7
+      405.6,
+      452.2
      ]
     ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Hinterland",
     "tier": 0,
     "tracking": 0.14,
-    "x": 299.5,
-    "y": 318.7
+    "x": 379.6,
+    "y": 380.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.1,
     "kind": "landmass",
+    "path": [
+     [
+      132.5,
+      287.4
+     ],
+     [
+      122.5,
+      298.1
+     ],
+     [
+      122.4,
+      332.6
+     ],
+     [
+      120.1,
+      337.0
+     ],
+     [
+      109.0,
+      349.9
+     ]
+    ],
     "role": "label-region",
-    "size": 12.59,
+    "size": 15.75,
     "text": "Villand",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    }
   ]
  },
@@ -2406,41 +2726,6 @@
  "mode": "legally_owns",
  "unlabelled": [
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltbank"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltclose"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltgate"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Belthill"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltholt"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltmere"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Beltmoor"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "Capitabank"
@@ -2459,16 +2744,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "Capitamoor"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Capitathorpe"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Capitawick"
   },
   {
    "kind": "village",
@@ -2556,16 +2831,6 @@
    "text": "Hintervale"
   },
   {
-   "kind": "region",
-   "reason": "no room",
-   "text": "The Belt"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Beltford"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Capitaclose"
@@ -2601,14 +2866,19 @@
    "text": "The Hinterwick"
   },
   {
-   "kind": "sea",
-   "reason": "no room",
-   "text": "The Open Sea"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Upper Beltland"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Upper Capitabank"
+  },
+  {
+   "kind": "village",
+   "reason": "no room",
+   "text": "Upper Capitamoor"
   }
  ]
 }

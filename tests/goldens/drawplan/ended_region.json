@@ -347,43 +347,74 @@
     "y": 358.0
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.6,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "The Drowned Ford",
     "tier": 2,
     "tracking": 0.0,
-    "x": 276.3,
+    "x": 259.3,
     "y": 457.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "region",
+    "path": [
+     [
+      638.3,
+      446.1
+     ],
+     [
+      638.3,
+      543.4
+     ],
+     [
+      582.6,
+      604.4
+     ],
+     [
+      582.3,
+      685.3
+     ]
+    ],
     "role": "label-region",
-    "size": 17.82,
+    "size": 22.0,
     "text": "The Drowned March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 529.2,
-    "y": 434.4
+    "x": 616.0,
+    "y": 567.9
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "The Drowned Pass",
     "tier": 2,
     "tracking": 0.02,
-    "x": 476.7,
+    "x": 493.7,
     "y": 431.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "The Drowned Weald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 121.8,
+    "y": 306.6
    },
    {
     "anchor": "start",
@@ -400,29 +431,42 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Drowned Wood",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 366.1,
+    "y": 725.5
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Drownedcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
-    "anchor": "start",
+    "anchor": "middle",
     "face": "sans",
-    "halo": 3.5,
+    "halo": 3.6,
     "kind": "village",
     "role": "label",
     "size": 10.0,
     "text": "The Drownedford",
     "tier": 2,
     "tracking": 0.0,
-    "x": 295.0,
-    "y": 517.3
+    "x": 286.5,
+    "y": 507.1
    },
    {
     "anchor": "middle",
@@ -458,15 +502,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Drownedmere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 533.6,
-    "y": 752.8
+    "x": 532.3,
+    "y": 753.9
    },
    {
     "anchor": "start",
@@ -541,28 +585,28 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The High Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    },
    {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "town",
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
     "role": "label",
-    "size": 11.5,
-    "text": "The High Ford",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 586.6,
-    "y": 622.7
+    "size": 11.0,
+    "text": "The High Holt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 434.8,
+    "y": 142.2
    },
    {
     "anchor": "middle",
@@ -574,39 +618,8 @@
     "text": "The High Home",
     "tier": 0,
     "tracking": 0.14,
-    "x": 278.8,
+    "x": 200.8,
     "y": 622.5
-   },
-   {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 3.6,
-    "kind": "road",
-    "path": [
-     [
-      275.6,
-      440.2
-     ],
-     [
-      309.8,
-      406.0
-     ],
-     [
-      313.9,
-      404.0
-     ],
-     [
-      320.0,
-      404.2
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "The High March",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 313.9,
-    "y": 404.0
    },
    {
     "anchor": "end",
@@ -623,6 +636,32 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "feature",
+    "role": "label",
+    "size": 10.07,
+    "text": "The High Shaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 561.7,
+    "y": 312.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The High Weald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 244.7,
+    "y": 474.4
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
     "halo": 3.1,
     "kind": "landmass",
@@ -631,8 +670,8 @@
     "text": "The High Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "start",
@@ -657,7 +696,7 @@
     "text": "The Highcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -741,8 +780,8 @@
     "text": "The Highmoor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 201.0,
-    "y": 707.3
+    "x": 200.2,
+    "y": 706.8
    },
    {
     "anchor": "start",
@@ -759,28 +798,41 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Highshaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 157.3,
+    "y": 565.4
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.95,
     "text": "The Home Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.8,
+    "halo": 3.2,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Home Fells",
     "tier": 2,
     "tracking": 0.02,
-    "x": 405.0,
+    "x": 381.6,
     "y": 684.3
    },
    {
@@ -845,8 +897,21 @@
     "text": "The Home Mere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 558.4,
-    "y": 704.0
+    "x": 554.1,
+    "y": 708.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Home Moor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 556.9,
+    "y": 384.5
    },
    {
     "anchor": "start",
@@ -864,14 +929,14 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Home Wood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 586.5,
+    "x": 577.4,
     "y": 478.1
    },
    {
@@ -890,15 +955,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
+    "halo": 2.8,
     "kind": "feature",
     "role": "label",
-    "size": 8.74,
+    "size": 6.5,
     "text": "The Homemere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 490.0,
-    "y": 625.2
+    "x": 484.1,
+    "y": 636.2
    },
    {
     "anchor": "start",
@@ -912,6 +977,19 @@
     "tracking": 0.02,
     "x": 343.0,
     "y": 658.8
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Homeshaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 630.5,
+    "y": 100.6
    },
    {
     "anchor": "start",
@@ -954,28 +1032,64 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Living Holt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 743.7,
+    "y": 626.9
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.3,
     "kind": "region",
+    "path": [
+     [
+      350.3,
+      324.3
+     ],
+     [
+      350.3,
+      528.2
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 22.0,
     "text": "The Living Land",
     "tier": 0,
     "tracking": 0.14,
-    "x": 410.5,
-    "y": 383.5
+    "x": 350.3,
+    "y": 426.2
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "The Living Mere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 485.7,
+    "y": 623.3
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 10.83,
     "text": "The Living Moor",
     "tier": 2,
     "tracking": 0.02,
-    "x": 452.4,
+    "x": 459.7,
     "y": 785.5
    },
    {
@@ -992,6 +1106,19 @@
     "y": 632.8
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.4,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Living Shaw",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 562.8,
+    "y": 147.0
+   },
+   {
     "anchor": "end",
     "face": "sans",
     "halo": 3.2,
@@ -1005,7 +1132,7 @@
     "y": 289.2
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
     "halo": 3.4,
     "kind": "village",
@@ -1014,7 +1141,7 @@
     "text": "The Livingford",
     "tier": 2,
     "tracking": 0.0,
-    "x": 332.8,
+    "x": 315.8,
     "y": 404.9
    },
    {
@@ -1057,6 +1184,19 @@
     "y": 252.3
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.7,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Livingmoor",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 140.3,
+    "y": 591.1
+   },
+   {
     "anchor": "start",
     "face": "sans",
     "halo": 3.3,
@@ -1070,30 +1210,75 @@
     "y": 567.1
    },
    {
-    "anchor": "end",
+    "anchor": "middle",
     "face": "sans",
-    "halo": 3.3,
+    "halo": 3.1,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "The Livingwick",
     "tier": 2,
     "tracking": 0.02,
-    "x": 666.3,
-    "y": 567.1
+    "x": 674.8,
+    "y": 585.0
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.0,
+    "halo": 2.9,
     "kind": "feature",
+    "path": [
+     [
+      312.8,
+      115.4
+     ],
+     [
+      312.8,
+      182.6
+     ]
+    ],
     "role": "label",
     "size": 11.0,
     "text": "The Livingwood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 342.3,
-    "y": 140.9
+    "x": 312.8,
+    "y": 149.0
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    }
   ],
   "regional": [
@@ -1112,55 +1297,34 @@
    },
    {
     "anchor": "middle",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "road",
+    "face": "sc",
+    "halo": 3.0,
+    "kind": "region",
     "path": [
      [
-      599.4,
-      599.4
+      638.3,
+      446.1
      ],
      [
-      599.6,
-      599.3
+      638.3,
+      543.4
      ],
      [
-      624.0,
-      599.0
+      582.6,
+      604.4
      ],
      [
-      626.7,
-      597.9
-     ],
-     [
-      656.5,
-      568.5
-     ],
-     [
-      656.8,
-      568.3
+      582.3,
+      685.3
      ]
     ],
-    "role": "label",
-    "size": 9.5,
-    "text": "The Drowned Land",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 626.7,
-    "y": 597.9
-   },
-   {
-    "anchor": "middle",
-    "face": "sc",
-    "halo": 3.3,
-    "kind": "region",
     "role": "label-region",
-    "size": 17.82,
+    "size": 22.0,
     "text": "The Drowned March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 529.2,
-    "y": 434.4
+    "x": 616.0,
+    "y": 567.9
    },
    {
     "anchor": "start",
@@ -1178,15 +1342,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Drownedcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
     "anchor": "middle",
@@ -1253,28 +1417,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The High Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.3,
-    "kind": "town",
-    "role": "label",
-    "size": 11.5,
-    "text": "The High Ford",
-    "tier": 1,
-    "tracking": 0.0,
-    "x": 586.6,
-    "y": 622.7
+    "x": 122.4,
+    "y": 319.0
    },
    {
     "anchor": "middle",
@@ -1286,7 +1437,7 @@
     "text": "The High Home",
     "tier": 0,
     "tracking": 0.14,
-    "x": 278.8,
+    "x": 200.8,
     "y": 622.5
    },
    {
@@ -1299,8 +1450,8 @@
     "text": "The High Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "middle",
@@ -1312,7 +1463,7 @@
     "text": "The Highcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
@@ -1366,27 +1517,27 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.95,
     "text": "The Home Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
-    "anchor": "start",
+    "anchor": "end",
     "face": "sans",
-    "halo": 3.3,
+    "halo": 3.5,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "The Home Ford",
     "tier": 2,
     "tracking": 0.02,
-    "x": 288.9,
+    "x": 269.9,
     "y": 523.4
    },
    {
@@ -1483,15 +1634,25 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.3,
     "kind": "region",
+    "path": [
+     [
+      350.3,
+      324.3
+     ],
+     [
+      350.3,
+      528.2
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 22.0,
     "text": "The Living Land",
     "tier": 0,
     "tracking": 0.14,
-    "x": 410.5,
-    "y": 383.5
+    "x": 350.3,
+    "y": 426.2
    },
    {
     "anchor": "middle",
@@ -1515,6 +1676,41 @@
     "tracking": 0.0,
     "x": 306.5,
     "y": 653.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    }
   ],
   "world": [
@@ -1534,41 +1730,59 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "region",
+    "path": [
+     [
+      638.3,
+      446.1
+     ],
+     [
+      638.3,
+      543.4
+     ],
+     [
+      582.6,
+      604.4
+     ],
+     [
+      582.3,
+      685.3
+     ]
+    ],
     "role": "label-region",
-    "size": 17.82,
+    "size": 22.0,
     "text": "The Drowned March",
     "tier": 0,
     "tracking": 0.14,
-    "x": 529.2,
-    "y": 434.4
+    "x": 616.0,
+    "y": 567.9
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The Drownedcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 753.9,
-    "y": 598.2
+    "x": 738.2,
+    "y": 598.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 7.0,
     "text": "The High Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 133.1,
-    "y": 306.3
+    "x": 122.4,
+    "y": 319.0
    },
    {
     "anchor": "middle",
@@ -1580,7 +1794,7 @@
     "text": "The High Home",
     "tier": 0,
     "tracking": 0.14,
-    "x": 278.8,
+    "x": 200.8,
     "y": 622.5
    },
    {
@@ -1593,8 +1807,8 @@
     "text": "The High Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 657.5,
-    "y": 114.7
+    "x": 644.3,
+    "y": 115.6
    },
    {
     "anchor": "middle",
@@ -1606,34 +1820,79 @@
     "text": "The Highcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 779.3,
+    "x": 785.3,
     "y": 233.3
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "landmass",
     "role": "label-region",
     "size": 9.95,
     "text": "The Home Coast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 432.4,
-    "y": 140.3
+    "x": 445.0,
+    "y": 126.1
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 2.9,
+    "halo": 3.3,
     "kind": "region",
+    "path": [
+     [
+      350.3,
+      324.3
+     ],
+     [
+      350.3,
+      528.2
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 22.0,
     "text": "The Living Land",
     "tier": 0,
     "tracking": 0.14,
-    "x": 410.5,
-    "y": 383.5
+    "x": 350.3,
+    "y": 426.2
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.3,
+    "kind": "sea",
+    "path": [
+     [
+      700.2,
+      275.6
+     ],
+     [
+      697.5,
+      271.9
+     ],
+     [
+      697.5,
+      163.1
+     ],
+     [
+      726.6,
+      125.6
+     ],
+     [
+      726.8,
+      118.4
+     ]
+    ],
+    "role": "label-water",
+    "size": 26.0,
+    "text": "The Open Sea",
+    "tier": 0,
+    "tracking": 0.12,
+    "x": 697.5,
+    "y": 163.1
    }
   ]
  },
@@ -1695,14 +1954,9 @@
    "text": "The Drownecombe"
   },
   {
-   "kind": "feature",
+   "kind": "road",
    "reason": "no room",
-   "text": "The Drowned Weald"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Drowned Wood"
+   "text": "The Drowned Land"
   },
   {
    "kind": "road",
@@ -1735,14 +1989,19 @@
    "text": "The Drownewick"
   },
   {
-   "kind": "feature",
+   "kind": "town",
    "reason": "no room",
-   "text": "The High Holt"
+   "text": "The High Ford"
   },
   {
    "kind": "road",
    "reason": "no room",
    "text": "The High Land"
+  },
+  {
+   "kind": "road",
+   "reason": "no room",
+   "text": "The High March"
   },
   {
    "kind": "feature",
@@ -1755,24 +2014,9 @@
    "text": "The High Run"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The High Shaw"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The High Weald"
-  },
-  {
    "kind": "road",
    "reason": "no room",
    "text": "The Highland"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Highshaw"
   },
   {
    "kind": "range",
@@ -1783,11 +2027,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Home Flow"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Home Moor"
   },
   {
    "kind": "road",
@@ -1805,29 +2044,9 @@
    "text": "The Homerush"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Homeshaw"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Living Holt"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Living Mere"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "The Living Rush"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Living Shaw"
   },
   {
    "kind": "river",
@@ -1840,11 +2059,6 @@
    "text": "The Livingmarch"
   },
   {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Livingmoor"
-  },
-  {
    "kind": "river",
    "reason": "no room",
    "text": "The Livingrush"
@@ -1853,11 +2067,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Livingwater"
-  },
-  {
-   "kind": "sea",
-   "reason": "no room",
-   "text": "The Open Sea"
   }
  ]
 }

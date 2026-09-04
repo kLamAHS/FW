@@ -340,6 +340,7 @@ def draw(features: Sequence[Mapping[str, Any]], *, mode: str = "legally_owns",
         # room and looser budgets, so a village that lost the world view gets a
         # real place, not a leftover one. Bands share nothing mutable: a Reserved
         # carried across solves would make one band's names veto another's.
+        left_for_air: list[labels.Dropped] = []
         for depth, band in enumerate(BANDS):
             shown = [icon for icon in icons if BANDS.index(icon.band) <= depth]
             # Every icon's ground is reserved before any name is placed (V2 §16) —
@@ -356,6 +357,13 @@ def draw(features: Sequence[Mapping[str, Any]], *, mode: str = "legally_owns",
             subset = [w for w in wanted if BANDS.index(w.band) <= depth]
             placed, dropped = labels.solve(subset, icons=knockouts, frame=frame)
             placed, calmed = _budgeted(placed, terrain, band)
+            # Kept across bands, not overwritten by the last one. `calmed` was a loop
+            # variable, so every name the budget set aside at the world and regional
+            # views was discarded and the writer was told the LOCAL solver's reason for
+            # it — "no room", which `_budgeted` itself calls a lie, because there was
+            # room and the map chose air. The honest reason was computed three times
+            # and thrown away twice.
+            left_for_air.extend(calmed)
             solved[band] = _haloed(placed, terrain)
             if band == BANDS[-1]:
                 # The honest remainder is what NO band placed — counted by what
@@ -371,7 +379,7 @@ def draw(features: Sequence[Mapping[str, Any]], *, mode: str = "legally_owns",
                 everywhere = {speaks_for.get(name.key, name.key)
                               for shown in solved.values() for name in shown}
                 missed = tuple(
-                    gone for gone in dropped + calmed
+                    gone for gone in tuple(dropped) + tuple(left_for_air)
                     if speaks_for.get(gone.key, gone.key) not in everywhere)
     return DrawPlan(bounds=bounds, mode=mode, labels=solved, icons=tuple(icons),
                     legend=_legend(features, icons, mode, holders), holders=holders,
@@ -389,7 +397,20 @@ BANDS = ("world", "regional", "local")
 # budgets loosen as the reader leans in: the local band is their own request for
 # detail, and it answers with everything that fits.
 NEIGHBOURHOOD = 200.0
-TIER_BUDGET = {"world": {0: 1, 1: 3}, "regional": {0: 2, 1: 6}}
+# Tier 0 is not budgeted, and that is a deliberate reversal. The art direction asked for
+# two things that cannot both be true: "per 200x200 neighbourhood, at most 1 tier-0" and
+# "tier-0/1 drop rate 0 at the world band". Any map with two important places within two
+# hundred units breaks the second to keep the first, and this one did — measured, the
+# world band deleted seven tier-0 names including the CAPITAL, which is the single name a
+# political map cannot do without. The plane split was added for exactly this failure
+# ("a budget that made them compete deleted the capital's name from the world view") and
+# it only moved the collision inside one plane.
+#
+# So the budget governs abundance and not the map's spine. Tier 0 is the four-read
+# hierarchy's top level: the names without which the picture is unreadable. It stays
+# bound by the neighbourhood TOTAL, which is what actually protects negative space;
+# what it stops competing for is a per-tier ration of one.
+TIER_BUDGET = {"world": {1: 3}, "regional": {1: 6}}
 TOTAL_BUDGET = {"world": (6, 3), "regional": (12, 8)}      # (calm, wild country)
 WILD = 0.08                    # develop below this is wild country
 
@@ -910,11 +931,24 @@ def _sea_wanted(land: list[tuple[Point, ...]], bounds: Bounds) -> list[labels.Wa
     size = max(width, height) / cells
     if size <= 0:
         return []
-    wide = max(1, int(width / size) + 1)
-    tall = max(1, int(height / size) + 1)
+    # A one-cell border of "not sea" all the way round, which is what `labels._raster`
+    # does for every other shape and says why: without it a mask that fills its own
+    # bounding box has no outside above its top row, so the distance transform never
+    # starts there and the widest point of the water lands on the frame edge. The sea
+    # was the one shape rasterised here instead of there, and it was the one shape
+    # missing that border — which is why "The Open Sea" has been dropped on eleven of
+    # the twelve corpus worlds for the whole programme.
+    wide = max(1, int(width / size) + 1) + 2
+    tall = max(1, int(height / size) + 1) + 2
+    x0 -= size
+    y0 -= size
     inside: list[bool] = []
     for k in range(wide * tall):
-        point = (x0 + (k % wide + 0.5) * size, y0 + (k // wide + 0.5) * size)
+        i, j = k % wide, k // wide
+        if i in (0, wide - 1) or j in (0, tall - 1):
+            inside.append(False)                 # the border: outside, by construction
+            continue
+        point = (x0 + (i + 0.5) * size, y0 + (j + 0.5) * size)
         inside.append(not any(shapes.contains(ring, point) for ring in land))
     spine = labels.spine_of_mask(inside, size, x0, y0, wide, tall)
     if len(spine) < 2:

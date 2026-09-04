@@ -381,22 +381,27 @@ def _across(want: Wanted, taken: Reserved) -> Placed | None:
         # away from any line a name could run along. Set it level at the widest point
         # instead, overhanging the border if it must — which is what an atlas does with
         # a small country, and better than leaving the country unnamed.
-        return _at_the_pole(want, taken, mid=_midpoint(path))
+        return (_at_the_pole(want, taken, mid=_midpoint(path))
+                or _at_the_pole(want, taken))
 
     trimmed = _centred(path, width)
     boxes = _boxes_along(trimmed, size)
     if not all(taken.free(box) for box in boxes):
         # One more try, straight across the middle: a spine blocked by a river's label
         # is common and a country with no name at all is worse than a level one.
-        mid = trimmed[len(trimmed) // 2]
+        mid = _midpoint(trimmed)
         flat = _box(mid[0], mid[1], width, size, "middle")
-        if not taken.free(flat):
-            return None
-        return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
-                      role=want.role, size=size, x=round(mid[0], 1),
-                      y=round(mid[1], 1), anchor="middle", boxes=(flat,),
-                      face=want.face, tracking=want.tracking)
-    mid = trimmed[len(trimmed) // 2]
+        if taken.free(flat):
+            return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
+                          role=want.role, size=size, x=round(mid[0], 1),
+                          y=round(mid[1], 1), anchor="middle", boxes=(flat,),
+                          face=want.face, tracking=want.tracking)
+        # And then the pole, which this used to reach only when the name was too LONG
+        # for the shape — never when the shape was merely BUSY. The Selli North was
+        # dropped with its pole standing empty, because a spine under a river's label
+        # took the only two seats a country was ever offered.
+        return _at_the_pole(want, taken)
+    mid = _midpoint(trimmed)
     return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
                   role=want.role, size=size, x=round(mid[0], 1), y=round(mid[1], 1),
                   anchor="middle", path=_curve_or_nothing(trimmed, size),
@@ -412,18 +417,101 @@ def _at_the_pole(want: Wanted, taken: Reserved,
     continent gets writes a word across the sea four times the length of the rock it
     belongs to.
     """
-    where = mid or pole(want.ring)
-    if where is None:
-        return None
-    size = _fitted(want)
-    width = _width(want, size)
-    box = _box(where[0], where[1], width, size, "middle")
-    if not taken.free(box):
-        return None
-    return Placed(key=want.key, text=want.text, kind=want.kind, tier=want.tier,
-                  role=want.role, size=size, x=round(where[0], 1),
-                  y=round(where[1], 1), anchor="middle", boxes=(box,),
-                  face=want.face, tracking=want.tracking)
+    # Set smaller rather than not at all, which is what `_across` has always done along
+    # a spine and this never did. A small country crowded by its neighbours' names is
+    # the ordinary case on a dense map, and an atlas answers it with smaller type.
+    for step in SHRINK_STEPS:
+        size = max(LEGIBLE, _fitted(want) * step)
+        width = _width(want, size)
+        for where in _insets(want, mid, size):
+            box = _box(where[0], where[1], width, size, "middle")
+            if taken.free(box):
+                return Placed(key=want.key, text=want.text, kind=want.kind,
+                              tier=want.tier, role=want.role, size=size,
+                              x=round(where[0], 1), y=round(where[1], 1),
+                              anchor="middle", boxes=(box,), face=want.face,
+                              tracking=want.tracking)
+        if size <= LEGIBLE:
+            break
+    return None
+
+
+# How far off the pole a name may be set, as multiples of its own size, and how far
+# along its spine. Few and fixed, in a stated order, because the order IS the score.
+ASIDE = (0.0, -1.4, 1.4, -2.8, 2.8)
+ALONG = (0.5, 0.34, 0.66, 0.2, 0.8)
+SPREAD = 9                     # the grid a name falls back to, across the whole shape
+SHRINK_STEPS = (1.0, 0.86, 0.74)
+
+
+def _insets(want: Wanted, mid: Point | None, size: float) -> list[Point]:
+    """Where else a country's name may sit, when the middle of it is taken.
+
+    This is the seat the solver never had. A ring was offered its spine and then ONE box
+    at its pole, against the eight scored offsets a town's name gets — so a country lost
+    its name to a single town label standing on the one point it was allowed to try. The
+    Carth Basin is the case: its pole is (456, 512) and Threeforks' own label occupies
+    (450, 510) to (522, 529), dead on it.
+
+    Ranked nearest-the-pole first, because the pole is where a name belongs and every
+    step away from it is a compromise a reader can see. Nothing random and nothing
+    searched: five offsets and five stations along the spine, in this order, always.
+    """
+    centre = mid or pole(want.ring)
+    if centre is None:
+        return []
+    out: list[Point] = []
+    path = spine(want.ring) if want.ring else ()
+    for aside in ASIDE:
+        out.append((centre[0], centre[1] + aside * size))
+    if len(path) >= 2:
+        total = _length(path)
+        for share in ALONG:
+            at = _walk_along(path, total * share)
+            for aside in ASIDE[:3]:
+                out.append((at[0], at[1] + aside * size))
+    # And then the rest of the country. The ladder above only ever steps away from the
+    # pole and along the spine, which on a broad region is a narrow band through its
+    # middle — and the middle is exactly where its capital, its river and its market
+    # town have already put their names. Measured on The Carth Basin: twenty seats
+    # offered, none free, and SIXTY-EIGHT free ones elsewhere inside the same ring.
+    # A country is not obliged to wear its name across its own centre.
+    if want.ring:
+        ring = [(float(x), float(y)) for x, y in want.ring]
+        xs = [p[0] for p in ring]
+        ys = [p[1] for p in ring]
+        wide, tall = max(xs) - min(xs), max(ys) - min(ys)
+        spread = []
+        for gx in range(SPREAD):
+            for gy in range(SPREAD):
+                x = min(xs) + (gx + 0.5) / SPREAD * wide
+                y = min(ys) + (gy + 0.5) / SPREAD * tall
+                if shapes.contains(ring, (x, y)):
+                    # Ranked by how far from the pole, because the pole is where a name
+                    # belongs; the grid index breaks ties so twin solves agree.
+                    spread.append((abs(x - centre[0]) + abs(y - centre[1]), gx, gy, x, y))
+        out.extend((x, y) for _, _, _, x, y in sorted(spread))
+
+    seen: set[tuple[float, float]] = set()
+    kept = []
+    for x, y in out:
+        key = (round(x, 1), round(y, 1))
+        if key not in seen:
+            seen.add(key)
+            kept.append((x, y))
+    return kept
+
+
+def _walk_along(path: tuple[Point, ...] | list[Point], distance: float) -> Point:
+    """The point this far along a line, by length."""
+    walk = list(path)
+    for (ax, ay), (bx, by) in zip(walk, walk[1:], strict=False):
+        step = math.dist((ax, ay), (bx, by))
+        if step >= distance:
+            t = distance / step if step else 0.0
+            return (ax + (bx - ax) * t, ay + (by - ay) * t)
+        distance -= step
+    return walk[-1]
 
 
 def _fitted(want: Wanted) -> float:
@@ -445,7 +533,24 @@ def _fitted(want: Wanted) -> float:
 
 
 def _midpoint(path: tuple[Point, ...] | list[Point]) -> Point:
-    return path[len(path) // 2]
+    """The middle of a line BY LENGTH, not the middle of its list of corners.
+
+    `path[len(path) // 2]` looks like the same thing and is not: `simplify` leaves the
+    vertices unevenly spaced, so the middle corner of a bent line sits wherever the
+    corners happen to bunch. On the very common two-point spine `len // 2` is 1 — the
+    far END — so the fallback aimed a country's name at one of its corners.
+    """
+    walk = list(path)
+    if len(walk) < 2:
+        return walk[0] if walk else (0.0, 0.0)
+    half = _length(walk) / 2
+    for (ax, ay), (bx, by) in zip(walk, walk[1:], strict=False):
+        step = math.dist((ax, ay), (bx, by))
+        if step >= half:
+            t = half / step if step else 0.0
+            return (ax + (bx - ax) * t, ay + (by - ay) * t)
+        half -= step
+    return walk[-1]
 
 
 def pole(ring: tuple[Point, ...], *, cells: int = SPINE_CELLS) -> Point | None:
@@ -496,10 +601,23 @@ def spine_of_mask(inside: list[bool], size: float, x0: float, y0: float,
     # and comes out as a diagonal name across a level country. A floor set from the
     # widest point keeps the spine in the part of the shape a name can live in.
     floor = max(CHAMFER_ORTH + 1, far[best] * SPINE_FLOOR)
-    walk = _ridge(far, wide, tall, best, +1, floor)
-    walk = list(reversed(_ridge(far, wide, tall, best, -1, floor)))[:-1] + walk
-    world = [(x0 + (k % wide + 0.5) * size, y0 + (k // wide + 0.5) * size)
-             for k in walk]
+
+    def both_ways(down: bool) -> list[int]:
+        forward = _ridge(far, wide, tall, best, +1, floor, down=down)
+        back = list(reversed(_ridge(far, wide, tall, best, -1, floor, down=down)))
+        return back[:-1] + forward
+
+    def as_world(walk: list[int]) -> list[Point]:
+        return [(x0 + (k % wide + 0.5) * size, y0 + (k // wide + 0.5) * size)
+                for k in walk]
+
+    # Walk the shape both ways and keep the longer line. A name wants the shape's LONG
+    # axis, and which axis that is depends on the shape, not on the lattice: measuring
+    # both costs one more ridge walk over a distance field already computed, and is
+    # exact where any aspect-ratio guess would be a guess.
+    across = as_world(both_ways(False))
+    down = as_world(both_ways(True))
+    world = down if _length(down) > _length(across) else across
     if len(world) < 2:
         return ()
     # Smoothed once and thinned: the raw walk is a staircase on the lattice, and a name
@@ -575,29 +693,39 @@ def _distance(inside: list[bool], wide: int, tall: int) -> list[int]:
 
 
 def _ridge(far: list[int], wide: int, tall: int, start: int, step: int,
-           floor: float) -> list[int]:
-    """Walk from the widest point outwards, one column at a time.
+           floor: float, *, down: bool = False) -> list[int]:
+    """Walk from the widest point outwards, one row of the chosen axis at a time.
 
-    Column at a time rather than free wandering, because a label runs across a shape and
+    One row at a time rather than free wandering, because a label runs across a shape and
     not around it: a walk allowed to go any direction follows the ridge into a spiral in
-    anything shaped like a ring. And level unless a step up or down is clearly better —
-    a line that changes row to gain a hundredth of a cell reads as a wobble in the name.
+    anything shaped like a ring. And straight unless a step aside is clearly better —
+    a line that swerves to gain a hundredth of a cell reads as a wobble in the name.
+
+    `down` walks column-wise instead of row-wise. Which axis is right is not a detail:
+    the walk only ever advanced along x, so a shape whose long axis ran north to south
+    was measured across its WIDTH. A plain rectangle showed it — 300x100 gave a spine of
+    262 units and the same rectangle turned on its side gave 64 — and on the map it cost
+    The Merran Coast, a coastal strip 109 wide and 260 tall, which reported a 51-unit
+    spine for a 231-unit name and could not be labelled at all. `spine_of_mask` now walks
+    both ways and keeps the longer, which needs no guess about the shape.
     """
     walk = [start]
     here = start
     while True:
         i, j = here % wide, here // wide
-        nxt = i + step
-        if not 0 <= nxt < wide:
+        along, across = (j, i) if down else (i, j)
+        limit, span = (tall, wide) if down else (wide, tall)
+        nxt = along + step
+        if not 0 <= nxt < limit:
             break
         best: tuple[float, int] | None = None
-        for dj in (0, -1, 1):
-            if not 0 <= j + dj < tall:
+        for aside in (0, -1, 1):
+            if not 0 <= across + aside < span:
                 continue
-            k = nxt + (j + dj) * wide
+            k = (nxt * wide + across + aside) if down else (nxt + (across + aside) * wide)
             if far[k] < floor:
                 continue
-            score = far[k] * (1.0 if dj == 0 else LEVEL_PREFERENCE)
+            score = far[k] * (1.0 if aside == 0 else LEVEL_PREFERENCE)
             if best is None or score > best[0] or (score == best[0] and k < best[1]):
                 best = (score, k)
         if best is None:

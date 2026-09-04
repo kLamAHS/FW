@@ -356,8 +356,8 @@
     "text": "Black Holt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 456.1,
-    "y": 229.9
+    "x": 442.8,
+    "y": 228.5
    },
    {
     "anchor": "middle",
@@ -479,12 +479,12 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 370.8,
-    "y": 417.3
+    "y": 430.1
    },
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.1,
+    "halo": 3.2,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -492,7 +492,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 582.4,
-    "y": 402.5
+    "y": 378.0
    },
    {
     "anchor": "end",
@@ -508,16 +508,16 @@
     "y": 343.6
    },
    {
-    "anchor": "end",
+    "anchor": "start",
     "face": "sans",
-    "halo": 3.2,
+    "halo": 3.1,
     "kind": "castle",
     "role": "label",
     "size": 10.0,
     "text": "Greyford",
     "tier": 2,
     "tracking": 0.02,
-    "x": 552.5,
+    "x": 569.5,
     "y": 220.4
    },
    {
@@ -547,6 +547,19 @@
     "y": 495.2
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.1,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Ironholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 768.6,
+    "y": 758.1
+   },
+   {
     "anchor": "end",
     "face": "sans",
     "halo": 3.8,
@@ -571,19 +584,6 @@
     "tracking": 0.01,
     "x": 341.1,
     "y": 350.8
-   },
-   {
-    "anchor": "start",
-    "face": "sans",
-    "halo": 3.1,
-    "kind": "castle",
-    "role": "label",
-    "size": 10.0,
-    "text": "Millford",
-    "tier": 2,
-    "tracking": 0.02,
-    "x": 607.5,
-    "y": 377.5
    },
    {
     "anchor": "start",
@@ -670,15 +670,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 2.9,
+    "halo": 2.8,
     "kind": "feature",
     "role": "label",
     "size": 6.5,
     "text": "Northmere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 590.3,
-    "y": 332.5
+    "x": 606.5,
+    "y": 328.2
    },
    {
     "anchor": "end",
@@ -720,6 +720,19 @@
     "y": 430.7
    },
    {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.9,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Red Weald",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 603.0,
+    "y": 262.0
+   },
+   {
     "anchor": "end",
     "face": "sans",
     "halo": 3.2,
@@ -731,37 +744,6 @@
     "tracking": 0.02,
     "x": 552.5,
     "y": 339.6
-   },
-   {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 2.9,
-    "kind": "road",
-    "path": [
-     [
-      459.6,
-      394.8
-     ],
-     [
-      465.6,
-      398.5
-     ],
-     [
-      494.0,
-      398.5
-     ],
-     [
-      495.6,
-      397.7
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "Redhaven",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 494.0,
-    "y": 398.5
    },
    {
     "anchor": "start",
@@ -786,8 +768,8 @@
     "text": "Redshaw",
     "tier": 2,
     "tracking": 0.02,
-    "x": 465.0,
-    "y": 604.4
+    "x": 456.1,
+    "y": 604.6
    },
    {
     "anchor": "start",
@@ -805,28 +787,38 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "feature",
+    "path": [
+     [
+      642.4,
+      487.8
+     ],
+     [
+      642.4,
+      531.3
+     ]
+    ],
     "role": "label",
     "size": 11.0,
     "text": "Renn Holt",
     "tier": 2,
     "tracking": 0.02,
-    "x": 677.0,
-    "y": 510.5
+    "x": 642.4,
+    "y": 509.6
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 18.26,
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 190.2,
-    "y": 169.5
+    "x": 175.7,
+    "y": 157.6
    },
    {
     "anchor": "start",
@@ -840,6 +832,19 @@
     "tracking": 0.01,
     "x": 443.8,
     "y": 300.6
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 2.8,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "Rennmere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 609.3,
+    "y": 314.8
    },
    {
     "anchor": "end",
@@ -903,8 +908,21 @@
     "text": "The Grey Mere",
     "tier": 2,
     "tracking": 0.02,
-    "x": 470.6,
-    "y": 618.2
+    "x": 476.9,
+    "y": 628.4
+   },
+   {
+    "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.2,
+    "kind": "feature",
+    "role": "label",
+    "size": 11.0,
+    "text": "The Greyholt",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 176.8,
+    "y": 183.6
    },
    {
     "anchor": "middle",
@@ -943,20 +961,20 @@
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 737.2,
+    "x": 743.4,
     "y": 600.2
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 2.9,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Ironweald",
     "tier": 2,
     "tracking": 0.02,
-    "x": 337.0,
+    "x": 306.4,
     "y": 158.8
    },
    {
@@ -1008,8 +1026,8 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.0,
-    "y": 774.5
+    "x": 757.8,
+    "y": 773.6
    },
    {
     "anchor": "middle",
@@ -1021,22 +1039,22 @@
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 483.1,
+    "x": 487.5,
     "y": 784.1
    },
    {
     "anchor": "middle",
     "face": "sans",
-    "halo": 3.4,
+    "halo": 3.2,
     "kind": "road",
     "path": [
      [
       707.3,
-      256.8
+      242.5
      ],
      [
       707.3,
-      316.2
+      301.8
      ]
     ],
     "role": "label",
@@ -1045,7 +1063,20 @@
     "tier": 2,
     "tracking": 0.0,
     "x": 707.3,
-    "y": 316.2
+    "y": 301.8
+   },
+   {
+    "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Northmarch",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 235.1,
+    "y": 671.8
    },
    {
     "anchor": "middle",
@@ -1085,15 +1116,33 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "sea",
+    "path": [
+     [
+      817.5,
+      384.3
+     ],
+     [
+      817.5,
+      466.9
+     ],
+     [
+      788.4,
+      519.4
+     ],
+     [
+      787.8,
+      544.8
+     ]
+    ],
     "role": "label-water",
     "size": 26.0,
     "text": "The Open Sea",
     "tier": 0,
     "tracking": 0.12,
-    "x": 721.5,
-    "y": 67.5
+    "x": 788.4,
+    "y": 519.4
    },
    {
     "anchor": "middle",
@@ -1163,16 +1212,51 @@
    },
    {
     "anchor": "middle",
+    "face": "serif-italic",
+    "halo": 3.0,
+    "kind": "feature",
+    "role": "label",
+    "size": 7.0,
+    "text": "The Salt Mere",
+    "tier": 2,
+    "tracking": 0.02,
+    "x": 478.4,
+    "y": 648.4
+   },
+   {
+    "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 2.9,
     "kind": "region",
+    "path": [
+     [
+      666.5,
+      175.2
+     ],
+     [
+      666.5,
+      289.3
+     ],
+     [
+      677.9,
+      303.4
+     ],
+     [
+      685.0,
+      317.5
+     ],
+     [
+      685.6,
+      326.4
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Salt Reach",
     "tier": 0,
     "tracking": 0.14,
-    "x": 720.8,
-    "y": 228.7
+    "x": 666.5,
+    "y": 253.7
    },
    {
     "anchor": "middle",
@@ -1208,15 +1292,15 @@
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.8,
+    "halo": 3.3,
     "kind": "feature",
     "role": "label",
     "size": 11.0,
     "text": "The Saltwood",
     "tier": 2,
     "tracking": 0.02,
-    "x": 206.4,
-    "y": 679.0
+    "x": 174.7,
+    "y": 694.4
    },
    {
     "anchor": "middle",
@@ -1228,8 +1312,8 @@
     "text": "The Vale of Renn",
     "tier": 0,
     "tracking": 0.14,
-    "x": 558.7,
-    "y": 438.6
+    "x": 479.4,
+    "y": 409.1
    }
   ],
   "regional": [
@@ -1288,7 +1372,7 @@
    {
     "anchor": "start",
     "face": "sans",
-    "halo": 3.3,
+    "halo": 3.2,
     "kind": "town",
     "role": "label",
     "size": 11.5,
@@ -1296,7 +1380,7 @@
     "tier": 1,
     "tracking": 0.0,
     "x": 582.4,
-    "y": 387.8
+    "y": 378.0
    },
    {
     "anchor": "start",
@@ -1446,37 +1530,6 @@
     "y": 430.7
    },
    {
-    "anchor": "middle",
-    "face": "sans",
-    "halo": 2.9,
-    "kind": "road",
-    "path": [
-     [
-      471.8,
-      398.5
-     ],
-     [
-      494.0,
-      398.5
-     ],
-     [
-      498.1,
-      396.5
-     ],
-     [
-      505.5,
-      389.2
-     ]
-    ],
-    "role": "label",
-    "size": 9.5,
-    "text": "Redhaven",
-    "tier": 2,
-    "tracking": 0.0,
-    "x": 498.1,
-    "y": 396.5
-   },
-   {
     "anchor": "start",
     "face": "sans",
     "halo": 3.7,
@@ -1492,15 +1545,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 18.26,
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 190.2,
-    "y": 169.5
+    "x": 175.7,
+    "y": 157.6
    },
    {
     "anchor": "start",
@@ -1604,7 +1657,7 @@
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 737.2,
+    "x": 743.4,
     "y": 600.2
    },
    {
@@ -1617,8 +1670,8 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.0,
-    "y": 774.5
+    "x": 757.8,
+    "y": 773.6
    },
    {
     "anchor": "middle",
@@ -1630,21 +1683,52 @@
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 483.1,
+    "x": 487.5,
     "y": 784.1
    },
    {
     "anchor": "middle",
+    "face": "sc",
+    "halo": 3.6,
+    "kind": "region",
+    "role": "label-region",
+    "size": 22.0,
+    "text": "The Northmarch",
+    "tier": 0,
+    "tracking": 0.14,
+    "x": 235.1,
+    "y": 671.8
+   },
+   {
+    "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "sea",
+    "path": [
+     [
+      817.5,
+      384.3
+     ],
+     [
+      817.5,
+      466.9
+     ],
+     [
+      788.4,
+      519.4
+     ],
+     [
+      787.8,
+      544.8
+     ]
+    ],
     "role": "label-water",
     "size": 26.0,
     "text": "The Open Sea",
     "tier": 0,
     "tracking": 0.12,
-    "x": 721.5,
-    "y": 67.5
+    "x": 788.4,
+    "y": 519.4
    },
    {
     "anchor": "middle",
@@ -1715,15 +1799,37 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 2.9,
     "kind": "region",
+    "path": [
+     [
+      666.5,
+      175.2
+     ],
+     [
+      666.5,
+      289.3
+     ],
+     [
+      677.9,
+      303.4
+     ],
+     [
+      685.0,
+      317.5
+     ],
+     [
+      685.6,
+      326.4
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Salt Reach",
     "tier": 0,
     "tracking": 0.14,
-    "x": 720.8,
-    "y": 228.7
+    "x": 666.5,
+    "y": 253.7
    },
    {
     "anchor": "middle",
@@ -1778,8 +1884,8 @@
     "text": "The Vale of Renn",
     "tier": 0,
     "tracking": 0.14,
-    "x": 558.7,
-    "y": 438.6
+    "x": 479.4,
+    "y": 409.1
    }
   ],
   "world": [
@@ -1812,28 +1918,24 @@
    {
     "anchor": "middle",
     "face": "sans",
-    "halo": 3.0,
+    "halo": 3.4,
     "kind": "road",
     "path": [
      [
-      360.6,
-      333.6
-     ],
-     [
-      360.6,
-      324.7
-     ],
-     [
-      361.6,
-      322.0
+      366.9,
+      316.8
      ],
      [
       381.6,
       302.1
      ],
      [
-      382.1,
-      301.9
+      384.3,
+      301.0
+     ],
+     [
+      401.2,
+      301.0
      ]
     ],
     "role": "label",
@@ -1841,8 +1943,8 @@
     "text": "Grey Brook",
     "tier": 2,
     "tracking": 0.0,
-    "x": 361.6,
-    "y": 322.0
+    "x": 384.3,
+    "y": 301.0
    },
    {
     "anchor": "start",
@@ -1860,15 +1962,15 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.4,
+    "halo": 3.0,
     "kind": "landmass",
     "role": "label-region",
     "size": 18.26,
     "text": "Renncoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 190.2,
-    "y": 169.5
+    "x": 175.7,
+    "y": 157.6
    },
    {
     "anchor": "start",
@@ -1893,7 +1995,7 @@
     "text": "The Ironcape",
     "tier": 1,
     "tracking": 0.14,
-    "x": 737.2,
+    "x": 743.4,
     "y": 600.2
    },
    {
@@ -1906,8 +2008,8 @@
     "text": "The Millcoast",
     "tier": 1,
     "tracking": 0.14,
-    "x": 751.0,
-    "y": 774.5
+    "x": 757.8,
+    "y": 773.6
    },
    {
     "anchor": "middle",
@@ -1919,7 +2021,7 @@
     "text": "The North Wick",
     "tier": 1,
     "tracking": 0.14,
-    "x": 483.1,
+    "x": 487.5,
     "y": 784.1
    },
    {
@@ -1928,25 +2030,43 @@
     "halo": 3.8,
     "kind": "region",
     "role": "label-region",
-    "size": 17.82,
+    "size": 22.0,
     "text": "The Northmarch",
     "tier": 0,
     "tracking": 0.14,
-    "x": 339.1,
-    "y": 641.0
+    "x": 235.1,
+    "y": 610.2
    },
    {
     "anchor": "middle",
     "face": "serif-italic",
-    "halo": 3.1,
+    "halo": 3.0,
     "kind": "sea",
+    "path": [
+     [
+      817.5,
+      384.3
+     ],
+     [
+      817.5,
+      466.9
+     ],
+     [
+      788.4,
+      519.4
+     ],
+     [
+      787.8,
+      544.8
+     ]
+    ],
     "role": "label-water",
     "size": 26.0,
     "text": "The Open Sea",
     "tier": 0,
     "tracking": 0.12,
-    "x": 721.5,
-    "y": 67.5
+    "x": 788.4,
+    "y": 519.4
    },
    {
     "anchor": "middle",
@@ -2017,28 +2137,50 @@
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.3,
+    "halo": 2.9,
     "kind": "region",
+    "path": [
+     [
+      666.5,
+      175.2
+     ],
+     [
+      666.5,
+      289.3
+     ],
+     [
+      677.9,
+      303.4
+     ],
+     [
+      685.0,
+      317.5
+     ],
+     [
+      685.6,
+      326.4
+     ]
+    ],
     "role": "label-region",
-    "size": 12.99,
+    "size": 17.82,
     "text": "The Salt Reach",
     "tier": 0,
     "tracking": 0.14,
-    "x": 720.8,
-    "y": 228.7
+    "x": 666.5,
+    "y": 253.7
    },
    {
     "anchor": "middle",
     "face": "sc",
-    "halo": 3.0,
+    "halo": 3.2,
     "kind": "region",
     "role": "label-region",
     "size": 22.0,
     "text": "The Vale of Renn",
     "tier": 0,
     "tracking": 0.14,
-    "x": 558.7,
-    "y": 438.6
+    "x": 408.3,
+    "y": 346.8
    }
   ]
  },
@@ -2158,9 +2300,9 @@
    "text": "Iron Brook"
   },
   {
-   "kind": "feature",
+   "kind": "castle",
    "reason": "no room",
-   "text": "Ironholt"
+   "text": "Millford"
   },
   {
    "kind": "road",
@@ -2173,19 +2315,14 @@
    "text": "Northwater"
   },
   {
-   "kind": "feature",
+   "kind": "road",
    "reason": "no room",
-   "text": "Red Weald"
+   "text": "Redhaven"
   },
   {
    "kind": "range",
    "reason": "no room",
    "text": "Renn Fells"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "Rennmere"
   },
   {
    "kind": "road",
@@ -2196,11 +2333,6 @@
    "kind": "road",
    "reason": "no room",
    "text": "The Greybrook"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Greyholt"
   },
   {
    "kind": "river",
@@ -2241,11 +2373,6 @@
    "kind": "river",
    "reason": "no room",
    "text": "The Rennrun"
-  },
-  {
-   "kind": "feature",
-   "reason": "no room",
-   "text": "The Salt Mere"
   },
   {
    "kind": "road",
